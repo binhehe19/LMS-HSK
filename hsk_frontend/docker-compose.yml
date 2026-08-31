@@ -1,0 +1,42 @@
+name: lms-hsk-frontend
+
+# Frontend quản lý LMS HSK (Next.js standalone), chạy sau Traefik của backend chung LMS_IELTS (cùng mẫu LMS_IELTS/frontend/docker-compose.yml).
+# Backend (../backend trong LMS_IELTS) và docker/infra phải chạy trước: Traefik network do infra tạo.
+#
+#   cp .env.example .env    # điền TRAEFIK_NETWORK, NEXT_PUBLIC_AUTH_API_BASE_URL, NEXT_PUBLIC_AUTH_FRONTEND_URL (bắt buộc)
+#   docker compose build && docker compose up -d
+#
+# NEXT_PUBLIC_* nhúng lúc build: đổi giá trị thì phải build lại. Chỉ bật NEXT_PUBLIC_HSK_API_BASE_PATH / QUIZ / TICKET khi backend đã có endpoint tương ứng.
+# Không đăng ký với Traefik: gateway oauth2-proxy của backend (Host(DOMAIN)) đăng nhập rồi chuyển trang tới lms-hsk-frontend:3000
+# qua mạng Traefik, nên mọi trang đi qua phiên đăng nhập và trang bảo trì đứng trước gateway vẫn chặn được.
+
+services:
+  hsk-frontend:
+    image: lms-hsk-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_AUTH_API_BASE_URL: ${NEXT_PUBLIC_AUTH_API_BASE_URL:?}
+        NEXT_PUBLIC_AUTH_FRONTEND_URL: ${NEXT_PUBLIC_AUTH_FRONTEND_URL:?}
+        NEXT_PUBLIC_LMS_API_BASE_PATH: ${NEXT_PUBLIC_LMS_API_BASE_PATH:-/api/lms}
+        NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH: ${NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH:-/api/notification}
+        NEXT_PUBLIC_STORAGE_API_BASE_PATH: ${NEXT_PUBLIC_STORAGE_API_BASE_PATH:-/api/storage}
+        NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH: ${NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH:-}
+        NEXT_PUBLIC_HSK_API_BASE_PATH: ${NEXT_PUBLIC_HSK_API_BASE_PATH:-}
+        NEXT_PUBLIC_QUIZ_API_BASE_PATH: ${NEXT_PUBLIC_QUIZ_API_BASE_PATH:-}
+        NEXT_PUBLIC_TICKET_API_BASE_PATH: ${NEXT_PUBLIC_TICKET_API_BASE_PATH:-}
+    container_name: lms-hsk-frontend
+    restart: unless-stopped
+    networks:
+      hsk-frontend-network:
+        aliases:
+          - lms-hsk-frontend
+      traefik-public: {}
+
+networks:
+  hsk-frontend-network:
+    driver: bridge
+  traefik-public:
+    name: ${TRAEFIK_NETWORK:?}
+    external: true
