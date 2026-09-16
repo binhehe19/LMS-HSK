@@ -1,0 +1,166 @@
+// CSS module Luyện phát âm — sao chép từ LMS_Frontend/src/features/learning-path/pronunciation/manage/manage-pronunciation.scss (khối
+// `.manage-pronunciation-page`, class gắn vào `.content` qua ContentModuleConfig.pageClassName). KHÔNG import từ component — điều phối thêm vào
+// src/styles/page-styles.ts SAU content-tree.scss.
+// [M5] Bỏ có chủ đích: (1) `.card { border-radius; overflow:hidden; .card-header/.card-body { padding !important } }` — bản cũ bọc cả trang riêng; trên nền
+// dùng chung nó sẽ ghi đè `.card-body.p-4` của khung cây và bảng antd; (2) `.modal-content`/`.modal-body-scrollable` (modal Bootstrap tự vẽ → antd Modal);
+// (3) `.quiz-import-modal` + @keyframes pronunciationImportBar (Import Excel chưa chuyển). Giữ: bảng, nút, badge, dòng mở rộng `.item-detail-panel`
+// (khối xem nhanh mục dùng lại đúng class).
+
+.manage-pronunciation-page {
+  .table {
+    th {
+      font-weight: 600;
+      color: #6c757d;
+      border-bottom-width: 1px;
+      vertical-align: middle;
+      padding: 12px 16px;
+      white-space: nowrap;
+    }
+
+    td {
+      vertical-align: middle;
+      padding: 12px 16px;
+      color: #495057;
+    }
+
+    tbody tr {
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+
+  .btn-light {
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+    color: #495057;
+
+    &:hover {
+      background-color: #e9ecef;
+      border-color: #e9ecef;
+      color: #212529;
+    }
+  }
+
+  .badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .table-responsive {
+    margin-bottom: 6px;
+
+    .table {
+      table-layout: fixed;
+
+      th, td {
+        &.text-truncate {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  /* Expandable item row styles */
+  .item-expand-row td {
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  .item-detail-panel {
+    padding: 16px 20px 16px 48px;
+    border-top: 1px solid #edf1f7;
+    background: #fbfcfe;
+
+    .detail-section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .pronunciation-guide-box {
+      background: #fff;
+      border-left: 4px solid #6366f1;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .example-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 14px;
+
+      .example-word {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1f2937;
+      }
+
+      .example-pinyin {
+        font-size: 12px;
+        color: #e91e63;
+        font-weight: 500;
+      }
+
+      .example-meaning {
+        font-size: 12px;
+        color: #6b7280;
+        font-style: italic;
+      }
+    }
+
+    .media-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
+  // ---------- [M5] bổ sung (không có ở HSK cũ) ----------
+  // Khối xem nhanh nằm ngoài bảng nên không có padding trái 48px của dòng mở rộng.
+  .card > .item-detail-panel {
+    padding: 20px 24px;
+    border-top: 0;
+  }
+
+  // Cột "Hướng dẫn phát âm" trong bảng: tối đa 2 dòng (bản cũ cắt một dòng với title đầy đủ).
+  .pronunciation-tip-cell {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-line;
+  }
+}
