@@ -1,0 +1,170 @@
+// CSS màn Quản lý Bài tập — NGUYÊN VĂN phần quiz-specific của LMS_Frontend/src/features/learning-path/quiz/manage/manage-quiz.scss
+// (.quiz-card/.difficulty-badge/.question-item/.question-type-badge và modal câu hỏi .qqm-*). Bỏ: .manage-quiz-container/.ptm-header/
+// .packages-list-card/.package-details-card (nền content-tree.scss đã có tương đương qua .manage-lp-container/.package-type-manager) và
+// .quiz-import-modal (Nhập Excel chưa chuyển). [M5] đổi selector cha: `.quiz-package-type-manager` → `.manage-quiz-page` (class trên .content của
+// nền), huy hiệu độ khó đứng ngoài .quiz-card (nằm trong bảng antd và dòng meta của trình soạn). KHÔNG import từ component — thêm vào page-styles.ts.
+.manage-quiz-page {
+    // Quiz-specific styles
+    .quiz-card {
+        border-radius: 16px;
+        border: 1px solid #eee;
+        transition: all 0.25s ease;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    .difficulty-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+
+        &.easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        &.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        &.hard {
+            background: #fde2e2;
+            color: #991b1b;
+        }
+    }
+
+    .question-item {
+        border: 1px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #fafbfc;
+        }
+
+        .question-type-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+
+            &.mc {
+                background: #dbeafe;
+                color: #1e40af;
+            }
+
+            &.fb {
+                background: #ede9fe;
+                color: #5b21b6;
+            }
+
+            &.mp {
+                background: #fce7f3;
+                color: #9d174d;
+            }
+
+            &.sb {
+                background: #d1fae5;
+                color: #065f46;
+            }
+        }
+    }
+}
+
+// Modal câu hỏi: bản cũ là div.modal.quiz-question-modal tự vẽ; ở đây là wrapClassName của antd Modal (phần nền/kích thước do antd lo).
+.quiz-question-modal {
+    .qqm-section {
+        border: 1px solid #eef0f5;
+        border-radius: 14px;
+        padding: 14px;
+        background: #fff;
+    }
+
+    .qqm-section-title {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        color: #2d3748;
+    }
+
+    .qqm-row-item {
+        padding: 8px;
+        border: 1px solid #f1f3f8;
+        border-radius: 10px;
+        background: #fcfcfd;
+    }
+
+    .qqm-type-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .qqm-type-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: 1px solid #e7eaf3;
+        border-radius: 12px;
+        background: #fff;
+        padding: 10px 12px;
+        text-align: left;
+        transition: all .2s ease;
+
+        &:hover {
+            border-color: #cfd7ee;
+            background: #fafbff;
+        }
+
+        &.active {
+            border-color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb), 0.08);
+        }
+
+        // [M5] loại có trong bản cũ nhưng chưa chuyển form soạn (SENTENCE_BUILDER).
+        &:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+    }
+
+    .qqm-type-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f4f6fb;
+        color: #4a5fa7;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .qqm-type-label {
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.1;
+    }
+
+    .qqm-type-desc {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+
+    @media (max-width: 767.98px) {
+        .qqm-type-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
