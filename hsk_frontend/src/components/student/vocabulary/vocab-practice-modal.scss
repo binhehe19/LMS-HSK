@@ -1,0 +1,334 @@
+// Nguyên văn LMS_Frontend/src/features/learning-path/vocabulary/components/vocab-practice-modal.scss, bọc trong .hsk-vocab-modal
+// (lớp gốc của portal popup) để không rò sang khu quản lý. @keyframes được Sass đưa ra gốc như bản cũ.
+.hsk-vocab-modal {
+  /* Popup Luyện tập từ vựng — Figma 1553:2086 / 1553:2046 (header xanh lá). */
+  .vp {
+    --vp-green: #22c15e;
+    --vp-red: #e11d1d;
+    --vp-line: #d7dbe3;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px 8px;
+  }
+
+  .vp-empty {
+    margin: 0;
+    padding: 24px 0;
+    color: #64748b;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  /* ───────── tiến trình ───────── */
+  .vp-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    &__bar {
+      flex: 1 1 auto;
+      height: 8px;
+      border-radius: 9999px;
+      background: #e5e7eb;
+      overflow: hidden;
+
+      span {
+        display: block;
+        height: 100%;
+        border-radius: 9999px;
+        background: var(--vp-green);
+        transition: width 0.25s ease;
+      }
+    }
+
+    &__label {
+      flex-shrink: 0;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+
+  .vp-prompt {
+    margin: 0;
+    color: #1f2430;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 22px;
+  }
+
+  /* gợi ý thao tác cho câu nối cột */
+  .vp-hint {
+    margin: -8px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  /* ───────── dạng nối cột ───────── */
+  .vp-match {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .vp-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &__head {
+      color: #9ca3af;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+    }
+  }
+
+  .vp-opt {
+    padding: 12px 14px;
+    border: 1px solid var(--vp-line);
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2430;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: var(--vp-green);
+    }
+
+    &.is-picked {
+      border-color: var(--vp-green);
+      background: #f0fdf4;
+    }
+
+    /* đã nối xong */
+    &.is-done {
+      border-color: #f0c8c8;
+      background: #fdf5f5;
+      color: #9aa0aa;
+      cursor: default;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  /* ───────── dạng viết pinyin ───────── */
+  .vp-pinyin {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .vp-label {
+    color: var(--vp-red);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .vp-cn {
+    align-self: flex-start;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    color: #191c1e;
+    font-size: 18px;
+    letter-spacing: 2px;
+    line-height: 28px;
+  }
+
+  .vp-input {
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid #1f2430;
+    background: transparent;
+    color: #1f2430;
+    font-size: 16px;
+    outline: none;
+
+    &::placeholder {
+      color: #b6bcc6;
+    }
+
+    &:focus {
+      border-bottom-color: var(--vp-green);
+    }
+  }
+
+  .vp-feedback {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+
+    &.is-ok {
+      color: #16a34a;
+    }
+
+    &.is-bad {
+      color: var(--vp-red);
+    }
+  }
+
+  /* Nút "Câu tiếp" ở chân popup: XÁM khi chưa trả lời -> XANH khi đã trả lời.
+     QUAN TRỌNG: nút này nằm trong .pm-foot, tức NGOÀI .vp, nên KHÔNG được dùng
+     var(--vp-green) (biến chỉ khai báo trong .vp). Biến không phân giải được sẽ
+     làm khai báo background thành invalid -> nền trong suốt -> nút tàng hình. */
+  .vp-next {
+    padding: 9px 20px;
+    border: 0;
+    border-radius: 9999px;
+    background: #cfd4dc;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: not-allowed;
+    transition: background 0.15s ease;
+
+    &.is-ready {
+      background: #22c15e;
+      cursor: pointer;
+
+      &:hover {
+        filter: brightness(1.05);
+      }
+    }
+  }
+
+  /* ───────── bảng điểm cuối bài ───────── */
+  .vp-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 20px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f0fdf4, #eff8ff);
+
+    &__cup {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+
+      i {
+        font-size: 34px;
+      }
+    }
+
+    &__grade {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 32px;
+    }
+
+    &__stats {
+      display: flex;
+      gap: 40px;
+      padding: 4px 0 16px;
+    }
+
+    /* Cần cố gắng: cúp xám, tiêu đề xám */
+    &--poor {
+      .vp-result__cup {
+        color: #94a3b8;
+      }
+
+      .vp-result__grade {
+        color: #5b7086;
+      }
+    }
+
+    /* Khá tốt: cúp hồng nhạt, tiêu đề xanh lá */
+    &--good {
+      .vp-result__cup {
+        color: #f0a0a0;
+      }
+
+      .vp-result__grade {
+        color: #17a34a;
+      }
+    }
+
+    /* Xuất sắc: cúp đỏ có vòng viền, tiêu đề xanh lá */
+    &--great {
+      .vp-result__cup {
+        color: #d81c1c;
+        border: 1.5px solid rgba(216, 28, 28, 0.35);
+      }
+
+      .vp-result__grade {
+        color: #17a34a;
+      }
+    }
+  }
+
+  .vp-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &__num {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 24px;
+
+      &.is-ok {
+        color: #16a34a;
+      }
+
+      &.is-bad {
+        color: #e11d1d;
+      }
+    }
+
+    &__label {
+      color: #44474e;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 16px;
+    }
+  }
+
+  .vp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border: 1px solid #d7dbe3;
+    border-radius: 9999px;
+    background: #fff;
+    color: #44474e;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    i {
+      font-size: 14px;
+    }
+
+    &--green {
+      border-color: #22c15e;
+      background: #22c15e;
+      color: #fff;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .vp-match {
+      grid-template-columns: 1fr;
+    }
+  }
+}

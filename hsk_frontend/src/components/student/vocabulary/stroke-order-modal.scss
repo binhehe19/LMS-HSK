@@ -1,0 +1,584 @@
+// Nguyên văn LMS_Frontend/src/features/learning-path/vocabulary/components/stroke-order-modal.scss, bọc trong .hsk-vocab-modal
+// (lớp gốc của portal popup) để không rò sang khu quản lý. @keyframes được Sass đưa ra gốc như bản cũ.
+.hsk-vocab-modal {
+  /* Popup Luyện thứ tự nét — Figma 1466:2250 / 2249 / 2536 (header xanh). */
+  .so {
+    --so-blue: #077ddd;
+    --so-blue-2: #27aeeb;
+    --so-line: #dfe3ec;
+    --so-dark: #1e293b;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 8px;
+  }
+
+  /* ───────── thanh thông tin từ ───────── */
+  .so-info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 19px;
+    background: rgba(39, 174, 235, 0.05);
+
+    &__left {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    &__speaker {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0.5px solid #64748b;
+      border-radius: 6px;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+
+      i {
+        font-size: 14px;
+      }
+    }
+
+    &__pinyin {
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    &__meaning {
+      color: var(--so-dark);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+    }
+
+    &__tags {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .so-tag-hsk {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #b00d0e, #e11d1d);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.16px;
+    line-height: 14px;
+  }
+
+  .so-tag-type {
+    display: inline-flex;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #fdebeb;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 14px;
+  }
+
+  .so-analysis-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8.5px 16.5px;
+    border: 0.5px solid #9ca3af;
+    border-radius: 24px;
+    background: #f8f9fa;
+    color: #1a1c1e;
+    font-size: 14px;
+    line-height: 24px;
+    cursor: pointer;
+
+    i {
+      font-size: 18px;
+    }
+  }
+
+  /* ───────── phân tích thành phần trong popup ───────── */
+  .so-analysis {
+    width: calc(100% - 38px);
+    display: flex;
+    align-items: stretch;
+    padding: 16px;
+    border: 1px solid var(--so-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .so-connector {
+    align-self: stretch;
+    width: 40px;
+    position: relative;
+    flex-shrink: 0;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid var(--so-line);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 20px;
+      transform: translate(-50%, -50%);
+      border-left: 1px solid var(--so-line);
+    }
+  }
+
+  .so-node-group {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--so-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .so-node {
+    border: 1px solid var(--so-line);
+    border-radius: 12px;
+    padding: 12px 14px;
+
+    &--main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: 100px;
+      flex-shrink: 0;
+      background: #fdebeb;
+    }
+
+    &--sub {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fffafa;
+    }
+
+    &__hanzi {
+      color: var(--so-dark);
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.2;
+
+      &--sm {
+        font-size: 26px;
+      }
+    }
+
+    &__sub {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 20px;
+      text-align: center;
+    }
+
+    &__text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__title {
+      color: var(--so-dark);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 22px;
+    }
+
+    &__desc {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 20px;
+    }
+  }
+
+  /* ───────── chọn chữ đang tập ───────── */
+  .so-chars {
+    display: flex;
+    gap: 8px;
+    padding: 9px;
+    border: 1px solid #e2e2e2;
+    border-radius: 32px;
+    background: #f8f9fa;
+  }
+
+  .so-char {
+    width: 143px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid transparent;
+    border-radius: 24px;
+    background: transparent;
+    opacity: 0.6;
+    cursor: pointer;
+
+    &__hanzi {
+      color: #7a7582;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 26px;
+    }
+
+    &__state {
+      color: #7a7582;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 15px;
+      text-transform: uppercase;
+    }
+
+    &.is-active {
+      opacity: 1;
+      border-color: var(--so-blue);
+      background: #fff;
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+      .so-char__hanzi {
+        color: var(--so-dark);
+      }
+
+      .so-char__state {
+        color: var(--so-blue);
+      }
+    }
+  }
+
+  /* ───────── ô viết ───────── */
+  .so-canvas {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--so-blue);
+    border-radius: 24px;
+    background: #fff;
+
+    /* ô kẻ gợi ý: 2 đường thẳng + 2 đường chéo, nét đứt xanh */
+    &__grid {
+      position: absolute;
+      inset: 18px;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(39, 174, 235, 0.45) 50%, transparent 50%),
+        linear-gradient(to bottom, rgba(39, 174, 235, 0.45) 50%, transparent 50%);
+      background-size:
+        8px 1px,
+        1px 8px;
+      background-position:
+        center center,
+        center center;
+      background-repeat: repeat-x, repeat-y;
+    }
+
+    &__writer {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  /* ───────── thumbnail thứ tự nét ───────── */
+  .so-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .so-thumb-box {
+    width: 61px;
+    height: 61px;
+    padding: 4px;
+    border: 0.5px solid #9ca3af;
+    border-radius: 6px;
+    background: #fff;
+
+    &.is-first {
+      border-color: var(--so-blue);
+      border-radius: 12px;
+    }
+  }
+
+  .so-thumb {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ───────── công tắc ───────── */
+  .so-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    padding: 8px 0;
+  }
+
+  .so-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    &__label {
+      color: #44474e;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.39px;
+      line-height: 16px;
+    }
+  }
+
+  .so-switch {
+    position: relative;
+    width: 38px;
+    height: 20px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.5);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &__knob {
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 9999px;
+      background: #fff;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s ease;
+    }
+
+    &.is-on {
+      background: linear-gradient(90deg, #b00d0e, #e11d1d);
+
+      .so-switch__knob {
+        transform: translateX(16px);
+      }
+    }
+  }
+
+  /* ───────── bảng kết quả ───────── */
+  .so-result {
+    width: calc(100% - 38px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #eff8ff, #fdf2f4);
+
+    &__cup {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+
+      i {
+        font-size: 34px;
+      }
+    }
+
+    &__grade {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 32px;
+    }
+
+    /* ── Cần cố gắng: cúp xám, tiêu đề xám ── */
+    &--poor {
+      .so-result__cup {
+        color: #94a3b8;
+      }
+
+      .so-result__grade {
+        color: #5b7086;
+      }
+    }
+
+    /* ── Khá tốt: cúp hồng nhạt, tiêu đề xanh ── */
+    &--good {
+      .so-result__cup {
+        color: #f0a0a0;
+      }
+
+      .so-result__grade {
+        color: var(--so-blue);
+      }
+    }
+
+    /* ── Xuất sắc: cúp đỏ có vòng tròn viền, tiêu đề xanh ── */
+    &--great {
+      .so-result__cup {
+        color: #d81c1c;
+        border: 1.5px solid rgba(216, 28, 28, 0.35);
+      }
+
+      .so-result__grade {
+        color: var(--so-blue);
+      }
+    }
+
+    &__stats {
+      display: flex;
+      gap: 40px;
+      padding: 4px 0 12px;
+    }
+
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+  }
+
+  .so-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &__num {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 24px;
+
+      &.is-ok {
+        color: #16a34a;
+      }
+
+      &.is-bad {
+        color: #e11d1d;
+      }
+    }
+
+    &__label {
+      color: #44474e;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 16px;
+    }
+  }
+
+  .so-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--so-line);
+    border-radius: 9999px;
+    background: #fff;
+    color: #44474e;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    i {
+      font-size: 14px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* nút chính khi Cần cố gắng / Khá tốt → "Viết lại" */
+    &--blue {
+      border-color: var(--so-blue);
+      background: var(--so-blue);
+      color: #fff;
+    }
+
+    /* nút chính khi Xuất sắc → "Chữ tiếp" */
+    &--red {
+      border-color: #c01111;
+      background: #c01111;
+      color: #fff;
+    }
+  }
+
+  /* nút "Kết quả" ở chân popup */
+  .so-result-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8.5px 16.5px;
+    border: 0.5px solid #b00d0e;
+    border-radius: 9999px;
+    background: #fef2f2;
+    color: #b00d0e;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.24px;
+    line-height: 16px;
+    cursor: pointer;
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .so-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .so-toggles {
+      gap: 16px;
+    }
+
+    .so-canvas {
+      width: 240px;
+      height: 240px;
+    }
+  }
+}

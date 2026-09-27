@@ -1,0 +1,416 @@
+// Nguyên văn LMS_Frontend/src/features/learning-path/vocabulary/components/practice-modal.scss, bọc trong .hsk-vocab-modal
+// (lớp gốc của portal popup) để không rò sang khu quản lý. @keyframes được Sass đưa ra gốc như bản cũ.
+.hsk-vocab-modal {
+  /* Khung popup luyện tập từ vựng — theo Figma (header gradient, radius 20, nút Đóng). */
+  .pm-overlay {
+    position: fixed;
+    inset: 0;
+    // header của web có z-index 9999-10000 -> popup phải cao hơn, nếu không sẽ bị che
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.45);
+    animation: pm-overlay-in 0.22s ease both;
+
+    &.is-closing {
+      animation: pm-overlay-out 0.16s ease both;
+    }
+  }
+
+  /* Vào: trượt từ phải sang trái. Ra: trượt ngược về phải, nhanh hơn. */
+  @keyframes pm-overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pm-overlay-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes pm-slide-in {
+    from {
+      transform: translateX(80px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pm-slide-out {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(80px);
+      opacity: 0;
+    }
+  }
+
+  .pm-modal {
+    --pm-red: #b90e0a;
+    --pm-brand: #b00d0e;
+    --pm-brand-2: #e11d1d;
+    --pm-outline: #64748b;
+    --pm-dark: #1e293b;
+    --pm-line: #dfe3ec;
+    --pm-card: #fffafa;
+
+    /* màu chủ đạo của header + nút Đóng (đổi theo theme) */
+    --pm-accent-1: var(--pm-brand);
+    --pm-accent-2: var(--pm-brand-2);
+
+    &--blue {
+      --pm-accent-1: #077ddd;
+      --pm-accent-2: #27aeeb;
+    }
+
+    &--green {
+      --pm-accent-1: #22c15e;
+      --pm-accent-2: #4ade80;
+    }
+
+    &--coral {
+      --pm-accent-1: #e14b3a;
+      --pm-accent-2: #f2705c;
+    }
+
+    width: 100%;
+    max-width: 650px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 8px 10px 20px 0 rgba(0, 0, 0, 0.05);
+    animation: pm-slide-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+
+    &.is-closing {
+      animation: pm-slide-out 0.16s ease-in both;
+    }
+
+    &--wide {
+      max-width: 860px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pm-overlay,
+    .pm-overlay.is-closing,
+    .pm-modal,
+    .pm-modal.is-closing {
+      animation-duration: 0.01ms;
+    }
+  }
+
+  .pm-head {
+    flex-shrink: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    background: linear-gradient(90deg, var(--pm-accent-1), var(--pm-accent-2));
+
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 32px;
+
+      i {
+        font-size: 30px;
+      }
+    }
+
+    &__hanzi {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    &__close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: #fff;
+      cursor: pointer;
+
+      i {
+        font-size: 22px;
+      }
+
+      &:hover {
+        opacity: 0.85;
+      }
+    }
+  }
+
+  .pm-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  .pm-foot {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 18px 22px;
+  }
+
+  .pm-btn-close {
+    padding: 9px 17px;
+    border: 1px solid #fff;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--pm-brand), var(--pm-brand-2));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.05);
+    }
+  }
+
+  /* ───────── dải bước: Nghe mẫu → Ghi âm → Nghe đánh giá kết quả ───────── */
+  .pm-steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    color: var(--pm-outline);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    line-height: 14px;
+
+    i {
+      font-size: 10px;
+    }
+  }
+
+  /* ───────── câu ví dụ có pinyin trên từng chữ ───────── */
+  .pm-sentence {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px;
+    background: var(--pm-card);
+  }
+
+  .pm-speaker {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.5px solid var(--pm-red);
+    border-radius: 6px;
+    background: #fef2f2;
+    color: var(--pm-red);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    i {
+      font-size: 18px;
+    }
+
+    img {
+      width: 20px;
+      height: 20px;
+      /* không cho flex bóp ngang -> ảnh không bị méo */
+      flex: 0 0 auto;
+      object-fit: contain;
+    }
+
+    /* Component 313 variant "Component 312": nền đỏ đặc, icon trắng, đổ bóng đỏ */
+    &:hover {
+      background: var(--pm-brand);
+      border-color: var(--pm-brand);
+      color: #fff;
+      box-shadow: 1px 4px 8.7px rgba(185, 14, 10, 0.5);
+    }
+  }
+
+  .pm-ruby {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding-left: 16px;
+  }
+
+  .pm-ruby__char {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5px;
+    padding-left: 16px;
+
+    &:first-child {
+      padding-left: 0;
+    }
+  }
+
+  .pm-ruby__pinyin {
+    color: #9ca3af;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .pm-ruby__hanzi {
+    color: var(--pm-dark);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24.775px;
+  }
+
+  .pm-translation {
+    margin: 4px 0 0;
+    padding-left: 16px;
+    color: #4b5563;
+    font-size: 14px;
+    letter-spacing: 0.14px;
+    line-height: 20px;
+  }
+
+  /* ───────── khu ghi âm ───────── */
+  .pm-record {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 48px 18px;
+  }
+
+  .pm-mic {
+    width: 74px;
+    height: 74px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Component 315 variant "Frame voice" (1423:1835) */
+    border: 1.233px solid var(--pm-red);
+    border-radius: 9999px;
+    background: #fef2f2;
+    color: var(--pm-red);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    i {
+      font-size: 34px;
+    }
+
+    /* variant "Frame voice click" (1423:1834): nền gradient đỏ, mic trắng */
+    &:hover:not(.is-recording) {
+      background: linear-gradient(90deg, var(--pm-brand) 0%, var(--pm-brand-2) 100%);
+      color: #fff;
+    }
+
+    /* đang ghi âm — nền gradient như variant3 (1423:1845) + vòng sóng lan toả */
+    &.is-recording {
+      background: linear-gradient(90deg, var(--pm-brand) 0%, var(--pm-brand-2) 100%);
+      color: #fff;
+      box-shadow: 0 0 0 0 rgba(185, 14, 10, 0.5);
+      animation: pm-pulse 1.4s infinite;
+    }
+  }
+
+  /* Glyph mic: vector 24.42x34.89 + viền nét 3.7 -> hộp asset 28.12x38.59 (Figma 1423:1831) */
+  .pm-mic__glyph {
+    width: 28.12px;
+    height: 38.59px;
+    display: block;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
+
+  /* Icon mic cạnh tiêu đề (1419:1739) — nền tròn trắng, mic gradient đỏ */
+  .pm-head__icon {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
+
+  /* Icon 2 trạng thái: mặc định bản idle, hover đổi sang bản hover (asset riêng từ Figma) */
+  .pm-icon-hover {
+    display: none;
+  }
+
+  .pm-speaker:hover .pm-icon-idle,
+  .pm-mic:hover:not(.is-recording) .pm-icon-idle {
+    display: none;
+  }
+
+  .pm-speaker:hover .pm-icon-hover,
+  .pm-mic:hover:not(.is-recording) .pm-icon-hover {
+    display: block;
+  }
+
+  @keyframes pm-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(185, 14, 10, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 18px rgba(185, 14, 10, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(185, 14, 10, 0);
+    }
+  }
+
+  .pm-hint {
+    margin: 0;
+    color: var(--pm-outline);
+    font-size: 12px;
+    line-height: 29.25px;
+  }
+
+  .pm-playback {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    audio {
+      height: 36px;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .pm-head__title {
+      font-size: 18px;
+
+      i {
+        font-size: 24px;
+      }
+    }
+
+    .pm-record {
+      padding: 32px 16px;
+    }
+  }
+}
