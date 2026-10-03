@@ -1,0 +1,29 @@
+.back {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 7px 13px;
+  border: 1px solid var(--admin-neutral, var(--gray-200, #d1d1d1));
+  border-radius: 999px;
+  background: var(--white, #fff);
+  color: var(--admin-primary, #B00D0E);
+  font: inherit;
+  font-size: var(--admin-font-body, .875rem);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover:not(:disabled) {
+  border-color: currentColor;
+  background: var(--admin-surface, #fff4f4);
+  color: var(--admin-primary-hover, #860707);
+}
+
+.back:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.back:disabled { opacity: .55; }
