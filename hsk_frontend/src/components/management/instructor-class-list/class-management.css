@@ -1,0 +1,324 @@
+/* Tông màu + tương tác dùng chung cho khu Quản lý lớp học */
+:root {
+  --cm-red: #a30f25;
+  /* đỏ sẫm hơn */
+  --cm-red-soft: #f7e9ec;
+  /* nền đỏ rất nhạt cho hover */
+}
+
+/* Hover nhẹ nhàng: chỉ đổi nền xám/đỏ rất nhạt, không sáng chói */
+.cm-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.cm-table tbody tr:hover {
+  background-color: #faf7f8 !important;
+}
+
+.cm-row {
+  transition: background-color 0.12s ease;
+}
+
+.cm-row:hover {
+  background-color: #faf7f8;
+}
+
+/* Nút icon: hover chỉ đậm màu chữ + nền xám nhạt */
+.cm-icon-btn {
+  color: #6b7280;
+  background: #fff;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.cm-icon-btn:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Header accordion: bỏ hiệu ứng sáng của .btn, chỉ đổi nền nhẹ */
+.cm-plain-btn {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.cm-plain-btn:hover,
+.cm-plain-btn:focus {
+  background-color: #faf7f8;
+  box-shadow: none;
+}
+
+/* Link dạng nút: hover chỉ đổi màu chữ */
+.cm-link-btn {
+  transition: color 0.12s ease;
+}
+
+.cm-link-btn:hover {
+  color: var(--cm-red) !important;
+}
+
+/* Khối nhấn đỏ sẫm */
+.cm-banner {
+  background-color: var(--cm-red);
+  color: #fff;
+}
+
+.cm-left-accent {
+  border-left: 3px solid var(--cm-red);
+}
+
+.cm-btn-red {
+  background-color: var(--cm-red);
+  border-color: var(--cm-red);
+  color: #fff;
+}
+
+.cm-btn-red:hover {
+  background-color: #870c1e;
+  /* sẫm thêm khi hover */
+  border-color: #870c1e;
+  color: #fff;
+}
+
+.cm-badge-red {
+  background-color: var(--cm-red);
+  color: #fff;
+}
+
+/* Container màn chấm bài: bỏ padding của col-lg-9 để header khớp sát khung trên cùng, không bị hở */
+.col-lg-9.cm-grading-workspace-col {
+  padding: 0 !important;
+}
+
+/* Thanh phân trang / hành động cố định dưới đáy */
+.cm-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  padding: 10px 16px;
+}
+
+.card > .cm-sticky-footer {
+  border-bottom-left-radius: calc(12px - 1px);
+  border-bottom-right-radius: calc(12px - 1px);
+}
+
+/* Thanh tiêu đề cố định trên cùng khi cuộn nội dung - khớp sát khung trên, không bị hở khi cuộn */
+.cm-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid rgba(57, 44, 125, 0.12);
+  border-top-left-radius: 13px;
+  border-top-right-radius: 13px;
+  padding: 12px 18px;
+  box-shadow: 0 2px 6px rgba(57, 44, 125, 0.04);
+}
+
+/* Badge dấu sao (*) nhỏ gọn — thay thế badge viên thuốc dài */
+.cm-dot-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background-color: var(--cm-red);
+  border-radius: 50%;
+}
+
+/* Tổng quan chấm bài lấy nhịp thẻ thống kê từ màn kết quả của học viên. */
+.cm-grading-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 104px;
+  height: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.cm-grading-stat i {
+  font-size: 24px;
+}
+
+.cm-grading-stat strong {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.cm-grading-stat span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.cm-grading-stat--graded {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.cm-grading-stat--correct {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.cm-grading-stat--score {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.cm-score-tone--low {
+  color: #c62828;
+}
+
+.cm-score-tone--mid {
+  color: #9a3412;
+}
+
+.cm-score-tone--high {
+  color: #15803d;
+}
+
+.cm-score-tone--muted {
+  color: #6b7280;
+}
+
+.cm-score-card.cm-score-tone--low,
+.cm-grading-stat--score.cm-score-tone--low {
+  background: #fde8e8;
+}
+
+.cm-score-card.cm-score-tone--mid,
+.cm-grading-stat--score.cm-score-tone--mid {
+  background: #fff1d6;
+}
+
+.cm-score-card.cm-score-tone--high,
+.cm-grading-stat--score.cm-score-tone--high {
+  background: #e8f7ee;
+}
+
+/* Màu cho vòng tròn Chuyên cần bài tập đồng bộ với hệ thống màu điểm */
+.cm-submission-progress.cm-score-tone--low .ant-progress-circle-path {
+  stroke: #ef4444 !important;
+}
+
+.cm-submission-progress.cm-score-tone--low .ant-progress-text,
+.cm-submission-progress.cm-score-tone--low .cm-progress-percent {
+  color: #dc2626 !important;
+}
+
+.cm-submission-progress.cm-score-tone--mid .ant-progress-circle-path {
+  stroke: #f59e0b !important;
+}
+
+.cm-submission-progress.cm-score-tone--mid .ant-progress-text,
+.cm-submission-progress.cm-score-tone--mid .cm-progress-percent {
+  color: #d97706 !important;
+}
+
+.cm-submission-progress.cm-score-tone--high .ant-progress-circle-path {
+  stroke: #22c55e !important;
+}
+
+.cm-submission-progress.cm-score-tone--high .ant-progress-text,
+.cm-submission-progress.cm-score-tone--high .cm-progress-percent {
+  color: #16a34a !important;
+}
+
+.cm-submission-progress.cm-score-tone--muted .ant-progress-circle-path {
+  stroke: #e5e7eb !important;
+}
+
+.cm-submission-progress.cm-score-tone--muted .ant-progress-text,
+.cm-submission-progress.cm-score-tone--muted .cm-progress-percent {
+  color: #9ca3af !important;
+}
+
+.cm-submission-list-body {
+  container: cm-submission-list / inline-size;
+}
+
+.cm-submission-header,
+.cm-submission-row {
+  display: grid;
+  grid-template-columns: 36px minmax(220px, 1fr) 150px 140px 60px;
+  column-gap: 16px;
+  align-items: center;
+}
+
+.cm-submission-header {
+  white-space: nowrap;
+}
+
+.cm-submission-student {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cm-submission-identity {
+  min-width: 0;
+}
+
+.cm-submission-value {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.cm-submission-mobile-label {
+  display: none;
+}
+
+@container cm-submission-list (max-width: 840px) {
+  .cm-submission-header {
+    display: none;
+  }
+
+  .cm-submission-row {
+    grid-template-columns: 44px minmax(0, 1fr) 42px;
+    grid-template-areas:
+      "index student detail"
+      "progress score score";
+    gap: 12px;
+    align-items: center;
+  }
+
+  .cm-submission-index {
+    grid-area: index;
+  }
+
+  .cm-submission-student {
+    grid-area: student;
+  }
+
+  .cm-submission-progress {
+    grid-area: progress;
+  }
+
+  .cm-submission-score {
+    grid-area: score;
+    justify-self: end;
+  }
+
+  .cm-submission-detail {
+    grid-area: detail;
+  }
+
+  .cm-submission-mobile-label {
+    display: block;
+    grid-column: 1 / -1;
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}
