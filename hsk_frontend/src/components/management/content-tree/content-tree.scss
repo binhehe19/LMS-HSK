@@ -1,0 +1,1002 @@
+// CSS nền quản lý nội dung dạng cây (gói → thư mục → bộ → mục). Gộp NGUYÊN VĂN phần cần dùng của ba file HSK cũ (LMS_Frontend/src/features/learning-path):
+//   1. learning-path/manage/manage-learning-path.scss  (.manage-lp-container dùng chung, .package-type-manager)
+//   2. flashcard/manage/manage-flashcard.scss           (.manage-flashcard-page)
+//   3. vocabulary-set/manage/manage-vocabulary-set.scss (.manage-vocabulary-page)
+// Bỏ: .import-modal (Nhập Excel chưa chuyển), .lp-delete-modal-* / .lp-error-* (xác nhận dùng antd). Phần bổ sung đánh dấu [M5] ở cuối.
+// KHÔNG import từ component — điều phối thêm vào src/styles/page-styles.ts.
+
+// ---------- 1. manage-learning-path.scss ----------
+.manage-lp-container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    min-height: 600px;
+
+    .hover-up {
+        transition: all 0.25s ease;
+        border: 1px solid #edf0f5;
+        background: #fff;
+        overflow: hidden;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(31, 41, 55, 0.12) !important;
+            border-color: rgba(102, 126, 234, 0.35);
+
+            /* Show actions on hover */
+            .opacity-0 {
+                opacity: 1 !important;
+            }
+        }
+
+        .icon-box {
+            transition: transform 0.25s ease;
+        }
+
+        &:hover .icon-box {
+            transform: scale(1.06);
+        }
+    }
+
+    .package-list-wrapper .card,
+    .folder-list-wrapper .card,
+    .study-set-list-wrapper .card {
+        position: relative;
+    }
+
+    .package-list-wrapper .card::before,
+    .folder-list-wrapper .card::before,
+    .study-set-list-wrapper .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .package-list-wrapper .card:hover::before,
+    .folder-list-wrapper .card:hover::before,
+    .study-set-list-wrapper .card:hover::before {
+        opacity: 1;
+    }
+
+    .package-list-wrapper .btn-outline-primary,
+    .package-list-wrapper .btn-outline-danger {
+        border-width: 1.5px;
+        transition: all 0.2s ease;
+    }
+
+    .package-list-wrapper .btn-outline-primary:hover {
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .package-list-wrapper .btn-outline-danger:hover {
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .manage-lp-header {
+        margin-bottom: 24px;
+        border-bottom: 1px solid #f1f1f1;
+        padding-bottom: 16px;
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+    }
+
+    .breadcrumb {
+        background: #f8f9fa;
+        padding: 10px 16px;
+        border-radius: 8px;
+
+        .breadcrumb-item {
+            font-size: 14px;
+            font-weight: 600;
+
+            a {
+                color: #58cc02;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+
+            &.active {
+                color: #6c757d;
+            }
+        }
+    }
+}
+
+// Package Type Manager Styles
+.package-type-manager {
+    .ptm-header {
+        margin-bottom: 32px;
+
+        h5 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            i {
+                font-size: 26px;
+            }
+        }
+
+        p {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .type-tabs-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            padding-top: 8px;
+            padding-left: 0;
+            padding-right: 0;
+
+            &::-webkit-scrollbar {
+                height: 6px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: #f5f5f5;
+                border-radius: 10px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: #d0d0d0;
+                border-radius: 10px;
+
+                &:hover {
+                    background: #a0a0a0;
+                }
+            }
+        }
+
+        .type-tab-btn {
+            cursor: pointer;
+            border-radius: 100px;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: nowrap;
+            border: none !important;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+            i {
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            &:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            &.active {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                transform: translateY(-2px);
+            }
+        }
+    }
+
+    .packages-list-card {
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid #e8e8e8;
+        background: #fff;
+
+        .card-header {
+            border-bottom-color: #e5e7eb;
+            background: linear-gradient(135deg, #fff 0%, #fafbfc 100%);
+            border-bottom: 2px solid #e8e8e8;
+
+            .card-title {
+                font-size: 16px;
+                font-weight: 800;
+                color: #1a1a1a;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                i {
+                    font-size: 20px;
+                }
+            }
+
+            .badge {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                font-weight: 700;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+            }
+        }
+
+        .packages-list {
+            &::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: #f5f5f5;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: #d0d0d0;
+                border-radius: 4px;
+
+                &:hover {
+                    background: #a0a0a0;
+                }
+            }
+
+            .package-item {
+                border-bottom: 1px solid #f0f0f0;
+                transition: all 0.2s ease;
+                cursor: pointer;
+
+                &:last-child {
+                    border-bottom: none;
+                }
+
+                &:hover {
+                    background-color: #f8f9fc;
+                }
+
+                &.active {
+                    background-color: #f5f7fc;
+                    border-left-color: inherit;
+                }
+
+                .package-icon {
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    flex-shrink: 0;
+                }
+
+                &:hover .package-icon {
+                    transform: scale(1.08);
+                    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+                }
+
+                h6 {
+                    font-weight: 800;
+                    font-size: 15px;
+                    color: #1a1a1a;
+                }
+
+                .text-muted {
+                    font-size: 13px;
+                    color: #999;
+                    font-weight: 500;
+                }
+
+                .badge {
+                    font-size: 12px;
+                    font-weight: 700;
+                    padding: 4px 10px;
+                    border-radius: 8px;
+                }
+            }
+        }
+    }
+
+    // Responsive
+    @media (max-width: 991.98px) {
+        .packages-list-card {
+            margin-bottom: 24px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .ptm-header {
+            .type-tabs-container {
+                margin: -8px -0.75rem 0 -0.75rem;
+                padding: 8px 0.75rem 8px 0.75rem;
+            }
+        }
+    }
+
+    .btn-white {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #eee;
+        color: #6c757d;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #fff;
+            color: var(--bs-primary);
+            transform: scale(1.1);
+        }
+
+        &.text-danger-hover:hover {
+            color: var(--bs-danger);
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(254, 226, 226, 0.5);
+        }
+
+        &.text-primary-hover:hover {
+            color: var(--bs-primary);
+            border-color: rgba(99, 102, 241, 0.2);
+            background: rgba(224, 231, 255, 0.5);
+        }
+    }
+}
+
+// ---------- 2. manage-flashcard.scss ----------
+.manage-flashcard-page {
+  --dashboard-radius: 1.25rem;
+  --dashboard-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --dashboard-border: 1px solid rgba(226, 232, 240, 0.8);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --surface-hover: #f8fafc;
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+
+  padding-bottom: 3rem;
+
+  .manage-lp-container {
+    border-radius: var(--dashboard-radius);
+    border: var(--dashboard-border);
+    box-shadow: var(--dashboard-shadow);
+    background: #fff;
+    overflow: hidden;
+    min-height: 600px;
+  }
+
+  .manage-lp-header {
+    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    border-bottom: 1px solid #f1f5f9;
+    padding: 2rem 1.5rem 1.5rem;
+
+    .section-title {
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+
+      i {
+        font-size: 1.75rem;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .flashcard-manage-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+
+    .flashcard-manage-nav-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 0.625rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.15s ease;
+      text-align: left;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.7);
+        color: #334155;
+      }
+
+      &.active {
+        background: #fff;
+        color: #B00D0E;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+
+        i {
+          color: #B00D0E;
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-top: 0.5rem;
+
+    .breadcrumb-item {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+
+      &.active {
+        color: #64748b;
+      }
+
+      a {
+        color: #2563eb;
+        text-decoration: none;
+        transition: color 0.15s ease;
+
+        &:hover {
+          color: #1d4ed8;
+        }
+      }
+
+      & + .breadcrumb-item::before {
+        content: "\e906";
+        font-family: "isax" !important;
+        font-size: 10px;
+        color: #cbd5e1;
+        padding-inline: 0.75rem;
+      }
+    }
+  }
+
+  .flashcard-viewer-container {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .flashcard-viewer {
+    perspective: 1500px;
+    height: min(480px, 62vh);
+    min-height: 400px;
+    cursor: pointer;
+    margin-bottom: 2rem;
+  }
+
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+
+    &.flipped {
+      transform: rotateX(180deg);
+    }
+  }
+
+  .flashcard-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+
+    &.flashcard-front {
+      background: #fff;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+      justify-content: center;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+    }
+
+    &.flashcard-back {
+      background: #eef2ff;
+      color: #2563eb;
+      transform: rotateX(180deg);
+      border: 1px solid #c7d2fe;
+      justify-content: flex-start;
+      align-items: stretch;
+      padding: 1rem 1.25rem 0.75rem;
+    }
+  }
+
+  .flashcard-front-content {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+  }
+
+  .flashcard-term-img {
+    display: block;
+    max-height: min(140px, 20vh);
+    max-width: min(100%, 260px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin: 0;
+  }
+
+  .flashcard-image-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+  }
+
+  .flashcard-term-text {
+    font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+    line-height: 1.2;
+    color: #0f172a;
+    font-family: var(--hsk-font-ui);
+  }
+
+  .flashcard-pinyin-text {
+    font-size: 1.35rem;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .flashcard-manage-audio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    margin: 0.15rem 0;
+    border-radius: 50%;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #2563eb;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .flashcard-manage-audio-btn:hover,
+  .flashcard-manage-audio-btn:focus,
+  .flashcard-manage-audio-btn:active {
+    color: #1d4ed8;
+    background: #dbeafe;
+    text-decoration: none;
+    box-shadow: none;
+    outline: none;
+    transform: scale(1.04);
+  }
+
+  .flashcard-manage-audio-btn i {
+    display: block;
+    line-height: 1;
+    font-size: 1.2rem;
+  }
+
+  .flashcard-back-header {
+    flex-shrink: 0;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .flashcard-back-scroll {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(37, 99, 235, 0.35) transparent;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(37, 99, 235, 0.35);
+      border-radius: 4px;
+    }
+  }
+
+  .flashcard-back-content {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .flashcard-back-footer {
+    flex-shrink: 0;
+    text-align: center;
+    margin-top: 0.5rem;
+    padding-top: 0.25rem;
+  }
+
+  .flashcard-detail-block {
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    flex-shrink: 0;
+
+    &:not(:last-child) {
+      margin-bottom: 0.65rem;
+    }
+  }
+
+  .flashcard-detail-title {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  .flashcard-detail-text {
+    font-size: clamp(1.25rem, 2vw, 1.6rem);
+    line-height: 1.5;
+    color: #1e3a8a;
+    font-weight: 700;
+  }
+
+  .flashcard-detail-example {
+    font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+    line-height: 1.5;
+    color: #334155;
+  }
+
+  .flashcard-nav-btn {
+    transition: all 0.2s ease;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .flashcard-progress {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    border-radius: 1rem;
+    min-width: 220px;
+
+    .progress {
+      background-color: #f1f5f9;
+      overflow: visible;
+    }
+  }
+
+  .transition-all {
+    transition: all 0.2s ease;
+  }
+
+  .hover-up {
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Global utilities for flashcard cards
+.flashcard-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 991.98px) {
+  .manage-flashcard-page {
+    .flashcard-study-info-card {
+      position: static !important;
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+@media (max-width: 767.98px) {
+  .manage-flashcard-page {
+    .manage-lp-header {
+      padding: 1.5rem 1rem 1rem;
+    }
+
+    .flashcard-viewer {
+      height: min(420px, 58vh);
+      min-height: 340px;
+    }
+
+    .flashcard-nav-btn {
+      width: 48px !important;
+      height: 48px !important;
+    }
+
+    .flashcard-progress {
+      min-width: 140px;
+    }
+  }
+}
+
+// ---------- 3. manage-vocabulary-set.scss (chỉ phần KHÁC manage-flashcard: hiển thị danh sách dài nên cho phép nội dung tràn/cuộn hết) ----------
+.manage-vocabulary-page {
+  --dashboard-radius: 1.25rem;
+  --dashboard-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --dashboard-border: 1px solid rgba(226, 232, 240, 0.8);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --surface-hover: #f8fafc;
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+
+  padding-bottom: 3rem;
+
+  .manage-lp-container {
+    border-radius: var(--dashboard-radius);
+    border: var(--dashboard-border);
+    box-shadow: var(--dashboard-shadow);
+    background: #fff;
+    overflow: visible;
+    min-height: auto;
+  }
+
+  .manage-lp-header {
+    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    border-bottom: 1px solid #f1f5f9;
+    padding: 2rem 1.5rem 1.5rem;
+
+    .section-title {
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+
+      i {
+        font-size: 1.75rem;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .flashcard-manage-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+
+    .flashcard-manage-nav-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 0.625rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.15s ease;
+      text-align: left;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.7);
+        color: #334155;
+      }
+
+      &.active {
+        background: #fff;
+        color: #B00D0E;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+
+        i {
+          color: #B00D0E;
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-top: 0.5rem;
+
+    .breadcrumb-item {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+
+      &.active {
+        color: #64748b;
+      }
+
+      a {
+        color: #2563eb;
+        text-decoration: none;
+        transition: color 0.15s ease;
+
+        &:hover {
+          color: #1d4ed8;
+        }
+      }
+
+      & + .breadcrumb-item::before {
+        content: "\e906";
+        font-family: "isax" !important;
+        font-size: 10px;
+        color: #cbd5e1;
+        padding-inline: 0.75rem;
+      }
+    }
+  }
+
+  .flashcard-viewer-container {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .transition-all {
+    transition: all 0.2s ease;
+  }
+
+  .hover-up {
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .manage-vocabulary-page {
+    .flashcard-study-info-card {
+      position: static !important;
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+@media (max-width: 767.98px) {
+  .manage-vocabulary-page {
+    .manage-lp-header {
+      padding: 1.5rem 1rem 1rem;
+    }
+  }
+}
+
+// ---------- [M5] bổ sung cho nền dùng chung (không có ở HSK cũ) ----------
+.content-tree-page {
+  // Breadcrumb bấm được là <button> (bản cũ <a href="#">): giữ màu/định dạng liên kết của bản cũ.
+  .breadcrumb .breadcrumb-item .btn-link {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: #1d4ed8;
+    }
+  }
+
+  .pointer {
+    cursor: pointer;
+  }
+
+  // Nút biểu tượng ở dòng gói: bản cũ đổi màu bằng JS onMouseEnter; ở đây bằng CSS.
+  .content-icon-btn {
+    background: #f5f5f5;
+    color: #999;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: #e9ecef;
+      color: #333;
+      transform: scale(1.1);
+    }
+
+    &.content-icon-btn-danger:hover:not(:disabled) {
+      background: #dc354520;
+      color: #dc3545;
+    }
+  }
+
+  .content-package-actions {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  .package-item:hover .content-package-actions {
+    opacity: 1;
+  }
+
+  .content-type-card:hover {
+    filter: brightness(0.97);
+  }
+
+  .content-row-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .content-add-item-card {
+    border: 2px dashed #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: #2563eb;
+      background: #f8fafc;
+    }
+  }
+
+  .flashcard-term-cell {
+    font-family: var(--hsk-font-ui);
+  }
+}
