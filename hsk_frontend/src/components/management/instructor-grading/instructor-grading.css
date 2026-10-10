@@ -1,0 +1,6 @@
+/* Bổ sung cho class-management.css (đã chuyển nguyên văn ở instructor-class-list/) — chỉ cho màn chấm bài /instructor/list-class/grading.
+   HSK cũ đặt class "cm-grading-workspace-col" thẳng lên <div class="col-lg-9"> để bỏ padding cột (header dính sát khung); ManagementPageFrame
+   dùng chung không nhận class cho cột nên áp qua class của .content do khung truyền (`contentClassName`). Nạp SAU class-management.css. */
+.content.cm-grading-workspace-page > .container > .row > .col-lg-9 {
+  padding: 0 !important;
+}
