@@ -1,0 +1,2471 @@
+/**
+ * Trang "Khoá học" — bám theo Figma node 3362:9518 (Tất cả khoá học)
+ * và 3484:13127 (Khoá học của tôi).
+ *
+ * Toàn bộ style nằm dưới `.hb-course` để không bị Bootstrap toàn cục ghi đè,
+ * và dùng số đo px tuyệt đối đúng như bản thiết kế.
+ */
+
+// ── HB Colors (Figma variables) ─────────────────────────────────────────────
+$hb-brand: #b00d0e;
+$hb-brand-hover: #8a0a0b;
+$hb-brand-active: #6b0708;
+$hb-brand-yellow: #fbf4a2;
+$hb-title-red: #a91b16;
+$hb-text-primary: #1e1e1e;
+$hb-text-dark: #333b47;
+$hb-text-secondary: #64748b;
+$hb-inverse: #ffffff;
+$hb-border: #e2e8f0;
+$hb-bg: #f8f9fa;
+$hb-surface: #ffffff;
+$hb-disabled: #94a3b8;
+$hb-disabled-2: #5e656e;
+$hb-danger: #ef4444;
+$hb-info: #0b78e3;
+$hb-progress-complete: #22c55e;
+$hb-progress-track: #e2e8f0;
+
+$hb-shadow-5: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$hb-drop-5: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+
+// Chấm trắng ở mốc "Hiện tại": phình ra lấp đầy vòng ngoài rồi thu về tâm.
+// Vòng ngoài r=6.7 stroke=1.4 → mép trong r=6.0; chấm r=1.7 nên scale tối đa 6.0/1.7 ≈ 3.53.
+@keyframes hb-dot-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(3.53);
+    }
+}
+
+// Pill "20%" chuyển qua lại giữa 2 variant trong Figma (node 3362:10588):
+//   Frame 1000005198 — đỏ:  linear-gradient(to right, #B00D0E, #E11D1D)
+//   Frame 1000005199 — vàng: linear-gradient(to left,  #FFD859, #F59E0B)
+// Gradient không nội suy được nên lớp vàng nằm đè và chỉ chạy opacity để crossfade.
+@keyframes hb-offer-blink {
+
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hb-course__hero-offer-pill::before,
+    .hb-course__hero-dot-core {
+        animation: none !important;
+    }
+
+    .hb-course__hero-offer-pill::before {
+        opacity: 0;
+    }
+}
+
+.hb-course {
+    background: $hb-bg;
+    min-height: 100vh;
+    font-family: var(--hsk-font-ui);
+    color: $hb-text-primary;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    &__container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 40px 48px;
+    }
+
+    // ── Hero / Next Session Card (3362:9524) ────────────────────────────────
+    &__hero {
+        // Frame "Main" cao 286, card 250 đặt ở y=18 → chừa 18 trên/dưới.
+        // Khối "KHOA HOC TAT CA" ngay sau đó lại có padding-top 24 → tổng dưới 42.
+        margin: 18px 0 42px;
+        height: 250px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 24px;
+        padding: 24.8px;
+        border: 0.8px solid $hb-border;
+        border-radius: 36px;
+        background: linear-gradient(to right, $hb-brand-active, $hb-brand);
+        filter: $hb-drop-5;
+    }
+
+    &__hero-promo {
+        grid-column: 1 / span 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 0.5px 16.5px;
+        border: 0.5px solid #fff;
+        border-radius: 24px;
+        background: linear-gradient(to right, rgba(176, 13, 14, 0.47), rgba(225, 29, 29, 0.47));
+        backdrop-filter: blur(6px);
+        position: relative;
+    }
+
+    // Figma lồng 2 tầng: tầng ngoài có gap 17 nhưng chỉ 1 con nên gap vô hiệu;
+    // tầng trong chứa mascot + cột chữ với gap 0.
+    // Kiểm chứng: 643.2 − 16.5×2 = 610.2 → trừ padding 8×2 = 594.2 = mascot 244 + chữ 350.2.
+    &__hero-promo-inner {
+        flex: 1 0 0;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 12px 8px;
+        position: relative;
+    }
+
+    // Tầng "Frame 1000005069": mascot + cột chữ, KHÔNG có gap giữa hai khối.
+    // Cũng là gốc toạ độ của 3 vệt tròn trang trí.
+    &__hero-promo-stage {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    // 3 vệt tròn mờ trang trí trong banner (Ellipse 1491/1492/1493).
+    // Toạ độ lấy nguyên theo Figma, gốc là khung nội dung của banner.
+    &__hero-blob {
+        position: absolute;
+        pointer-events: none;
+        user-select: none;
+
+        &--lg {
+            left: -66.3px;
+            top: 127px;
+            width: 128px;
+            height: 128px;
+        }
+
+        &--md {
+            left: 161.7px;
+            top: 64px;
+            width: 44px;
+            height: 44px;
+        }
+
+        &--sm {
+            left: 161.7px;
+            top: 26px;
+            width: 13px;
+            height: 13px;
+        }
+    }
+
+    &__hero-mascot {
+        width: 244px;
+        height: 200px;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+
+        img {
+            position: absolute;
+            left: 9.52%;
+            top: 10%;
+            width: 76.41%;
+            height: 87%;
+            max-width: none;
+            transform: scaleX(-1);
+        }
+    }
+
+    &__hero-promo-copy {
+        flex: 1 0 0;
+        min-width: 0;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 38px 0;
+    }
+
+    &__hero-headline {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    &__hero-offer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__hero-offer-label {
+        font-size: 16px;
+        font-weight: 900;
+        line-height: 31px;
+        letter-spacing: 0.16px;
+        color: #fff;
+    }
+
+    &__hero-offer-pill {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 10px;
+        border-radius: 38px;
+        background: linear-gradient(to right, $hb-brand, #e11d1d);
+        font-size: 27px;
+        font-weight: 900;
+        line-height: 20px;
+        letter-spacing: 0.27px;
+        color: #fff;
+
+        // Lớp vàng đè lên, fade ra/vào để đổi màu (node 3362:10588)
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(to left, #ffd859, #f59e0b);
+            animation: hb-offer-blink 1.6s ease-in-out infinite;
+        }
+
+        // Chữ "20%" phải nằm trên lớp màu
+        >span {
+            position: relative;
+            z-index: 1;
+        }
+    }
+
+    &__hero-offer-note {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        color: #fff;
+    }
+
+    // Biến thể phải: "Xin chào {tên}" + trục trình độ
+    // Hai panel đảo cột giữa 2 chế độ (node 3362:9524 vs 3484:13132):
+    //   Tất cả khoá học → mascot cột 1-2, học viên cột 3-4
+    //   Khoá học của tôi → học viên cột 1-2, mascot cột 3-4
+    // Dùng `& &__…` để ra `.hb-course .hb-course__…` — specificity cao hơn rule gốc
+    // nên không phụ thuộc vào thứ tự khai báo trong file.
+    & &__hero-promo--right {
+        grid-column: 3 / span 2;
+    }
+
+    & &__hero-user--left {
+        grid-column: 1 / span 2;
+    }
+
+    &__hero-user {
+        grid-column: 3 / span 2;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+        padding: 0 16px 0 88px;
+        border-radius: 16px;
+        backdrop-filter: blur(6px);
+    }
+
+    &__hero-avatar {
+        width: 90px;
+        height: 90px;
+        max-width: 90px;
+        max-height: 90px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #fff;
+    }
+
+    &__hero-user-body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        position: relative;
+
+        // Đường kẻ trắng nối 3 mốc trình độ (node 3362:9528).
+        // Neo theo container này đúng như Figma — trước đây neo nhầm vào hàng mốc
+        // nên bị lệch và đè lên chữ.
+        &::after {
+            content: '';
+            position: absolute;
+            left: 16.2px;
+            top: 119.2px;
+            width: 337px;
+            height: 1px;
+            background: #fff;
+            pointer-events: none;
+        }
+    }
+
+    &__hero-greeting {
+        margin: 0;
+        padding: 6px 0;
+        width: 505.2px;
+        max-width: 100%;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+        color: #fff;
+    }
+
+    &__hero-levels {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        width: 505.2px;
+        max-width: 100%;
+        position: relative;
+    }
+
+    &__hero-levels-label {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        color: #fff;
+    }
+
+    &__hero-track {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    &__hero-milestone {
+        flex: 1 0 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 8px;
+        border-radius: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    &__hero-milestone-icon {
+        width: 16px;
+        height: 22px;
+        display: block;
+    }
+
+    &__hero-milestone-dot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        width: 16px;
+
+    }
+
+    // Chỉ chấm trong chuyển động, vòng ngoài giữ nguyên (node 3362:9532).
+    // transform-box: fill-box để scale quanh tâm chính nó thay vì gốc toạ độ SVG.
+    &__hero-dot-core {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: hb-dot-pulse 1.6s ease-in-out infinite;
+    }
+
+    &__hero-milestone-name {
+        margin-top: 2px;
+        width: 48px;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 14px;
+        letter-spacing: 0.4px;
+        color: #fff;
+    }
+
+    &__hero-milestone-value {
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+        color: #fff;
+    }
+
+    // Biến thể "Khoá học của tôi" (node 3484:13176) — dùng chung khung panel mascot,
+    // chỉ khác phần nội dung bên phải.
+    &__hero-current-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    &__hero-current-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 12px;
+        border: 1px solid #fff;
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.32);
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    &__hero-current-note {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        color: #fff;
+        white-space: nowrap;
+    }
+
+    // ── Bố cục 2 cột: sidebar 280 + nội dung 1056, cách nhau 24 ─────────────
+    &__layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    // ── Sidebar bộ lọc (3362:9968) ──────────────────────────────────────────
+    &__sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 25px 25px 49px;
+        background: $hb-surface;
+        border: 1px solid #fef2f2;
+        border-radius: 12px;
+        position: sticky;
+        top: 24px;
+    }
+
+    &__sidebar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 17px;
+        border-bottom: 1px solid #e2e2e2;
+    }
+
+    &__sidebar-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 32px;
+        color: $hb-brand;
+    }
+
+    &__sidebar-clear {
+        padding: 0;
+        border: 0;
+        background: none;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        color: $hb-brand;
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding-top: 17px;
+        border-top: 1px solid #e2e2e2;
+
+        // Nhóm đầu nằm ngay dưới đường kẻ của tiêu đề nên bỏ viền trên
+        &--first {
+            padding-top: 0;
+            border-top: 0;
+        }
+    }
+
+    &__filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+    }
+
+    &__filter-toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+        color: #1a1c1c;
+    }
+
+    &__filter-chevron {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+
+        .hb-course__filter-toggle[aria-expanded='false'] & {
+            transform: rotate(180deg);
+        }
+    }
+
+    &__filter-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__check {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        cursor: pointer;
+
+        // Ô tick thật bị ẩn, giữ lại để vẫn dùng được bàn phím và trợ năng
+        input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    }
+
+    &__check-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        color: $hb-text-dark;
+    }
+
+    &__check-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        border: 1px solid $hb-disabled;
+        border-radius: 4px;
+        background: $hb-surface;
+        overflow: hidden;
+    }
+
+    input:checked+&__check-box {
+        border-color: transparent;
+        background: $hb-brand;
+    }
+
+    &__check-count {
+        padding: 2px 8px;
+        border: 1px solid $hb-border;
+        border-radius: 9999px;
+        background: $hb-bg;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        color: $hb-text-dark;
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 11px;
+    }
+
+    &__chip {
+        padding: 4px 12px;
+        border: 1px solid $hb-border;
+        border-radius: 9999px;
+        background: $hb-bg;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 16px;
+        color: $hb-text-dark;
+        cursor: pointer;
+
+        &:hover {
+            border-color: $hb-brand;
+            color: $hb-brand;
+        }
+
+        &--active {
+            padding: 5px 13px;
+            border-color: $hb-brand;
+            background: #fef2f2;
+            color: $hb-brand;
+        }
+    }
+
+    &__price {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px 8px 0;
+    }
+
+    &__price-rail {
+        position: relative;
+        height: 4px;
+        border-radius: 51px;
+        background: #e2e2e2;
+    }
+
+    &__price-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 4px;
+        border-radius: 51px;
+        background: $hb-danger;
+        pointer-events: none;
+    }
+
+    &__price-slider {
+        position: absolute;
+        inset: -3px 0;
+        width: 100%;
+        margin: 0;
+        appearance: none;
+        background: none;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border: 0;
+            border-radius: 8px;
+            background: $hb-brand;
+            cursor: pointer;
+        }
+
+        &::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border: 0;
+            border-radius: 8px;
+            background: $hb-brand;
+            cursor: pointer;
+        }
+    }
+
+    &__price-legend {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        color: $hb-text-dark;
+    }
+
+    // ── Toolbar (3362:10092) ────────────────────────────────────────────────
+    &__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 104px;
+        padding: 13px;
+        margin-bottom: 12px;
+        background: $hb-surface;
+        border: 1px solid $hb-border;
+        border-radius: 24px;
+        box-shadow: $hb-shadow-5;
+    }
+
+    &__mode {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    // Node 3484:13324 — hai nút rời, không phải segmented pill.
+    &__mode-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    // 3 trạng thái theo Figma:
+    //   thường  (3474:12073) — nền trắng, chữ #1E1E1E
+    //   hover   (3474:12072) — gradient #F27A4B → #B00D0E (to left), chữ trắng
+    //   đang chọn (3480:12156) — nền đặc #B00D0E, chữ trắng
+    &__mode-btn {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border: 1px solid $hb-border;
+        border-radius: 12px;
+        background: $hb-surface;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+        color: $hb-text-primary;
+        white-space: nowrap;
+        cursor: pointer;
+        position: relative;
+        // Không dùng `overflow: hidden`: ngôi sao bay ra sát mép nút, dễ bị cắt.
+        // Lớp phủ đã tự bo góc bằng `border-radius: inherit` nên không cần cắt.
+        transition: color 0.45s ease;
+
+        // CSS không nội suy được từ màu sang linear-gradient, nên nền sẽ nhảy phựt
+        // nếu đổi thẳng `background`. Đặt gradient ở lớp phủ rồi chạy opacity để
+        // nó mờ vào lúc hover và mờ ra khi rời chuột.
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(to left, #f27a4b, $hb-brand);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+        }
+    }
+
+    &__mode-btn--active {
+        background: $hb-brand;
+        color: $hb-inverse;
+    }
+
+    & &__mode-btn:not(&__mode-btn--active):hover {
+        color: $hb-inverse;
+
+        &::before {
+            opacity: 1;
+        }
+    }
+
+    &__mode-btn-label {
+        position: relative;
+        // Nằm trên lớp gradient ở `::before`
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    // Ngôi sao HB. Figma đặt nó ở 2 vị trí khác nhau:
+    //   thường  — trái chữ, 18px, `left: -13px`, giữa theo chiều dọc
+    //   hover/đang chọn — phải chữ, 9px, xoay 180°, nhô lên 14.5px
+    // File 18px được export với opacity 0.01 (gần như vô hình), nên ở trạng thái
+    // thường ta để opacity 0 rồi cho sao hiện dần trong lúc bay sang phải.
+    // Kích thước gốc 9px, scale(2) = 18px.
+    &__mode-star {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        left: -13px;
+        top: 50%;
+        opacity: 0;
+        transform: translateY(-50%) scale(2);
+        pointer-events: none;
+        transition: left 0.75s cubic-bezier(0.34, 0.9, 0.36, 1), top 0.75s cubic-bezier(0.34, 0.9, 0.36, 1),
+            transform 0.75s cubic-bezier(0.34, 0.9, 0.36, 1), opacity 0.45s ease;
+    }
+
+    & &__mode-btn--active &__mode-star,
+    & &__mode-btn:hover &__mode-star {
+        left: 100%;
+        top: calc(50% - 14.5px);
+        opacity: 1;
+        transform: translateY(-50%) rotate(180deg) scale(1);
+    }
+
+    &__mode-hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        color: $hb-text-secondary;
+    }
+
+    &__sort {
+        width: 168.83px;
+        height: 36px;
+        padding: 8px 16px;
+        border: 1px solid $hb-border;
+        border-radius: 8px;
+        background: #fff;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        color: $hb-text-dark;
+        cursor: pointer;
+    }
+
+    // ── Section theo danh mục ───────────────────────────────────────────────
+    &__section {
+        margin-bottom: 32px;
+        padding: 25px 0;
+        background: $hb-surface;
+        border: 1px solid $hb-border;
+        border-radius: 24px;
+        box-shadow: $hb-shadow-5;
+    }
+
+    &__section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px 13px;
+        margin: 0 17px;
+        border-bottom: 1px solid $hb-border;
+    }
+
+    &__section-head-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    &__section-badge {
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        white-space: nowrap;
+
+        &--hsk {
+            background: $hb-brand;
+            color: #fff;
+        }
+
+        &--gt {
+            background: $hb-brand-active;
+            color: #fff;
+        }
+
+        &--cx {
+            background: $hb-brand-yellow;
+            color: $hb-brand-active;
+        }
+
+        &--gs {
+            background: linear-gradient(to left, #ffb69c, $hb-danger);
+            color: #fff;
+        }
+
+        &--video {
+            background: linear-gradient(to left, #81d5ff, $hb-info);
+            color: #fff;
+        }
+    }
+
+    &__section-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+
+        &--hsk,
+        &--gt {
+            color: $hb-title-red;
+        }
+
+        &--cx,
+        &--gs {
+            color: $hb-text-dark;
+        }
+
+        &--video {
+            color: $hb-info;
+        }
+    }
+
+    // Icon đổi màu khi hover: 2 bản xếp chồng, đổi opacity (node 2890:9538 / 3429:17858)
+    &__swap-icon {
+        position: relative;
+        display: block;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+
+        img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.32s ease;
+        }
+    }
+
+    &__swap-icon-hover {
+        opacity: 0;
+    }
+
+    // "Tìm hiểu" (3429:17853 → 3429:17858)
+    &__section-more {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border: 0;
+        border-radius: 28px;
+        // Dùng đỏ trong suốt thay vì `transparent` (= rgba(0,0,0,0)): fade sẽ đi
+        // qua các sắc đỏ nhạt dần thay vì ngả xám đục ở khoảng giữa.
+        background: rgba(176, 13, 14, 0);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 24px;
+        color: $hb-brand;
+        cursor: pointer;
+        filter: $hb-drop-5;
+        transition: background 0.32s ease, color 0.32s ease;
+
+        &:hover {
+            background: rgba(176, 13, 14, 1);
+            color: $hb-inverse;
+        }
+    }
+
+    &__section-more:hover &__swap-icon-base,
+    &__card-link:hover &__swap-icon-base {
+        opacity: 0;
+    }
+
+    &__section-more:hover &__swap-icon-hover,
+    &__card-link:hover &__swap-icon-hover {
+        opacity: 1;
+    }
+
+    // Course Grid ở y=89 trong section, header kết thúc ở 73 → cách 16 (không phải 25).
+    // Ngang: grid ở x=17, card đầu ở x=16 trong grid → lề trái 33.
+    //
+    // Cột dùng `1fr` thay vì cố định 314px: khi section rộng đúng 1056 thì
+    // (1056 − 66 padding − 48 gap) / 3 = 314 y hệt Figma, còn khi hẹp hơn
+    // (zoom trình duyệt, màn nhỏ) card co lại thay vì tràn ra khỏi nền.
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+        padding: 16px 33px 0;
+    }
+
+    // ── Card khoá học (314×385) ─────────────────────────────────────────────
+    &__card {
+        // Chặn trên 314px để đúng Figma, nhưng vẫn co được khi cột hẹp lại.
+        width: 100%;
+        max-width: 314px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        // Không đặt padding: ảnh bìa phải áp sát viền ở cạnh trên và hai bên.
+        // (Figma có `p-px` nhưng 1px đó cộng với 1px border tạo ra vành trắng lộ rõ.)
+        padding: 0;
+        position: relative;
+        // Bắt buộc: cắt nền trắng của phần nội dung theo bo góc 24px của card,
+        // nếu không góc dưới sẽ vuông và thò ra ngoài viền.
+        overflow: hidden;
+        text-align: left;
+        background: $hb-surface;
+        border: 1px solid $hb-border;
+        border-radius: 24px;
+        box-shadow: $hb-shadow-5;
+        cursor: pointer;
+        // Card đứng yên khi hover, chỉ đổi viền/bóng.
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    // Đã sở hữu — hover (node 3281:9426). Lấy nguyên giá trị Figma:
+    //   border: 1px solid #B00D0E  (đều 4 cạnh, không phải gradient)
+    //   effect "card drop": 8.25px 11px 73.333px 0 #FFA8A8
+    // Vẻ "đậm dưới, nhạt trên" là do quầng hồng lệch xuống-phải với blur 73px,
+    // không phải do viền chuyển sắc.
+    &__card:not(&__card--locked):hover {
+        border-color: $hb-brand;
+        box-shadow: 8.25px 11px 73.333px 0 #ffa8a8;
+    }
+
+    // Chưa sở hữu — hover (node 3303:8337): viền giữ nguyên xám, dùng effect "LMS drop 600".
+    &__card--locked:hover {
+        box-shadow: 0 8px 18px -6px rgba(19, 25, 39, 0.12), 0 12px 42px -4px rgba(19, 25, 39, 0.12);
+    }
+
+    &__card-media {
+        height: 191.5px;
+        overflow: hidden;
+        border-radius: 23px 23px 0 0;
+        position: relative;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.25s ease;
+        }
+    }
+
+    // Ảnh phóng to: Figma đổi 354.668px → 380px, tức hệ số 380/354.668 ≈ 1.0714.
+    // Khung ảnh overflow hidden nên phần dôi ra bị cắt, không tràn khỏi card.
+    &__card:hover &__card-media img {
+        transform: scale(1.0714);
+    }
+
+    // Khoá chưa sở hữu: Figma làm mờ bằng lớp phủ trắng 60%, không giảm opacity ảnh.
+    &__card-veil {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.6);
+        pointer-events: none;
+        transition: background 0.25s ease;
+    }
+
+    // Hover thẻ chưa mở khoá (node 3303:8337): lớp phủ GIỮ NGUYÊN 0.6, chỉ ảnh phóng to.
+    // Tiêu đề đổi #5E656E → #B00D0E, nút chuyển gradient đỏ và ổ khoá bật mở.
+    // Dùng `& &__…` để specificity cao hơn rule gốc nằm phía dưới trong file.
+    & &__card--locked:hover &__card-title {
+        color: $hb-brand;
+    }
+
+    & &__card--locked:hover &__unlock {
+        background: linear-gradient(to right, $hb-brand, #e11d1d);
+    }
+
+    & &__card--locked:hover &__lock-closed {
+        opacity: 0;
+    }
+
+    & &__card--locked:hover &__lock-open {
+        opacity: 1;
+    }
+
+    &__card-body {
+        height: 191.5px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 18px 24px;
+        background: $hb-surface;
+        // Bo góc dưới khớp ảnh bìa (23px = 24px của card trừ 1px padding).
+        // Thiếu dòng này thì nền trắng vuông góc, để hở khoảng lớn ở 2 góc dưới
+        // và vành viền gradient sẽ bị phình ra ở đó.
+        border-radius: 0 0 23px 23px;
+    }
+
+    &__card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+        padding-bottom: 10px;
+    }
+
+    &__card-title {
+        display: flex;
+        gap: 8px;
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 32px;
+        color: $hb-title-red;
+        white-space: nowrap;
+    }
+
+    &__card--locked &__card-title {
+        color: $hb-disabled-2;
+        transition: color 0.2s ease;
+    }
+
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px;
+        color: #fff;
+        white-space: nowrap;
+        filter: $hb-drop-5;
+
+        &--owned {
+            background: linear-gradient(to left, #5dff68, #16a34a);
+        }
+
+        &--locked {
+            background: $hb-disabled;
+        }
+
+        svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+    }
+
+    &__progress {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    &__progress-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 14px;
+        letter-spacing: 0.56px;
+        color: $hb-brand;
+
+        // Nhãn dài ("Bạn chưa sở hữu khoá học này!") cắt bớt thay vì đẩy % ra ngoài
+        >span:first-child {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        >span:last-child {
+            flex-shrink: 0;
+        }
+    }
+
+    &__progress-row--done {
+        color: $hb-progress-complete;
+    }
+
+    &__progress-row--idle {
+        color: $hb-disabled;
+    }
+
+    &__progress-track {
+        height: 10px;
+        border-radius: 15px;
+        background: $hb-progress-track;
+        overflow: hidden;
+    }
+
+    &__progress-fill {
+        height: 10px;
+        border-radius: 15px;
+        background: $hb-brand;
+
+        &--done {
+            background: $hb-progress-complete;
+        }
+    }
+
+    &__card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+        padding-top: 7px;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    // "Chi tiết" (2890:9537 → 2890:9538): hover nền đỏ đặc, chữ + icon trắng.
+    &__card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px 4px 12px;
+        border: 0;
+        border-radius: 28px;
+        // Xem chú thích ở `__section-more`: tránh `transparent` để fade không ngả xám.
+        background: rgba(176, 13, 14, 0);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 24px;
+        color: $hb-brand;
+        cursor: pointer;
+        filter: $hb-drop-5;
+        transition: background 0.32s ease, color 0.32s ease;
+
+        &:hover {
+            background: rgba(176, 13, 14, 1);
+            color: $hb-inverse;
+        }
+    }
+
+    &__card-count {
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        line-height: 20px;
+
+        b {
+            font-size: 14px;
+            font-weight: 700;
+            color: $hb-text-dark;
+        }
+
+        span {
+            font-size: 12px;
+            color: $hb-disabled;
+        }
+    }
+
+    &__unlock {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        margin-top: auto;
+        padding: 6px 12px;
+        border: 0;
+        border-radius: 9999px;
+        background: $hb-disabled;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+        color: #fff;
+        cursor: pointer;
+        // Màu nút do hover của cả thẻ điều khiển (xem rule `__card--locked:hover`),
+        // không đặt `:hover` riêng để tránh 2 rule cùng specificity ghi đè nhau.
+        transition: background 0.32s ease;
+    }
+
+    // Ổ khoá: 2 asset xếp chồng, đổi qua lại khi hover (variant "Not Available" → "Mở khoá").
+    &__lock {
+        position: relative;
+        display: block;
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+
+        img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+    }
+
+    &__lock-open {
+        opacity: 0;
+        // Góc nghiêng lấy đúng từ Figma
+        transform: rotate(-17.03deg);
+    }
+
+
+    &__empty {
+        padding: 64px 24px;
+        text-align: center;
+        color: $hb-text-secondary;
+    }
+
+    &__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 0;
+    }
+}
+
+// ── Modal chi tiết khoá học (3570:15240 / 3570:16028) ────────────────────────
+// Modal CỐ Ý nằm dưới header (không nâng z-index) để người dùng vẫn bấm được menu
+// và chuyển trang khi popup đang mở. Header có z-index cao hơn nên nó vừa hiện
+// trên backdrop vừa nhận được click.
+//
+// Đổi lại phải chừa khoảng trống phía trên đúng bằng chiều cao header, nếu không
+// phần đầu card (badge, tên khoá, ảnh bìa) sẽ nằm khuất sau header.
+.hb-course-modal-root {
+    --hb-header-height: 104px;
+
+    // Chỉ chừa ~1/3 chiều cao header: card nằm sát header nhất có thể mà badge và
+    // tên khoá vẫn đọc được, nhờ đó người dùng phải cuộn ít hơn hẳn.
+    // Đây là con số duy nhất cần chỉnh nếu muốn xa/gần header hơn.
+    padding-top: calc(var(--hb-header-height) * 0.36);
+}
+
+.hb-course-modal {
+    font-family: var(--hsk-font-ui);
+    &__dismiss { display: none; }
+    // Neo từ trên xuống (không dùng `centered`) + lề 24px, để `.modal` cuộn được
+    // TOÀN BỘ card — xem trọn cả phần đầu lẫn phần cuối, không chỉ vùng lộ trình.
+    // Figma: popup rộng 975px (node 3570:15240 / 3570:15236)
+    max-width: 975px;
+    // Khoảng trên đã do `padding-top` của `.hb-course-modal-root` đảm nhiệm
+    margin: 0 auto 24px;
+
+    .modal-content {
+        border: 0;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    // Node 3568:14472 — padding 24/40/14, gap 10 (không phải 32/40, gap 32)
+    &__head {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 24px 40px 14px;
+        background: linear-gradient(to right, $hb-brand-active, $hb-brand);
+        color: #fff;
+    }
+
+    &__head-copy {
+        flex: 1 0 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 2px 24px 0 0;
+    }
+
+    &__tags {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    &__tag {
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 20px;
+        background: $hb-brand;
+        color: #fff;
+    }
+
+    &__title {
+        margin: 0;
+        padding-top: 4px;
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 32px;
+        color: #fff;
+    }
+
+    &__desc {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        color: #fff;
+        opacity: 0.9;
+    }
+
+    &__levels {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 8px 0;
+        margin-bottom: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+    }
+
+    &__level {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    &__level-pill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 8px;
+        border: 0.5px solid #fff;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.24);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+    }
+
+    // "Training Metrics Cards" — 3 ô chia đều trong khối rộng 430px
+    &__meta {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 430px;
+        max-width: 100%;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+    }
+
+    &__meta-item {
+        flex: 1 0 0;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        white-space: nowrap;
+
+        // Mỗi icon có tỉ lệ gốc riêng (27×27, 24×27, 26.67×26.67) — không ép về
+        // cùng một cỡ, và không cho co lại khi ô hẹp.
+        img {
+            flex-shrink: 0;
+        }
+    }
+
+    // "Main CTA" trong Figma — số lẻ là do component được scale
+    &__thumb {
+        width: 364.8px;
+        height: 228px;
+        flex-shrink: 0;
+        border-radius: 15.666px;
+        object-fit: cover;
+        // Viền trắng CHỈ ở cạnh trên và cạnh phải; hai cạnh còn lại để trống
+        // và thay bằng bóng đổ về phía dưới-trái, đúng như thiết kế.
+        border: 0;
+        border-top: 1.14px solid #fff;
+        border-right: 1.14px solid #fff;
+        box-shadow: -10.26px 10.26px 22.23px 0 rgba(0, 0, 0, 0.25);
+    }
+
+    &__body {
+        padding: 24px 40px 32px;
+        background: #fff;
+    }
+
+    &__tabs {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid $hb-border;
+    }
+
+    &__tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 0 12px;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        background: none;
+        font-size: 16px;
+        font-weight: 700;
+        color: $hb-disabled;
+        cursor: pointer;
+
+        &--active {
+            border-bottom-color: $hb-brand;
+            color: $hb-brand;
+        }
+    }
+
+    &__progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+
+    &__progress-info {
+        flex: 1 0 0;
+        max-width: 300px;
+    }
+
+    &__progress-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: $hb-brand;
+    }
+
+    &__timetable-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        border: 0;
+        border-radius: 9999px;
+        background: $hb-brand;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+
+        &:hover {
+            background: $hb-brand-hover;
+        }
+    }
+
+    // Node I3570:16028;3570:14588 — pill bo tròn hẳn, không phải bo 12px
+    &__unlock-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        margin-bottom: 14px;
+        padding: 8px 24px;
+        border: 0;
+        border-radius: 9999px;
+        background: linear-gradient(to right, $hb-brand, #e11d1d);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+        color: #fff;
+        cursor: pointer;
+        filter: $hb-drop-5;
+    }
+
+    &__sessions {
+        display: flex;
+        gap: 24px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        // Kéo bằng chuột nên ẩn thanh cuộn ngang cho gọn
+        cursor: grab;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    // Trong lúc kéo: đổi con trỏ và chặn bôi đen chữ
+    &__sessions--dragging {
+        cursor: grabbing;
+        user-select: none;
+    }
+
+    // Card buổi học (node 3533:11599 / hover 3553:12442 / khoá 3570:14965)
+    // Khung card cố định: rộng 314, cao 302 (đầu thẻ 48 + thân 252 + viền 2).
+    // Nội dung dài bao nhiêu cũng không làm card giãn ra — chỉ cuộn bên trong.
+    &__session {
+        width: 314px;
+        height: 302px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 1px;
+        background: $hb-surface;
+        border: 1px solid $hb-border;
+        border-radius: 12px;
+        overflow: hidden;
+        // token "LMS drop 100"
+        box-shadow: 0 2px 4px -2px rgba(19, 25, 39, 0.12), 0 4px 4px -2px rgba(19, 25, 39, 0.08);
+        transition: border-color 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    &__session-head {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 16px;
+        background: linear-gradient(to right, $hb-brand-active, $hb-brand);
+        // Không co lại khi tiêu đề bài học dài
+        flex-shrink: 0;
+    }
+
+    &__session-no {
+        flex-shrink: 0;
+        padding: 4px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        background: $hb-surface;
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 24px;
+        color: $hb-brand;
+        white-space: nowrap;
+        transition: background 0.22s ease, color 0.22s ease;
+    }
+
+    &__session-topic {
+        flex: 1 0 0;
+        min-width: 0;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 20px;
+        color: #ffffff;
+        transition: color 0.22s ease;
+    }
+
+    &__session-body {
+        // Chiếm hết chiều cao còn lại của card; nội dung tràn thì cuộn trong đây.
+        // `min-height: 0` là bắt buộc, thiếu nó flex item sẽ không cho phép cuộn.
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 14px 16px;
+        padding-right: 8px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0.14px;
+        color: $hb-text-dark;
+        white-space: pre-wrap;
+
+        // Thanh cuộn mảnh 8px, thumb bo tròn như thiết kế
+        scrollbar-width: thin;
+        scrollbar-color: $hb-border transparent;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: $hb-border;
+            border-radius: 37px;
+        }
+    }
+
+    // Hover: viền đỏ nhạt, bóng nổi hơn. Tiêu đề và badge giữ nguyên màu trắng,
+    // chỉ nền header sáng hơn nhẹ để gợi ý tương tác — tuyệt đối không đổi màu chữ.
+    &__session:not(&__session--locked):hover {
+        border-color: $hb-danger;
+        // token "LMS drop 600"
+        box-shadow: 0 8px 18px -6px rgba(19, 25, 39, 0.12), 0 12px 42px -4px rgba(19, 25, 39, 0.12);
+    }
+
+    &__session:not(&__session--locked):hover &__session-head {
+        filter: brightness(1.15);
+    }
+
+    &__session:not(&__session--locked):hover &__session-topic {
+        color: #ffffff;
+    }
+
+    // Buổi học bị khoá: đầu thẻ xám, thân xám nhạt với ổ khoá 52px ở giữa.
+    &__session--locked &__session-head {
+        background: $hb-disabled;
+    }
+
+    &__session--locked &__session-body {
+        margin: 0;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: $hb-border;
+    }
+
+    &__materials {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__material {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border: 1px solid $hb-border;
+        border-radius: 10px;
+        background: #fbfcfd;
+        font-size: 15px;
+        color: $hb-text-dark;
+    }
+
+    &__material-dl {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        background: none;
+        font-size: 14px;
+        font-weight: 600;
+        color: $hb-text-secondary;
+        cursor: pointer;
+
+        &:hover {
+            color: $hb-brand;
+        }
+    }
+
+    &__foot {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 24px;
+    }
+
+    // Node 3555:12636
+    &__close {
+        padding: 4px 16px;
+        border: 1px solid $hb-disabled;
+        border-radius: 25px;
+        background: #fff;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        color: $hb-disabled;
+        cursor: pointer;
+        transition: border-color 0.2s ease, color 0.2s ease;
+
+        &:hover {
+            border-color: $hb-brand;
+            color: $hb-brand;
+        }
+    }
+}
+
+// ── Thu gọn ở màn hình nhỏ ──────────────────────────────────────────────────
+@media (max-width: 1279px) {
+    .hb-course {
+        &__layout {
+            grid-template-columns: 1fr;
+        }
+
+        &__sidebar {
+            position: static;
+        }
+
+        &__grid {
+            // Sidebar đã xuống dưới nên cột nội dung rộng ra: xếp bao nhiêu card vừa thì xếp.
+            grid-template-columns: repeat(auto-fill, minmax(280px, 314px));
+            padding: 16px 24px 0;
+        }
+
+        &__hero {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+
+        &__hero-promo,
+        &__hero-user,
+        &__hero-current {
+            grid-column: 1 / -1;
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hb-course {
+        width: 100%;
+        min-width: 0;
+        min-height: 100svh;
+
+        &__container {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 0 12px 32px;
+        }
+
+        &__hero {
+            min-width: 0;
+            gap: 12px;
+            margin: 12px 0 24px;
+            padding: 14px;
+            border-radius: 22px;
+        }
+
+        &__hero-promo,
+        &__hero-user,
+        &__hero-current {
+            min-width: 0;
+            border-radius: 16px;
+        }
+
+        &__hero-promo-inner {
+            width: 100%;
+        }
+
+        &__hero-promo-stage {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        &__hero-mascot {
+            align-self: center;
+            width: min(100%, 220px);
+            height: 120px;
+        }
+
+        &__hero-promo-copy {
+            flex: 1 1 auto;
+            width: 100%;
+            gap: 12px;
+            padding: 0;
+        }
+
+        &__hero-headline {
+            font-size: clamp(17px, 5vw, 22px);
+            line-height: 1.25;
+            white-space: normal;
+        }
+
+        &__hero-offer {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        &__hero-offer-pill {
+            font-size: 22px;
+        }
+
+        &__hero-offer-note {
+            font-size: 12px;
+        }
+
+        &__hero-user {
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 14px;
+        }
+
+        &__hero-avatar {
+            width: 64px;
+            height: 64px;
+            max-width: 64px;
+            max-height: 64px;
+        }
+
+        &__hero-user-body {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        &__hero-user-body::after {
+            display: none;
+        }
+
+        &__hero-greeting,
+        &__hero-levels {
+            width: 100%;
+        }
+
+        &__hero-greeting {
+            font-size: clamp(18px, 5vw, 24px);
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        &__hero-current-code {
+            max-width: 100%;
+            font-size: clamp(17px, 5vw, 24px);
+            line-height: 1.25;
+            white-space: normal;
+            text-align: center;
+        }
+
+        &__hero-current-note {
+            white-space: normal;
+        }
+
+        &__layout {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 16px;
+            min-width: 0;
+        }
+
+        &__sidebar,
+        &__layout > main {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        &__toolbar {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+            padding: 12px;
+            border-radius: 16px;
+        }
+
+        &__mode {
+            min-width: 0;
+        }
+
+        &__mode-switch {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        &__mode-btn {
+            flex: 1 1 auto;
+            justify-content: center;
+            min-width: 0;
+            padding: 8px 10px;
+            font-size: 13px;
+            line-height: 18px;
+            white-space: normal;
+        }
+
+        &__mode-hint {
+            align-items: flex-start;
+        }
+
+        &__sort {
+            width: 100%;
+            min-width: 0;
+        }
+
+        &__section {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        &__grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 16px;
+            min-width: 0;
+            padding: 12px 0 0;
+        }
+
+        &__card {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+    }
+}
+
+// Mobile catalogue composition follows the 390px Figma demo (5287:28267).
+// Keep the viewport-specific layout scoped to mobile; desktop retains its grid.
+.hb-course {
+    &__filter-backdrop,
+    &__mobile-filter,
+    &__sidebar-close,
+    &__mobile-label,
+    &__mobile-lock-icon,
+    &__card-foot--mobile-locked,
+    &__scroll-track {
+        display: none;
+    }
+
+    &__toolbar-actions {
+        display: contents;
+    }
+}
+
+@media (min-width: 1280px) {
+    .hb-course__filter-panel { position: sticky; top: 24px; }
+    .hb-course__filter-panel .hb-course__sidebar { position: static; }
+}
+
+@media (max-width: 767.98px) {
+    .hb-course {
+        &__container { padding: 0 16px 32px; }
+
+        &__hero {
+            height: 234px;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: 95px 117px;
+            row-gap: 11px;
+            column-gap: 0;
+            margin: 12px 0 16px;
+            padding: 11px 11px 0;
+            border: 0;
+            border-radius: 16px;
+        }
+
+        &__hero-promo,
+        &__hero-user,
+        & &__hero-promo--right,
+        & &__hero-user--left {
+            grid-column: 1;
+        }
+
+        &__hero-promo {
+            grid-row: 1;
+            padding: 0 8px;
+            border-radius: 11px;
+        }
+
+        &__hero-promo-inner { padding: 0; }
+        &__hero-promo-stage {
+            height: 100%;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0;
+        }
+
+        &__hero-promo-copy {
+            order: -1;
+            flex: 1 1 auto;
+            align-self: stretch;
+            justify-content: center;
+            gap: 8px;
+            min-width: 0;
+            padding: 0 0 0 3px;
+        }
+
+        &__hero-headline {
+            font-size: 12px;
+            line-height: 18px;
+            letter-spacing: .24px;
+            font-weight: 800;
+        }
+
+        &__hero-offer { gap: 5px; flex-wrap: nowrap; white-space: nowrap; }
+        &__hero-offer-label { font-size: 8px; line-height: 14px; }
+        &__hero-offer-pill { padding: 5px 5px; font-size: 14px; line-height: 8px; }
+        &__hero-offer-note { font-size: 8px; line-height: 14px; }
+        &__hero-mascot {
+            align-self: center;
+            flex: 0 0 114px;
+            width: 114px;
+            height: 94px;
+        }
+
+        &__hero-blob--lg { left: 188px; top: 59px; width: 60px; height: 60px; }
+        &__hero-blob--md { left: 295px; top: 30px; width: 21px; height: 21px; }
+        &__hero-blob--sm { left: 295px; top: 12px; width: 6px; height: 6px; }
+
+        &__hero-user {
+            grid-row: 2;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 12px;
+        }
+
+        &__hero-avatar {
+            width: 68px;
+            height: 68px;
+            max-width: 68px;
+            max-height: 68px;
+        }
+
+        &__hero-user-body { flex: 1; height: auto; gap: 2px; }
+        &__hero-user-body::after {
+            display: block;
+            top: 39px;
+            left: 11px;
+            width: calc(100% - 50px);
+        }
+        &__hero-greeting {
+            padding: 0;
+            font-size: 14px;
+            line-height: 17px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        &__hero-levels-label { font-size: 8px; line-height: 10px; }
+        &__hero-milestone { padding: 0 6px; }
+        &__hero-milestone-icon { width: 11px; height: 15px; }
+        &__hero-milestone-dot { width: 11px; gap: 0; transform: scale(.7); transform-origin: left top; }
+        &__hero-milestone-name { margin-top: 0; font-size: 7px; line-height: 10px; width: auto; }
+        &__hero-milestone-value { font-size: 14px; line-height: 22px; }
+        &__hero-current-code { font-size: 12px; line-height: 16px; padding: 3px 8px; }
+        &__hero-current-note { font-size: 8px; line-height: 12px; }
+
+        &__layout { display: block; }
+        &__filter-panel { display: none; }
+        &__filter-panel--open {
+            display: block;
+            position: fixed;
+            // Keep the filter dialog above the fixed mobile topbar and bottom navigation.
+            z-index: 100031;
+            top: 50%;
+            left: 50%;
+            bottom: auto;
+            width: min(374px, calc(100vw - 16px));
+            max-height: calc(100dvh - 16px);
+            overflow-y: auto;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(15, 23, 42, .2);
+            scrollbar-width: none;
+        }
+        &__filter-panel--open::-webkit-scrollbar { display: none; }
+        &__filter-backdrop--open {
+            display: block;
+            position: fixed;
+            z-index: 100030;
+            inset: 0;
+            border: 0;
+            background: rgba(0, 0, 0, .45);
+        }
+        &__sidebar {
+            position: static;
+            min-height: 0;
+            gap: 0;
+            padding: 18px;
+            border: 0;
+            border-radius: inherit;
+        }
+        &__sidebar-head {
+            min-height: 52px;
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #e2e2e2;
+        }
+        &__sidebar-title { gap: 8px; font-size: 18px; line-height: 24px; }
+        &__sidebar-title img { width: 16px; height: 16px; }
+        &__sidebar-clear { font-size: 16px; line-height: 24px; }
+        &__sidebar-close { display: none; }
+        &__filter-group {
+            gap: 12px;
+            padding-top: 18px;
+            border-top-color: #e2e2e2;
+        }
+        &__filter-group--first { padding-top: 0; border-top: 0; }
+        &__filter-group--studyform,
+        &__filter-group--price { display: none; }
+        &__filter-toggle { min-height: 24px; }
+        &__filter-toggle-label { gap: 8px; font-size: 16px; line-height: 24px; }
+        &__filter-toggle-label img { width: 18px; height: 18px; object-fit: contain; }
+        &__filter-chevron { width: 14px; height: 9px; }
+        &__filter-body { gap: 12px; }
+        &__check { min-height: 28px; }
+        &__check-main { gap: 12px; font-size: 16px; line-height: 24px; }
+        &__check-box { width: 20px; height: 20px; border-radius: 5px; }
+        &__check-box img { width: 16px; height: 16px; }
+        &__chips { gap: 8px; }
+        &__chip {
+            min-height: 32px;
+            padding: 5px 16px;
+            font-size: 16px;
+            line-height: 20px;
+            background: #f8fafc;
+        }
+        &__chip--active { padding: 5px 16px; background: #fef2f2; }
+
+        &__toolbar {
+            gap: 10px;
+            padding: 0;
+            margin-bottom: 16px;
+            border: 0;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+        }
+        &__mode-switch {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0;
+            width: 100%;
+            min-height: 36px;
+            padding: 4px;
+            border-radius: 10px;
+            background: #fff;
+        }
+        &__mode-btn {
+            flex: 1 1 50%;
+            min-height: 28px;
+            padding: 6px 3px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: 600;
+            color: $hb-disabled-2;
+            white-space: nowrap;
+        }
+        &__mode-btn--active {
+            background: linear-gradient(to right, $hb-brand, #e11d1d);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(19, 25, 39, .15);
+        }
+        &__mode-star,
+        &__mode-hint { display: none; }
+        &__toolbar-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            min-height: 33px;
+        }
+        &__mobile-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 28px;
+            padding: 0 12px;
+            border: 1px solid $hb-border;
+            border-radius: 8px;
+            background: #fff;
+            color: $hb-brand;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        &__mobile-filter-count {
+            display: grid;
+            place-items: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #c41e3a;
+            color: #fff;
+            font-size: 9px;
+        }
+        &__sort {
+            width: auto;
+            height: 33px;
+            min-width: 0;
+            padding: 0 18px 0 8px;
+            border: 0;
+            background-color: transparent;
+            color: $hb-text-dark;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        &__section {
+            min-height: 276px;
+            margin: 0 0 16px;
+            padding: 12px 8px;
+            border-radius: 12px;
+        }
+        &__section-head {
+            height: 27px;
+            gap: 4px;
+            margin: 0;
+            padding: 0 12px 8px;
+        }
+        &__section-head-left { min-width: 0; gap: 8px; }
+        &__section-badge { padding: 2px 5px; font-size: 9px; line-height: 14px; }
+        &__section-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            line-height: 17px;
+        }
+        &__section-title--cx,
+        &__section-title--gs { color: $hb-brand; }
+        &__section-more {
+            flex: 0 0 auto;
+            gap: 2px;
+            padding: 0;
+            font-size: 12px;
+            line-height: 17px;
+            white-space: nowrap;
+        }
+        &__section-more .hb-course__swap-icon { width: 12px; height: 12px; }
+        &__grid {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            margin-top: 8px;
+            padding: 0;
+        }
+        &__grid::-webkit-scrollbar { display: none; }
+        &__card {
+            flex: 0 0 calc((100% - 12px) / 2);
+            width: calc((100% - 12px) / 2);
+            height: 198px;
+            scroll-snap-align: start;
+            border-radius: 12px;
+        }
+        &__card-media { height: 99px; border-radius: 11px 11px 0 0; }
+        &__card-body { height: 99px; gap: 0; padding: 8px 12px 6px; border-radius: 0 0 11px 11px; }
+        &__card-head { gap: 3px; padding: 0; }
+        &__card-title { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; line-height: 18px; }
+        &__card-title-prefix { display: none; }
+        &__status { gap: 2px; padding: 3px 4px; font-size: 7px; line-height: 9px; }
+        &__status img { width: 8px; height: 8px; }
+        &__status--locked svg { display: none; }
+        &__mobile-lock-icon,
+        &__mobile-label { display: inline; }
+        &__desktop-label { display: none; }
+        &__progress { gap: 4px; padding: 7px 0 5px; }
+        &__progress-row { font-size: 8px; line-height: 11px; letter-spacing: 0; }
+        &__progress-track,
+        &__progress-fill { height: 6px; }
+        &__card-foot { gap: 2px; margin-top: auto; padding-top: 3px; }
+        &__card-foot--mobile-locked { display: flex; }
+        &__card-link { gap: 2px; padding: 1px 4px; font-size: 10px; line-height: 15px; }
+        &__card-link .hb-course__swap-icon { width: 10px; height: 10px; }
+        &__card-count { white-space: nowrap; line-height: 12px; }
+        &__card-count b { font-size: 8px; }
+        &__card-count span { font-size: 7px; }
+        &__unlock { display: none; }
+        &__scroll-track {
+            display: block;
+            width: 222px;
+            height: 6px;
+            margin-top: 8px;
+            border-radius: 6px;
+            background: $hb-border;
+            overflow: hidden;
+        }
+        &__scroll-track span {
+            display: block;
+            width: 98px;
+            height: 100%;
+            border-radius: inherit;
+            background: #cbd5e1;
+        }
+    }
+}
+
+@media (max-width: 359.98px) {
+    .hb-course {
+        &__hero-promo-copy { gap: 5px; }
+        &__hero-headline { font-size: 10px; line-height: 14px; }
+        &__hero-mascot { flex-basis: 88px; width: 88px; }
+        &__hero-offer { gap: 3px; }
+        &__hero-offer-label,
+        &__hero-offer-note { font-size: 7px; }
+        &__hero-offer-pill { padding: 4px; font-size: 12px; }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hb-course-modal-root {
+        --hb-header-height: 48px;
+        padding: 48px 0 8px;
+    }
+
+    .hb-course-modal {
+        width: calc(100% - 12px);
+        max-width: none;
+        margin: 6px auto 12px;
+    }
+
+    .hb-course-modal .modal-content {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100dvh - 58px);
+        border-radius: 16px;
+    }
+
+    .hb-course-modal__head {
+        position: relative;
+        display: block;
+        flex: 0 0 auto;
+        padding: 18px 18px 10px;
+    }
+
+    .hb-course-modal__head-copy {
+        gap: 7px;
+        padding: 0 0 0 10px;
+    }
+
+    .hb-course-modal__dismiss {
+        position: absolute;
+        z-index: 1;
+        top: 16px;
+        right: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #fff;
+    }
+
+    .hb-course-modal__tags { padding-right: 35px; }
+    .hb-course-modal__tag { padding: 3px 10px; font-size: 11px; line-height: 18px; }
+    .hb-course-modal__title { padding: 0; font-size: 18px; line-height: 24px; }
+    .hb-course-modal__desc { font-size: 14px; line-height: 20px; }
+    .hb-course-modal__levels { flex-wrap: wrap; gap: 8px 14px; padding: 2px 0 0; font-size: 13px; line-height: 20px; }
+    .hb-course-modal__level { gap: 4px; }
+    .hb-course-modal__level svg { width: 14px; height: 14px; }
+    .hb-course-modal__level-pill { padding: 2px 6px; border-radius: 8px; font-size: 12px; line-height: 18px; }
+    .hb-course-modal__meta { width: 100%; gap: 2px; padding-top: 6px; font-size: 11px; line-height: 16px; }
+    .hb-course-modal__meta-item { justify-content: flex-start; gap: 5px; padding: 5px 0; white-space: normal; }
+    .hb-course-modal__meta-item img { width: 18px; height: 18px; object-fit: contain; }
+    .hb-course-modal__thumb { display: none; }
+
+    .hb-course-modal__body {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 14px 18px 18px;
+    }
+
+    .hb-course-modal__tabs { gap: 16px; margin-bottom: 14px; overflow-x: auto; }
+    .hb-course-modal__tab { flex: 0 0 auto; gap: 6px; padding-bottom: 8px; font-size: 12px; line-height: 18px; white-space: nowrap; }
+    .hb-course-modal__tab svg { flex: 0 0 auto; width: 14px; height: 16px; }
+    .hb-course-modal__progress-bar { align-items: center; gap: 8px; margin-bottom: 12px; }
+    .hb-course-modal__progress-info { flex: 1 1 0; min-width: 0; max-width: none; }
+    .hb-course-modal__progress-label { margin-bottom: 5px; font-size: 11px; }
+    .hb-course-modal__timetable-btn { flex: 0 0 auto; gap: 6px; padding: 7px 10px; font-size: 13px; line-height: 18px; white-space: nowrap; }
+    .hb-course-modal__timetable-btn svg { width: 16px; height: 16px; }
+    .hb-course-modal__sessions { gap: 16px; padding-bottom: 4px; }
+    .hb-course-modal__session { width: 225px; height: 224px; border-radius: 10px; }
+    .hb-course-modal__session-head { gap: 6px; padding: 8px 10px; }
+    .hb-course-modal__session-no { padding: 3px 8px; font-size: 12px; line-height: 18px; }
+    .hb-course-modal__session-topic { font-size: 11px; line-height: 15px; }
+    .hb-course-modal__session-body { margin: 10px 12px; padding-right: 6px; font-size: 11px; line-height: 15px; }
+    .hb-course-modal__session--locked .hb-course-modal__session-body { margin: 0; padding: 12px; }
+    .hb-course-modal__unlock-banner { margin-bottom: 10px; padding: 7px 12px; font-size: 14px; line-height: 20px; }
+    .hb-course-modal__foot { display: none; }
+}
+
+// Thông báo khi CMS không trả được danh sách đăng ký (chế độ "Khoá học của tôi")
+.hb-course__notice {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 14px;
+    line-height: 1.5;
+}
