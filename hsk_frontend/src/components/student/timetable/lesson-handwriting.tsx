@@ -1,0 +1,86 @@
+"use client";
+import {studentApi} from "@/lib/api/student-client";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import type HanziWriter from "hanzi-writer";
+import { loadHanziChar } from "@/lib/dictionary/hanzi-writer-loader";
+import type { Word } from "./lesson-panels";
+import "./lesson-handwriting.css";
+
+type Command={kind:"idle"|"write"|"reset";sequence:number};
+type Filter="all"|"new"|"learned";
+function CharacterPad({character,index,command,onReady,onComplete}:{character:string;index:number;command:Command;onReady:(index:number,ready:boolean)=>void;onComplete:(index:number)=>void}){
+ const target=useRef<HTMLDivElement>(null);const writer=useRef<HanziWriter|null>(null);
+ const [status,setStatus]=useState<"loading"|"ready"|"error">("loading");
+ const [hideHint,setHideHint]=useState(false);
+ const [demo,setDemo]=useState<{round:Command}|null>(null);
+ const completedRound=useRef<Command|null>(null);
+ const ready=useEffectEvent(onReady);const complete=useEffectEvent(onComplete);
+ useEffect(()=>{let disposed=false;const element=target.current;if(!element)return;
+  Promise.all([import("hanzi-writer"),loadHanziChar(character)]).then(([{default:Writer},data])=>{
+   if(disposed)return;if(!data){setStatus("error");ready(index,false);return;}
+   writer.current=Writer.create(element,character,{width:240,height:240,padding:15,showCharacter:false,showOutline:true,strokeColor:"#252525",outlineColor:"#ddd",highlightColor:"#ef2634",drawingColor:"#333",strokeAnimationSpeed:1,delayBetweenStrokes:160,showHintAfterMisses:3,charDataLoader:(_char,onLoad)=>onLoad(data)});
+   setStatus("ready");ready(index,true);
+  }).catch(()=>{if(!disposed){setStatus("error");ready(index,false);}});
+  return ()=>{disposed=true;writer.current?.cancelQuiz();writer.current=null;element.replaceChildren();};
+ },[character,index]);
+ useEffect(()=>{if(status !== "ready" || !writer.current)return;void (hideHint?writer.current.hideOutline():writer.current.showOutline());},[hideHint,status]);
+ useEffect(()=>{const current=writer.current;if(status !== "ready" || !current)return;let cancelled=false;current.cancelQuiz();
+  if(demo?.round === command){
+   void current.animateCharacter({onComplete:result=>{if(!cancelled && !result.canceled)setDemo(null);}});
+  }else if(command.kind !== "write"){
+   void current.hideCharacter();
+  }else if(completedRound.current !== command){
+   void current.quiz({onComplete:()=>{
+    if(cancelled)return;
+    completedRound.current=command;
+    complete(index);
+   }});
+  }
+  return ()=>{cancelled=true;current.cancelQuiz();};
+ },[command,demo,status,index]);
+ return <div className="lh-character" role="group" aria-label={`Ký tự ${index+1}: ${character}`}><span>Ký tự {index+1}: {character}</span><div className="lh-grid" aria-label={`Ô luyện viết ${character}`}><div ref={target}/>{status === "loading" && <p role="status">Đang tải nét chữ…</p>}{status === "error" && <p role="status">Chưa có dữ liệu nét chữ</p>}</div>
+  <div className="lh-actions lh-hints">
+   <button type="button" disabled={status !== "ready"} onClick={()=>setDemo({round:command})}>
+    <i className="fa-regular fa-lightbulb" aria-hidden="true"/> Xem gợi ý
+   </button>
+   <button type="button" onClick={()=>setHideHint(previous=>!previous)}>
+    {hideHint ? "Hiện nét gợi ý" : "Ẩn nét gợi ý"}
+   </button>
+  </div>
+ </div>;
+}
+function WordPractice({word,count,learned,onComplete}:{word:Word;count:number;learned:boolean;onComplete:()=>void}){
+ const characters=Array.from(word.word).filter(character=>/\p{Script=Han}/u.test(character));
+ const [success,setSuccess]=useState(false);const [writing,setWriting]=useState(false);const [command,setCommand]=useState<Command>({kind:"idle",sequence:0});const [ready,setReady]=useState<Record<number,boolean>>({});
+ const completed=useRef(new Set<number>());const roundDone=useRef(false);
+ const canPractice=characters.length>0 && characters.every((_,i)=>ready[i]);
+ const issue=(kind:Command["kind"])=>setCommand(previous=>({kind,sequence:previous.sequence+1}));
+ const begin=()=>{setSuccess(false);completed.current.clear();roundDone.current=false;setWriting(true);issue("write");};
+ const reset=()=>{setSuccess(false);completed.current.clear();roundDone.current=false;setWriting(false);issue("reset");};
+ const finish=(i:number)=>{completed.current.add(i);if(completed.current.size===characters.length&&!roundDone.current){roundDone.current=true;setWriting(false);setSuccess(true);onComplete();}};
+ return <div className="lh-practice-card"><aside className="lh-word-panel"><small>CHỮ ĐANG LUYỆN</small><strong className="lh-word">{word.word}</strong><div className="lh-word-meta"><span>{word.pinyin}</span>{word.pos && <small>{word.pos}</small>}</div><p className="lh-meaning"><b>Nghĩa:</b> {word.meaning || "Chưa có dữ liệu"}</p>{word.examples[0] && <div className="lh-example"><b>▶ Ví dụ:</b> {word.examples[0].cn}</div>}</aside>
+ <section className="lh-workspace"><div className="lh-workspace-heading"><span>Số lần luyện viết đúng <strong>{count}</strong></span><span className={learned?"is-learned":""}>{learned?"Đã học":"Chưa luyện"}</span></div><div className="lh-characters">{characters.length?characters.map((character,i)=><CharacterPad key={`${character}-${i}`} character={character} index={i} command={command} onReady={(index,loaded)=>setReady(previous=>({...previous,[index]:loaded}))} onComplete={finish}/>):<div className="lh-no-characters" role="status">Chưa có ký tự tiếng Trung để luyện viết.</div>}</div>
+ <div className="lh-controls">
+  <div className="lh-actions">
+   <button type="button" className="lh-start" disabled={!canPractice} onClick={writing ? reset : begin}>
+    <i className={writing ? "fa-solid fa-stop" : "fa-regular fa-pen-to-square"} aria-hidden="true"/>
+    {writing ? "Ngừng viết" : "Bắt đầu viết ngay"}
+   </button>
+   <button type="button" disabled={!canPractice} onClick={reset}><i className="fa-solid fa-rotate-left" aria-hidden="true"/> Viết lại</button>
+  </div>
+  <div className="lh-announcement" role="status" aria-live="polite">{success?"Đã hoàn thành lượt viết!":writing?"Viết lần lượt theo đúng thứ tự nét trong từng ô.":""}</div></div></section></div>;
+}
+export default function LessonHandwriting({words}:{words:Word[]}){
+ const [counts,setCounts]=useState<Record<string,number>>({});const [filter,setFilter]=useState<Filter>("all");const [activeId,setActiveId]=useState(words[0]?.id || "");
+ const [saveError,setSaveError]=useState("");
+ const complete=async(word:Word)=>{if(!word.resourceId){setSaveError("Từ vựng chưa có mã học liệu để lưu tiến độ.");return;}try{const state=await studentApi.saveVocabularyState(word.resourceId,true);if(state.learningResourceId!==word.resourceId || state.comprehensionLevel!=="KNOWN")throw Error("Máy chủ chưa xác nhận tiến độ.");setCounts(previous=>({...previous,[word.id]:(previous[word.id] || 0)+1}));setSaveError("");window.dispatchEvent(new Event("hsk:vocabulary-updated"));}catch(error){setSaveError(error instanceof Error?error.message:"Không lưu được tiến độ luyện viết.");}};
+ const learned=(word:Word)=>word.learned || (counts[word.id] || 0)>0;const learnedCount=words.filter(learned).length;
+ const visible=words.filter(word=>filter === "all" || (filter === "learned"?learned(word):!learned(word)));
+ const index=Math.max(0,visible.findIndex(word=>word.id===activeId));const word=visible[index];const percent=words.length?Math.round(learnedCount/words.length*100):0;
+ const chooseFilter=(next:Filter)=>{setFilter(next);setActiveId("");};
+ return <div className="lesson-handwriting"><div className="lh-breadcrumb">• Tài liệu học tập <span>/</span> Từ vựng <span>/</span> <strong>Luyện viết</strong></div><div className="lh-heading"><h2>Flashcard - Luyện viết</h2><div className="lh-progress"><div>Tiến độ luyện viết <strong>{learnedCount}/{words.length}</strong> <b>{percent}%</b></div><progress aria-label="Tiến độ luyện viết" value={percent} max={100}/></div></div><div className="lh-filters">{([{key:"all",label:"Tất cả",count:words.length},{key:"new",label:"Chưa luyện",count:words.length-learnedCount},{key:"learned",label:"Đã học",count:learnedCount}] as const).map(item=><button key={item.key} type="button" className={filter===item.key?"is-active":""} aria-pressed={filter===item.key} onClick={()=>chooseFilter(item.key)}>{item.label} ({item.count})</button>)}</div>
+ {saveError && <p role="alert">{saveError}</p>}
+ {word?<><WordPractice key={word.id} word={word} count={counts[word.id] || 0} learned={learned(word)} onComplete={()=>void complete(word)}/><nav className="lh-bottom-nav" aria-label="Chọn thẻ luyện viết"><button type="button" disabled={index===0} onClick={()=>setActiveId(visible[index-1].id)}>‹ Thẻ trước</button><div><strong>{index+1} / {visible.length}</strong><progress aria-label="Vị trí thẻ" value={index+1} max={visible.length}/></div><button type="button" disabled={index===visible.length-1} onClick={()=>setActiveId(visible[index+1].id)}>Thẻ sau ›</button></nav></>:<div className="lh-empty" role="status"><h3>{words.length?"Không có thẻ trong bộ lọc này":"Chưa có dữ liệu"}</h3><p>{words.length?"Chọn bộ lọc khác để tiếp tục luyện viết.":"Từ vựng của buổi học chưa được gắn vào giáo trình."}</p></div>}
+ {words.length>0 && learnedCount===words.length && <div className="lh-completed" role="status">🎉 Bạn đã hoàn thành toàn bộ nội dung trong study-set này.</div>}
+ </div>;
+}
