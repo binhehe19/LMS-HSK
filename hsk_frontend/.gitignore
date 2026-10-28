@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+
+# next.js
+/.next/
+/.next-e2e*/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# debug
+npm-debug.log*
+
+# env files (chỉ .env.example được commit)
+.env*
+!.env.example
+/.next-guard-test/
+/.next-preview/

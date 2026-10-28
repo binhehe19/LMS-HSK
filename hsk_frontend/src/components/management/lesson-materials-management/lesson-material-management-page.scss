@@ -1,0 +1,650 @@
+.lesson-material-management {
+  .lesson-material-management__header {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    margin-bottom: 18px;
+  }
+
+  .lesson-material-management__notice,
+  .lesson-material-management__modal-notice {
+    align-items: center;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    color: #9a3412;
+    display: flex;
+    gap: 10px;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+  }
+
+  .lesson-material-management__toolbar {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(220px, 1fr) 160px 170px auto;
+    margin-bottom: 16px;
+  }
+
+  .lesson-material-management__search {
+    position: relative;
+
+    i {
+      color: #64748b;
+      left: 14px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .form-control {
+      padding-left: 40px;
+    }
+  }
+
+  .lesson-material-management__clear {
+    justify-self: start;
+    min-width: 62px;
+    padding-left: 0;
+  }
+
+  .lesson-material-management__loading,
+  .lesson-material-management__empty {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    min-height: 220px;
+    text-align: center;
+  }
+
+  .lesson-material-management__empty i {
+    color: #94a3b8;
+    font-size: 44px;
+  }
+
+  .lesson-material-management__table-wrap {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .lesson-material-management__attachments {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    padding: 16px;
+  }
+
+  .lesson-material-management__attachments-header {
+    align-items: flex-end;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+
+    h5 {
+      color: #0f172a;
+      font-size: 16px;
+      margin: 2px 0 0;
+    }
+  }
+
+  .lesson-material-management__section-eyebrow {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .lesson-material-management__schedule-search {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(220px, 320px) auto;
+  }
+
+  .lesson-material-management__attachment-state {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    display: flex;
+    justify-content: center;
+    min-height: 82px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .lesson-material-management__attachment-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lesson-material-management__attachment-row {
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(240px, 1fr) 128px auto;
+    padding: 12px;
+  }
+
+  .lesson-material-management__attachment-meta {
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 8px;
+    margin-top: 6px;
+
+    span {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+  }
+
+  .lesson-material-management__attachment-order {
+    .form-label {
+      color: #64748b;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+  }
+
+  .lesson-material-management__attachment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .lesson-material-management__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .lesson-material-management__material-title {
+    color: #0f172a;
+    font-weight: 700;
+    max-width: 350px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .lesson-material-management__file-name {
+    color: #0f172a;
+    font-weight: 700;
+    max-width: 250px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .lesson-material-management__material-desc {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 3px;
+    max-width: 350px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .lesson-material-management__file-meta {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 3px;
+    max-width: 250px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .lesson-material-management__selected-file {
+    align-items: center;
+    color: #475569;
+    display: flex;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .lesson-material-management__attach-target {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+  }
+
+  .lesson-material-management__status {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+  }
+
+  .lesson-material-management__status.draft {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  .lesson-material-management__status.published {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .lesson-material-management__status.archived {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+@media (max-width: 991px) {
+  .lesson-material-management {
+    .lesson-material-management__toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .lesson-material-management__attachments-header,
+    .lesson-material-management__attachment-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .lesson-material-management__schedule-search,
+    .lesson-material-management__attachment-row {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* AMD-002: grouped material library */
+.lesson-material-management__group-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-top: 8px;
+}
+
+.lesson-material-management__group-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lesson-material-management__group-body {
+  cursor: pointer;
+  flex: 1;
+  padding: 16px;
+
+  &:hover { background: #f8fafc; }
+
+  .lesson-material-management__group-top {
+    align-items: center;
+    color: #b10019;
+    display: flex;
+    font-size: 22px;
+    justify-content: space-between;
+  }
+
+  .lesson-material-management__group-name {
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 800;
+    margin: 10px 0 4px;
+    overflow-wrap: anywhere;
+  }
+
+  .lesson-material-management__group-desc {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0 0 10px;
+  }
+
+  .lesson-material-management__group-counts {
+    color: #475569;
+    display: flex;
+    font-size: 13px;
+    gap: 14px;
+
+    b { color: #0f172a; }
+  }
+}
+
+.lesson-material-management__group-status {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  text-transform: uppercase;
+
+  &.active { background: #dcfce7; color: #166534; }
+  &.archived { background: #f1f5f9; color: #64748b; }
+}
+
+.lesson-material-management__group-actions {
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+}
+
+.lesson-material-management__detail-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 8px 0 12px;
+
+  .lesson-material-management__detail-title {
+    flex: 1;
+    min-width: 200px;
+
+    h5 { color: #0f172a; font-weight: 800; margin: 4px 0 0; }
+    p { color: #64748b; font-size: 13px; margin: 4px 0 0; }
+  }
+}
+
+.lesson-material-management__tabs {
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.lesson-material-management__tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-weight: 700;
+  padding: 8px 16px;
+
+  &.active { border-bottom-color: #b10019; color: #b10019; }
+}
+
+.lesson-material-management__type-section {
+  margin-bottom: 20px;
+}
+
+.lesson-material-management__type-heading {
+  align-items: center;
+  color: #0f172a;
+  display: flex;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 8px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.lesson-material-management__type-dot {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+
+  &.slide { background: #2563eb; }
+  &.grammar { background: #059669; }
+}
+
+.lesson-material-management__type-count {
+  background: #f1f5f9;
+  border-radius: 999px;
+  color: #475569;
+  font-size: 12px;
+  padding: 1px 9px;
+}
+
+/* ----- Bulk upload modal styles ----- */
+
+.lesson-material-management__bulk-file-list {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.lesson-material-management__bulk-file-header {
+  align-items: center;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.lesson-material-management__bulk-file-row {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+}
+
+.lesson-material-management__bulk-file-info {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.lesson-material-management__bulk-title-input {
+  flex: 1;
+  max-width: 280px;
+  min-width: 140px;
+}
+
+.lesson-material-management__bulk-file-size {
+  color: #94a3b8;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.lesson-material-management__bulk-file-controls {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.lesson-material-management__bulk-type-select {
+  max-width: 150px;
+  min-width: 120px;
+}
+
+/* Processing state */
+.lesson-material-management__bulk-processing {
+  padding: 10px 0;
+}
+
+.lesson-material-management__bulk-phase {
+  align-items: center;
+  color: #475569;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lesson-material-management__bulk-processing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.lesson-material-management__bulk-file-status {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  font-size: 13px;
+  justify-content: space-between;
+  padding: 6px 10px;
+
+  &.uploaded {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+
+  &.uploading {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+  }
+
+  &.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+
+  &.idle {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+.lesson-material-management__bulk-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-material-management__bulk-file-badge {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Result state */
+.lesson-material-management__bulk-result {
+  padding: 10px 0;
+}
+
+.lesson-material-management__bulk-result-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.lesson-material-management__bulk-stat {
+  align-items: center;
+  border-radius: 8px;
+  display: flex;
+  font-size: 16px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 14px 20px;
+
+  &.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  &.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  i {
+    font-size: 22px;
+  }
+}
+
+.lesson-material-management__bulk-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 14px;
+
+  h6 {
+    color: #991b1b;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+}
+
+.lesson-material-management__bulk-error-item {
+  border-bottom: 1px solid #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.lesson-material-management__bulk-error-title {
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lesson-material-management__bulk-error-msg {
+  color: #7f1d1d;
+  font-size: 12px;
+}
+
+
+/* [M5] Bố cục hai cột của app mới (cột trái: danh sách bộ tài liệu có tìm kiếm; cột phải: bảng tài liệu) — bản cũ là lưới card + drill-down. */
+.lesson-material-management__group-list {
+  display: grid;
+  gap: 12px;
+
+  .lesson-material-management__group-card.is-selected {
+    border-color: #b10019;
+    box-shadow: 0 0 0 2px rgba(177, 0, 25, 0.15);
+  }
+}
+
+.lesson-material-management__pane-placeholder {
+  align-items: center;
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-height: 220px;
+  padding: 24px;
+  text-align: center;
+
+  i {
+    color: #94a3b8;
+    font-size: 40px;
+  }
+}

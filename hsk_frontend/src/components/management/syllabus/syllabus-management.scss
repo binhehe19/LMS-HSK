@@ -1,0 +1,156 @@
+// Port của LMS_Frontend/src/features/learning-path/learning-path/manage/components/syllabus-management-modal.scss (phần dùng ở chế độ asPage) + khối vỏ
+// `.manage-lp-container` của manage-learning-path.scss (chỉ phần màn này dùng). Nạp qua styles/page-styles.ts (KHÔNG import từ component).
+// [M5] Bỏ selector `.syllabus-management-modal` và phần hộp thêm module react-bootstrap (`.schedule-module-*`, `.pending-panel`...): app mới dùng antd Modal;
+// giữ `.schedule-module-add-modal` chỉ để đặt tên lớp cho antd Modal. Thêm `.syllabus-available-list` (danh sách bộ nội dung có sẵn, không có ở bản cũ).
+
+.manage-lp-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  min-height: 600px;
+}
+
+.syllabus-management-page {
+  .syllabus-management-container {
+    display: flex;
+    flex-direction: column;
+    height: 82vh;
+    background: #ffffff;
+
+    .toolbar {
+      flex-shrink: 0;
+    }
+
+    .syllabus-selector {
+      min-width: 260px;
+    }
+
+    .content-wrapper {
+      flex: 1;
+      overflow: auto;
+      padding-bottom: 1rem;
+    }
+
+    .syllabus-tabs {
+      border-bottom: 1px solid #e2e8f0;
+
+      .nav-link {
+        color: #475569;
+        font-weight: 600;
+        border: none;
+        border-bottom: 2px solid transparent;
+      }
+
+      .nav-link.active {
+        color: #0f172a;
+        border-bottom-color: #2563eb;
+      }
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+
+      .info-item {
+        label {
+          display: block;
+          margin-bottom: 6px;
+          color: #334155;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .value-box {
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 10px 12px;
+          background: #f8fafc;
+          min-height: 42px;
+          color: #0f172a;
+          font-size: 14px;
+          word-break: break-word;
+        }
+      }
+    }
+
+    .syllabus-section-table {
+      position: relative;
+
+      th {
+        background: #f8fafc;
+        font-size: 12px;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+
+      td {
+        font-size: 14px;
+        color: #0f172a;
+        vertical-align: middle;
+      }
+
+      .action-col {
+        min-width: 150px;
+      }
+
+      .need-col {
+        min-width: 230px;
+      }
+
+      .module-col {
+        min-width: 280px;
+      }
+
+      .module-summary-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .module-summary-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .missing-type-list {
+        color: #b45309;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 600;
+      }
+    }
+
+    // [M5] Liên kết tên giáo trình trong bảng danh sách (bản cũ không có bảng).
+    .syllabus-name-link {
+      color: #2563eb;
+      text-decoration: none;
+    }
+  }
+}
+
+// [M5] Danh sách bộ nội dung có sẵn trong hộp Thêm module (antd Modal, nằm ngoài .syllabus-management-page).
+.schedule-module-add-modal .syllabus-available-list {
+  max-height: 260px;
+  overflow: auto;
+}
+
+@media (max-width: 992px) {
+  .syllabus-management-page .syllabus-management-container {
+    height: 88vh;
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .syllabus-selector {
+      min-width: 100%;
+    }
+  }
+}

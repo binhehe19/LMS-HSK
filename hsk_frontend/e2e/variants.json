@@ -1,0 +1,27 @@
+{
+  "base": {
+    "NEXT_PUBLIC_AUTH_FRONTEND_URL": "/__auth",
+    "NEXT_PUBLIC_AUTH_API_BASE_URL": "/api/auth",
+    "NEXT_PUBLIC_QUIZ_API_BASE_PATH": "/api/quiz",
+    "NEXT_PUBLIC_LMS_API_BASE_PATH": "",
+    "NEXT_PUBLIC_STORAGE_API_BASE_PATH": "",
+    "NEXT_PUBLIC_DEMO_MODE": "",
+    "QUIZ_API_PROXY_TARGET": "",
+    "LMS_API_PROXY_TARGET": "",
+    "STORAGE_API_PROXY_TARGET": "",
+    "HSK_API_PROXY_TARGET": "",
+    "NOTIFICATION_API_PROXY_TARGET": "",
+    "ADMIN_USER_API_PROXY_TARGET": "",
+    "TICKET_API_PROXY_TARGET": ""
+  },
+  "variants": [
+    {
+      "dist": ".next-e2e",
+      "env": { "NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH": "/api/notification", "NEXT_PUBLIC_TICKET_API_BASE_PATH": "/api/tickets", "NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH": "/api/admin/users", "NEXT_PUBLIC_HSK_API_BASE_PATH": "/api/hsk", "NEXT_PUBLIC_NOTIFICATION_CAMPAIGN_SEND": "enabled" }
+    },
+    {
+      "dist": ".next-e2e-unconfigured",
+      "env": { "NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH": "", "NEXT_PUBLIC_TICKET_API_BASE_PATH": "", "NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH": "", "NEXT_PUBLIC_HSK_API_BASE_PATH": "", "NEXT_PUBLIC_NOTIFICATION_CAMPAIGN_SEND": "" }
+    }
+  ]
+}

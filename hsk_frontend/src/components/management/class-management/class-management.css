@@ -1,0 +1,331 @@
+/* ── Admin Class Management — red theme matching site palette ── */
+:root {
+  --acm-red:       #b10019;
+  --acm-red-dark:  #8e0014;
+  --acm-red-soft:  #fde8ec;
+  --acm-red-muted: #f3e8ea;
+  --acm-border:    #f1d7dc;
+  --acm-text-dark: #231214;
+  --acm-text-muted:#7b5b60;
+}
+
+/* ── Page background (mirrors teacher-management radial gradient) ── */
+.acm-page-bg {
+  background:
+    radial-gradient(circle at 0% 0%,   rgba(177, 0, 25, 0.07), transparent 36%),
+    radial-gradient(circle at 100% 10%, rgba(177, 0, 25, 0.05), transparent 32%),
+    #f8f9fc;
+  min-height: 100vh;
+}
+
+/* ── Hero banner ── */
+.acm-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(125deg, #b10019 0%, #8e0014 60%, #6f0010 100%);
+  border-radius: 16px;
+  box-shadow: 0 16px 35px rgba(177, 0, 25, 0.22);
+  color: #fff;
+  padding: 22px 26px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.acm-hero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 28%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: skewX(-16deg);
+  animation: acmShine 4s ease-in-out infinite;
+}
+.acm-hero-content { position: relative; z-index: 1; }
+.acm-hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.32);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  margin-bottom: 8px;
+}
+.acm-hero-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+.acm-hero-sub {
+  color: rgba(255,255,255,0.85);
+  font-size: 13.5px;
+  margin: 0;
+}
+.acm-hero-icon {
+  font-size: 72px;
+  opacity: 0.14;
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ── Stat cards ── */
+.acm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--acm-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(27, 8, 12, 0.05);
+}
+.acm-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.acm-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--acm-text-dark);
+}
+.acm-stat-label {
+  font-size: 12px;
+  color: var(--acm-text-muted);
+  font-weight: 600;
+}
+
+/* ── Filter card ── */
+.acm-filter-card {
+  border: 1px solid var(--acm-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(27, 8, 12, 0.04);
+}
+.acm-filter-card .form-control:focus,
+.acm-filter-card .form-select:focus {
+  border-color: var(--acm-red);
+  box-shadow: 0 0 0 3px rgba(177, 0, 25, 0.12);
+}
+.acm-filter-card .input-group-text {
+  border-color: #e0c8cc;
+}
+.acm-filter-card .input-group .form-control {
+  border-left: 0;
+}
+
+/* ── Table card ── */
+.acm-table-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 14px 28px rgba(27, 8, 12, 0.08);
+}
+.acm-table-card > .card-header {
+  background: linear-gradient(125deg, #b10019 0%, #8e0014 100%) !important;
+  background-color: #b10019 !important;
+  color: #fff !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 14px 18px !important;
+  border: none !important;
+}
+.acm-table-card > .card-header small {
+  color: rgba(255,255,255,0.75) !important;
+  font-size: 12px;
+}
+
+/* ── Table ── */
+.acm-scroll-x { overflow-x: auto; }
+.acm-table {
+  min-width: 2000px;
+  font-size: 13.5px;
+}
+.acm-table thead th {
+  white-space: nowrap;
+  background: #faf8f8;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a2a2f;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--acm-border);
+  letter-spacing: 0.01em;
+}
+.acm-table tbody td {
+  padding: 10px 12px;
+  vertical-align: middle;
+  border-color: #f5eced;
+}
+.acm-col-stt  { width: 44px; }
+.acm-col-code { width: 130px; }
+
+/* Row hover */
+.acm-row { transition: background-color 0.1s ease; }
+.acm-row:hover { background-color: #fff5f6 !important; }
+
+/* Class code link */
+.acm-class-link {
+  color: var(--acm-red);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+.acm-class-link:hover {
+  color: var(--acm-red-dark);
+  text-decoration: underline;
+}
+
+/* Avatar */
+.acm-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #b10019, #7b0012);
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+/* Status badge */
+.acm-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* QC link */
+.acm-qc-link {
+  color: var(--acm-red);
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.acm-qc-link:hover { text-decoration: underline; color: var(--acm-red-dark); }
+
+/* Export button */
+.acm-btn-export {
+  background: transparent;
+  border: 1.5px solid var(--acm-red);
+  color: var(--acm-red);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 8px 16px;
+  transition: all 0.15s ease;
+}
+.acm-btn-export:hover {
+  background: var(--acm-red);
+  color: #fff;
+}
+
+/* Sticky footer */
+.acm-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: #fff;
+  border-top: 1px solid var(--acm-border);
+  padding: 10px 16px;
+}
+
+/* ── Back button ── */
+.acm-back-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acm-text-dark);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+.acm-back-btn:hover {
+  background: var(--acm-red-soft);
+  border-color: var(--acm-red);
+  color: var(--acm-red);
+}
+
+/* ── Info strip (used on students page) ── */
+.acm-info-strip {
+  border: 1px solid var(--acm-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(27, 8, 12, 0.04);
+}
+
+.acm-modal-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 18px;
+  background: linear-gradient(90deg, #fff5f6 0%, #fff 100%);
+  border-bottom: 1px solid var(--acm-border);
+  flex-wrap: wrap;
+}
+.acm-strip-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--acm-text-dark);
+  font-weight: 600;
+}
+.acm-strip-item i { color: var(--acm-red); font-size: 13px; }
+
+/* Students page table — compact (no horizontal scroll needed) */
+.acm-students-table {
+  min-width: unset;
+  font-size: 13px;
+}
+.acm-students-table thead th {
+  padding: 8px 10px;
+  font-size: 11.5px;
+}
+.acm-students-table tbody td {
+  padding: 7px 10px;
+}
+
+/* Ant pagination — tint red */
+.acm-sticky-footer .ant-pagination-item-active {
+  border-color: var(--acm-red) !important;
+}
+.acm-sticky-footer .ant-pagination-item-active a {
+  color: var(--acm-red) !important;
+}
+.acm-sticky-footer .ant-pagination-item:hover a,
+.acm-sticky-footer .ant-pagination-prev:hover .ant-pagination-item-link,
+.acm-sticky-footer .ant-pagination-next:hover .ant-pagination-item-link {
+  color: var(--acm-red) !important;
+  border-color: var(--acm-red) !important;
+}
+
+/* ── Shine animation ── */
+@keyframes acmShine {
+  0%   { left: -42%; }
+  100% { left: 130%; }
+}
+
+@media (max-width: 768px) {
+  .acm-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .acm-hero-icon { display: none; }
+}

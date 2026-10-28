@@ -1,0 +1,55 @@
+// CSS màn Quản lý Ngữ pháp — NGUYÊN VĂN phần riêng của LMS_Frontend/src/features/learning-path/grammar/manage/manage-grammar.scss
+// (.grammar-point-title/.grammar-point-structure/.type-tab-btn/grammarSlideIn). Bỏ .manage-grammar-container/.ptm-header/.packages-list-card
+// (nền content-tree.scss đã có tương đương). [M5] đổi selector cha `.grammar-package-type-manager` → `.manage-grammar-page` (class trên .content của nền)
+// và bỏ `.row { animation }` (áp cho mọi .row trong trang, kể cả bảng antd — gây nhấp nháy khi phân trang). KHÔNG import từ component — thêm vào page-styles.ts.
+.manage-grammar-page {
+
+    // ── Grammar point rows ────────────────────────────────────────
+
+    .grammar-point-title {
+        font-weight: 700;
+        color: #1a56db;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+
+    .grammar-point-structure {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    // ── Type tab buttons ──────────────────────────────────────────
+
+    .type-tab-btn {
+        font-size: 13px;
+        transition: all 0.3s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+        }
+    }
+
+    // ── Folder / StudySet cards ───────────────────────────────────
+
+    @keyframes grammarSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .folder-list-wrapper,
+    .study-set-list-wrapper {
+        animation: grammarSlideIn 0.25s ease;
+    }
+}

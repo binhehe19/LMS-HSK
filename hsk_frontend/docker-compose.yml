@@ -1,0 +1,49 @@
+name: lms-hsk-frontend
+
+# Frontend quản lý LMS HSK (Next.js standalone), chạy sau Traefik của backend chung LMS_IELTS (cùng mẫu LMS_IELTS/frontend/docker-compose.yml).
+# Backend (../backend trong LMS_IELTS) và docker/infra phải chạy trước: Traefik network do infra tạo.
+#
+#   cp .env.example .env    # điền HSK_DOMAIN, TRAEFIK_NETWORK, NEXT_PUBLIC_AUTH_API_BASE_URL, NEXT_PUBLIC_AUTH_FRONTEND_URL (bắt buộc)
+#   docker compose build && docker compose up -d
+#
+# NEXT_PUBLIC_* nhúng lúc build: đổi giá trị thì phải build lại. Chỉ bật NEXT_PUBLIC_HSK_API_BASE_PATH / QUIZ / TICKET khi backend đã có endpoint tương ứng.
+# Traefik: FE nhận mọi request của HSK_DOMAIN (priority 1); /api/lms, /api/storage, /api/notification do backend chiếm trước (priority cao hơn).
+
+services:
+  hsk-frontend:
+    image: lms-hsk-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_AUTH_API_BASE_URL: ${NEXT_PUBLIC_AUTH_API_BASE_URL:?}
+        NEXT_PUBLIC_AUTH_FRONTEND_URL: ${NEXT_PUBLIC_AUTH_FRONTEND_URL:?}
+        NEXT_PUBLIC_LMS_API_BASE_PATH: ${NEXT_PUBLIC_LMS_API_BASE_PATH:-/api/lms}
+        NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH: ${NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH:-/api/notification}
+        NEXT_PUBLIC_STORAGE_API_BASE_PATH: ${NEXT_PUBLIC_STORAGE_API_BASE_PATH:-/api/storage}
+        NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH: ${NEXT_PUBLIC_ADMIN_USER_API_BASE_PATH:-}
+        NEXT_PUBLIC_HSK_API_BASE_PATH: ${NEXT_PUBLIC_HSK_API_BASE_PATH:-}
+        NEXT_PUBLIC_QUIZ_API_BASE_PATH: ${NEXT_PUBLIC_QUIZ_API_BASE_PATH:-}
+        NEXT_PUBLIC_TICKET_API_BASE_PATH: ${NEXT_PUBLIC_TICKET_API_BASE_PATH:-}
+    container_name: lms-hsk-frontend
+    restart: unless-stopped
+    networks:
+      hsk-frontend-network:
+        aliases:
+          - lms-hsk-frontend
+      traefik-public: {}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:?}
+      - traefik.http.routers.lms-hsk-frontend.rule=Host(`${HSK_DOMAIN:?}`)
+      - traefik.http.routers.lms-hsk-frontend.entrypoints=web
+      - traefik.http.routers.lms-hsk-frontend.priority=1
+      - traefik.http.routers.lms-hsk-frontend.service=lms-hsk-frontend
+      - traefik.http.services.lms-hsk-frontend.loadbalancer.server.port=3000
+
+networks:
+  hsk-frontend-network:
+    driver: bridge
+  traefik-public:
+    name: ${TRAEFIK_NETWORK:?}
+    external: true

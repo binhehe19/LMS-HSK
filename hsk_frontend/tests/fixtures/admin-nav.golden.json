@@ -1,0 +1,236 @@
+{
+  "authAdminUsersUrl": "https://auth.test.invalid/admin/users",
+  "items": [
+    {
+      "header": null,
+      "title": "Overview",
+      "icon": "isax isax-grid-3",
+      "route": "/admin/dashboard",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Quản lý thông báo",
+      "icon": "isax isax-notification-bing",
+      "route": "/admin/settings/notifications",
+      "subRoute": null,
+      "activePrefix": "/admin/settings/notifications"
+    },
+    {
+      "header": null,
+      "title": "Phân tích hành vi",
+      "icon": "isax isax-chart-21",
+      "route": "/admin/analytics",
+      "subRoute": null,
+      "activePrefix": "/admin/analytics"
+    },
+    {
+      "header": null,
+      "title": "Quản lý lớp học",
+      "icon": "isax isax-teacher",
+      "route": "/admin/class-management",
+      "subRoute": null,
+      "activePrefix": "/admin/class-management"
+    },
+    {
+      "header": null,
+      "title": "Yêu cầu hỗ trợ",
+      "icon": "isax isax-ticket",
+      "route": "/instructor/instructor-support-tickets",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "HỆ THỐNG ÔN LUYỆN",
+      "title": "Quản lý Luyện viết (Hán tự)",
+      "icon": "isax isax-pen-add",
+      "route": "/hanzi/manage",
+      "subRoute": null,
+      "activePrefix": "/hanzi"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Luyện Phát âm",
+      "icon": "isax isax-microphone",
+      "route": "/pronunciation/manage",
+      "subRoute": null,
+      "activePrefix": "/pronunciation"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Thẻ ghi nhớ",
+      "icon": "isax isax-folder-2",
+      "route": "/flashcard/create-package",
+      "subRoute": null,
+      "activePrefix": "/flashcard"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Ngữ pháp",
+      "icon": "isax isax-book",
+      "route": "/grammar/manage",
+      "subRoute": null,
+      "activePrefix": "/grammar"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Từ vựng",
+      "icon": "isax isax-book-1",
+      "route": "/vocab-set/manage",
+      "subRoute": null,
+      "activePrefix": "/vocab-set"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Bài tập",
+      "icon": "isax isax-document-text",
+      "route": "/quiz/manage",
+      "subRoute": null,
+      "activePrefix": "/quiz"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Từ điển",
+      "icon": "isax isax-book-1",
+      "route": "/vocabulary/manage",
+      "subRoute": null,
+      "activePrefix": "/vocabulary"
+    },
+    {
+      "header": "KHÓA HỌC TRỰC TUYẾN",
+      "title": "Quản lý Khóa học Trực tuyến",
+      "icon": "isax isax-teacher",
+      "route": "/learning-path/online-course/manage",
+      "subRoute": null,
+      "activePrefix": "/learning-path/online-course/manage"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Tài liệu học tập",
+      "icon": "isax isax-document-text",
+      "route": "/learning-path/lesson-materials/manage",
+      "subRoute": null,
+      "activePrefix": "/learning-path/lesson-materials/manage"
+    },
+    {
+      "header": "CHƯƠNG TRÌNH HỌC",
+      "title": "Quản lý Giáo trình",
+      "icon": "isax isax-book-saved",
+      "route": "/learning-path/syllabus/manage",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Quản lý Giảng viên",
+      "icon": "isax isax-profile-2user",
+      "route": "/admin/teacher-management",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Quản lý Thông tin \nĐăng ký Khóa học Trực tuyến",
+      "icon": "isax isax-document-download",
+      "route": "/learning-path/online-course/leads",
+      "subRoute": null,
+      "activePrefix": "/learning-path/online-course/leads"
+    },
+    {
+      "header": "KHO TÀI NGUYÊN",
+      "title": "Quản lý Kho lưu trữ Đa phương tiện",
+      "icon": "isax isax-video-play",
+      "route": "/instructor/manage-storage",
+      "subRoute": null,
+      "activePrefix": "/instructor/manage-storage"
+    },
+    {
+      "header": "KHÁC",
+      "title": "Sao kê",
+      "icon": "isax isax-shopping-cart",
+      "route": "/admin/statements",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Phân công công việc",
+      "icon": "isax isax-ticket",
+      "route": "/admin/tickets",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "QUẢN TRỊ HỆ THỐNG",
+      "title": "Quản lý Gói thành viên",
+      "icon": "isax isax-crown",
+      "route": "/admin/membership-management",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Quản lý người dùng",
+      "icon": "isax isax-profile-2user",
+      "route": "https://auth.test.invalid/admin/users",
+      "subRoute": null,
+      "activePrefix": "/admin/users"
+    }
+  ],
+  "active": {
+    "/admin/dashboard": [
+      0
+    ],
+    "/admin/class-management": [
+      3
+    ],
+    "/admin/class-management/students": [
+      3
+    ],
+    "/admin/analytics": [
+      2
+    ],
+    "/admin/settings/notifications": [
+      1
+    ],
+    "/admin/teacher-management": [
+      15
+    ],
+    "/hanzi/manage": [
+      5
+    ],
+    "/hanzi/manage/create": [
+      5
+    ],
+    "/vocab-set/manage": [
+      9
+    ],
+    "/quiz/manage": [
+      10
+    ],
+    "/learning-path/online-course/manage": [
+      12
+    ],
+    "/learning-path/syllabus/manage": [
+      14
+    ],
+    "/instructor/instructor-support-tickets": [
+      4
+    ],
+    "/admin/tickets": [
+      19
+    ],
+    "/admin/statements": [
+      18
+    ],
+    "/admin/membership-management": [
+      20
+    ],
+    "/admin/users": [
+      21
+    ],
+    "/": [],
+    "/admin": []
+  }
+}
