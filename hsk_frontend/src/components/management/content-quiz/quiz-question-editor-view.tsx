@@ -16,25 +16,24 @@ import { quizDifficultyMeta, quizSkillLabel } from "@/lib/content/quiz-item";
 import type { QuizItem, QuizQuestion } from "@/types/content-quiz";
 
 export interface QuizQuestionEditorViewProps {
-  quizState: FetchState<QuizItem>;
+  /** Trạng thái tải chung (quiz + câu hỏi cùng nằm trong 1 content, tải chung 1 lần). */
+  state: FetchState<{ item: QuizItem; questions: QuizQuestion[]; packageName: string }>;
   quiz: QuizItem | null;
-  questionsState: FetchState<QuizQuestion[]>;
   questions: QuizQuestion[];
-  /** Tên bộ đề cha cho breadcrumb (null khi chưa tải/không có trong URL). */
-  studySetTitle: string | null;
+  /** Tên gói cha cho breadcrumb (null khi chưa tải). */
+  packageName: string | null;
   access: ContentAccess;
   writeEnabled: boolean;
   canWrite: boolean;
   busy: boolean;
-  /** Về gốc cây ("Quản lý Bài tập"). */
+  /** Về gốc ("Quản lý Bài tập"). */
   rootHref: string;
-  /** Về cấp bộ đề (hoặc cấp gần nhất còn trong URL). */
+  /** Về cấp Bài tập của gói. */
   backHref: string;
   onAdd: () => void;
   onEdit: (q: QuizQuestion) => void;
   onDelete: (q: QuizQuestion) => void;
-  onRetryQuiz: () => void;
-  onRetryQuestions: () => void;
+  onRetry: () => void;
 }
 
 function QuizMedia({ quiz }: { quiz: QuizItem }) {
@@ -75,9 +74,8 @@ function QuizMedia({ quiz }: { quiz: QuizItem }) {
   );
 }
 
-export function QuizQuestionEditorView({ quizState, quiz, questionsState, questions, studySetTitle, access, writeEnabled, canWrite, busy, rootHref, backHref, onAdd, onEdit, onDelete, onRetryQuiz, onRetryQuestions }: QuizQuestionEditorViewProps) {
-  const quizNotice = quizState.kind === "waiting" || quizState.kind === "error";
-  const questionsNotice = questionsState.kind === "waiting" || questionsState.kind === "error";
+export function QuizQuestionEditorView({ state, quiz, questions, packageName, access, writeEnabled, canWrite, busy, rootHref, backHref, onAdd, onEdit, onDelete, onRetry }: QuizQuestionEditorViewProps) {
+  const notice = state.kind === "waiting" || state.kind === "error";
   const difficulty = quizDifficultyMeta(quiz?.difficulty);
 
   return (
@@ -112,7 +110,7 @@ export function QuizQuestionEditorView({ quizState, quiz, questionsState, questi
               {backHref !== rootHref && (
                 <li className="breadcrumb-item">
                   <Link href={backHref} prefetch={false} className="btn btn-link p-0 align-baseline">
-                    <i className="isax isax-book-1 me-1" /> {studySetTitle ?? "Bộ đề"}
+                    <i className="isax isax-book-1 me-1" /> {packageName ?? "Package"}
                   </Link>
                 </li>
               )}
@@ -124,13 +122,13 @@ export function QuizQuestionEditorView({ quizState, quiz, questionsState, questi
         </div>
 
         <div className="card-body p-4">
-          {quizState.kind === "loading" && !quiz ? (
+          {state.kind === "loading" && !quiz ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status" />
               <p className="text-muted mt-3 mb-0">Đang tải bài tập...</p>
             </div>
-          ) : quizNotice && !quiz ? (
-            <FetchStateNotice state={quizState} waitingText="Bài tập chưa được kết nối API (WAITING FOR BACKEND)." onRetry={onRetryQuiz} testId="quiz-notice" />
+          ) : notice && !quiz ? (
+            <FetchStateNotice state={state} waitingText="Bài tập chưa được kết nối API (WAITING FOR BACKEND)." onRetry={onRetry} testId="quiz-notice" />
           ) : (
             <>
               <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -142,7 +140,7 @@ export function QuizQuestionEditorView({ quizState, quiz, questionsState, questi
                   {quiz && (
                     <div className="d-flex align-items-center gap-2 flex-wrap small text-muted" data-testid="quiz-meta">
                       <span className={`difficulty-badge ${difficulty.className}`}>{difficulty.label}</span>
-                      <span className="badge bg-info-subtle text-info border">{quiz.skill ? quizSkillLabel(quiz.skill) : "Kỹ năng theo bộ đề"}</span>
+                      <span className="badge bg-info-subtle text-info border">{quiz.skill ? quizSkillLabel(quiz.skill) : "Chưa chọn kỹ năng"}</span>
                       <span>
                         <i className="isax isax-timer-1 me-1" />
                         {quiz.durationMinutes && quiz.durationMinutes > 0 ? `${quiz.durationMinutes} phút` : "Không giới hạn"}
@@ -168,13 +166,13 @@ export function QuizQuestionEditorView({ quizState, quiz, questionsState, questi
 
               {quiz && <QuizMedia quiz={quiz} />}
 
-              {questionsState.kind === "loading" ? (
+              {state.kind === "loading" ? (
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status" />
                   <p className="text-muted mt-3 mb-0">Đang tải câu hỏi...</p>
                 </div>
-              ) : questionsNotice ? (
-                <FetchStateNotice state={questionsState} waitingText="Danh sách câu hỏi chưa được kết nối API (WAITING FOR BACKEND)." onRetry={onRetryQuestions} testId="quiz-questions-notice" />
+              ) : notice ? (
+                <FetchStateNotice state={state} waitingText="Danh sách câu hỏi chưa được kết nối API (WAITING FOR BACKEND)." onRetry={onRetry} testId="quiz-questions-notice" />
               ) : (
                 <QuizQuestionList questions={questions} canWrite={canWrite} busy={busy} onEdit={onEdit} onDelete={onDelete} />
               )}

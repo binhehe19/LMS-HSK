@@ -51,9 +51,9 @@ export function DictionaryManageView({ filters, state, page, refreshing, access,
     return () => window.clearTimeout(timer);
   }, [keyword, filters, onFiltersChange]);
 
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [strokeModal, setStrokeModal] = useState<Vocabulary | null>(null);
-  const toggleRow = (id: number) =>
+  const toggleRow = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);

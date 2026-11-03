@@ -1,5 +1,8 @@
-// Cấu hình menu sidebar Admin (một nguồn dữ liệu, khai báo tĩnh). Thứ tự, nhãn, icon, route và activePrefix khớp
-// NGUYÊN VĂN menu Admin của M1 (tests/fixtures/admin-nav.golden.json được sinh từ code M1; test golden so khớp từng mục).
+// Cấu hình menu sidebar Admin (một nguồn dữ liệu, khai báo tĩnh). Gốc khớp NGUYÊN VĂN menu Admin của M1
+// (tests/fixtures/admin-nav.golden.json được sinh từ code M1; test golden so khớp từng mục) — đã bỏ theo yêu cầu:
+// Phân tích hành vi, Quản lý Giảng viên, Quản lý Thông tin Đăng ký Khóa học Trực tuyến, Quản lý Kho lưu trữ Đa
+// phương tiện, Sao kê, Phân công công việc, Quản lý Gói thành viên (golden đã cập nhật theo, các trang/route liên
+// quan vẫn giữ nguyên, chỉ ẩn khỏi sidebar).
 // Menu Admin của LMS_Frontend cũ lấy từ dữ liệu menu của instructor rồi lọc/đổi nhãn/map route; ở đây ghi trực tiếp kết quả.
 // Sidebar của vai trò khác (instructor/teacher-manager) sẽ có file riêng dùng chung kiểu NavItem trong management-nav.ts.
 import type { NavItem } from "@/components/management/management-nav";
@@ -21,12 +24,6 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       href: "/admin/settings/notifications",
       activePrefix: "/admin/settings/notifications",
       unreadBadge: true,
-    },
-    {
-      title: "Phân tích hành vi",
-      icon: "isax isax-chart-21",
-      href: "/admin/analytics",
-      activePrefix: "/admin/analytics",
     },
     {
       title: "Quản lý lớp học",
@@ -86,8 +83,8 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       header: "KHÓA HỌC TRỰC TUYẾN",
       title: "Quản lý Khóa học Trực tuyến",
       icon: "isax isax-teacher",
-      href: "/learning-path/online-course/manage",
-      activePrefix: "/learning-path/online-course/manage",
+      href: "/online-course/manage",
+      activePrefix: "/online-course/manage",
     },
     {
       title: "Quản lý Tài liệu học tập",
@@ -102,41 +99,7 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       href: "/learning-path/syllabus/manage",
     },
     {
-      title: "Quản lý Giảng viên",
-      icon: "isax isax-profile-2user",
-      href: "/admin/teacher-management",
-    },
-    {
-      title: "Quản lý Thông tin \nĐăng ký Khóa học Trực tuyến",
-      icon: "isax isax-document-download",
-      href: "/learning-path/online-course/leads",
-      activePrefix: "/learning-path/online-course/leads",
-    },
-    {
-      header: "KHO TÀI NGUYÊN",
-      title: "Quản lý Kho lưu trữ Đa phương tiện",
-      icon: "isax isax-video-play",
-      href: "/instructor/manage-storage",
-      activePrefix: "/instructor/manage-storage",
-    },
-    {
-      header: "KHÁC",
-      title: "Sao kê",
-      icon: "isax isax-shopping-cart",
-      href: "/admin/statements",
-    },
-    {
-      title: "Phân công công việc",
-      icon: "isax isax-ticket",
-      href: "/admin/tickets",
-    },
-    {
       header: "QUẢN TRỊ HỆ THỐNG",
-      title: "Quản lý Gói thành viên",
-      icon: "isax isax-crown",
-      href: "/admin/membership-management",
-    },
-    {
       title: "Quản lý người dùng",
       icon: "isax isax-profile-2user",
       href: authAdminUsersUrl,

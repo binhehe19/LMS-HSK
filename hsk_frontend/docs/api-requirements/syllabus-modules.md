@@ -1,4 +1,15 @@
-# Yêu cầu API cho backend — Quản lý Syllabus: `/learning-path/syllabus/manage` (module ôn luyện theo buổi)
+# [HUỶ — xem ghi chú] Yêu cầu API cho backend — Quản lý Syllabus: `/learning-path/syllabus/manage` (module ôn luyện theo buổi)
+
+> **Cập nhật 2026-11-02 — hợp đồng `/online-learning/schedule-modules*` dưới đây ĐÃ HUỶ, không triển khai.** Module ôn luyện theo buổi giờ dùng
+> lại NGUYÊN `/content-packages*` + `/learning-resources*` của `repo-lms` (đã "AVAILABLE", xem `lms-content-client.ts`/`lms-quiz-client.ts`/
+> `lms-grammar-client.ts`) qua `lmsClient` — đúng cơ chế THẬT của IELTS (`frontend/.../package-editor/use-package-resources.ts`): không có entity
+> "module" riêng, chỉ là `LearningResource` copy từ Kho HSK vào `ContentPackage` của CHÍNH giáo trình đó, tại `sessionNo` = vị trí buổi trong
+> `schedule[]` + 1. **Không có backend mới.** Chỉ 3 loại có nội dung thật: VOCABULARY (gồm FLASHCARD), ASSESSMENT (QUIZ), GRAMMAR — các loại khác
+> của hợp đồng cũ (WRITING, KANJI, PRONUNCIATION, LISTENING, AI_\*, LESSON_MATERIAL) chưa từng có nội dung backing, bỏ khỏi màn này.
+> Vì mọi endpoint `/content-packages*` chỉ `ROLE_ADMIN` ở backend, màn này giờ **chỉ Admin** thao tác (xem+sửa) — không còn theo ticket `OTHER`
+> như mục 3 dưới đây mô tả. Code mới: `lib/syllabus/schedule-resource-types.ts`, `lib/api/syllabus-schedule-resources-client.ts`,
+> `components/management/syllabus/use-schedule-resources.ts`, `add-schedule-module-modal.tsx`, `schedule-table.tsx`.
+> Nội dung dưới đây chỉ còn giá trị lịch sử (bối cảnh vì sao từng đề xuất hợp đồng riêng).
 
 Trạng thái: giáo trình (danh sách, chi tiết, phiên bản) **AVAILABLE** từ backend chung; module ôn luyện theo buổi **WAITING FOR BACKEND** (hợp đồng ĐỀ XUẤT dưới đây, kế thừa HSK cũ). Frontend (M5, gói W2-D) đã hoàn thiện giao diện, lớp gọi API và máy chủ giả lập; **không** sửa backend và **không** dùng dữ liệu giả thay thế: dịch vụ chưa cấu hình ⇒ màn hiện "WAITING FOR BACKEND", API lỗi ⇒ hiện lỗi + "Thử lại".
 

@@ -62,7 +62,7 @@ const MATRIX: [url: string, allowed: string[]][] = [
   ["/instructor/instructor-tickets", ["TEACHER", "MENTOR"]], // cũ còn COLLABORATOR → chưa xác minh → chặn
   ["/hanzi/manage", ["ADMIN", "TEACHER", "MENTOR"]], // dùng chung, guard liệt kê đủ
   ["/instructor/manage-storage", ["ADMIN", "TEACHER", "MENTOR"]], // dưới /instructor nhưng cũ cho phép ADMIN
-  ["/learning-path/online-course/manage", ["ADMIN"]], // cũ ADMIN + TEACHER_MANAGER
+  ["/online-course/manage", ["ADMIN"]], // cũ ADMIN + TEACHER_MANAGER
   ["/learning-path/syllabus/manage", ["ADMIN", "TEACHER", "MENTOR"]],
   ["/hanzi/edit/42", ["ADMIN", "TEACHER", "MENTOR"]], // route có tham số
   ["/instructor/welcome", ["TEACHER", "MENTOR"]], // HSK cũ không có PrivateRoute; quyết định giao diện của chủ dự án (M3B.2), KHÔNG Admin

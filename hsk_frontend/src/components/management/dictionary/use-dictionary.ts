@@ -7,7 +7,7 @@ import { useKeyedFetch } from "@/components/management/notifications/use-keyed-f
 import { useContentAccess } from "@/hooks/use-content-access";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { ApiError } from "@/lib/api/api-client";
-import { createVocabulary, deleteVocabulary, getVocabulary, searchVocabularies, updateVocabulary } from "@/lib/api/dictionary-client";
+import { createVocabulary, deleteVocabulary, getVocabulary, searchVocabularies, updateVocabulary } from "@/lib/api/lms-dictionary-client";
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import { buildVocabularyPayload, validateVocabularyForm, type VocabularyFormValues } from "@/lib/dictionary/vocabulary-form";
 import { type DictionaryFilters, dictionaryHref, dictionaryQuery, readDictionaryFilters, toSearchParams } from "@/lib/dictionary/vocabulary-model";
@@ -65,7 +65,7 @@ export function useDictionary() {
   };
 
   /** Bản cũ gọi getById trước khi mở form sửa (danh sách là bản rút gọn, thiếu nghĩa/ví dụ đầy đủ). */
-  const loadForEdit = (id: number): Promise<Vocabulary | null> => run("Không thể tải thông tin từ vựng", () => getVocabulary(id));
+  const loadForEdit = (id: string): Promise<Vocabulary | null> => run("Không thể tải thông tin từ vựng", () => getVocabulary(id));
 
   const save = async (values: VocabularyFormValues, editing: Vocabulary | null): Promise<boolean> => {
     const invalid = validateVocabularyForm(values);

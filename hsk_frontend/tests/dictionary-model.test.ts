@@ -4,7 +4,7 @@ import { allMeanings, buildSearchQuery, DEFAULT_DICTIONARY_FILTERS, dictionaryHr
 import type { Vocabulary } from "@/types/dictionary";
 
 const hao: Vocabulary = {
-  id: 2,
+  id: "2",
   hanzi: "好",
   hskLevel: 1,
   isSingleVocab: true,
@@ -12,8 +12,8 @@ const hao: Vocabulary = {
   strokeCount: 6,
   status: "published",
   pinyins: [
-    { id: 21, pinyin: "hǎo", sinoVietnamese: "hảo", wordTypes: "Tính từ, Phó từ", isPrimary: false, measureWord: "", compounds: JSON.stringify([{ hanzi: "好吃", sinoVietnamese: "hảo cật" }]), synonyms: JSON.stringify([{ hanzi: "棒", pinyin: "bàng" }]), antonyms: "không phải json", meanings: [{ id: 1, meaning: "tốt", exampleSentenceCn: "很好。" }, { id: 2, meaning: "khỏe" }] },
-    { id: 22, pinyin: "hào", sinoVietnamese: "hiếu", wordTypes: "Động từ", isPrimary: true, meanings: [{ id: 3, meaning: "thích" }] },
+    { id: "21", pinyin: "hǎo", sinoVietnamese: "hảo", wordTypes: "Tính từ, Phó từ", isPrimary: false, measureWord: "", compounds: JSON.stringify([{ hanzi: "好吃", sinoVietnamese: "hảo cật" }]), synonyms: JSON.stringify([{ hanzi: "棒", pinyin: "bàng" }]), antonyms: "không phải json", meanings: [{ id: "1", meaning: "tốt", exampleSentenceCn: "很好。" }, { id: "2", meaning: "khỏe" }] },
+    { id: "22", pinyin: "hào", sinoVietnamese: "hiếu", wordTypes: "Động từ", isPrimary: true, meanings: [{ id: "3", meaning: "thích" }] },
   ],
 };
 

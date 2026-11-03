@@ -1,10 +1,11 @@
-// Token chỉ tồn tại TRONG BỘ NHỚ của tab (khác IELTS: localStorage). Lý do: Auth backend luôn set cookie HttpOnly;
-// token chỉ xuất hiện trong body/hash ở profile không phải prod (isExposeTokensEnabled), tức môi trường dev/staging chạy
-// từ host khác ROOT_DOMAIN (vd localhost) nơi cookie không đi kèm. Ở production phiên chỉ là cookie, không có token nào ở đây.
-// Hệ quả đã chấp nhận: chế độ hash mất token khi tải lại trang/mở tab mới; khi đó đi vòng qua Authentication_Frontend
-// (đã có phiên cookie của chính nó thì đăng nhập lại nhanh). Không bao giờ ghi token vào log hoặc web storage.
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
+// Token được lưu ở localStorage — giống IELTS (lib/auth/auth-storage.ts, mirror ERP_Frontend/Exam_Frontend) thay vì chỉ giữ
+// trong biến bộ nhớ của tab: bản trước mất token mỗi khi tải lại trang/mở tab mới (phải vòng qua Authentication_Frontend để
+// lấy lại), gây văng phiên giả ngay sau khi vừa đăng nhập xong (reload hoặc điều hướng cứng là mất token). Auth backend luôn
+// set cookie HttpOnly; token chỉ xuất hiện trong hash ở profile không phải prod (isExposeTokensEnabled), tức môi trường
+// dev/staging chạy từ host khác ROOT_DOMAIN (vd localhost) nơi cookie không đi kèm. Ở production phiên chỉ là cookie, không
+// có token nào ở đây. Không bao giờ ghi token vào log.
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
 const TOKEN_PARAMS = ["access_token", "refresh_token"] as const;
 // Dạng JWT (3 đoạn base64url); chỉ kiểm tra hình dạng để loại rác, chữ ký do server kiểm tra.
@@ -16,21 +17,25 @@ function isPlausibleToken(value: string | null): value is string {
 }
 
 export function getAccessToken(): string | null {
-  return accessToken;
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function getRefreshToken(): string | null {
-  return refreshToken;
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 export function setTokens(tokens: { accessToken?: string | null; refreshToken?: string | null }): void {
-  if (tokens.accessToken) accessToken = tokens.accessToken;
-  if (tokens.refreshToken) refreshToken = tokens.refreshToken;
+  if (typeof window === "undefined") return;
+  if (tokens.accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+  if (tokens.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
 }
 
 export function clearTokens(): void {
-  accessToken = null;
-  refreshToken = null;
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 /**
@@ -48,8 +53,12 @@ export function consumeTokensFromUrlHash(): boolean {
   const refresh = params.get("refresh_token");
   const accepted = isPlausibleToken(access);
   if (accepted) {
-    accessToken = access;
-    refreshToken = isPlausibleToken(refresh) ? refresh : null;
+    localStorage.setItem(ACCESS_TOKEN_KEY, access);
+    if (isPlausibleToken(refresh)) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    } else {
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
   }
 
   for (const name of TOKEN_PARAMS) params.delete(name);

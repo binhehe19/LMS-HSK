@@ -5,12 +5,9 @@
 
 # testing
 /coverage
-/test-results/
-/playwright-report/
 
 # next.js
 /.next/
-/.next-e2e*/
 /out/
 
 # production
@@ -29,4 +26,3 @@ npm-debug.log*
 .env*
 !.env.example
 /.next-guard-test/
-/.next-preview/

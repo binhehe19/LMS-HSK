@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiNotConfiguredError } from "@/lib/api/api-client";
 import { createStorageVideo, listStorageFolders, listStoragePackages, setStoragePackagePublished } from "@/lib/api/hsk-storage-client";
-import { archiveMaterialGroup, listMaterialGroups, listMaterials, updateMaterialGroup, updateMaterialStatus } from "@/lib/api/lesson-materials-client";
 import { deleteOnlineCourse, listOnlineCourseLeads, listOnlineCourses, startOnlineSync, updateOnlineCourse } from "@/lib/api/online-course-client";
 import { WriteDisabledError } from "@/lib/api/write-gate";
 
@@ -51,42 +50,6 @@ describe("online-course-client (hợp đồng đề xuất /online-learning/*)",
     expect(fetchMock.mock.calls[1][1].method).toBe("DELETE");
     expect(fetchMock.mock.calls[2][0]).toBe("/api/hsk/online-learning/sync/all");
     expect(fetchMock.mock.calls[2][1].method).toBe("POST");
-  });
-});
-
-describe("lesson-materials-client (hợp đồng đề xuất /lesson-materials/*)", () => {
-  it("listMaterialGroups bỏ tham số rỗng; listMaterials có page/size/sort mặc định", async () => {
-    const fetchMock = okResponse([]);
-    vi.stubGlobal("fetch", fetchMock);
-    await listMaterialGroups();
-    await listMaterialGroups({ status: "ACTIVE", search: " hsk " });
-    await listMaterials({ size: 200 });
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/hsk/lesson-materials/groups");
-    expect(fetchMock.mock.calls[1][0]).toBe("/api/hsk/lesson-materials/groups?status=ACTIVE&search=hsk");
-    expect(fetchMock.mock.calls[2][0]).toBe("/api/hsk/lesson-materials/materials?page=0&size=200&sort=createdAt%2Cdesc");
-  });
-
-  it("PATCH bộ tài liệu / trạng thái tài liệu đi qua apiFetch với method PATCH và body JSON; DELETE bộ = lưu trữ", async () => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_LESSON_MATERIALS", "enabled");
-    const fetchMock = okResponse({ id: "g1" });
-    vi.stubGlobal("fetch", fetchMock);
-    await updateMaterialGroup("g1", { status: "ACTIVE" }, false);
-    await updateMaterialStatus("m 1", { status: "PUBLISHED" }, false);
-    await archiveMaterialGroup("g1", false);
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/hsk/lesson-materials/groups/g1");
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "PATCH", body: JSON.stringify({ status: "ACTIVE" }), credentials: "include" });
-    expect(fetchMock.mock.calls[1][0]).toBe("/api/hsk/lesson-materials/materials/m%201/status");
-    expect(fetchMock.mock.calls[1][1].method).toBe("PATCH");
-    expect(fetchMock.mock.calls[2][1].method).toBe("DELETE");
-  });
-
-  it("PATCH khi chưa cấu hình base => ApiNotConfiguredError (không ném đồng bộ, không fetch)", async () => {
-    vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_LESSON_MATERIALS", "enabled");
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    await expect(updateMaterialGroup("g1", { name: "x" }, false)).rejects.toBeInstanceOf(ApiNotConfiguredError);
-    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

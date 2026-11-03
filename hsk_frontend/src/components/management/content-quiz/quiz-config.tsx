@@ -5,6 +5,7 @@
 // do QuizManagePageContent chuyển hướng hiển thị. Bộ đề có kỹ năng (hasSkill) với QUIZ_SKILL_OPTIONS của bản cũ.
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { FlatItemsBreadcrumbView } from "@/components/management/content-flat/flat-items-breadcrumb-view";
 import { QuizItemForm } from "@/components/management/content-quiz/quiz-item-form";
 import type { ContentApiTarget } from "@/lib/api/content-tree-client";
 import { emptyQuizInput, normalizeQuizInput, quizDifficultyMeta, QUIZ_SKILLS, quizSkillLabel, quizSummary, quizToInput, validateQuizInput } from "@/lib/content/quiz-item";
@@ -101,6 +102,7 @@ export const QUIZ_CONFIG: ContentModuleConfig<QuizItem> = {
   skills: QUIZ_SKILLS,
   supportsImport: true,
   itemColumns: QUIZ_COLUMNS,
+  ItemsView: FlatItemsBreadcrumbView,
   ItemForm: QuizItemForm,
   emptyItemInput: emptyQuizInput,
   itemToInput: quizToInput,

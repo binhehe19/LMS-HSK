@@ -1,4 +1,4 @@
-// WAITING FOR BACKEND — Hàm gọi API màn Quản lý khoá học trực tuyến (/learning-path/online-course/manage) và Đăng ký khoá học (/leads) theo HỢP ĐỒNG
+// WAITING FOR BACKEND — Hàm gọi API màn Quản lý khoá học trực tuyến (/online-course/manage) và Đăng ký khoá học (/leads) theo HỢP ĐỒNG
 // ĐỀ XUẤT, kế thừa đường dẫn `/online-learning/*` của online-course.service.ts HSK cũ, qua base NEXT_PUBLIC_HSK_API_BASE_PATH (lib/api/hsk-client.ts).
 // Backend chung LMS_IELTS CHƯA có endpoint tương đương nên ở production biến này trống => mọi hàm ném ApiNotConfiguredError => màn hình hiện
 // WAITING FOR BACKEND. Máy chủ giả lập: scripts/mock/handlers/online-course.mjs. Hợp đồng chi tiết: docs/api-requirements/online-course.md.

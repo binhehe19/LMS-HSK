@@ -8,6 +8,7 @@ import { OLD_OUT_OF_SCOPE_PATHS, OLD_ROUTE_COUNTS, type OldRouteFact } from "@/l
 import {
   MANAGEMENT_ROUTES,
   MIGRATED_ROUTES,
+  RENAMED_ROUTES,
   UI_ROLE_DECISIONS,
   UNKNOWN_GROUP_LABEL,
   classifyRoute,
@@ -223,8 +224,9 @@ describe("registry khớp với App Router thực tế", () => {
     expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file)).toEqual(["src/app/demo/page.tsx"]);
   });
 
-  it("tập trang thật (page.tsx) chính là MIGRATED_ROUTES — không thiếu, không thừa", () => {
-    expect(realPages.map((p) => p.url).sort()).toEqual([...MIGRATED_ROUTES].sort());
+  it("tập trang thật (page.tsx) chính là MIGRATED_ROUTES, trừ các route đã RENAMED_ROUTES sang URL mới — không thiếu, không thừa", () => {
+    const servedUrls = MIGRATED_ROUTES.map((p) => RENAMED_ROUTES[p] ?? p);
+    expect(realPages.map((p) => p.url).sort()).toEqual([...servedUrls].sort());
   });
 
   it("mọi trang thật nằm trong nhóm (management) (được layout guard theo route bao phủ)", () => {
@@ -258,8 +260,8 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 22 mục = 20 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 20, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 15 mục = 13 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
   });

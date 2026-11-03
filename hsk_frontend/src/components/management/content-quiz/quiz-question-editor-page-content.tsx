@@ -7,7 +7,7 @@ import { QuizQuestionModal } from "@/components/management/content-quiz/quiz-que
 import { useQuizQuestions } from "@/components/management/content-quiz/use-quiz-questions";
 import { confirmAction } from "@/components/shared/confirm-action";
 import { emptyQuestionInput, questionSummary, questionToInput } from "@/lib/content/quiz-question";
-import { type ContentTreeLocation, ROOT_LOCATION, treeHref } from "@/lib/content/content-tree-params";
+import { FLAT_ROOT_LOCATION, flatHref, flatPackageLocation } from "@/lib/content/flat-content-params";
 import type { QuizQuestion } from "@/types/content-quiz";
 
 interface QuestionModalState {
@@ -15,10 +15,10 @@ interface QuestionModalState {
   key: number;
 }
 
-/** Container trình soạn câu hỏi: URL `/quiz/manage?packageId=&folderId=&studySetId=&quizId=`; "Quay lại" bỏ `quizId` để về đúng cấp của cây. */
-export function QuizQuestionEditorPageContent({ quizId, location }: { quizId: string; location: ContentTreeLocation }) {
+/** Container trình soạn câu hỏi: URL `/quiz/manage?packageId=&quizId=`; "Quay lại" bỏ `quizId` để về cấp Bài tập của gói. */
+export function QuizQuestionEditorPageContent({ packageId, quizId }: { packageId: string; quizId: string }) {
   const pathname = usePathname();
-  const editor = useQuizQuestions(quizId, location.studySetId);
+  const editor = useQuizQuestions(packageId, quizId);
   const [modal, setModal] = useState<QuestionModalState | null>(null);
 
   const remove = async (question: QuizQuestion) => {
@@ -29,22 +29,20 @@ export function QuizQuestionEditorPageContent({ quizId, location }: { quizId: st
   return (
     <>
       <QuizQuestionEditorView
-        quizState={editor.quizState}
+        state={editor.state}
         quiz={editor.quiz}
-        questionsState={editor.questionsState}
         questions={editor.questions}
-        studySetTitle={editor.studySetTitle}
+        packageName={editor.packageName}
         access={editor.access}
         writeEnabled={editor.writeEnabled}
         canWrite={editor.canWrite}
         busy={editor.busy}
-        rootHref={treeHref(pathname, ROOT_LOCATION)}
-        backHref={treeHref(pathname, location)}
+        rootHref={flatHref(pathname, FLAT_ROOT_LOCATION)}
+        backHref={flatHref(pathname, flatPackageLocation(packageId))}
         onAdd={() => setModal((prev) => ({ editing: null, key: (prev?.key ?? 0) + 1 }))}
         onEdit={(q) => setModal((prev) => ({ editing: q, key: (prev?.key ?? 0) + 1 }))}
         onDelete={(q) => void remove(q)}
-        onRetryQuiz={editor.reloadQuiz}
-        onRetryQuestions={editor.reloadQuestions}
+        onRetry={editor.reload}
       />
       {modal && (
         <QuizQuestionModal

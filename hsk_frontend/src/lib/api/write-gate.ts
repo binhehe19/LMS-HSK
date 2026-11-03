@@ -11,7 +11,6 @@ export type WriteFeature =
   | "teacher-management"
   | "content"
   | "online-course"
-  | "lesson-materials"
   | "storage"
   | "work-tickets"
   | "membership";
@@ -25,7 +24,6 @@ const FLAGS: Record<WriteFeature, () => string | undefined> = {
   "teacher-management": () => process.env.NEXT_PUBLIC_WRITE_TEACHER_MANAGEMENT,
   content: () => process.env.NEXT_PUBLIC_WRITE_CONTENT,
   "online-course": () => process.env.NEXT_PUBLIC_WRITE_ONLINE_COURSE,
-  "lesson-materials": () => process.env.NEXT_PUBLIC_WRITE_LESSON_MATERIALS,
   storage: () => process.env.NEXT_PUBLIC_WRITE_STORAGE,
   "work-tickets": () => process.env.NEXT_PUBLIC_WRITE_WORK_TICKETS,
   membership: () => process.env.NEXT_PUBLIC_WRITE_MEMBERSHIP,

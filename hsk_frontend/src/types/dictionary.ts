@@ -1,9 +1,10 @@
-// DTO của TỪ ĐIỂN (dịch vụ /dictionary/vocabularies của HSK cũ — core/types/vocabulary.type.ts, "matches backend DTOs exactly"). Giữ nguyên tên trường
-// vì backend từ điển đã tồn tại (LMS_Backend); backend chung LMS_IELTS chưa có nên vẫn là hợp đồng ĐỀ XUẤT: docs/api-requirements/dictionary.md.
+// DTO của TỪ ĐIỂN (dịch vụ /dictionary/vocabularies của HSK cũ — core/types/vocabulary.type.ts, "matches backend DTOs exactly").
+// Đã nối vào repo-lms thật qua lms-dictionary-client.ts: LearningResourceType.DICTIONARY/DictionaryContent (tài nguyên độc lập
+// trong Kho, id là ULID chuỗi — không phải số tự tăng như backend từ điển cũ).
 // Rút gọn có chủ đích: bỏ các trường "legacy flat" (pinyin/wordTypes/meanings ở cấp từ) và componentVocabs — màn quản lý mới chỉ dùng mô hình pinyins[].
 
 export interface VocabularyMeaning {
-  id?: number;
+  id?: string;
   meaning: string;
   exampleSentenceCn?: string;
   exampleSentenceVi?: string;
@@ -15,7 +16,7 @@ export interface VocabularyMeaning {
 }
 
 export interface VocabularyPinyin {
-  id?: number;
+  id?: string;
   pinyin: string;
   sinoVietnamese?: string;
   /** Từ loại, phân cách bằng dấu phẩy: "Động từ,Danh từ". */
@@ -36,7 +37,7 @@ export interface VocabularyPinyin {
 export type VocabularyStatus = "draft" | "published";
 
 export interface Vocabulary {
-  id: number;
+  id: string;
   hanzi: string;
   hskLevel?: number;
   audioUrl?: string;

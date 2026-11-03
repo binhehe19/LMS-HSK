@@ -1,105 +1,173 @@
-// WAITING FOR BACKEND — Hàm gọi API màn Quản lý tài liệu học tập (/learning-path/lesson-materials/manage) theo HỢP ĐỒNG ĐỀ XUẤT, kế thừa đường dẫn
-// `/lesson-materials/*` của lesson-materials.service.ts HSK cũ, qua base NEXT_PUBLIC_HSK_API_BASE_PATH (lib/api/hsk-client.ts). Backend chung có
-// content-packages MATERIAL/SLIDE + repo-storage nhưng chưa map được "bộ tài liệu"/trạng thái => PARTIAL; production để trống biến => WAITING FOR
-// BACKEND. Máy chủ giả lập: scripts/mock/handlers/lesson-materials.mjs. Hợp đồng chi tiết: docs/api-requirements/lesson-materials.md.
-//
-// Khác bản cũ có chủ đích: byte của tệp đi qua repo-storage của backend chung (`uploadFile` ở lib/api/storage-client.ts: presign → PUT → confirm) rồi
-// chỉ gửi `fileId` cho dịch vụ tài liệu — bản cũ POST multipart lên `/storage/upload` của HSK. PATCH không có trong createApiClient nên đi thẳng
-// `apiFetch` với cùng base (cùng cookie/Bearer/refresh một lần). Thao tác GHI qua công tắc an toàn (lib/api/write-gate.ts, miền "lesson-materials").
 "use client";
 
-import { ApiNotConfiguredError, apiFetch } from "@/lib/api/api-client";
-import { hskClient } from "@/lib/api/hsk-client";
+// Client "nối thật" màn Quản lý tài liệu học tập vào repo-lms có sẵn (ContentPackage + LearningResource), thay cho hợp đồng đề xuất cũ
+// `/lesson-materials/*` (chưa có backend). Cùng cơ chế đã chạy cho Kho Flashcard/Quiz/Ngữ pháp (lms-content-client.ts/lms-quiz-client.ts/
+// lms-grammar-client.ts): 1 "bộ tài liệu" = 1 ContentPackage (type SLIDE|MATERIAL), mỗi "tài liệu" = 1 LearningResource (content SlideMaterialContent)
+// gắn vào bản DRAFT của package ở sessionNo cố định = 1 (tài liệu không thuộc buổi/giáo trình nào). Dùng lmsClient (base NEXT_PUBLIC_LMS_API_BASE_PATH),
+// cùng write-gate "content" như Kho (đã enabled, không còn "lesson-materials" — xem docs/api-requirements/lesson-materials.md).
+import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
-import type {
-  BulkCreateMaterialResult,
-  CreateLessonMaterialGroupRequest,
-  CreateLessonMaterialRequest,
-  GroupedLessonMaterials,
-  LessonMaterial,
-  LessonMaterialGroup,
-  LessonMaterialGroupStatus,
-  LessonMaterialPage,
-  LessonMaterialQuery,
-  UpdateLessonMaterialGroupRequest,
-  UpdateLessonMaterialStatusRequest,
-} from "@/types/lesson-materials";
+import type { PageResponse } from "@/types/lms";
+import type { CreateLessonMaterialGroupRequest, CreateLessonMaterialRequest, LessonMaterial, LessonMaterialGroup, LessonMaterialType, UpdateLessonMaterialGroupRequest } from "@/types/lesson-materials";
 
-const enc = encodeURIComponent;
-const FEATURE = "lesson-materials";
-const GROUPS = "/lesson-materials/groups";
-const MATERIALS = "/lesson-materials/materials";
+const FEATURE = "content";
 
-async function hskPatch<T>(path: string, body: unknown): Promise<T> {
-  const base = process.env.NEXT_PUBLIC_HSK_API_BASE_PATH?.trim().replace(/\/+$/, "");
-  if (!base) throw new ApiNotConfiguredError();
-  return apiFetch<T>(base, path, { method: "PATCH", body: JSON.stringify(body) });
+/** Syllabus đại diện cố định cho mọi bộ tài liệu HSK theo loại (ContentPackage bắt buộc syllabusId/syllabusVersionId nhưng tài liệu không thuộc giáo trình nào). */
+function pseudoSyllabusId(type: LessonMaterialType): string {
+  return `HSK-LIBRARY-${type}`;
 }
 
-/** Bộ tài liệu (ROLE_ADMIN). `status`/`search` rỗng thì không gửi, như bản cũ. */
-export function listMaterialGroups(params: { status?: LessonMaterialGroupStatus; search?: string } = {}) {
-  const q = new URLSearchParams();
-  if (params.status) q.set("status", params.status);
-  if (params.search?.trim()) q.set("search", params.search.trim());
-  const query = q.toString();
-  return hskClient.get<LessonMaterialGroup[]>(query ? `${GROUPS}?${query}` : GROUPS);
+interface BackendPackageVersion {
+  id: string;
+  title: string | null;
+  description: string | null;
+}
+interface BackendPackage {
+  id: string;
+  type: string;
+  draftVersionId: string | null;
+  publishedVersionId: string | null;
+  draftVersion: BackendPackageVersion | null;
+  publishedVersion: BackendPackageVersion | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+interface SlideMaterialContent {
+  fileId: string;
+  fileName?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+}
+interface BackendLearningResource {
+  id: string;
+  draftVersionId: string | null;
+  publishedVersionId: string | null;
+  content: SlideMaterialContent | null;
+}
+interface BackendPackageVersionResource {
+  id: string;
+  learningResourceId: string;
+  learningResourceVersionId: string;
+  displayOrder: number;
+  resourceContent: SlideMaterialContent | null;
+}
+interface EditLockResponse {
+  acquired: boolean;
+  holderUserId?: string | null;
 }
 
-export function listGroupMaterials(groupId: string) {
-  return hskClient.get<GroupedLessonMaterials>(`${GROUPS}/${enc(groupId)}/materials`);
+function toUiGroup(pkg: BackendPackage, type: LessonMaterialType): LessonMaterialGroup {
+  const version = pkg.draftVersion ?? pkg.publishedVersion;
+  return {
+    id: pkg.id,
+    name: version?.title ?? "",
+    description: version?.description ?? undefined,
+    type,
+    status: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
+    createdAt: pkg.createdAt,
+    updatedAt: pkg.updatedAt,
+  };
 }
 
-/** Danh sách tài liệu phân trang (màn quản lý gọi `size=200` một lần để đếm theo bộ, như bản cũ). */
-export function listMaterials(query: LessonMaterialQuery = {}) {
-  const q = new URLSearchParams();
-  if (query.keyword) q.set("keyword", query.keyword);
-  if (query.category) q.set("category", query.category);
-  if (query.type) q.set("type", query.type);
-  if (query.status) q.set("status", query.status);
-  if (query.groupId) q.set("groupId", query.groupId);
-  q.set("page", String(query.page ?? 0));
-  q.set("size", String(query.size ?? 20));
-  q.set("sort", query.sort ?? "createdAt,desc");
-  return hskClient.get<LessonMaterialPage>(`${MATERIALS}?${q.toString()}`);
+function toUiMaterial(groupId: string, link: BackendPackageVersionResource): LessonMaterial {
+  return {
+    id: link.learningResourceId,
+    title: link.resourceContent?.fileName ?? "",
+    fileId: link.resourceContent?.fileId ?? "",
+    filename: link.resourceContent?.fileName,
+    mimeType: link.resourceContent?.mimeType,
+    sizeBytes: link.resourceContent?.sizeBytes,
+    groupId,
+    displayOrder: link.displayOrder,
+  };
 }
 
-// ---- thao tác GHI (write gate "lesson-materials") ----
-
-export function createMaterialGroup(body: CreateLessonMaterialGroupRequest, demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskClient.post<LessonMaterialGroup>(GROUPS, body);
+// ---- bộ tài liệu (ContentPackage) ----
+export async function listMaterialGroups(): Promise<LessonMaterialGroup[]> {
+  const types: LessonMaterialType[] = ["SLIDE", "MATERIAL"];
+  const pages = await Promise.all(types.map((type) => lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${type}&syllabusId=${encodeURIComponent(pseudoSyllabusId(type))}&size=200`)));
+  return types.flatMap((type, i) => (pages[i].items ?? []).map((pkg) => toUiGroup(pkg, type)));
 }
 
-export function updateMaterialGroup(groupId: string, body: UpdateLessonMaterialGroupRequest, demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskPatch<LessonMaterialGroup>(`${GROUPS}/${enc(groupId)}`, body);
-}
-
-/** DELETE của bản cũ là LƯU TRỮ (status → ARCHIVED), không xoá dữ liệu; khôi phục bằng PATCH {status: "ACTIVE"}. */
-export function archiveMaterialGroup(groupId: string, demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskClient.delete<LessonMaterialGroup>(`${GROUPS}/${enc(groupId)}`);
-}
-
-/** Tạo tài liệu từ `fileId` đã tải lên repo-storage; chỉ gửi các trường an toàn như bản cũ. */
-export function createMaterial(body: CreateLessonMaterialRequest, demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskClient.post<LessonMaterial>(MATERIALS, {
-    title: body.title,
-    description: body.description || undefined,
-    category: body.category,
-    type: body.type,
-    fileId: body.fileId,
-    groupId: body.groupId || undefined,
+export async function createMaterialGroup(input: CreateLessonMaterialGroupRequest, demo: boolean): Promise<LessonMaterialGroup> {
+  assertWriteEnabled(FEATURE, demo);
+  const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
+    type: input.type,
+    syllabusId: pseudoSyllabusId(input.type),
+    syllabusVersionId: `${pseudoSyllabusId(input.type)}-V1`,
+    title: input.name,
+    description: input.description || undefined,
   });
+  return toUiGroup(pkg, input.type);
 }
 
-export function bulkCreateMaterials(items: CreateLessonMaterialRequest[], demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskClient.post<BulkCreateMaterialResult>(`${MATERIALS}/bulk`, { items });
+async function ensureDraftVersionId(packageId: string): Promise<string> {
+  const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
+  if (pkg.draftVersionId) return pkg.draftVersionId;
+  const draft = await lmsClient.post<BackendPackageVersion>(`/content-packages/${encodeURIComponent(packageId)}/draft`);
+  return draft.id;
 }
 
-export function updateMaterialStatus(materialId: string, body: UpdateLessonMaterialStatusRequest, demoActive: boolean) {
-  assertWriteEnabled(FEATURE, demoActive);
-  return hskPatch<LessonMaterial>(`${MATERIALS}/${enc(materialId)}/status`, body);
+export async function updateMaterialGroup(groupId: string, type: LessonMaterialType, input: UpdateLessonMaterialGroupRequest, demo: boolean): Promise<LessonMaterialGroup> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await ensureDraftVersionId(groupId);
+  await lmsClient.put(`/content-packages/${encodeURIComponent(groupId)}/versions/${encodeURIComponent(versionId)}`, { title: input.name, description: input.description || undefined });
+  const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(groupId)}`);
+  return toUiGroup(pkg, type);
+}
+
+export async function publishMaterialGroup(groupId: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const sessionToken = crypto.randomUUID();
+  const lock = await lmsClient.post<EditLockResponse>(`/content-packages/${encodeURIComponent(groupId)}/lock`, { sessionToken });
+  if (!lock.acquired) throw new Error("Không khoá được phiên chỉnh sửa (có thể người khác đang sửa bộ này).");
+  const versionId = await ensureDraftVersionId(groupId);
+  await lmsClient.post(`/content-packages/${encodeURIComponent(groupId)}/versions/${encodeURIComponent(versionId)}/publish?sessionToken=${encodeURIComponent(sessionToken)}`);
+}
+
+export async function unpublishMaterialGroup(groupId: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(groupId)}`);
+  if (!pkg.publishedVersionId) return;
+  await ensureDraftVersionId(groupId);
+  await lmsClient.post(`/content-packages/${encodeURIComponent(groupId)}/versions/${encodeURIComponent(pkg.publishedVersionId)}/archive`);
+}
+
+/** Xoá thật cả bộ (package không có cờ lưu trữ mềm riêng). */
+export async function deleteMaterialGroup(groupId: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  await lmsClient.delete(`/content-packages/${encodeURIComponent(groupId)}`);
+}
+
+// ---- tài liệu (LearningResource), phẳng trong bộ — sessionNo cố định = 1 ----
+export async function listGroupMaterials(groupId: string): Promise<LessonMaterial[]> {
+  const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(groupId)}`);
+  const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
+  if (!versionId) return [];
+  const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=1`);
+  return links.map((link) => toUiMaterial(groupId, link)).sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+export async function createMaterial(groupId: string, groupType: LessonMaterialType, groupPublished: boolean, input: CreateLessonMaterialRequest, demo: boolean): Promise<LessonMaterial> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await ensureDraftVersionId(groupId);
+  const content: SlideMaterialContent = { fileId: input.fileId, fileName: input.filename || input.title, mimeType: input.mimeType, sizeBytes: input.sizeBytes };
+  const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
+    type: groupType,
+    content,
+    publishImmediately: groupPublished,
+    inLibrary: false,
+  });
+  const existing = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=1`);
+  const displayOrder = existing.length ? Math.max(...existing.map((r) => r.displayOrder)) + 1 : 0;
+  const resourceVersionId = resource.publishedVersionId ?? resource.draftVersionId;
+  await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: resource.id, learningResourceVersionId: resourceVersionId, sessionNo: 1, displayOrder });
+  return toUiMaterial(groupId, { id: resource.id, learningResourceId: resource.id, learningResourceVersionId: resourceVersionId ?? "", displayOrder, resourceContent: resource.content });
+}
+
+export async function deleteMaterial(groupId: string, resourceId: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await ensureDraftVersionId(groupId);
+  await lmsClient.delete(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}`);
+  await lmsClient.delete(`/learning-resources/${encodeURIComponent(resourceId)}`).catch(() => undefined);
 }

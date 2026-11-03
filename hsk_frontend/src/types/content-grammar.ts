@@ -19,8 +19,6 @@ export interface GrammarPoint extends ContentItemBase {
   exampleSentenceZh?: string;
   exampleSentencePinyin?: string;
   exampleSentenceVi?: string;
-  /** Bộ đề bài tập liên kết (id study set của module quiz). */
-  linkedQuizStudySetId?: string;
 }
 
 export type GrammarPointInput = ContentItemInput<GrammarPoint>;

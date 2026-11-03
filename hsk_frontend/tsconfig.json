@@ -34,17 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts",
-    ".next-e2e-unconfigured/types/**/*.ts",
-    ".next-e2e-unconfigured/dev/types/**/*.ts",
-    ".next-e2e-dev/types/**/*.ts",
-    ".next-e2e-dev/dev/types/**/*.ts",
-    ".next-css-test/types/**/*.ts",
-    ".next-css-test/dev/types/**/*.ts",
-    ".next-wp/types/**/*.ts",
-    ".next-wp/dev/types/**/*.ts"
+    "**/*.mts"
   ],
   "exclude": [
     "node_modules"

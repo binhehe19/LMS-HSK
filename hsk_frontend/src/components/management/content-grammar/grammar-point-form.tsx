@@ -1,7 +1,8 @@
 "use client";
 
 // Form một ĐIỂM NGỮ PHÁP — port GrammarPointModal.tsx của HSK cũ (tên, cấp HSK, phân loại, định nghĩa chung, cấu trúc, giải thích, ví dụ zh/pinyin/vi,
-// ghi chú, id bộ đề liên kết). Thuần: nhận/trả giá trị qua props (ContentItemFormProps). Khác bản cũ có chủ đích: cấp HSK là ô chọn 1–9 thay cho ô số.
+// ghi chú). Thuần: nhận/trả giá trị qua props (ContentItemFormProps). Khác bản cũ có chủ đích: cấp HSK là ô chọn 1–9 thay cho ô số; bỏ hẳn field
+// "Bộ đề bài tập liên kết (id)" (chưa từng có chỗ lưu ở backend, xem lms-grammar-client.ts — field chết, không chỉ ẩn trên form).
 import type { ChangeEvent } from "react";
 import { HSK_LEVEL_OPTIONS } from "@/lib/content/grammar-point";
 import type { ContentItemFormProps } from "@/types/content";
@@ -80,12 +81,6 @@ export function GrammarPointForm({ value, onChange, disabled, idPrefix }: Conten
           Ghi chú
         </label>
         <textarea id={id("note")} className="form-control" rows={2} value={value.note ?? ""} onChange={set("note")} disabled={disabled} />
-      </div>
-      <div className="col-12">
-        <label className={LABEL} htmlFor={id("linkedQuizStudySetId")}>
-          Bộ đề bài tập liên kết (id)
-        </label>
-        <input id={id("linkedQuizStudySetId")} type="text" className="form-control" placeholder="UUID của bộ đề trong Quản lý Bài tập" value={value.linkedQuizStudySetId ?? ""} onChange={set("linkedQuizStudySetId")} disabled={disabled} />
       </div>
     </div>
   );

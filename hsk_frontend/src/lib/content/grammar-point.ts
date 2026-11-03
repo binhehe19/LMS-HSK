@@ -19,7 +19,7 @@ export function hskLevelStyle(level: string | number | undefined | null): { bg: 
 export const HSK_LEVEL_OPTIONS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export function emptyGrammarPointInput(): GrammarPointInput {
-  return { title: "", generalDefinition: "", category: "", hskLevel: "1", structure: "", explanation: "", note: "", exampleSentenceZh: "", exampleSentencePinyin: "", exampleSentenceVi: "", linkedQuizStudySetId: "" };
+  return { title: "", generalDefinition: "", category: "", hskLevel: "1", structure: "", explanation: "", note: "", exampleSentenceZh: "", exampleSentencePinyin: "", exampleSentenceVi: "" };
 }
 
 export function grammarPointToInput(point: GrammarPoint): GrammarPointInput {
@@ -34,7 +34,6 @@ export function grammarPointToInput(point: GrammarPoint): GrammarPointInput {
     exampleSentenceZh: point.exampleSentenceZh ?? "",
     exampleSentencePinyin: point.exampleSentencePinyin ?? "",
     exampleSentenceVi: point.exampleSentenceVi ?? "",
-    linkedQuizStudySetId: point.linkedQuizStudySetId ?? "",
     index: point.index,
   };
 }
@@ -45,6 +44,9 @@ export function validateGrammarPointInput(input: GrammarPointInput): string | nu
   if (!input.category?.trim()) return "Vui lòng nhập phân loại";
   if (!input.structure?.trim()) return "Vui lòng nhập cấu trúc";
   if (!input.explanation?.trim()) return "Vui lòng nhập giải thích";
+  if ((input.exampleSentencePinyin?.trim() || input.exampleSentenceVi?.trim()) && !input.exampleSentenceZh?.trim()) {
+    return "Đã nhập Phiên âm/Dịch nghĩa thì cần nhập Ví dụ chính (Tiếng Trung)";
+  }
   const level = input.hskLevel?.trim();
   if (level && !/^[1-9]$/.test(level)) return "Cấp độ HSK phải từ 1 đến 9";
   return null;
@@ -67,7 +69,6 @@ export function normalizeGrammarPointInput(input: GrammarPointInput): GrammarPoi
     exampleSentenceZh: clean(input.exampleSentenceZh),
     exampleSentencePinyin: clean(input.exampleSentencePinyin),
     exampleSentenceVi: clean(input.exampleSentenceVi),
-    linkedQuizStudySetId: clean(input.linkedQuizStudySetId),
     index: input.index,
   };
 }

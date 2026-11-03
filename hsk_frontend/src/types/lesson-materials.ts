@@ -1,28 +1,24 @@
-// DTO tài liệu học tập theo HỢP ĐỒNG ĐỀ XUẤT kế thừa `/lesson-materials/*` của HSK cũ (core/types/lesson-materials.type.ts), chỉ phần màn
-// `/learning-path/lesson-materials/manage` dùng (bộ tài liệu + tài liệu + tạo hàng loạt + đổi trạng thái). Phần gắn tài liệu vào buổi/khoá
-// (attachments) chưa chuyển vì màn quản lý cũ không có giao diện cho nó.
+// DTO tài liệu học tập — gắn trực tiếp vào ContentPackage/LearningResource có sẵn của repo-lms (type MATERIAL/SLIDE, nội dung SlideMaterialContent),
+// cùng cơ chế Kho nội dung Flashcard/Quiz/Ngữ pháp (lms-content-client.ts). Xem docs/api-requirements/lesson-materials.md.
 
-export type LessonMaterialCategory = "LESSON" | "COURSE";
+/** Đúng 2 loại thật có backing ở backend (ContentPackageType/LearningResourceType) — không còn GRAMMAR/GRAMMAR_3_0/TEXTBOOK giả. */
+export type LessonMaterialType = "SLIDE" | "MATERIAL";
 
-export type LessonMaterialType = "SLIDE" | "GRAMMAR" | "GRAMMAR_3_0" | "TEXTBOOK";
-
-export type LessonMaterialStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-
-export type LessonMaterialGroupStatus = "ACTIVE" | "ARCHIVED";
+/** Bộ tài liệu = 1 ContentPackage; trạng thái suy từ publishedVersionId/draftVersionId (như Kho Flashcard/Quiz/Ngữ pháp), không có cờ ARCHIVED riêng. */
+export type LessonMaterialGroupStatus = "DRAFT" | "PUBLISHED";
 
 export interface LessonMaterialGroup {
   id: string;
   name: string;
   description?: string | null;
-  displayOrder?: number | null;
+  type: LessonMaterialType;
   status: LessonMaterialGroupStatus;
-  slideCount?: number | null;
-  grammarCount?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateLessonMaterialGroupRequest {
+  type: LessonMaterialType;
   name: string;
   description?: string;
 }
@@ -30,63 +26,26 @@ export interface CreateLessonMaterialGroupRequest {
 export interface UpdateLessonMaterialGroupRequest {
   name?: string;
   description?: string;
-  displayOrder?: number;
-  status?: LessonMaterialGroupStatus;
 }
 
 export interface LessonMaterial {
   id: string;
   title: string;
-  description?: string | null;
-  type: LessonMaterialType;
-  category: LessonMaterialCategory;
-  status: LessonMaterialStatus;
-  groupId?: string | null;
   /** Mã tệp ở repo-storage của backend chung (tải lên bằng storage-client, không gửi byte qua dịch vụ tài liệu). */
   fileId: string;
   filename?: string | null;
   mimeType?: string | null;
   sizeBytes?: number | null;
-  createdAt?: string;
-  updatedAt?: string;
+  groupId: string;
+  displayOrder: number;
 }
 
 export interface CreateLessonMaterialRequest {
   title: string;
-  description?: string;
-  category: LessonMaterialCategory;
-  type: LessonMaterialType;
   fileId: string;
-  groupId?: string;
-}
-
-export interface GroupedLessonMaterials {
-  group: LessonMaterialGroup;
-  materialsByType: Partial<Record<LessonMaterialType, LessonMaterial[]>>;
-}
-
-export interface UpdateLessonMaterialStatusRequest {
-  status: LessonMaterialStatus;
-}
-
-export interface LessonMaterialQuery {
-  keyword?: string;
-  category?: LessonMaterialCategory;
-  type?: LessonMaterialType;
-  status?: LessonMaterialStatus;
-  groupId?: string;
-  page?: number;
-  size?: number;
-  sort?: string;
-}
-
-/** Spring Page như HSK cũ (`number` = trang hiện tại từ 0). */
-export interface LessonMaterialPage {
-  content: LessonMaterial[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+  filename?: string;
+  mimeType?: string;
+  sizeBytes?: number;
 }
 
 export interface BulkItemError {
@@ -98,7 +57,7 @@ export interface BulkItemError {
 
 export interface BulkCreateMaterialResult {
   created: LessonMaterial[];
-  errors: BulkItemError[] | null;
+  errors: BulkItemError[];
   totalRequested: number;
   totalCreated: number;
   totalFailed: number;

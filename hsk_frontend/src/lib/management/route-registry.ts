@@ -76,6 +76,16 @@ export const MIGRATED_ROUTES: readonly string[] = [
   "/vocabulary/manage",
 ];
 
+/**
+ * Route MIGRATED được đổi sang URL thực sự phục vụ, NGẮN hơn URL cũ của HSK (file page.tsx đặt ở URL mới trong src/app).
+ * Role/guard/status vẫn tính theo URL CŨ (key ở đây) qua OLD_MANAGEMENT_ROUTES — không sửa dữ kiện cũ, chỉ thêm 1 alias
+ * tra cứu để URL MỚI dùng chung role/guard đó (xem đoạn dựng `exact` map bên dưới). URL cũ không còn page.tsx thật nên
+ * tự rơi về catch-all -> notFound() (route-registry coi là MIGRATED nên không hiện placeholder "đang chuyển đổi").
+ */
+export const RENAMED_ROUTES: Readonly<Record<string, string>> = {
+  "/learning-path/online-course/manage": "/online-course/manage",
+};
+
 export interface UiRoleDecision {
   roles: readonly string[];
   /** Căn cứ + phạm vi của quyết định (hiển thị trong docs/ROUTE-STATUS.md). */
@@ -158,6 +168,10 @@ for (const route of MANAGEMENT_ROUTES) {
   } else {
     exact.set(route.path, route);
   }
+}
+for (const [oldPath, newPath] of Object.entries(RENAMED_ROUTES)) {
+  const route = exact.get(oldPath);
+  if (route) exact.set(newPath, route);
 }
 // Mẫu ít tham số hơn (cụ thể hơn) được thử trước.
 patterns.sort((a, b) => a.paramCount - b.paramCount);

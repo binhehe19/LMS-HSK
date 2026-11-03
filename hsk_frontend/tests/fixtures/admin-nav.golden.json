@@ -19,14 +19,6 @@
     },
     {
       "header": null,
-      "title": "Phân tích hành vi",
-      "icon": "isax isax-chart-21",
-      "route": "/admin/analytics",
-      "subRoute": null,
-      "activePrefix": "/admin/analytics"
-    },
-    {
-      "header": null,
       "title": "Quản lý lớp học",
       "icon": "isax isax-teacher",
       "route": "/admin/class-management",
@@ -101,9 +93,9 @@
       "header": "KHÓA HỌC TRỰC TUYẾN",
       "title": "Quản lý Khóa học Trực tuyến",
       "icon": "isax isax-teacher",
-      "route": "/learning-path/online-course/manage",
+      "route": "/online-course/manage",
       "subRoute": null,
-      "activePrefix": "/learning-path/online-course/manage"
+      "activePrefix": "/online-course/manage"
     },
     {
       "header": null,
@@ -122,55 +114,7 @@
       "activePrefix": null
     },
     {
-      "header": null,
-      "title": "Quản lý Giảng viên",
-      "icon": "isax isax-profile-2user",
-      "route": "/admin/teacher-management",
-      "subRoute": null,
-      "activePrefix": null
-    },
-    {
-      "header": null,
-      "title": "Quản lý Thông tin \nĐăng ký Khóa học Trực tuyến",
-      "icon": "isax isax-document-download",
-      "route": "/learning-path/online-course/leads",
-      "subRoute": null,
-      "activePrefix": "/learning-path/online-course/leads"
-    },
-    {
-      "header": "KHO TÀI NGUYÊN",
-      "title": "Quản lý Kho lưu trữ Đa phương tiện",
-      "icon": "isax isax-video-play",
-      "route": "/instructor/manage-storage",
-      "subRoute": null,
-      "activePrefix": "/instructor/manage-storage"
-    },
-    {
-      "header": "KHÁC",
-      "title": "Sao kê",
-      "icon": "isax isax-shopping-cart",
-      "route": "/admin/statements",
-      "subRoute": null,
-      "activePrefix": null
-    },
-    {
-      "header": null,
-      "title": "Phân công công việc",
-      "icon": "isax isax-ticket",
-      "route": "/admin/tickets",
-      "subRoute": null,
-      "activePrefix": null
-    },
-    {
       "header": "QUẢN TRỊ HỆ THỐNG",
-      "title": "Quản lý Gói thành viên",
-      "icon": "isax isax-crown",
-      "route": "/admin/membership-management",
-      "subRoute": null,
-      "activePrefix": null
-    },
-    {
-      "header": null,
       "title": "Quản lý người dùng",
       "icon": "isax isax-profile-2user",
       "route": "https://auth.test.invalid/admin/users",
@@ -183,52 +127,37 @@
       0
     ],
     "/admin/class-management": [
-      3
+      2
     ],
     "/admin/class-management/students": [
-      3
-    ],
-    "/admin/analytics": [
       2
     ],
     "/admin/settings/notifications": [
       1
     ],
-    "/admin/teacher-management": [
-      15
-    ],
     "/hanzi/manage": [
-      5
-    ],
-    "/hanzi/manage/create": [
-      5
-    ],
-    "/vocab-set/manage": [
-      9
-    ],
-    "/quiz/manage": [
-      10
-    ],
-    "/learning-path/online-course/manage": [
-      12
-    ],
-    "/learning-path/syllabus/manage": [
-      14
-    ],
-    "/instructor/instructor-support-tickets": [
       4
     ],
-    "/admin/tickets": [
-      19
+    "/hanzi/manage/create": [
+      4
     ],
-    "/admin/statements": [
-      18
+    "/vocab-set/manage": [
+      8
     ],
-    "/admin/membership-management": [
-      20
+    "/quiz/manage": [
+      9
+    ],
+    "/online-course/manage": [
+      11
+    ],
+    "/learning-path/syllabus/manage": [
+      13
+    ],
+    "/instructor/instructor-support-tickets": [
+      3
     ],
     "/admin/users": [
-      21
+      14
     ],
     "/": [],
     "/admin": []

@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe("token-store (chỉ trong bộ nhớ)", () => {
+describe("token-store (localStorage)", () => {
   it("nhận access/refresh token hợp lệ từ hash và xóa chúng khỏi URL, giữ query", () => {
     setLocation("/admin/class-management", "?page=2", `#access_token=${jwt("a")}&refresh_token=${jwt("r")}`);
     expect(consumeTokensFromUrlHash()).toBe(true);
@@ -55,14 +55,16 @@ describe("token-store (chỉ trong bộ nhớ)", () => {
     expect(getRefreshToken()).toBeNull();
   });
 
-  it("KHÔNG ghi token vào localStorage/sessionStorage và KHÔNG ghi log", () => {
+  it("ghi token vào localStorage (sống sót qua tải lại trang) và KHÔNG ghi log", () => {
     const spies = (["log", "info", "warn", "error", "debug"] as const).map((m) => vi.spyOn(console, m).mockImplementation(() => {}));
     setLocation("/p", "", `#access_token=${jwt("secret")}&refresh_token=${jwt("secret2")}`);
     consumeTokensFromUrlHash();
+    expect(window.localStorage.getItem("access_token")).toBe(jwt("secret"));
+    expect(window.localStorage.getItem("refresh_token")).toBe(jwt("secret2"));
     setTokens({ accessToken: jwt("x"), refreshToken: jwt("y") });
+    expect(window.localStorage.getItem("access_token")).toBe(jwt("x"));
     clearTokens();
     expect(window.localStorage.length).toBe(0);
-    expect(window.sessionStorage.length).toBe(0);
     spies.forEach((spy) => expect(spy).not.toHaveBeenCalled());
   });
 

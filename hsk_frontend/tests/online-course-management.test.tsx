@@ -14,7 +14,7 @@ import { makeStore } from "@/redux/store";
 import type { OnlineCourseSummary } from "@/types/online-course";
 import { adminUser } from "./fixtures/classes";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/learning-path/online-course/manage", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/online-course/manage", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }) }));
 vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn() }));
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));

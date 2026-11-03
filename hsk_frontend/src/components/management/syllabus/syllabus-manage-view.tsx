@@ -15,9 +15,9 @@ import { ManagementPageFrame } from "@/components/management/management-page-fra
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { SyllabusDetailPanel } from "@/components/management/syllabus/syllabus-detail-panel";
 import { SyllabusListTable } from "@/components/management/syllabus/syllabus-list-table";
-import type { ScheduleModulesMap } from "@/components/management/syllabus/use-schedule-modules";
+import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { PageHeader } from "@/components/shared/page-header";
-import type { ContentAccess } from "@/hooks/use-content-access";
+import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import type { SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
 import type { SyllabusDetailResponse, SyllabusScheduleItem, SyllabusSummaryResponse, SyllabusVersionResponse } from "@/types/lms";
 
@@ -25,7 +25,8 @@ export type SyllabusManageMode = "list" | "detail" | "invalid-id";
 
 export interface SyllabusManageViewProps {
   mode: SyllabusManageMode;
-  access: ContentAccess;
+  /** Module ôn luyện theo buổi dùng nguyên `/content-packages*` (ADMIN-only ở backend) — chỉ Admin thao tác được, không theo ticket. */
+  isAdmin: boolean;
   /** Công tắc ghi "content" đang mở (demo hoặc NEXT_PUBLIC_WRITE_CONTENT=enabled). */
   writeEnabled: boolean;
   // danh sách
@@ -43,17 +44,16 @@ export interface SyllabusManageViewProps {
   onBack: () => void;
   onReloadDetail: () => void;
   // module ôn luyện theo buổi
-  modulesState: FetchState<ScheduleModulesMap>;
+  resourcesState: FetchState<ScheduleResourcesMap>;
   busyScheduleId: string | null;
-  onRetryModules: () => void;
-  onAddModule: (item: SyllabusScheduleItem) => void;
-  onMoveModule: (scheduleId: string, moduleId: string, direction: -1 | 1) => void;
-  onDeleteModule: (scheduleId: string, moduleId: string) => void;
+  onRetryResources: () => void;
+  onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
+  onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
+  onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
 }
 
 export function SyllabusManageView(p: SyllabusManageViewProps) {
-  // Admin: luôn canManage. Giảng viên: chờ ticket (không hiện Alert khi đang chờ); không có ticket OTHER hoặc dịch vụ ticket không sẵn sàng => chỉ xem.
-  const viewOnly = p.access.status !== "loading" && !p.access.canManage;
+  const viewOnly = !p.isAdmin;
 
   return (
     <ManagementPageFrame>
@@ -63,11 +63,7 @@ export function SyllabusManageView(p: SyllabusManageViewProps) {
             <div className="px-3 pt-3">
               <Alert
                 message="Chế độ Xem duy nhất"
-                description={
-                  p.access.status === "unavailable"
-                    ? "Không lấy được danh sách ticket phân công (dịch vụ chưa cấu hình hoặc lỗi), nên chỉ xem. Các chức năng Thêm, Sắp xếp, Xóa module ôn luyện đã bị vô hiệu hóa."
-                    : "Bạn hiện không có ticket hỗ trợ hoạt động cho module Giáo trình. Các chức năng Thêm, Sửa cấu trúc Syllabus đã bị vô hiệu hóa."
-                }
+                description="Module ôn luyện theo buổi chỉ Admin thao tác được (Thêm, Sắp xếp, Xóa). Các phần khác của Syllabus bạn vẫn xem được bình thường."
                 type="warning"
                 showIcon
                 className="rounded-3 shadow-sm border-warning mb-0"
@@ -101,14 +97,14 @@ export function SyllabusManageView(p: SyllabusManageViewProps) {
                 onTabChange={p.onTabChange}
                 onBack={p.onBack}
                 onReload={p.onReloadDetail}
-                canManage={p.access.canManage}
+                canManage={p.isAdmin}
                 writeEnabled={p.writeEnabled}
-                modulesState={p.modulesState}
+                resourcesState={p.resourcesState}
                 busyScheduleId={p.busyScheduleId}
-                onRetryModules={p.onRetryModules}
+                onRetryResources={p.onRetryResources}
                 onAddModule={p.onAddModule}
-                onMoveModule={p.onMoveModule}
-                onDeleteModule={p.onDeleteModule}
+                onMoveResource={p.onMoveResource}
+                onDeleteResource={p.onDeleteResource}
               />
             )}
           </div>

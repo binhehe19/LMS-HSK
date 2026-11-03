@@ -4,6 +4,7 @@
 // giữ các cột của bản cũ (Điểm ngữ pháp, Định nghĩa chung, Giải thích, Ví dụ, Phân loại, Trình độ; STT và Thao tác do nền thêm).
 // Khác bản cũ có chủ đích: bản cũ bỏ qua cấp Thư mục (tự tạo ngầm một thư mục trùng tên gói khi mở gói) — nền dùng chung hiện đủ 4 cấp;
 // "Import Excel" của bản cũ nằm ở cấp Cấu trúc ngữ pháp (POST /grammar/grammar-points/import), nền chỉ có nút ở cấp gói và chưa chuyển.
+import { FlatItemsBreadcrumbView } from "@/components/management/content-flat/flat-items-breadcrumb-view";
 import { GrammarPointForm } from "@/components/management/content-grammar/grammar-point-form";
 import { emptyGrammarPointInput, grammarPointSummary, grammarPointToInput, hskLevelStyle, normalizeGrammarPointInput, validateGrammarPointInput } from "@/lib/content/grammar-point";
 import type { ContentItemColumn, ContentModuleConfig, ContentPackageTypeMeta } from "@/types/content";
@@ -35,21 +36,6 @@ const GRAMMAR_COLUMNS: ContentItemColumn<GrammarPoint>[] = [
       </div>
     ),
   },
-  { key: "generalDefinition", title: "Định nghĩa chung", width: 150, render: (point) => <div className="text-muted small" style={WRAP}>{point.generalDefinition || "—"}</div> },
-  { key: "explanation", title: "Giải thích", render: (point) => <div className="text-muted small" style={{ ...WRAP, minWidth: 200 }}>{point.explanation || "—"}</div> },
-  {
-    key: "examples",
-    title: "Ví dụ",
-    width: 250,
-    render: (point) => (
-      <div className="small" style={WRAP}>
-        <div className="text-dark mb-1">{point.exampleSentenceZh || "—"}</div>
-        {point.exampleSentencePinyin && <div className="text-muted">{point.exampleSentencePinyin}</div>}
-        {point.exampleSentenceVi && <div className="text-secondary fst-italic">{point.exampleSentenceVi}</div>}
-      </div>
-    ),
-  },
-  { key: "category", title: "Phân loại", width: 120, render: (point) => <div className="text-muted small" style={WRAP}>{point.category || "—"}</div> },
   {
     key: "hskLevel",
     title: "Trình độ",
@@ -64,6 +50,25 @@ const GRAMMAR_COLUMNS: ContentItemColumn<GrammarPoint>[] = [
       );
     },
   },
+  { key: "category", title: "Phân loại", width: 120, render: (point) => <div className="text-muted small" style={WRAP}>{point.category || "—"}</div> },
+  { key: "generalDefinition", title: "Định nghĩa chung", width: 150, render: (point) => <div className="text-muted small" style={WRAP}>{point.generalDefinition || "—"}</div> },
+  { key: "explanation", title: "Giải thích", render: (point) => <div className="text-muted small" style={{ ...WRAP, minWidth: 200 }}>{point.explanation || "—"}</div> },
+  {
+    key: "examples",
+    title: "Ví dụ",
+    width: 250,
+    render: (point) => (
+      <div className="small" style={WRAP}>
+        <div className="text-dark mb-1">{point.exampleSentenceZh || "—"}</div>
+        {point.exampleSentencePinyin && <div className="text-muted">{point.exampleSentencePinyin}</div>}
+        {point.exampleSentenceVi && (
+          <div className="fst-italic" style={{ color: "#D4AF37" }}>
+            {point.exampleSentenceVi}
+          </div>
+        )}
+      </div>
+    ),
+  },
 ];
 
 export const GRAMMAR_CONFIG: ContentModuleConfig<GrammarPoint> = {
@@ -76,6 +81,7 @@ export const GRAMMAR_CONFIG: ContentModuleConfig<GrammarPoint> = {
   pageClassName: "manage-grammar-page",
   labels: { package: "Package", folder: "Thư mục", studySet: "Cấu trúc ngữ pháp", item: "Điểm ngữ pháp" },
   packagesHeader: { title: "Quản lý ngữ pháp theo khóa học", subtitle: "Tổ chức và quản lý các điểm ngữ pháp HSK" },
+  subtitle: "Quản lý toàn bộ điểm ngữ pháp theo trình độ HSK và bài học",
   packageTypes: GRAMMAR_PACKAGE_TYPES,
   supportsImport: true,
   itemColumns: GRAMMAR_COLUMNS,
@@ -85,4 +91,5 @@ export const GRAMMAR_CONFIG: ContentModuleConfig<GrammarPoint> = {
   validateItemInput: validateGrammarPointInput,
   normalizeItemInput: normalizeGrammarPointInput,
   itemSummary: grammarPointSummary,
+  ItemsView: FlatItemsBreadcrumbView,
 };

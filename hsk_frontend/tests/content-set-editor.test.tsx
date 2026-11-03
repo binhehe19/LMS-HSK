@@ -207,7 +207,7 @@ describe("config module Thẻ ghi nhớ / Bộ từ vựng và thẻ lật", () 
     expect(FLASHCARD_CONFIG.itemSearchTab?.label).toBe("Quản lý từ vựng");
     expect(FLASHCARD_CONFIG.setEditorRoutes?.create("p 1", "f1")).toBe("/sets/create?packageId=p%201&folderId=f1");
     expect(FLASHCARD_CONFIG.setEditorRoutes?.edit("s1")).toBe("/sets/s1/edit");
-    expect(FLASHCARD_CONFIG.itemColumns.map((c) => c.key)).toEqual(["term", "meaning", "media"]);
+    expect(FLASHCARD_CONFIG.itemColumns.map((c) => c.key)).toEqual(["term", "meaning", "audio"]);
     expect(VOCAB_SET_CONFIG).toMatchObject({ module: "FLASHCARD", apiPrefix: "/flashcard", itemsPath: "cards", title: "Quản lý Từ vựng", pageClassName: "manage-vocabulary-page", labels: { studySet: "Bộ từ vựng", item: "Từ" } });
     expect(VOCAB_SET_CONFIG.ItemPreview).toBeUndefined();
     expect(VOCAB_SET_CONFIG.ItemForm).toBe(FLASHCARD_CONFIG.ItemForm);

@@ -3,6 +3,7 @@
 // Cấu hình module THẺ GHI NHỚ (/flashcard, mục `cards`) và biến thể BỘ TỪ VỰNG (/vocab-set/manage của HSK cũ: cùng dịch vụ, cùng dữ liệu, khác nhãn/
 // tiêu đề, không có thẻ lật — manage-vocabulary-set.tsx là bản sao của manage-flashcard.tsx chỉ đổi chữ). Đây là mẫu để các gói sau thêm module mới
 // (quiz, hán tự, ngữ pháp, phát âm): một file config như thế này + một form mục + (tuỳ chọn) cột/xem nhanh.
+import { useRef } from "react";
 import { FlashcardCardForm } from "@/components/management/content-flashcard/flashcard-card-form";
 import { FlashcardPreview } from "@/components/management/content-flashcard/flashcard-preview";
 import { AssetImage } from "@/components/shared/asset-image";
@@ -19,11 +20,34 @@ const enc = encodeURIComponent;
 
 function CardThumb({ card }: { card: FlashcardCard }) {
   const url = fileUrl(card.imageFileId);
-  if (url) return <AssetImage src={url} alt={card.term} className="rounded-3 border" style={{ width: 40, height: 40, objectFit: "cover" }} />;
+  if (!url) return null;
+  return <AssetImage src={url} alt={card.term} className="rounded-3 border flex-shrink-0" style={{ width: 40, height: 40, objectFit: "cover" }} />;
+}
+
+/** Nút phát âm tròn của hàng (port .flashcard-manage-audio-btn cũ, dùng chung tệp đã tải lên hoặc Web Speech API zh-CN như FlashcardPreview). */
+function RowAudioButton({ card }: { card: FlashcardCard }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audio = fileUrl(card.audioFileId);
+
+  const speak = () => {
+    if (audio && audioRef.current) {
+      void audioRef.current.play().catch(() => undefined);
+      return;
+    }
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const utterance = new SpeechSynthesisUtterance(card.term);
+    utterance.lang = "zh-CN";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
-    <div className="rounded-3 border bg-light d-flex align-items-center justify-content-center text-muted" style={{ width: 40, height: 40 }} aria-hidden>
-      <i className="isax isax-gallery" />
-    </div>
+    <>
+      <button type="button" className="flashcard-manage-audio-btn" style={{ width: 36, height: 36, minWidth: 36 }} onClick={speak} title="Phát âm" aria-label={`Phát âm ${card.term}`}>
+        <i className="isax isax-volume-high" style={{ fontSize: "1rem" }} />
+      </button>
+      {audio && <audio ref={audioRef} src={audio} preload="none" />}
+    </>
   );
 }
 
@@ -35,9 +59,9 @@ const FLASHCARD_COLUMNS: ContentItemColumn<FlashcardCard>[] = [
       <div className="d-flex align-items-center gap-3">
         <CardThumb card={card} />
         <div>
-          <div className="fw-700 text-dark flashcard-term-cell">{card.term}</div>
-          <div className="small text-muted">{card.pinyin || "Chưa có pinyin"}</div>
-          {card.wordType && <span className="badge bg-primary-subtle text-primary small">{card.wordType}</span>}
+          <div className="fw-800 fs-5 text-dark flashcard-term-cell">{card.term}</div>
+          <div className="text-muted">{card.pinyin || "Chưa có pinyin"}</div>
+          {card.wordType && <div className="small text-muted">{card.wordType}</div>}
         </div>
       </div>
     ),
@@ -47,22 +71,23 @@ const FLASHCARD_COLUMNS: ContentItemColumn<FlashcardCard>[] = [
     title: "Nghĩa",
     render: (card) => (
       <>
-        <div className="fw-600 text-secondary">{card.meaning}</div>
-        {card.example && <div className="small text-muted mt-1">VD: {card.example}</div>}
+        <div className="fw-700" style={{ color: "#D4AF37" }}>
+          {card.meaning}
+        </div>
+        {card.example && (
+          <div className="small text-muted mt-1">
+            VD: {card.example}
+            {card.exampleMeaning && <span> ({card.exampleMeaning})</span>}
+          </div>
+        )}
       </>
     ),
   },
   {
-    key: "media",
-    title: "Tệp",
-    width: 80,
-    render: (card) => (
-      <span className="text-muted" title={[card.imageFileId ? "Có ảnh" : "", card.audioFileId ? "Có âm thanh" : ""].filter(Boolean).join(", ") || "Không có tệp"}>
-        {card.imageFileId && <i className="isax isax-gallery me-1 text-primary" aria-label="Có ảnh" />}
-        {card.audioFileId && <i className="isax isax-volume-high text-primary" aria-label="Có âm thanh" />}
-        {!card.imageFileId && !card.audioFileId && "—"}
-      </span>
-    ),
+    key: "audio",
+    title: "Phát âm",
+    width: 90,
+    render: (card) => <RowAudioButton card={card} />,
   },
 ];
 

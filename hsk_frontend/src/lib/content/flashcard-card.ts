@@ -3,7 +3,7 @@
 import type { FlashcardCard, FlashcardCardInput } from "@/types/content-flashcard";
 
 export function emptyFlashcardInput(): FlashcardCardInput {
-  return { term: "", pinyin: "", wordType: "", meaning: "", example: "", exampleMeaning: "", imageFileId: undefined, audioFileId: undefined };
+  return { term: "", pinyin: "", wordType: "", meaning: "", example: "", examplePinyin: "", exampleMeaning: "", imageFileId: undefined, audioFileId: undefined, customFields: [] };
 }
 
 export function flashcardToInput(card: FlashcardCard): FlashcardCardInput {
@@ -13,9 +13,11 @@ export function flashcardToInput(card: FlashcardCard): FlashcardCardInput {
     wordType: card.wordType ?? "",
     meaning: card.meaning,
     example: card.example ?? "",
+    examplePinyin: card.examplePinyin ?? "",
     exampleMeaning: card.exampleMeaning ?? "",
     imageFileId: card.imageFileId || undefined,
     audioFileId: card.audioFileId || undefined,
+    customFields: card.customFields ? card.customFields.map((f) => ({ ...f })) : [],
     index: card.index,
   };
 }
@@ -33,15 +35,18 @@ const clean = (value: string | undefined): string | undefined => {
 };
 
 export function normalizeFlashcardInput(input: FlashcardCardInput): FlashcardCardInput {
+  const customFields = (input.customFields ?? []).map((f) => ({ label: f.label.trim(), value: f.value.trim() })).filter((f) => f.label || f.value);
   return {
     term: input.term.trim(),
     meaning: input.meaning.trim(),
     pinyin: clean(input.pinyin),
     wordType: clean(input.wordType),
     example: clean(input.example),
+    examplePinyin: clean(input.examplePinyin),
     exampleMeaning: clean(input.exampleMeaning),
     imageFileId: clean(input.imageFileId),
     audioFileId: clean(input.audioFileId),
+    customFields: customFields.length > 0 ? customFields : undefined,
     index: input.index,
   };
 }

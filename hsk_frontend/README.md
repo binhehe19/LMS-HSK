@@ -3,7 +3,7 @@
 Frontend mới (App Router, TypeScript) cho **khu vực quản lý Admin/Giảng viên** của LMS HSK. Giao diện và nghiệp vụ lấy từ `LMS_Frontend`
 (React/Vite cũ), cấu trúc code theo `LMS_IELTS/frontend`, chạy sau gateway của backend chung `LMS_IELTS/backend`. Backend và Authentication do người khác phụ trách.
 
-Trạng thái: **M5 — toàn bộ mục menu Admin (22) và Giảng viên (14) đã là trang thật**, xem được trên máy mình bằng `npm run preview:local`; tích hợp backend thật
+Trạng thái: **M5 — toàn bộ mục menu Admin (22) và Giảng viên (14) đã là trang thật**; tích hợp backend thật
 mới ở mức AVAILABLE cho lớp/học viên/giáo trình (`/api/lms`), thông báo (`/api/notification`), tải tệp (`/api/storage`) — phần còn lại chờ backend (WAITING FOR BACKEND).
 Hai kết luận tách riêng và bảng trạng thái từng màn: **`docs/FEATURE-STATUS.md`**. Kế hoạch/ma trận: `docs/M5-FULL-DEMO-PLAN.md`. Triển khai: **`docs/DEPLOY.md`**.
 Lịch sử milestone: `docs/M1-MANIFEST.md`, `M1.5-REFACTOR.md`, `M3A-LAYOUT.md`, `M3B1-NAVIGATION.md`, `M3B2-WELCOME.md`, `M3B3-NOTIFICATIONS.md`, `M3B4-ADMIN-NOTIFICATIONS.md`, `M4A-LIST-CLASS.md`, `M4B-LIST-LESSON.md`, `M4C0-SURVEY.md`.
@@ -18,14 +18,11 @@ Node.js ≥ 20.9 (đã kiểm tra với Node 22.19, npm 10.9). Next 16.3.5, Reac
 | Lệnh | Việc |
 |---|---|
 | `npm ci` | Cài dependencies |
-| `npm run preview:local` | **Xem toàn bộ khu quản lý trên máy mình** với dữ liệu giả lập nhất quán: build production vào `.next-preview` (~3 phút) rồi chạy mock + `next start` + gateway → mở http://localhost:3100/demo và chọn tài khoản (Admin / Giảng viên / Trợ giảng / Học viên). `-- --no-build` dùng lại bản build; chi tiết `docs/PREVIEW-LOCAL.md` |
-| `npm run dev` | Dev server cổng **3100** (HMR); cần biến môi trường trỏ backend/Auth thật hoặc mock (`.env.example`) |
+| `npm run dev` | Dev server cổng **3100** (HMR); cần biến môi trường trỏ backend/Auth thật (`.env.example`) |
 | `npm run build` / `npm start` | Build production / chạy (cổng 3100). Build **từ chối** cấu hình trỏ `localhost`/`.invalid`/`.test` hoặc `*_API_PROXY_TARGET` |
 | `npm run typecheck` / `npm run lint` | `tsc --noEmit` / ESLint CLI |
-| `npm test` | Vitest (87 file / 1.358 ca: auth/refresh/guard, menu golden, registry, sidebar/chuông/toast, client API từng dịch vụ, hook, view, hàm thuần, guard production; ~5 phút) |
-| `npm run e2e:install` → `e2e:build` → `test:e2e` | Playwright + mock cách ly (344 ca: configured / unconfigured / visual; ~6 phút build + ~35 phút chạy) — `docs/TESTING.md` |
-| `npm run test:all` | typecheck → lint → vitest → e2e:build → test:e2e |
-| `npm run mock:server` | Máy chủ giả lập cổng 3190 (`MOCK_PROFILE=e2e` mặc định, `demo` cho dữ liệu đẹp) — **MOCK / NOT INTEGRATED** |
+| `npm test` | Vitest (hook, view, hàm thuần, client API từng dịch vụ, guard production) |
+| `npm run test:all` | typecheck → lint → vitest |
 | `docker compose build && docker compose up -d` | Container theo mẫu IELTS (Traefik, `HSK_DOMAIN`) — `docs/DEPLOY.md` |
 
 Biến môi trường: `.env.example` (không có giá trị mặc định trỏ hệ thống thật; để trống = dịch vụ chưa tích hợp ⇒ màn hiện WAITING FOR BACKEND, không gọi mạng, không dữ liệu giả).
@@ -44,7 +41,7 @@ trình duyệt ─ Auth chung (NEXT_PUBLIC_AUTH_*: /users/me, refresh một lầ
 write gate (lib/api/write-gate.ts): mọi thao tác ghi chưa có hợp đồng xác nhận bị chặn trước khi tạo request; mở bằng xem trước cục bộ hoặc NEXT_PUBLIC_WRITE_<FEATURE>=enabled
 ```
 
-Không có fallback mock trong `src/`; "giả" chỉ ở `scripts/mock/` (máy chủ giả lập, hồ sơ `e2e` đóng băng cho kiểm thử và `demo` nhất quán cho xem trước) và `tests/`, `e2e/`.
+Không có fallback mock trong `src/`.
 
 ## Cấu trúc
 
@@ -71,8 +68,8 @@ src/
   redux/                     store, slices/auth-slice (chỉ auth)
   types/                     DTO theo dịch vụ (lms, grading, content-*, payment, ticket, …)
   styles/                    SCSS/CSS của HSK cũ, page-styles.ts (thứ tự cascade)
-scripts/   mock-server.mjs → mock/{core,server,data/{legacy,demo,grading-model},handlers/*}.mjs · preview-local.mjs · e2e-gateway.mjs · e2e-build.mjs · survey-old-routes.mjs
-tests/ (Vitest)   e2e/ (Playwright + ảnh chuẩn Windows)   docs/ (api-requirements/*.md = hợp đồng gửi backend)
+scripts/   survey-old-routes.mjs
+tests/ (Vitest)   docs/ (api-requirements/*.md = hợp đồng gửi backend)
 ```
 
 Nguyên tắc: view (`*-view.tsx`) không gọi API; dữ liệu đi qua hook → `lib/api/*-client`. Màn thiếu API vẫn hoàn thiện UI, hiện trạng thái `WAITING FOR BACKEND`/lỗi (+ Thử lại), **không** có dữ liệu giả tự động, không "thành công giả".
@@ -85,5 +82,5 @@ Bằng chứng và việc cần xác minh với Auth thật: `docs/AUTH-INTEGRAT
 
 ## Đối chiếu giao diện với HSK cũ
 
-M1–M4B: sidebar, chuông/toast/dropdown, `/admin/class-management`, `/instructor/welcome`, thông báo, lớp/bài học của giảng viên khớp HSK cũ **từng pixel** (3 khung, dữ liệu fixture, công cụ ngoài repo; ảnh chuẩn trong `e2e/__screenshots__/win32`).
+M1–M4B: sidebar, chuông/toast/dropdown, `/admin/class-management`, `/instructor/welcome`, thông báo, lớp/bài học của giảng viên khớp HSK cũ **từng pixel** (3 khung, dữ liệu fixture, công cụ ngoài repo).
 M5: các màn mới đối chiếu **nghiệp vụ** (trường, bộ lọc, hành động, thuật ngữ) và giữ DOM/class để SCSS cũ áp dụng; khác có chủ đích (modal antd, dashboard chuẩn hoá, phạm vi rút gọn) ghi ở `docs/FEATURE-STATUS.md` mục 3 và 5. Chưa so sánh với dữ liệu thật.

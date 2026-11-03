@@ -18,7 +18,7 @@ describe("grammar-point — form điểm ngữ pháp", () => {
   });
 
   it("normalize cắt khoảng trắng, bỏ trường rỗng, giữ index", () => {
-    expect(normalizeGrammarPointInput({ ...emptyGrammarPointInput(), title: " 把 ", category: "Câu đặc biệt", structure: " S + 把 + O ", explanation: "x", note: "  ", linkedQuizStudySetId: "", hskLevel: "3", index: 1 })).toEqual({
+    expect(normalizeGrammarPointInput({ ...emptyGrammarPointInput(), title: " 把 ", category: "Câu đặc biệt", structure: " S + 把 + O ", explanation: "x", note: "  ", hskLevel: "3", index: 1 })).toEqual({
       title: "把",
       generalDefinition: undefined,
       category: "Câu đặc biệt",
@@ -29,13 +29,12 @@ describe("grammar-point — form điểm ngữ pháp", () => {
       exampleSentenceZh: undefined,
       exampleSentencePinyin: undefined,
       exampleSentenceVi: undefined,
-      linkedQuizStudySetId: undefined,
       index: 1,
     });
   });
 
   it("grammarPointToInput: trường thiếu => chuỗi rỗng, cấp HSK thiếu => '1', index giữ; summary là tên", () => {
-    expect(grammarPointToInput(point)).toMatchObject({ title: "Câu với 是", category: "Câu trần thuật", hskLevel: "1", note: "", linkedQuizStudySetId: "", exampleSentenceVi: "Tôi là học sinh.", index: 4 });
+    expect(grammarPointToInput(point)).toMatchObject({ title: "Câu với 是", category: "Câu trần thuật", hskLevel: "1", note: "", exampleSentenceVi: "Tôi là học sinh.", index: 4 });
     expect(grammarPointToInput({ ...point, hskLevel: undefined }).hskLevel).toBe("1");
     expect(grammarPointSummary(point)).toBe("Câu với 是");
     expect(emptyGrammarPointInput().hskLevel).toBe("1");

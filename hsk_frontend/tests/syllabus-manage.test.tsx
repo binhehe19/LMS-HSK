@@ -7,17 +7,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ManagementShell } from "@/components/management/management-shell";
 import { SyllabusManagePageContent } from "@/components/management/syllabus/syllabus-manage-page-content";
 import { confirmAction } from "@/components/shared/confirm-action";
-import { resetContentAccessCache } from "@/hooks/use-content-access";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import type { AuthUser } from "@/lib/api/auth-client";
 import { getSyllabus, listSyllabusVersions, listSyllabuses } from "@/lib/api/lms-syllabus-client";
+import { listFlashcardPackages, listPackageItems } from "@/lib/api/lms-content-client";
+import { listGrammarPackages, listPackageGrammarPoints } from "@/lib/api/lms-grammar-client";
+import { listPackageQuizItems, listQuizPackages } from "@/lib/api/lms-quiz-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
-import { createScheduleModule, deleteScheduleModule, listAvailableScheduleModules, listScheduleModules, reorderScheduleModules } from "@/lib/api/syllabus-modules-client";
+import { attachLibraryItemsToSchedule, listScheduleResources, removeScheduleResource, reorderScheduleResources, type ScheduleResourceLink } from "@/lib/api/syllabus-schedule-resources-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import type { ManagementArea } from "@/lib/management/area";
 import { makeStore } from "@/redux/store";
 import type { SyllabusDetailResponse, SyllabusSummaryResponse, SyllabusVersionResponse } from "@/types/lms";
-import type { ScheduleModule } from "@/types/syllabus-modules";
 import { adminUser } from "./fixtures/classes";
 
 const PATH = "/learning-path/syllabus/manage";
@@ -64,7 +65,10 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/lib/api/lms-syllabus-client", () => ({ listSyllabuses: vi.fn(), getSyllabus: vi.fn(), listSyllabusVersions: vi.fn() }));
-vi.mock("@/lib/api/syllabus-modules-client", () => ({ listScheduleModules: vi.fn(), listAvailableScheduleModules: vi.fn(), createScheduleModule: vi.fn(), reorderScheduleModules: vi.fn(), deleteScheduleModule: vi.fn() }));
+vi.mock("@/lib/api/syllabus-schedule-resources-client", () => ({ listScheduleResources: vi.fn(), attachLibraryItemsToSchedule: vi.fn(), reorderScheduleResources: vi.fn(), removeScheduleResource: vi.fn() }));
+vi.mock("@/lib/api/lms-content-client", () => ({ listFlashcardPackages: vi.fn(), listPackageItems: vi.fn() }));
+vi.mock("@/lib/api/lms-quiz-client", () => ({ listQuizPackages: vi.fn(), listPackageQuizItems: vi.fn() }));
+vi.mock("@/lib/api/lms-grammar-client", () => ({ listGrammarPackages: vi.fn(), listPackageGrammarPoints: vi.fn() }));
 vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof import("sonner")>()), toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 // Hộp xác nhận antd (Modal.confirm) không render được trong jsdom; kiểm tra hợp đồng của màn với confirmAction thay vì nội bộ antd.
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
@@ -104,31 +108,40 @@ const versions: SyllabusVersionResponse[] = [
   { id: "v1", versionNo: 1, status: "ARCHIVED", publishedAt: "2026-01-15T08:00:00Z", publishedBy: "admin" },
   { id: "v2", versionNo: 2, status: "PUBLISHED", publishedAt: "2026-06-01T08:00:00Z", publishedBy: "admin", changeNote: "Cập nhật buổi 7–10" },
 ];
-// API trả lẫn lộn thứ tự: màn phải sắp theo `order`.
-const modulesSch1: ScheduleModule[] = [
-  { id: "m2", scheduleId: SCH1, moduleType: "QUIZ", title: "Bài tập buổi 1", order: 2, contentSetId: "set-quiz-1", skillType: "PRACTICE" },
-  { id: "m1", scheduleId: SCH1, moduleType: "VOCABULARY", title: "Từ vựng buổi 1", order: 1, contentSetId: "set-flashcard-1" },
+// Buổi 1 (sessionNo=1): 1 Từ vựng (#1) + 1 Quiz (#2); buổi 2 (sessionNo=2): rỗng.
+const linkFor = (type: string, id: string, displayOrder: number, content: unknown): ScheduleResourceLink => ({ id: `rl-${id}`, learningResourceId: id, learningResourceVersionId: `${id}-v1`, sessionNo: 1, displayOrder, resourceType: type, resourceContent: content });
+const vocabLink = linkFor("VOCABULARY", "res-vocab-1", 0, { word: "Từ vựng buổi 1" });
+const quizLink = linkFor("ASSESSMENT", "res-quiz-1", 1, { title: "Bài tập buổi 1" });
+const flashcardPackages = [{ id: "pkg-flashcard-1", name: "Từ vựng HSK 1 — Bài 1", type: "VOCABULARY" }];
+const flashcardItems = [
+  { id: "item-f1", studySetId: "", index: 0, term: "你好", meaning: "Xin chào" },
+  { id: "item-f2", studySetId: "", index: 1, term: "谢谢", meaning: "Cảm ơn" },
 ];
-const availableFlashcards = [
-  { id: "set-flashcard-1", title: "Từ vựng HSK 1 — Bài 1", moduleType: "FLASHCARD", repoName: "Gói Từ vựng HSK 1 / Thư mục Bài 1", itemCount: 20 },
-  { id: "set-flashcard-2", title: "Từ vựng HSK 1 — Bài 2", moduleType: "FLASHCARD" },
-];
+
+function scheduleResourcesImpl(syllabusId: string, type: string, sessionNo: number): Promise<ScheduleResourceLink[]> {
+  if (sessionNo !== 1) return Promise.resolve([]);
+  if (type === "VOCABULARY") return Promise.resolve([vocabLink]);
+  if (type === "ASSESSMENT") return Promise.resolve([quizLink]);
+  return Promise.resolve([]);
+}
 
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
-  resetContentAccessCache();
   vi.mocked(getUnreadCount).mockReset().mockResolvedValue(0);
   vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
   vi.mocked(listSyllabuses).mockReset().mockResolvedValue([syl(1), syl(2), syl(3)]);
   vi.mocked(getSyllabus).mockReset().mockResolvedValue(detail);
   vi.mocked(listSyllabusVersions).mockReset().mockResolvedValue(versions);
-  vi.mocked(listScheduleModules)
-    .mockReset()
-    .mockImplementation((id: string) => Promise.resolve(id === SCH1 ? modulesSch1 : []));
-  vi.mocked(listAvailableScheduleModules).mockReset().mockResolvedValue(availableFlashcards);
-  vi.mocked(createScheduleModule).mockReset().mockResolvedValue({ id: "sm-new-1", scheduleId: SCH1, moduleType: "VOCABULARY", order: 3 });
-  vi.mocked(reorderScheduleModules).mockReset().mockResolvedValue([]);
-  vi.mocked(deleteScheduleModule).mockReset().mockResolvedValue(undefined);
+  vi.mocked(listScheduleResources).mockReset().mockImplementation(scheduleResourcesImpl);
+  vi.mocked(attachLibraryItemsToSchedule).mockReset().mockResolvedValue({ added: 1, failed: [] });
+  vi.mocked(reorderScheduleResources).mockReset().mockResolvedValue(undefined);
+  vi.mocked(removeScheduleResource).mockReset().mockResolvedValue(undefined);
+  vi.mocked(listFlashcardPackages).mockReset().mockResolvedValue(flashcardPackages as never);
+  vi.mocked(listPackageItems).mockReset().mockResolvedValue(flashcardItems as never);
+  vi.mocked(listQuizPackages).mockReset().mockResolvedValue([]);
+  vi.mocked(listPackageQuizItems).mockReset().mockResolvedValue([]);
+  vi.mocked(listGrammarPackages).mockReset().mockResolvedValue([]);
+  vi.mocked(listPackageGrammarPoints).mockReset().mockResolvedValue([]);
   vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
   vi.mocked(toast.error).mockClear();
   vi.mocked(toast.success).mockClear();
@@ -304,13 +317,13 @@ describe("chế độ chi tiết (?view=<id>) — chỉ đọc từ backend chun
   }, LONG);
 });
 
-describe("tab Lịch trình + module ôn luyện (Admin, công tắc ghi 'content' mở)", () => {
+describe("tab Lịch trình + module ôn luyện (Admin) — gắn trực tiếp vào ContentPackage của giáo trình (cơ chế IELTS)", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     nav.set(`${PATH}?view=syl-1&tab=schedule`);
   });
 
-  it("gọi listScheduleModules cho TỪNG buổi; module sắp theo order; buổi trống 'Chưa có module'; cột Cần bổ sung đối chiếu; tài liệu chỉ mở khi là URL", async () => {
+  it("gọi listScheduleResources cho TỪNG buổi×loại; buổi 1 có Từ vựng + Quiz, buổi 2 trống; cột Cần bổ sung đối chiếu; tài liệu chỉ mở khi là URL", async () => {
     renderPage();
     const rows = await waitFor(() => {
       const r = scheduleRows();
@@ -318,12 +331,19 @@ describe("tab Lịch trình + module ôn luyện (Admin, công tắc ghi 'conten
       return r;
     });
     expect(rows).toHaveLength(2);
-    expect(vi.mocked(listScheduleModules).mock.calls.map((c) => c[0])).toEqual([SCH1, SCH2]);
-    expect(moduleTexts(rows[0])).toEqual(["#1 Từ vựng - Từ vựng buổi 1", "#2 Quiz - Bài tập buổi 1"]);
+    expect(vi.mocked(listScheduleResources).mock.calls.map((c) => [c[0], c[1], c[2]])).toEqual(
+      expect.arrayContaining([
+        ["syl-1", "VOCABULARY", 1],
+        ["syl-1", "ASSESSMENT", 1],
+        ["syl-1", "GRAMMAR", 1],
+        ["syl-1", "VOCABULARY", 2],
+      ]),
+    );
+    expect(moduleTexts(rows[0])).toEqual(["#1 Từ vựng buổi 1", "#2 Bài tập buổi 1"]);
     expect(rows[0]).toHaveTextContent("Đủ module theo cột này");
     expect(within(rows[1]).getByText("Chưa có module")).toBeInTheDocument();
-    expect(rows[1]).toHaveTextContent("Buổi này nên thêm (mapping):");
-    expect(within(rows[1]).getByText("Ngữ pháp")).toHaveClass("missing-type-list");
+    expect(rows[1]).toHaveTextContent("Buổi này nên thêm:");
+    expect(within(rows[1]).getByText("GRAMMAR")).toHaveClass("missing-type-list");
     expect(within(rows[0]).getByText("Slide buổi 1").closest("a")).toHaveAttribute("href", "https://files.test/slide-1");
     expect(within(rows[0]).getByText("Giáo án 1").closest("a")).toBeNull(); // "#" không mở được => chỉ chữ
     expect(rows[0]).toHaveTextContent("CLO1");
@@ -333,101 +353,24 @@ describe("tab Lịch trình + module ôn luyện (Admin, công tắc ghi 'conten
     expect(addButtons()).toHaveLength(2);
   });
 
-  it("'Đưa xuống' module đầu => reorder với toàn bộ id theo thứ tự mới (demo=false), toast, tải lại module; 'Đưa lên' đầu bị khoá", async () => {
+  it("'Đưa xuống' mục Từ vựng (duy nhất trong nhóm) => bị khoá cả 2 đầu vì nhóm chỉ có 1 mục", async () => {
     renderPage();
-    const first = (await screen.findAllByTestId("module-item"))[0];
-    expect(within(first).getByLabelText("Đưa lên")).toBeDisabled();
-    await userEvent.click(within(first).getByLabelText("Đưa xuống"));
-    await waitFor(() => expect(reorderScheduleModules).toHaveBeenCalledWith(SCH1, ["m2", "m1"], false));
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã cập nhật thứ tự học module"));
-    await waitFor(() => expect(listScheduleModules).toHaveBeenCalledTimes(4)); // 2 buổi × 2 lần
+    await screen.findAllByTestId("module-item");
+    const rows = scheduleRows();
+    const upButtons = within(rows[0]).getAllByLabelText("Đưa lên");
+    const downButtons = within(rows[0]).getAllByLabelText("Đưa xuống");
+    // Mỗi nhóm (Từ vựng, Quiz) chỉ có 1 mục => cả ↑ và ↓ đều khoá.
+    expect(upButtons.every((b) => (b as HTMLButtonElement).disabled)).toBe(true);
+    expect(downButtons.every((b) => (b as HTMLButtonElement).disabled)).toBe(true);
   });
 
-  it("lỗi ghi (403) => toast thông điệp của API, KHÔNG toast thành công", async () => {
-    vi.mocked(reorderScheduleModules).mockRejectedValue(new ApiError("Bạn không có quyền thực hiện thao tác này.", 403));
-    renderPage();
-    const first = (await screen.findAllByTestId("module-item"))[0];
-    await userEvent.click(within(first).getByLabelText("Đưa xuống"));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Bạn không có quyền thực hiện thao tác này."));
-    expect(toast.success).not.toHaveBeenCalled();
-  });
-
-  it(
-    "Thêm module: hộp theo buổi; tải kho theo LOẠI NỘI DUNG (Từ vựng => FLASHCARD); chọn bộ => tiêu đề tự điền; gửi đúng body; đổi loại => tải lại kho + chọn kỹ năng cho Quiz",
-    async () => {
-      renderPage();
-      await screen.findAllByTestId("module-item");
-      await userEvent.click(addButtons()[0]);
-      expect(await screen.findByText(/Thêm module ôn luyện — Buổi 1: Chào hỏi/, {}, { timeout: 5000 })).toBeInTheDocument();
-      await waitFor(() => expect(listAvailableScheduleModules).toHaveBeenCalledWith("FLASHCARD", ""));
-      expect(button("Thêm vào buổi")).toBeDisabled(); // chưa chọn bộ nội dung
-      const list = await screen.findByTestId("available-list");
-      await userEvent.click(within(list).getByText("Từ vựng HSK 1 — Bài 1").closest("button") as HTMLButtonElement);
-      expect(screen.getByLabelText("Tiêu đề module")).toHaveValue("Từ vựng HSK 1 — Bài 1");
-      expect(screen.getByText("20 mục")).toBeInTheDocument();
-      await userEvent.type(screen.getByLabelText("Tìm bộ nội dung có sẵn"), "bài 1");
-      await userEvent.click(button("Tìm"));
-      await waitFor(() => expect(listAvailableScheduleModules).toHaveBeenCalledWith("FLASHCARD", "bài 1"));
-      await userEvent.click(button("Thêm vào buổi"));
-      await waitFor(() => expect(createScheduleModule).toHaveBeenCalledWith({ scheduleId: SCH1, moduleType: "VOCABULARY", contentSetId: "set-flashcard-1", title: "Từ vựng HSK 1 — Bài 1" }, false));
-      await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã thêm module"));
-      await waitFor(() => expect(screen.queryByText(/Thêm module ôn luyện — Buổi 1/)).toBeNull()); // hộp tự đóng
-      await waitFor(() => expect(listScheduleModules).toHaveBeenCalledTimes(4)); // tải lại module sau khi thêm
-
-      // mở lại cho buổi 2 (sau khi tải lại xong), đổi loại sang Quiz
-      await waitFor(() => expect(addButtons()[1]).toBeEnabled());
-      await userEvent.click(addButtons()[1]);
-      await screen.findByText(/Thêm module ôn luyện — Buổi 2: Gia đình/, {}, { timeout: 5000 });
-      await userEvent.selectOptions(screen.getByLabelText("Loại module"), "QUIZ");
-      await waitFor(() => expect(listAvailableScheduleModules).toHaveBeenCalledWith("QUIZ", ""));
-      expect(screen.getByLabelText("Kỹ năng")).toHaveValue("PRACTICE");
-    },
-    LONG,
-  );
-
-  it(
-    "kho nội dung chưa cấu hình => WAITING trong hộp, nút 'Thêm vào buổi' khoá",
-    async () => {
-      vi.mocked(listAvailableScheduleModules).mockRejectedValue(new ApiNotConfiguredError());
-      renderPage();
-      await screen.findAllByTestId("module-item");
-      await userEvent.click(addButtons()[0]);
-      expect(await screen.findByTestId("available-notice", {}, { timeout: 5000 })).toHaveAttribute("data-kind", "waiting");
-      expect(button("Thêm vào buổi")).toBeDisabled();
-      expect(createScheduleModule).not.toHaveBeenCalled();
-    },
-    LONG,
-  );
-
-  it("module chưa cấu hình => notice WAITING, buổi vẫn hiện từ giáo trình, nút Thêm bị khoá", async () => {
-    vi.mocked(listScheduleModules).mockRejectedValue(new ApiNotConfiguredError());
-    renderPage();
-    expect(await screen.findByTestId("modules-notice")).toHaveAttribute("data-kind", "waiting");
-    expect(scheduleRows()).toHaveLength(2);
-    expect(addButtons()).toHaveLength(2);
-    for (const b of addButtons()) expect(b).toBeDisabled();
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("một buổi lỗi => cả khối lỗi + 'Thử lại' (bản cũ coi là rỗng); thử lại tải được", async () => {
-    vi.mocked(listScheduleModules).mockImplementationOnce((id: string) => Promise.resolve(id === SCH1 ? modulesSch1 : [])).mockImplementationOnce(() => Promise.reject(new ApiError("Lỗi module", 500)));
-    renderPage();
-    const notice = await screen.findByTestId("modules-notice");
-    expect(notice).toHaveAttribute("data-kind", "error");
-    expect(notice).toHaveTextContent("Lỗi module");
-    expect(screen.queryAllByTestId("module-item")).toHaveLength(0);
-    await userEvent.click(button("Thử lại", notice));
-    expect(await screen.findAllByTestId("module-item")).toHaveLength(2);
-  });
-
-  it("Xóa => hỏi xác nhận (confirmAction, nút nguy hiểm); đồng ý => deleteScheduleModule(id, demo=false) + toast + tải lại", async () => {
+  it("Xóa => hỏi xác nhận (confirmAction, nút nguy hiểm); đồng ý => removeScheduleResource(syllabusId, type, resourceId) + toast + tải lại", async () => {
     renderPage();
     const first = (await screen.findAllByTestId("module-item"))[0];
     await userEvent.click(within(first).getByLabelText("Xóa module"));
     await waitFor(() => expect(confirmAction).toHaveBeenCalledWith(expect.objectContaining({ title: "Xóa module ôn luyện?", okText: "Xóa", danger: true })));
-    await waitFor(() => expect(deleteScheduleModule).toHaveBeenCalledWith("m1", false));
+    await waitFor(() => expect(removeScheduleResource).toHaveBeenCalledWith("syl-1", "VOCABULARY", "res-vocab-1", false));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã xóa module"));
-    await waitFor(() => expect(listScheduleModules).toHaveBeenCalledTimes(4));
   });
 
   it("Xóa => từ chối xác nhận => KHÔNG gọi API, không toast", async () => {
@@ -436,50 +379,108 @@ describe("tab Lịch trình + module ôn luyện (Admin, công tắc ghi 'conten
     const first = (await screen.findAllByTestId("module-item"))[0];
     await userEvent.click(within(first).getByLabelText("Xóa module"));
     await waitFor(() => expect(confirmAction).toHaveBeenCalledTimes(1));
-    expect(deleteScheduleModule).not.toHaveBeenCalled();
+    expect(removeScheduleResource).not.toHaveBeenCalled();
     expect(toast.success).not.toHaveBeenCalled();
-    expect(listScheduleModules).toHaveBeenCalledTimes(2);
+  });
+
+  it("lỗi ghi (403) => toast thông điệp của API, KHÔNG toast thành công", async () => {
+    vi.mocked(removeScheduleResource).mockRejectedValue(new ApiError("Bạn không có quyền thực hiện thao tác này.", 403));
+    renderPage();
+    const first = (await screen.findAllByTestId("module-item"))[0];
+    await userEvent.click(within(first).getByLabelText("Xóa module"));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Bạn không có quyền thực hiện thao tác này."));
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it(
+    "Thêm module: hộp theo buổi; chọn loại => tải Kho của loại đó; chọn bộ => hiện mục; tick mục => gửi attachLibraryItemsToSchedule đúng syllabus/buổi",
+    async () => {
+      renderPage();
+      await screen.findAllByTestId("module-item");
+      await userEvent.click(addButtons()[0]);
+      expect(await screen.findByText(/Thêm module ôn luyện — Buổi 1: Chào hỏi/, {}, { timeout: 5000 })).toBeInTheDocument();
+      await waitFor(() => expect(listFlashcardPackages).toHaveBeenCalled());
+      expect(button("Thêm vào buổi")).toBeDisabled(); // chưa chọn mục nào
+
+      await userEvent.selectOptions(screen.getByLabelText("Bộ nội dung trong Kho"), "pkg-flashcard-1");
+      await waitFor(() => expect(listPackageItems).toHaveBeenCalledWith("pkg-flashcard-1"));
+      const list = await screen.findByTestId("available-list");
+      await userEvent.click(within(list).getByText("你好").closest("button") as HTMLButtonElement);
+      expect(screen.getByText("Đã chọn 1 / 2 mục")).toBeInTheDocument();
+
+      await userEvent.click(button("Thêm 1 mục vào buổi"));
+      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "VOCABULARY", 1, [{ id: "item-f1", label: "你好" }], false));
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 mục vào buổi."));
+      await waitFor(() => expect(screen.queryByText(/Thêm module ôn luyện — Buổi 1/)).toBeNull()); // hộp tự đóng
+
+      // mở lại cho buổi 2 (sessionNo=2), đổi loại sang Bài tập (Quiz)
+      await waitFor(() => expect(addButtons()[1]).toBeEnabled());
+      await userEvent.click(addButtons()[1]);
+      await screen.findByText(/Thêm module ôn luyện — Buổi 2: Gia đình/, {}, { timeout: 5000 });
+      await userEvent.selectOptions(screen.getByLabelText("Loại nội dung"), "ASSESSMENT");
+      await waitFor(() => expect(listQuizPackages).toHaveBeenCalled());
+    },
+    LONG,
+  );
+
+  it(
+    "Kho chưa có bộ nội dung => thông báo, không có mục để chọn; Kho chưa cấu hình (lỗi) => notice WAITING",
+    async () => {
+      vi.mocked(listFlashcardPackages).mockRejectedValue(new ApiNotConfiguredError());
+      renderPage();
+      await screen.findAllByTestId("module-item");
+      await userEvent.click(addButtons()[0]);
+      expect(await screen.findByTestId("packages-notice", {}, { timeout: 5000 })).toHaveAttribute("data-kind", "waiting");
+      expect(button("Thêm vào buổi")).toBeDisabled();
+      expect(attachLibraryItemsToSchedule).not.toHaveBeenCalled();
+    },
+    LONG,
+  );
+
+  it("module chưa cấu hình => notice WAITING, buổi vẫn hiện từ giáo trình, nút Thêm bị khoá", async () => {
+    vi.mocked(listScheduleResources).mockRejectedValue(new ApiNotConfiguredError());
+    renderPage();
+    expect(await screen.findByTestId("modules-notice")).toHaveAttribute("data-kind", "waiting");
+    expect(scheduleRows()).toHaveLength(2);
+    expect(addButtons()).toHaveLength(2);
+    for (const b of addButtons()) expect(b).toBeDisabled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("một buổi×loại lỗi => cả khối lỗi + 'Thử lại' (coi là rỗng không được, phải báo lỗi); thử lại tải được", async () => {
+    vi.mocked(listScheduleResources)
+      .mockImplementationOnce(scheduleResourcesImpl) // VOCABULARY sch1
+      .mockRejectedValueOnce(new ApiError("Lỗi module", 500)); // ASSESSMENT sch1
+    renderPage();
+    const notice = await screen.findByTestId("modules-notice");
+    expect(notice).toHaveAttribute("data-kind", "error");
+    expect(notice).toHaveTextContent("Lỗi module");
+    expect(screen.queryAllByTestId("module-item")).toHaveLength(0);
+    vi.mocked(listScheduleResources).mockReset().mockImplementation(scheduleResourcesImpl);
+    await userEvent.click(button("Thử lại", notice));
+    expect(await screen.findAllByTestId("module-item")).toHaveLength(2);
   });
 });
 
-describe("quyền sửa module theo ticket (useContentAccess OTHER) × công tắc ghi", () => {
-  beforeEach(() => nav.set(`${PATH}?view=syl-1&tab=schedule`));
-
-  it("Giảng viên KHÔNG có ticket OTHER => Alert 'Chế độ Xem duy nhất' (chữ bản cũ), module vẫn xem được, không nút Thêm/↑/↓/Xóa", async () => {
+describe("module ôn luyện chỉ Admin thao tác (mọi endpoint /content-packages* chỉ ROLE_ADMIN ở backend)", () => {
+  beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
-    vi.mocked(getTickets).mockResolvedValue([{ id: "t1", status: "OPEN", assignedId: "u-teacher-1", module: "QUIZ" }] as never);
+    nav.set(`${PATH}?view=syl-1&tab=schedule`);
+  });
+
+  it("Giảng viên => Alert 'Chế độ Xem duy nhất', module vẫn xem được, không nút Thêm/↑/↓/Xóa", async () => {
     renderPage(teacher, "instructor");
     expect(await screen.findByText("Chế độ Xem duy nhất")).toBeInTheDocument();
-    expect(screen.getByText(/không có ticket hỗ trợ hoạt động cho module Giáo trình/)).toBeInTheDocument();
+    expect(screen.getByText(/Module ôn luyện theo buổi chỉ Admin thao tác được/)).toBeInTheDocument();
     expect(await screen.findAllByTestId("module-item")).toHaveLength(2);
     expect(addButtons()).toHaveLength(0);
     expect(screen.queryByLabelText("Đưa xuống")).toBeNull();
     expect(screen.queryByLabelText("Xóa module")).toBeNull();
-    expect(screen.queryByTestId("write-locked")).toBeNull();
   }, LONG);
 
-  it("Giảng viên CÓ ticket OTHER (OPEN) nhưng công tắc ghi đóng => không Alert xem-duy-nhất, có WriteLockedNotice, nút ghi không hiện", async () => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
-    vi.mocked(getTickets).mockResolvedValue([{ id: "t2", status: "OPEN", assignedId: "u-teacher-1", module: "OTHER" }] as never);
-    renderPage(teacher, "instructor");
-    expect(await screen.findByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
-    expect(screen.queryByText("Chế độ Xem duy nhất")).toBeNull();
-    expect(addButtons()).toHaveLength(0);
-  }, LONG);
-
-  it("Giảng viên có ticket OTHER (DONE) + công tắc mở => đủ nút ghi như Admin", async () => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
-    vi.mocked(getTickets).mockResolvedValue([{ id: "t3", status: "DONE", assignedId: "u-teacher-1", module: "OTHER" }] as never);
-    renderPage(teacher, "instructor");
+  it("Admin => đủ nút ghi", async () => {
+    renderPage(adminUser, "admin");
     await waitFor(() => expect(addButtons()).toHaveLength(2));
     expect(screen.queryByText("Chế độ Xem duy nhất")).toBeNull();
-    expect(screen.queryByTestId("write-locked")).toBeNull();
   }, LONG);
-
-  it("dịch vụ ticket lỗi/chưa cấu hình => Alert nói rõ không lấy được ticket (fail-closed)", async () => {
-    vi.mocked(getTickets).mockRejectedValue(new ApiNotConfiguredError());
-    renderPage(teacher, "instructor");
-    expect(await screen.findByText("Chế độ Xem duy nhất")).toBeInTheDocument();
-    expect(screen.getByText(/Không lấy được danh sách ticket phân công/)).toBeInTheDocument();
-  });
 });

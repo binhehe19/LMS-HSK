@@ -1,47 +1,30 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useKeyedFetch, type FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { archiveMaterialGroup, bulkCreateMaterials, createMaterial, createMaterialGroup, listGroupMaterials, listMaterialGroups, listMaterials, updateMaterialGroup, updateMaterialStatus } from "@/lib/api/lesson-materials-client";
+import { createMaterial, createMaterialGroup, deleteMaterial, deleteMaterialGroup, listGroupMaterials, listMaterialGroups, publishMaterialGroup, unpublishMaterialGroup, updateMaterialGroup } from "@/lib/api/lesson-materials-client";
 import { isStorageApiConfigured, uploadFile } from "@/lib/api/storage-client";
 import { STORAGE_NOT_CONFIGURED_MESSAGE, writeErrorMessage } from "@/lib/api/write-error-message";
-import {
-  findDuplicateGroup,
-  flattenGroupedMaterials,
-  isDuplicateGroupError,
-  isInvalidTransitionError,
-  LESSON_MATERIAL_STATUS_LABELS,
-  materialsOfGroup,
-  NEW_GROUP,
-  uploadFailureErrors,
-  type BulkFileItem,
-} from "@/lib/lesson-materials/lesson-material-model";
-import type { BulkCreateMaterialResult, CreateLessonMaterialRequest, LessonMaterial, LessonMaterialCategory, LessonMaterialGroup, LessonMaterialStatus, LessonMaterialType } from "@/types/lesson-materials";
+import { findDuplicateGroup, NEW_GROUP, type BulkFileItem } from "@/lib/lesson-materials/lesson-material-model";
+import type { BulkCreateMaterialResult, BulkItemError, LessonMaterial, LessonMaterialGroup, LessonMaterialType } from "@/types/lesson-materials";
 
-export interface LessonMaterialsData {
-  groups: LessonMaterialGroup[];
-  materials: LessonMaterial[];
-}
-
-/** Bộ đang xem ở cột phải: một bộ tài liệu (theo id, đối tượng lấy lại từ dữ liệu mới nhất) hoặc ngăn "Chưa phân loại". */
-export type MaterialSelection = { kind: "group"; id: string } | { kind: "ungrouped" } | null;
+export type MaterialSelection = { id: string } | null;
 
 export interface GroupFormValues {
   id: string | null;
+  type: LessonMaterialType;
   name: string;
   description: string;
 }
 
 export interface MaterialFormValues {
   title: string;
-  description: string;
-  category: LessonMaterialCategory;
-  type: LessonMaterialType;
-  /** "" = Chưa phân loại; id bộ; hoặc NEW_GROUP. */
+  /** id bộ có sẵn hoặc NEW_GROUP. */
   groupSelection: string;
+  newGroupType: LessonMaterialType;
   newGroupName: string;
 }
 
@@ -56,71 +39,39 @@ export interface BulkState {
 
 const IDLE_BULK: BulkState = { phase: "idle", items: [], progress: { current: 0, total: 0, phase: "" }, result: null };
 
-const ARCHIVED_DUPLICATE_MESSAGE = "Tên bộ tài liệu đã tồn tại trong mục lưu trữ. Vui lòng khôi phục bộ đó hoặc nhập tên khác.";
-const DUPLICATE_MESSAGE = "Tên bộ tài liệu đã tồn tại. Vui lòng chọn bộ có sẵn hoặc nhập tên khác.";
+const DUPLICATE_MESSAGE = "Tên bộ tài liệu đã tồn tại (cùng loại). Vui lòng chọn bộ có sẵn hoặc nhập tên khác.";
 
-/** Lỗi tải tệp lên repo-storage: chưa cấu hình => câu riêng; lỗi API => thông điệp của nó. */
 function uploadErrorMessage(error: unknown): string {
   if (error instanceof ApiNotConfiguredError) return STORAGE_NOT_CONFIGURED_MESSAGE;
   return error instanceof Error && error.message ? error.message : "Không thể tải tệp lên";
 }
 
 /**
- * Logic màn Quản lý tài liệu học tập: bộ tài liệu + toàn bộ tài liệu (một lần, size=200 như bản cũ), tài liệu của bộ đang chọn, và các thao tác ghi
- * (bộ: thêm/sửa/lưu trữ/khôi phục; tài liệu: thêm một, thêm hàng loạt, đổi trạng thái). Tệp tải lên repo-storage của backend chung (storage-client)
- * rồi chỉ gửi `fileId` — khác bản cũ (POST /storage/upload của HSK).
- * Khác bản cũ có chủ đích: lỗi tải là trạng thái màn (bản cũ: toast + lưới rỗng); sau ghi thành công TẢI LẠI từ máy chủ; thao tác ghi qua write gate
- * "lesson-materials"; không giữ "mã tệp đã tải lên" giữa hai lần bấm Thêm (nếu tạo tài liệu lỗi sau khi tải tệp, lần sau tải lại tệp).
+ * Logic màn Quản lý tài liệu học tập — gắn trực tiếp vào ContentPackage/LearningResource có sẵn (xem lesson-materials-client.ts): bộ tài liệu = 1
+ * package/loại, tài liệu của bộ đang chọn tải riêng khi chọn bộ (không còn "Chưa phân loại" — mỗi tài liệu luôn thuộc đúng 1 bộ). Tệp tải lên
+ * repo-storage (storage-client) rồi mới tạo LearningResource. Trạng thái tài liệu dùng chung trạng thái publish của bộ (không còn trạng thái riêng
+ * từng tài liệu); xoá tài liệu là xoá thật (resource không chia sẻ nơi khác).
  */
 export function useLessonMaterials() {
-  const { enabled: writeEnabled, demo } = useWriteGate("lesson-materials");
+  const { enabled: writeEnabled, demo } = useWriteGate("content");
   const storageConfigured = isStorageApiConfigured();
 
-  const all = useKeyedFetch<LessonMaterialsData>("lesson-materials", async () => {
-    const [groups, page] = await Promise.all([listMaterialGroups(), listMaterials({ size: 200 })]);
-    if (!Array.isArray(groups)) throw new ApiError("Dữ liệu trả về không đúng định dạng danh sách bộ tài liệu.", 200, "CONTRACT");
-    if (!page || !Array.isArray(page.content)) throw new ApiError("Dữ liệu trả về không đúng định dạng danh sách tài liệu.", 200, "CONTRACT");
-    return { groups, materials: page.content };
-  });
+  const groupsFetch = useKeyedFetch<LessonMaterialGroup[]>("lesson-materials-groups", listMaterialGroups);
+  const groups = groupsFetch.state.kind === "ok" ? groupsFetch.state.data : (groupsFetch.lastData ?? []);
 
   const [selection, setSelection] = useState<MaterialSelection>(null);
-  const groupId = selection?.kind === "group" ? selection.id : null;
-  const groupDetail = useKeyedFetch<LessonMaterial[]>(groupId === null ? null : `group-materials:${groupId}`, async () => flattenGroupedMaterials(await listGroupMaterials(groupId as string)));
+  const selectedGroup = selection === null ? null : (groups.find((g) => g.id === selection.id) ?? null);
+  const detailFetch = useKeyedFetch<LessonMaterial[]>(selection === null ? null : `group-materials:${selection.id}`, () => listGroupMaterials(selection!.id));
+  const detailState: FetchState<LessonMaterial[]> = selection === null ? { kind: "ok", data: [] } : detailFetch.state;
 
   const [busy, setBusy] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [transitioningId, setTransitioningId] = useState<string | null>(null);
   const [bulk, setBulk] = useState<BulkState>(IDLE_BULK);
-  const lock = useRef(false);
-
-  const run = async <T,>(fallback: string, work: () => Promise<T>): Promise<T | null> => {
-    if (lock.current) return null;
-    lock.current = true;
-    setBusy(true);
-    try {
-      return await work();
-    } catch (error) {
-      toast.error(writeErrorMessage(error, fallback));
-      return null;
-    } finally {
-      lock.current = false;
-      setBusy(false);
-    }
-  };
-
-  const data = all.state.kind === "ok" ? all.state.data : (all.lastData ?? { groups: [], materials: [] });
-  const groups = data.groups;
-  const materials = data.materials;
-  const selectedGroup = groupId === null ? null : (groups.find((g) => g.id === groupId) ?? null);
 
   const reloadAll = () => {
-    all.reload();
-    if (groupId !== null) groupDetail.reload();
+    groupsFetch.reload();
+    if (selection !== null) detailFetch.reload();
   };
-
-  /** Tài liệu của cột phải: bộ đang chọn (từ máy chủ) hoặc "Chưa phân loại" (lọc từ danh sách tổng). */
-  const detailState: FetchState<LessonMaterial[]> =
-    selection === null ? { kind: "ok", data: [] } : selection.kind === "ungrouped" ? (all.state.kind === "ok" ? { kind: "ok", data: materialsOfGroup(all.state.data.materials, null) } : all.state.kind === "loading" && all.lastData ? { kind: "ok", data: materialsOfGroup(all.lastData.materials, null) } : (all.state as FetchState<LessonMaterial[]>)) : groupDetail.state;
 
   // ---- bộ tài liệu ----
   const saveGroup = async (values: GroupFormValues): Promise<boolean> => {
@@ -129,56 +80,75 @@ export function useLessonMaterials() {
       toast.error("Vui lòng nhập tên bộ tài liệu");
       return false;
     }
-    const duplicated = findDuplicateGroup(groups, name, values.id);
-    if (duplicated) {
-      toast.error(duplicated.status === "ARCHIVED" ? ARCHIVED_DUPLICATE_MESSAGE : "Tên bộ tài liệu đã tồn tại. Vui lòng nhập tên khác.");
+    if (findDuplicateGroup(groups, values.type, name, values.id)) {
+      toast.error("Tên bộ tài liệu đã tồn tại (cùng loại). Vui lòng nhập tên khác.");
       return false;
     }
-    const description = values.description.trim() || undefined;
-    const result = await run("Không thể lưu bộ tài liệu", async () => {
-      try {
-        return values.id ? await updateMaterialGroup(values.id, { name, description }, demo) : await createMaterialGroup({ name, description }, demo);
-      } catch (error) {
-        if (error instanceof ApiError && isDuplicateGroupError(error.status, error.errorCode)) throw new ApiError("Tên bộ tài liệu đã tồn tại. Vui lòng nhập tên khác.", error.status, error.errorCode);
-        throw error;
-      }
-    });
-    if (!result) return false;
+    setBusy(true);
+    try {
+      const description = values.description.trim() || undefined;
+      if (values.id) await updateMaterialGroup(values.id, values.type, { name, description }, demo);
+      else await createMaterialGroup({ type: values.type, name, description }, demo);
+    } catch (error) {
+      toast.error(writeErrorMessage(error, "Không thể lưu bộ tài liệu"));
+      return false;
+    } finally {
+      setBusy(false);
+    }
     toast.success(values.id ? "Đã cập nhật bộ tài liệu" : "Đã thêm bộ tài liệu");
     reloadAll();
     return true;
   };
 
-  const toggleGroupArchive = async (group: LessonMaterialGroup): Promise<boolean> => {
-    const restoring = group.status === "ARCHIVED";
-    const result = await run("Không thể thay đổi trạng thái bộ tài liệu", () => (restoring ? updateMaterialGroup(group.id, { status: "ACTIVE" }, demo) : archiveMaterialGroup(group.id, demo)));
-    if (!result) return false;
-    toast.success(restoring ? "Đã khôi phục bộ tài liệu" : "Đã lưu trữ bộ tài liệu");
+  const togglePublish = async (group: LessonMaterialGroup): Promise<boolean> => {
+    const publishing = group.status === "DRAFT";
+    setBusy(true);
+    try {
+      await (publishing ? publishMaterialGroup(group.id, demo) : unpublishMaterialGroup(group.id, demo));
+    } catch (error) {
+      toast.error(writeErrorMessage(error, "Không thể thay đổi trạng thái bộ tài liệu"));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+    toast.success(publishing ? "Đã xuất bản bộ tài liệu" : "Đã chuyển bộ tài liệu về nháp");
     reloadAll();
     return true;
   };
 
-  /** Bộ đích của tài liệu mới: "" => không bộ; NEW_GROUP => dùng bộ cùng tên nếu có (lưu trữ thì từ chối) hoặc tạo mới; trả về `false` khi phải dừng. */
-  const resolveGroupId = async (groupSelection: string, newGroupName: string): Promise<string | undefined | false> => {
-    if (groupSelection !== NEW_GROUP) return groupSelection || undefined;
+  const removeGroup = async (group: LessonMaterialGroup): Promise<boolean> => {
+    setBusy(true);
+    try {
+      await deleteMaterialGroup(group.id, demo);
+    } catch (error) {
+      toast.error(writeErrorMessage(error, "Không thể xoá bộ tài liệu"));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+    toast.success("Đã xoá bộ tài liệu");
+    if (selection?.id === group.id) setSelection(null);
+    reloadAll();
+    return true;
+  };
+
+  /** Bộ đích của tài liệu mới: id bộ có sẵn, hoặc tạo bộ mới (NEW_GROUP) cùng loại `type`. Trả `false` khi phải dừng. */
+  const resolveGroup = async (groupSelection: string, type: LessonMaterialType, newGroupName: string): Promise<LessonMaterialGroup | false> => {
+    if (groupSelection !== NEW_GROUP) return groups.find((g) => g.id === groupSelection) ?? false;
     const name = newGroupName.trim();
     if (!name) {
       toast.error("Vui lòng nhập tên bộ tài liệu mới");
       return false;
     }
-    const existing = findDuplicateGroup(groups, name);
-    if (existing?.status === "ARCHIVED") {
-      toast.error(ARCHIVED_DUPLICATE_MESSAGE);
-      return false;
-    }
+    const existing = findDuplicateGroup(groups, type, name);
     if (existing) {
       toast.info(`Đã dùng bộ tài liệu hiện có: ${existing.name}`);
-      return existing.id;
+      return existing;
     }
     try {
-      return (await createMaterialGroup({ name }, demo)).id;
+      return await createMaterialGroup({ type, name }, demo);
     } catch (error) {
-      toast.error(error instanceof ApiError && isDuplicateGroupError(error.status, error.errorCode) ? DUPLICATE_MESSAGE : writeErrorMessage(error, "Không thể tạo bộ tài liệu mới"));
+      toast.error(error instanceof ApiError ? DUPLICATE_MESSAGE : writeErrorMessage(error, "Không thể tạo bộ tài liệu mới"));
       return false;
     }
   };
@@ -194,77 +164,68 @@ export function useLessonMaterials() {
       toast.error("Vui lòng tải tệp lên");
       return false;
     }
-    if (lock.current) return false;
-    lock.current = true;
     setBusy(true);
     try {
       setUploadProgress(0);
-      let fileId: string;
+      let meta: { fileId: string; filename?: string; mimeType?: string; sizeBytes?: number };
       try {
-        fileId = (await uploadFile(file, setUploadProgress)).fileId;
+        meta = await uploadFile(file, setUploadProgress);
       } catch (error) {
         toast.error(uploadErrorMessage(error));
         return false;
       } finally {
         setUploadProgress(null);
       }
-      const groupTarget = await resolveGroupId(values.groupSelection, values.newGroupName);
-      if (groupTarget === false) return false;
-      const payload: CreateLessonMaterialRequest = { title, description: values.description.trim() || undefined, category: values.category, type: values.type, fileId, groupId: groupTarget };
+      const group = await resolveGroup(values.groupSelection, values.newGroupType, values.newGroupName);
+      if (group === false) return false;
       try {
-        await createMaterial(payload, demo);
+        await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title, fileId: meta.fileId, filename: meta.filename || file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo);
       } catch (error) {
         toast.error(writeErrorMessage(error, "Không thể thêm tài liệu học tập"));
         return false;
       }
-      toast.success("Đã thêm tài liệu học tập");
-      reloadAll();
-      return true;
     } finally {
-      lock.current = false;
       setBusy(false);
     }
+    toast.success("Đã thêm tài liệu học tập");
+    reloadAll();
+    return true;
   };
 
-  const changeStatus = async (material: LessonMaterial, next: LessonMaterialStatus): Promise<boolean> => {
-    setTransitioningId(material.id);
+  const removeMaterial = async (material: LessonMaterial): Promise<boolean> => {
+    setBusy(true);
     try {
-      await updateMaterialStatus(material.id, { status: next }, demo);
-      toast.success(`Đã chuyển tài liệu sang trạng thái ${LESSON_MATERIAL_STATUS_LABELS[next]}`);
-      reloadAll();
-      return true;
+      await deleteMaterial(material.groupId, material.id, demo);
     } catch (error) {
-      if (error instanceof ApiError && isInvalidTransitionError(error.status, error.errorCode)) {
-        toast.error("Trạng thái chuyển đổi không còn hợp lệ. Danh sách đã được tải lại.");
-        reloadAll();
-      } else {
-        toast.error(writeErrorMessage(error, "Không thể cập nhật trạng thái tài liệu"));
-      }
+      toast.error(writeErrorMessage(error, "Không thể xoá tài liệu"));
       return false;
     } finally {
-      setTransitioningId(null);
+      setBusy(false);
     }
+    toast.success("Đã xoá tài liệu");
+    reloadAll();
+    return true;
   };
 
-  // ---- thêm hàng loạt: tải từng tệp lên repo-storage rồi POST /materials/bulk cho các tệp thành công ----
-  const startBulk = async (items: BulkFileItem[], groupSelection: string, newGroupName: string) => {
+  // ---- thêm hàng loạt: tải từng tệp lên repo-storage rồi tạo+gắn từng LearningResource tuần tự vào 1 bộ đích ----
+  const startBulk = async (items: BulkFileItem[], groupSelection: string, newGroupType: LessonMaterialType, newGroupName: string) => {
     if (items.length === 0) return;
     if (items.some((item) => !item.title.trim())) {
       toast.error("Vui lòng nhập tên cho tất cả tài liệu");
       return;
     }
-    if (lock.current) return;
-    lock.current = true;
     setBusy(true);
     const current: BulkFileItem[] = items.map((item) => ({ ...item, uploadStatus: "idle", fileId: "", errorMessage: "" }));
     const publish = (progress: BulkState["progress"]) => setBulk({ phase: "processing", items: [...current], progress, result: null });
     try {
       publish({ current: 0, total: items.length, phase: "Đang chuẩn bị..." });
-      const groupTarget = await resolveGroupId(groupSelection, newGroupName);
-      if (groupTarget === false) {
+      const group = await resolveGroup(groupSelection, newGroupType, newGroupName);
+      if (group === false) {
         setBulk(IDLE_BULK);
         return;
       }
+      const created: LessonMaterial[] = [];
+      const createErrors: BulkItemError[] = [];
       for (let i = 0; i < current.length; i += 1) {
         const item = current[i];
         current[i] = { ...item, uploadStatus: "uploading" };
@@ -272,60 +233,42 @@ export function useLessonMaterials() {
         try {
           const meta = await uploadFile(item.file);
           current[i] = { ...current[i], uploadStatus: "uploaded", fileId: meta.fileId };
+          const material = await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title: item.title.trim(), fileId: meta.fileId, filename: meta.filename || item.file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo);
+          created.push(material);
         } catch (error) {
-          current[i] = { ...current[i], uploadStatus: "error", errorMessage: uploadErrorMessage(error) };
+          current[i] = { ...current[i], uploadStatus: "error", errorMessage: error instanceof Error && error.message ? error.message : uploadErrorMessage(error) };
+          createErrors.push({ index: i, title: item.title.trim(), errorCode: "UPLOAD_FAILED", message: current[i].errorMessage });
         }
       }
-      const uploaded = current.filter((item) => item.uploadStatus === "uploaded" && item.fileId);
-      const uploadErrors = uploadFailureErrors(current);
-      if (uploaded.length === 0) {
-        toast.error("Không có tệp nào được tải lên thành công");
-        setBulk({ phase: "done", items: [...current], progress: { current: current.length, total: current.length, phase: "" }, result: { created: [], errors: uploadErrors, totalRequested: current.length, totalCreated: 0, totalFailed: current.length } });
-        return;
-      }
-      publish({ current: current.length, total: current.length, phase: `Đang tạo ${uploaded.length} tài liệu...` });
-      let result: BulkCreateMaterialResult;
-      try {
-        result = await bulkCreateMaterials(
-          uploaded.map((item) => ({ title: item.title.trim(), category: item.category, type: item.type, fileId: item.fileId, groupId: groupTarget })),
-          demo,
-        );
-      } catch (error) {
-        toast.error(writeErrorMessage(error, "Không thể tạo tài liệu hàng loạt"));
-        setBulk(IDLE_BULK);
-        return;
-      }
-      const merged: BulkCreateMaterialResult = { ...result, errors: [...(result.errors ?? []), ...uploadErrors], totalRequested: current.length, totalFailed: result.totalFailed + uploadErrors.length };
-      if (merged.totalCreated > 0) toast.success(`Đã tạo ${merged.totalCreated}/${merged.totalRequested} tài liệu`);
-      if (merged.totalFailed > 0) toast.error(`${merged.totalFailed} tài liệu gặp lỗi`);
-      setBulk({ phase: "done", items: [...current], progress: { current: current.length, total: current.length, phase: "" }, result: merged });
-      if (merged.totalCreated > 0) reloadAll();
+      const result: BulkCreateMaterialResult = { created, errors: createErrors, totalRequested: current.length, totalCreated: created.length, totalFailed: current.length - created.length };
+      if (result.totalCreated > 0) toast.success(`Đã tạo ${result.totalCreated}/${result.totalRequested} tài liệu`);
+      if (result.totalFailed > 0) toast.error(`${result.totalFailed} tài liệu gặp lỗi`);
+      setBulk({ phase: "done", items: [...current], progress: { current: current.length, total: current.length, phase: "" }, result });
+      if (result.totalCreated > 0) reloadAll();
     } finally {
-      lock.current = false;
       setBusy(false);
     }
   };
 
   return {
-    state: all.state,
+    state: groupsFetch.state,
     groups,
-    materials,
-    refreshing: all.state.kind === "loading" && all.lastData !== null,
-    reload: all.reload,
+    refreshing: groupsFetch.state.kind === "loading" && groupsFetch.lastData !== null,
+    reload: groupsFetch.reload,
     writeEnabled,
     storageConfigured,
     busy,
     uploadProgress,
-    transitioningId,
     selection,
     selectedGroup,
     detailState,
     select: (next: MaterialSelection) => setSelection(next),
-    retryDetail: groupDetail.reload,
+    retryDetail: detailFetch.reload,
     saveGroup,
-    toggleGroupArchive,
+    togglePublish,
+    removeGroup,
     createOne,
-    changeStatus,
+    removeMaterial,
     bulk,
     startBulk,
     resetBulk: () => setBulk(IDLE_BULK),

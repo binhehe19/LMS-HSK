@@ -1,3 +1,12 @@
+> **[HUỶ — xem ghi chú]** Hợp đồng `/lesson-materials/*` dưới đây là ĐỀ XUẤT, không có backend nào đứng sau và đã bị thay thế. Màn này giờ gắn trực
+> tiếp vào `ContentPackage`/`LearningResource` có sẵn của `repo-lms` (type `MATERIAL`/`SLIDE`, nội dung `SlideMaterialContent`) — cùng cơ chế đã dùng
+> cho Kho Flashcard/Quiz/Ngữ pháp (`lms-content-client.ts`) và cho "module ôn luyện theo buổi" (xem `docs/api-requirements/syllabus-modules.md`).
+> Không còn backend mới nào được thêm; chỉ còn 2 loại tài liệu thật (**Slides**, **Tài liệu**), bỏ danh mục LESSON/COURSE, bỏ trạng thái riêng từng
+> tài liệu (dùng chung trạng thái publish Bản nháp/Đã xuất bản của bộ chứa nó), bỏ "Chưa phân loại" (mỗi tài liệu luôn thuộc đúng 1 bộ). Xem code thật:
+> [lesson-materials-client.ts](../../src/lib/api/lesson-materials-client.ts), [use-lesson-materials.ts](../../src/components/management/lesson-materials-management/use-lesson-materials.ts).
+>
+> Phần đọc để biết backend chung không có gì khác (Mục 1) vẫn còn giá trị tham khảo lịch sử; phần hợp đồng đề xuất (Mục 2 trở xuống) không còn áp dụng.
+
 # Yêu cầu API — Quản lý tài liệu học tập (`/learning-path/lesson-materials/manage`)
 
 Trạng thái: **UI_COMPLETE · API PARTIAL (WAITING FOR BACKEND)**. Hợp đồng dưới đây là **ĐỀ XUẤT**, kế thừa đường dẫn `/lesson-materials/*` của

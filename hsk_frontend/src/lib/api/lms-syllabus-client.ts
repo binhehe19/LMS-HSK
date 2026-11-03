@@ -1,5 +1,6 @@
-// Giáo trình từ backend chung (repo-lms SyllabusController, proxy chỉ đọc từ ERP; chỉ cần đã đăng nhập — backend chung không giới hạn role,
-// điểm này đã được báo lại trong khảo sát). Trạng thái: AVAILABLE, chưa xác minh trên môi trường thật.
+// Giáo trình từ backend chung (repo-lms SyllabusController, proxy chỉ đọc từ ERP IELTS backup-erp.thespace.edu.vn; chỉ cần đã đăng nhập — backend chung
+// không giới hạn role). TẠM dùng lại nguồn này cho hsk_frontend (chưa phải syllabus thật của HSK) trong lúc chờ erp.hoc-ba.edu.vn whitelist repo-lms
+// cho endpoint /hsk-syllabuses (xem HskSyllabusController + HskCmsClient bên repo-lms - giữ nguyên, sẵn sàng đổi lại khi được cấp quyền).
 "use client";
 
 import { ApiError } from "@/lib/api/api-client";

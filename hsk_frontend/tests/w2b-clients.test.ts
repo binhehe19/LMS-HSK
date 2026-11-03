@@ -1,10 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { createVocabulary, deleteVocabulary, getVocabulary, searchVocabularies, updateVocabulary } from "@/lib/api/dictionary-client";
+import { ApiNotConfiguredError } from "@/lib/api/api-client";
 import { createQuestion, deleteQuestion, getQuiz, listQuestions, updateQuestion } from "@/lib/api/quiz-question-client";
 import { WriteDisabledError } from "@/lib/api/write-gate";
 import type { QuizQuestionBody } from "@/types/content-quiz";
-import type { VocabularyInput } from "@/types/dictionary";
 
 const respond = (status: number, body: unknown) => vi.fn().mockResolvedValue(new Response(typeof body === "string" ? body : JSON.stringify(body), { status }));
 const lastCall = (fetchMock: ReturnType<typeof vi.fn>) => {
@@ -12,7 +10,6 @@ const lastCall = (fetchMock: ReturnType<typeof vi.fn>) => {
   return { url, method: init.method, body: init.body ? JSON.parse(init.body as string) : undefined, credentials: init.credentials };
 };
 const question: QuizQuestionBody = { type: "TRUE_FALSE", prompt: "再见 = tạm biệt", points: 5, correctAnswer: true, index: 2 };
-const vocab: VocabularyInput = { hanzi: "朋友", isSingleVocab: false, pinyins: [{ pinyin: "péngyou", isPrimary: true, meanings: [{ meaning: "bạn" }] }] };
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -54,42 +51,5 @@ describe("quiz-question-client — /quiz/questions theo hợp đồng đề xu�
     expect(lastCall(fetchMock)).toMatchObject({ url: "/api/hsk/quiz/questions/qq%201", method: "PUT" });
     await deleteQuestion("qq1", true);
     expect(lastCall(fetchMock)).toMatchObject({ url: "/api/hsk/quiz/questions/qq1", method: "DELETE" });
-  });
-});
-
-describe("dictionary-client — /dictionary/vocabularies theo hợp đồng đề xuất", () => {
-  it("search: URL mang đủ tham số có giá trị, keySearch luôn gửi; get mã hoá id số", async () => {
-    vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "http://lms.test.invalid/api/hsk/");
-    const fetchMock = respond(200, { items: [], totalElements: 0, totalPages: 0, page: 0, size: 10 });
-    vi.stubGlobal("fetch", fetchMock);
-    await expect(searchVocabularies({ keySearch: "", page: 0, size: 10 })).resolves.toMatchObject({ items: [] });
-    expect(lastCall(fetchMock)).toMatchObject({ url: "http://lms.test.invalid/api/hsk/dictionary/vocabularies/search?keySearch=&page=0&size=10", method: "GET", credentials: "include" });
-    await searchVocabularies({ keySearch: "好", hskLevel: 1, isSingleVocab: true, wordType: "Tính từ", radical: "女", page: 2, size: 10 });
-    expect(lastCall(fetchMock).url).toBe(`http://lms.test.invalid/api/hsk/dictionary/vocabularies/search?keySearch=${encodeURIComponent("好")}&isSingleVocab=true&page=2&size=10&hskLevel=1&wordType=${encodeURIComponent("Tính")}+${encodeURIComponent("từ")}&radical=${encodeURIComponent("女")}`);
-    await getVocabulary(42);
-    expect(lastCall(fetchMock).url).toBe("http://lms.test.invalid/api/hsk/dictionary/vocabularies/42");
-  });
-
-  it("ghi: công tắc đóng => WriteDisabledError; mở => POST / PUT /{id} / DELETE /{id}; lỗi 409 giữ thông điệp máy chủ", async () => {
-    vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "/api/hsk");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
-    vi.stubGlobal("fetch", vi.fn());
-    expect(() => createVocabulary(vocab, false)).toThrow(WriteDisabledError);
-    expect(() => updateVocabulary(1, vocab, false)).toThrow(WriteDisabledError);
-    expect(() => deleteVocabulary(1, false)).toThrow(WriteDisabledError);
-
-    const fetchMock = respond(201, { success: true, data: { id: 62, ...vocab } });
-    vi.stubGlobal("fetch", fetchMock);
-    await expect(createVocabulary(vocab, true)).resolves.toMatchObject({ id: 62, hanzi: "朋友" });
-    expect(lastCall(fetchMock)).toMatchObject({ url: "/api/hsk/dictionary/vocabularies", method: "POST", body: { hanzi: "朋友", isSingleVocab: false } });
-    await updateVocabulary(62, vocab, true);
-    expect(lastCall(fetchMock)).toMatchObject({ url: "/api/hsk/dictionary/vocabularies/62", method: "PUT" });
-    await deleteVocabulary(62, true);
-    expect(lastCall(fetchMock)).toMatchObject({ url: "/api/hsk/dictionary/vocabularies/62", method: "DELETE" });
-
-    vi.stubGlobal("fetch", respond(409, { success: false, errorCode: "DUPLICATE_HANZI", errorMessage: 'Từ "朋友" đã có trong từ điển (MOCK)' }));
-    const error = await createVocabulary(vocab, true).catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(ApiError);
-    expect(error as ApiError).toMatchObject({ status: 409, errorCode: "DUPLICATE_HANZI", message: 'Từ "朋友" đã có trong từ điển (MOCK)' });
   });
 });

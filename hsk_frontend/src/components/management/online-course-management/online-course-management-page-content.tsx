@@ -11,7 +11,7 @@ import { courseName, DEFAULT_COURSE_FILTERS, filterCourses, formFromCourse, type
 import type { OnlineCourseSummary } from "@/types/online-course";
 
 /**
- * Container màn /learning-path/online-course/manage (HSK cũ: OnlineCourseManagementPage, chỉ ADMIN ở app mới): nối hook dữ liệu với view thuần,
+ * Container màn /online-course/manage (HSK cũ: OnlineCourseManagementPage, chỉ ADMIN ở app mới): nối hook dữ liệu với view thuần,
  * bộ lọc phía client (state cục bộ, như bản cũ) và các modal. Xác nhận xoá dùng `confirmAction` (antd Modal.confirm) thay cho modal react-bootstrap.
  */
 export function OnlineCourseManagementPageContent() {

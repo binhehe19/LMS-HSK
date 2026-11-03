@@ -3,8 +3,9 @@
 import type { ReactNode } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { ScheduleTable } from "@/components/management/syllabus/schedule-table";
-import type { ScheduleModulesMap } from "@/components/management/syllabus/use-schedule-modules";
+import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import { buildSyllabusInfoFields, cloCodes, displayText, formatSyllabusDate, syllabusTitle, type InfoField } from "@/lib/syllabus/syllabus-model";
 import { SYLLABUS_TABS, type SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
 import type { SyllabusDetailResponse, SyllabusScheduleItem, SyllabusVersionResponse } from "@/types/lms";
@@ -18,12 +19,12 @@ interface SyllabusDetailPanelProps {
   onReload: () => void;
   canManage: boolean;
   writeEnabled: boolean;
-  modulesState: FetchState<ScheduleModulesMap>;
+  resourcesState: FetchState<ScheduleResourcesMap>;
   busyScheduleId: string | null;
-  onRetryModules: () => void;
-  onAddModule: (item: SyllabusScheduleItem) => void;
-  onMoveModule: (scheduleId: string, moduleId: string, direction: -1 | 1) => void;
-  onDeleteModule: (scheduleId: string, moduleId: string) => void;
+  onRetryResources: () => void;
+  onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
+  onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
+  onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
 }
 
 interface SectionColumn<T> {
@@ -186,14 +187,14 @@ export function SyllabusDetailPanel(p: SyllabusDetailPanelProps) {
             {p.tab === "schedule" && (
               <ScheduleTable
                 detail={detail.data}
-                modulesState={p.modulesState}
+                resourcesState={p.resourcesState}
                 busyScheduleId={p.busyScheduleId}
                 canManage={p.canManage}
                 writeEnabled={p.writeEnabled}
-                onRetryModules={p.onRetryModules}
+                onRetryResources={p.onRetryResources}
                 onAddModule={p.onAddModule}
-                onMoveModule={p.onMoveModule}
-                onDeleteModule={p.onDeleteModule}
+                onMoveResource={p.onMoveResource}
+                onDeleteResource={p.onDeleteResource}
               />
             )}
 

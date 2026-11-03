@@ -3,6 +3,12 @@
 // lưu trữ backend chung, không phải URL tự do. Đối chiếu: docs/api-requirements/content-tree.md mục "Thẻ ghi nhớ".
 import type { ContentItemBase, ContentItemInput } from "@/types/content";
 
+/** Một dòng trong "Trường bổ sung" (hiển thị ở mặt sau thẻ) — vd "Từ đồng nghĩa", "Từ trái nghĩa". */
+export interface FlashcardCustomField {
+  label: string;
+  value: string;
+}
+
 export interface FlashcardCard extends ContentItemBase {
   /** Chữ Hán (mặt trước). */
   term: string;
@@ -13,10 +19,14 @@ export interface FlashcardCard extends ContentItemBase {
   meaning: string;
   /** Câu ví dụ (tiếng Trung). */
   example?: string;
+  /** Pinyin của câu ví dụ. */
+  examplePinyin?: string;
   /** Dịch câu ví dụ. */
   exampleMeaning?: string;
   imageFileId?: string;
   audioFileId?: string;
+  /** Trường tự do thêm vào (nhãn + giá trị), hiển thị ở mặt sau thẻ. */
+  customFields?: FlashcardCustomField[];
 }
 
 export type FlashcardCardInput = ContentItemInput<FlashcardCard>;

@@ -9,7 +9,7 @@ import { ManagementShell } from "@/components/management/management-shell";
 import { confirmAction } from "@/components/shared/confirm-action";
 import { resetContentAccessCache } from "@/hooks/use-content-access";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import * as client from "@/lib/api/dictionary-client";
+import * as client from "@/lib/api/lms-dictionary-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { makeStore } from "@/redux/store";
@@ -56,21 +56,21 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
-vi.mock("@/lib/api/dictionary-client", () => ({ searchVocabularies: vi.fn(), getVocabulary: vi.fn(), createVocabulary: vi.fn(), updateVocabulary: vi.fn(), deleteVocabulary: vi.fn() }));
+vi.mock("@/lib/api/lms-dictionary-client", () => ({ searchVocabularies: vi.fn(), getVocabulary: vi.fn(), createVocabulary: vi.fn(), updateVocabulary: vi.fn(), deleteVocabulary: vi.fn() }));
 vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof import("sonner")>()), toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }));
 
 vi.setConfig({ testTimeout: 30_000 });
 
 const teacher = { ...adminUser, id: "u-teacher-1", fullName: "Giáo Viên Một", email: "gv1@example.test", roles: ["ROLE_TEACHER"] };
 const vocab = (i: number, over: Partial<Vocabulary> = {}): Vocabulary => ({
-  id: i,
+  id: String(i),
   hanzi: `字${i}`,
   hskLevel: ((i - 1) % 6) + 1,
   isSingleVocab: true,
   radical: "口",
   strokeCount: 3 + i,
   status: "published",
-  pinyins: [{ id: i * 10, pinyin: `zi${i}`, sinoVietnamese: `tự ${i}`, wordTypes: "Danh từ", isPrimary: true, measureWord: "个 [gè]", meanings: [{ id: i * 100, meaning: `nghĩa ${i}`, exampleSentenceCn: `例句${i}`, exampleSentenceVi: `ví dụ ${i}` }] }],
+  pinyins: [{ id: String(i * 10), pinyin: `zi${i}`, sinoVietnamese: `tự ${i}`, wordTypes: "Danh từ", isPrimary: true, measureWord: "个 [gè]", meanings: [{ id: String(i * 100), meaning: `nghĩa ${i}`, exampleSentenceCn: `例句${i}`, exampleSentenceVi: `ví dụ ${i}` }] }],
   ...over,
 });
 const page = (items: Vocabulary[], over: Partial<VocabularyPage> = {}): VocabularyPage => ({ items, totalElements: 25, totalPages: 3, page: 0, size: 10, ...over });
@@ -89,10 +89,10 @@ beforeEach(() => {
   vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
   for (const fn of Object.values(client)) vi.mocked(fn).mockReset();
   vi.mocked(client.searchVocabularies).mockResolvedValue(firstPage);
-  vi.mocked(client.getVocabulary).mockImplementation(async (id) => vocab(Number(id), { etymologyStory: "chiết tự" }));
+  vi.mocked(client.getVocabulary).mockImplementation(async (id) => vocab(Number(id), { id: String(id), etymologyStory: "chiết tự" }));
   vi.mocked(client.createVocabulary).mockResolvedValue(vocab(99));
   vi.mocked(client.updateVocabulary).mockResolvedValue(vocab(1));
-  vi.mocked(client.deleteVocabulary).mockResolvedValue({});
+  vi.mocked(client.deleteVocabulary).mockResolvedValue(undefined);
   for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
   nav.push.length = 0;
   nav.replaced.length = 0;
@@ -192,7 +192,7 @@ describe("màn Từ điển — thao tác ghi", () => {
     renderPage();
     await screen.findByText("字1");
     await userEvent.click(screen.getByRole("button", { name: "Chỉnh sửa 字2" }));
-    await waitFor(() => expect(client.getVocabulary).toHaveBeenCalledWith(2));
+    await waitFor(() => expect(client.getVocabulary).toHaveBeenCalledWith("2"));
     const modal = await waitFor(() => {
       const m = antModal();
       if (!m) throw new Error("modal chưa mở");
@@ -208,7 +208,7 @@ describe("màn Từ điển — thao tác ghi", () => {
     await userEvent.click(within(modal).getByRole("tab", { name: "Media & Chi tiết" }));
     expect(within(modal).getByLabelText("Chiết tự (nguồn gốc)")).toHaveValue("chiết tự");
     await userEvent.click(within(modal).getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(client.updateVocabulary).toHaveBeenCalledWith(2, expect.objectContaining({ hanzi: "字2", strokeCount: 5, etymologyStory: "chiết tự" }), false));
+    await waitFor(() => expect(client.updateVocabulary).toHaveBeenCalledWith("2", expect.objectContaining({ hanzi: "字2", strokeCount: 5, etymologyStory: "chiết tự" }), false));
     expect(vi.mocked(client.updateVocabulary).mock.calls[0][1].pinyins[0].meanings[0].meaning).toBe("nghĩa mới");
     expect(toast.success).toHaveBeenCalledWith("Cập nhật thành công!");
   });
@@ -221,7 +221,7 @@ describe("màn Từ điển — thao tác ghi", () => {
     await waitFor(() => expect(confirmAction).toHaveBeenCalledWith(expect.objectContaining({ title: "Xác nhận xóa", okText: "Xóa ngay", danger: true })));
     expect(client.deleteVocabulary).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Xóa 字3" }));
-    await waitFor(() => expect(client.deleteVocabulary).toHaveBeenCalledWith(3, false));
+    await waitFor(() => expect(client.deleteVocabulary).toHaveBeenCalledWith("3", false));
     expect(toast.success).toHaveBeenCalledWith("Xóa từ vựng thành công");
     await userEvent.click(screen.getByRole("button", { name: /Import từ Excel/ }));
     expect(toast.info).toHaveBeenCalledWith(expect.stringContaining("chưa được chuyển"));

@@ -1,13 +1,12 @@
 "use client";
 
-// Modal "Thêm nhiều tài liệu cùng lúc" (react-bootstrap Modal cũ => antd Modal; ba trạng thái: chọn tệp / đang xử lý / kết quả, cùng class
-// `lesson-material-management__bulk-*`). Không gọi API: danh sách tệp + bộ đích chuyển cho container (startBulk); tiến trình đọc từ `bulk`.
-// Không đóng được trong lúc xử lý (bản cũ: backdrop static, ẩn nút đóng).
+// Modal "Thêm nhiều tài liệu cùng lúc": ba trạng thái (chọn tệp / đang xử lý / kết quả). Không gọi API: danh sách tệp + bộ đích chuyển cho container
+// (startBulk). Mọi tệp trong một lượt tải lên cùng một bộ đích (loại tài liệu = loại của bộ đó); không còn chọn loại riêng từng tệp.
 import { Modal } from "antd";
 import { useState } from "react";
 import type { BulkState } from "@/components/management/lesson-materials-management/use-lesson-materials";
 import { STORAGE_NOT_CONFIGURED_MESSAGE } from "@/lib/api/write-error-message";
-import { ACCEPTED_MATERIAL_FILE_TYPES, appendBulkFiles, formatBytes, inferCategoryFromType, LESSON_MATERIAL_TYPE_LABELS, LESSON_MATERIAL_TYPE_ORDER, MAX_BULK_FILES, NEW_GROUP, type BulkFileItem } from "@/lib/lesson-materials/lesson-material-model";
+import { ACCEPTED_MATERIAL_FILE_TYPES, appendBulkFiles, formatBytes, LESSON_MATERIAL_TYPE_LABELS, LESSON_MATERIAL_TYPE_ORDER, MAX_BULK_FILES, NEW_GROUP, type BulkFileItem } from "@/lib/lesson-materials/lesson-material-model";
 import type { LessonMaterialGroup, LessonMaterialType } from "@/types/lesson-materials";
 
 export interface BulkUploadModalProps {
@@ -15,13 +14,14 @@ export interface BulkUploadModalProps {
   defaultGroupSelection: string;
   bulk: BulkState;
   storageConfigured: boolean;
-  onStart: (items: BulkFileItem[], groupSelection: string, newGroupName: string) => void;
+  onStart: (items: BulkFileItem[], groupSelection: string, newGroupType: LessonMaterialType, newGroupName: string) => void;
   onClose: () => void;
 }
 
 export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageConfigured, onStart, onClose }: BulkUploadModalProps) {
   const [items, setItems] = useState<BulkFileItem[]>([]);
   const [groupSelection, setGroupSelection] = useState(defaultGroupSelection);
+  const [newGroupType, setNewGroupType] = useState<LessonMaterialType>("SLIDE");
   const [newGroupName, setNewGroupName] = useState("");
   const processing = bulk.phase === "processing";
   const done = bulk.phase === "done" && bulk.result !== null;
@@ -47,7 +47,7 @@ export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageCo
             <button type="button" className="btn btn-link text-muted" onClick={onClose} disabled={processing}>
               Hủy
             </button>
-            <button type="button" className="btn btn-danger rounded-pill px-4" onClick={() => onStart(items, groupSelection, newGroupName)} disabled={processing || !storageConfigured || items.length === 0}>
+            <button type="button" className="btn btn-danger rounded-pill px-4" onClick={() => onStart(items, groupSelection, newGroupType, newGroupName)} disabled={processing || !storageConfigured || items.length === 0 || !groupSelection}>
               {processing ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="isax isax-document-upload me-2" />}
               Tải lên {items.length} tệp
             </button>
@@ -72,7 +72,7 @@ export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageCo
                 </div>
               )}
             </div>
-            {bulk.result.errors && bulk.result.errors.length > 0 && (
+            {bulk.result.errors.length > 0 && (
               <div className="lesson-material-management__bulk-errors">
                 <h6>Chi tiết lỗi:</h6>
                 {bulk.result.errors.map((error, index) => (
@@ -116,7 +116,7 @@ export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageCo
           <>
             <div className="lesson-material-management__modal-notice">
               <i className="isax isax-info-circle" />
-              <span>Chọn tối đa {MAX_BULK_FILES} tệp. Loại tài liệu sẽ được tự động phát hiện từ đuôi tệp (PDF/PPT → Slides, JPG/PNG/WebP → Ngữ pháp). Bạn có thể chỉnh sửa trước khi tải lên.</span>
+              <span>Chọn tối đa {MAX_BULK_FILES} tệp, tất cả thêm vào CÙNG một bộ tài liệu (loại tài liệu theo loại của bộ đó).</span>
             </div>
             {!storageConfigured && (
               <div className="alert alert-warning py-2 small" role="status">
@@ -143,29 +143,43 @@ export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageCo
                   }}
                 />
               </div>
-              <div className="col-12">
+              <div className="col-md-8">
                 <label className="form-label" htmlFor="lm-bulk-group">
                   Bộ tài liệu (áp dụng cho tất cả)
                 </label>
                 <select id="lm-bulk-group" className="form-select" value={groupSelection} onChange={(e) => setGroupSelection(e.target.value)}>
-                  <option value="">Chưa phân loại</option>
-                  {groups
-                    .filter((group) => group.status !== "ARCHIVED")
-                    .map((group) => (
-                      <option value={group.id} key={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
+                  <option value="" disabled>
+                    — Chọn bộ tài liệu —
+                  </option>
+                  {groups.map((group) => (
+                    <option value={group.id} key={group.id}>
+                      {group.name} ({LESSON_MATERIAL_TYPE_LABELS[group.type]})
+                    </option>
+                  ))}
                   <option value={NEW_GROUP}>+ Tạo bộ mới</option>
                 </select>
               </div>
               {groupSelection === NEW_GROUP && (
-                <div className="col-12">
-                  <label className="form-label" htmlFor="lm-bulk-new-group">
-                    Tên bộ tài liệu mới
-                  </label>
-                  <input id="lm-bulk-new-group" className="form-control" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Ví dụ: HSK 3" />
-                </div>
+                <>
+                  <div className="col-md-4">
+                    <label className="form-label" htmlFor="lm-bulk-new-group-type">
+                      Loại bộ mới
+                    </label>
+                    <select id="lm-bulk-new-group-type" className="form-select" value={newGroupType} onChange={(e) => setNewGroupType(e.target.value as LessonMaterialType)}>
+                      {LESSON_MATERIAL_TYPE_ORDER.map((type) => (
+                        <option value={type} key={type}>
+                          {LESSON_MATERIAL_TYPE_LABELS[type]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label" htmlFor="lm-bulk-new-group">
+                      Tên bộ tài liệu mới
+                    </label>
+                    <input id="lm-bulk-new-group" className="form-control" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Ví dụ: HSK 3" />
+                  </div>
+                </>
               )}
             </div>
 
@@ -186,21 +200,6 @@ export function BulkUploadModal({ groups, defaultGroupSelection, bulk, storageCo
                       <span className="lesson-material-management__bulk-file-size">{formatBytes(item.file.size)}</span>
                     </div>
                     <div className="lesson-material-management__bulk-file-controls">
-                      <select
-                        className="form-select form-select-sm lesson-material-management__bulk-type-select"
-                        value={item.type}
-                        aria-label={`Loại tài liệu ${index + 1}`}
-                        onChange={(e) => {
-                          const type = e.target.value as LessonMaterialType;
-                          update(index, { type, category: inferCategoryFromType(type) });
-                        }}
-                      >
-                        {LESSON_MATERIAL_TYPE_ORDER.map((type) => (
-                          <option value={type} key={type}>
-                            {LESSON_MATERIAL_TYPE_LABELS[type]}
-                          </option>
-                        ))}
-                      </select>
                       <button type="button" className="btn btn-link btn-sm text-muted p-0 ms-2" onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))} aria-label={`Bỏ tệp ${item.file.name}`}>
                         <i className="isax isax-trash" />
                       </button>

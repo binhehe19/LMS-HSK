@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { WriteDisabledError } from "@/lib/api/write-gate";
-import { ADDABLE_MODULE_TYPES, contentTypeOf, missingModuleTypes, moduleActionErrorMessage, moduleTypeLabel, movedIds, requiredModuleTypes, sortModules } from "@/lib/syllabus/schedule-modules-model";
+import { movedResourceIds } from "@/components/management/syllabus/use-schedule-resources";
+import type { ScheduleResourceLink } from "@/lib/api/syllabus-schedule-resources-client";
+import { missingRawModuleTypes, normalizeScheduleResourceType, rawModuleTypeLabel, requiredRawModuleTypes } from "@/lib/syllabus/schedule-resource-types";
 import { buildSyllabusInfoFields, cloCodes, displayText, filterSyllabuses, formatSyllabusDate, isOpenableLink, syllabusTitle } from "@/lib/syllabus/syllabus-model";
 import { SYLLABUS_TABS, checkSyllabusId, parseSyllabusTab } from "@/lib/syllabus/syllabus-params";
 import type { SyllabusDetailResponse, SyllabusSummaryResponse } from "@/types/lms";
-import type { ScheduleModule } from "@/types/syllabus-modules";
 
-const mod = (id: string, order: number, moduleType = "QUIZ"): ScheduleModule => ({ id, scheduleId: "s1", order, moduleType });
+const link = (id: string, displayOrder: number): ScheduleResourceLink => ({ id: `link-${id}`, learningResourceId: id, learningResourceVersionId: `v-${id}`, sessionNo: 1, displayOrder, resourceType: "VOCABULARY", resourceContent: null });
 const syl = (i: number, over: Partial<SyllabusSummaryResponse> = {}): SyllabusSummaryResponse => ({ id: `syl-${i}`, name: `Giáo trình HSK ${i}`, code: `GT-${i}`, educationLevelName: `HSK ${i}`, type: "STANDARD", author: "Tổ chuyên môn", ...over });
 
 describe("syllabus-params: ?view= và ?tab=", () => {
@@ -104,55 +103,37 @@ describe("syllabus-model: hiển thị", () => {
   });
 });
 
-describe("schedule-modules-model: module ôn luyện theo buổi", () => {
-  it("moduleTypeLabel: nhãn tiếng Việt của HSK cũ, không phân biệt hoa thường; loại lạ giữ nguyên; rỗng => —", () => {
-    expect(moduleTypeLabel("VOCABULARY")).toBe("Từ vựng");
-    expect(moduleTypeLabel("quiz")).toBe("Quiz");
-    expect(moduleTypeLabel("AI_WRITING")).toBe("Luyện tập với AI");
-    expect(moduleTypeLabel("NEW_TYPE")).toBe("NEW_TYPE");
-    expect(moduleTypeLabel(undefined)).toBe("—");
+describe("schedule-resource-types: module ôn luyện theo buổi (gắn trực tiếp vào ContentPackage của giáo trình, cơ chế IELTS)", () => {
+  it("normalizeScheduleResourceType: FLASHCARD/VOCABULARY => VOCABULARY, QUIZ => ASSESSMENT, GRAMMAR giữ nguyên; loại chưa hỗ trợ => null", () => {
+    expect(normalizeScheduleResourceType("FLASHCARD")).toBe("VOCABULARY");
+    expect(normalizeScheduleResourceType("vocabulary")).toBe("VOCABULARY");
+    expect(normalizeScheduleResourceType("quiz")).toBe("ASSESSMENT");
+    expect(normalizeScheduleResourceType("GRAMMAR")).toBe("GRAMMAR");
+    expect(normalizeScheduleResourceType("WRITING")).toBeNull();
+    expect(normalizeScheduleResourceType(undefined)).toBeNull();
   });
 
-  it("contentTypeOf: Từ vựng tải kho Flashcard, AI_* dùng kho AI_PRACTICE, loại khác giữ nguyên (viết hoa)", () => {
-    expect(contentTypeOf("VOCABULARY")).toBe("FLASHCARD");
-    expect(contentTypeOf("AI_SPEAKING")).toBe("AI_PRACTICE");
-    expect(contentTypeOf("quiz")).toBe("QUIZ");
+  it("rawModuleTypeLabel: nhãn tiếng Việt cho 3 loại có nội dung thật; loại lạ giữ nguyên; rỗng => —", () => {
+    expect(rawModuleTypeLabel("VOCABULARY")).toBe("Từ vựng");
+    expect(rawModuleTypeLabel("quiz")).toBe("Bài tập (Quiz)");
+    expect(rawModuleTypeLabel("WRITING")).toBe("WRITING");
+    expect(rawModuleTypeLabel(undefined)).toBe("—");
   });
 
-  it("ADDABLE_MODULE_TYPES: không có LESSON_MATERIAL (màn Tài liệu học tập riêng), LISTENING (chọn video từ kho) và AI_* (bản cũ đã tắt)", () => {
-    expect(ADDABLE_MODULE_TYPES).not.toContain("LESSON_MATERIAL");
-    expect(ADDABLE_MODULE_TYPES).not.toContain("LISTENING");
-    expect(ADDABLE_MODULE_TYPES.some((t) => t.startsWith("AI_"))).toBe(false);
-    expect(ADDABLE_MODULE_TYPES).toEqual(expect.arrayContaining(["QUIZ", "FLASHCARD", "WRITING", "GRAMMAR", "PRONUNCIATION"]));
+  it("requiredRawModuleTypes + missingRawModuleTypes: cột Module ôn luyện của giáo trình đối chiếu với resource đã gắn", () => {
+    const item = { moduleOnLuyen: [{ moduleType: "quiz", moduleContent: "Bài tập" }, { moduleType: "WRITING" }, { moduleType: "QUIZ" }, { moduleType: "" }] };
+    expect(requiredRawModuleTypes(item)).toEqual(["QUIZ", "WRITING"]);
+    expect(missingRawModuleTypes(["QUIZ", "WRITING"], { ASSESSMENT: 1 })).toEqual(["WRITING"]);
+    expect(missingRawModuleTypes(["QUIZ", "WRITING"], {})).toEqual(["QUIZ", "WRITING"]);
+    expect(requiredRawModuleTypes({ moduleOnLuyen: undefined })).toEqual([]);
   });
 
-  it("sortModules: theo order tăng dần, ổn định với order trùng/không phải số; không đổi mảng gốc", () => {
-    const list = [mod("c", 3), mod("a", 1), mod("x", Number.NaN), mod("b", 2), mod("y", 0)];
-    expect(sortModules(list).map((m) => m.id)).toEqual(["x", "y", "a", "b", "c"]);
-    expect(list[0].id).toBe("c");
-  });
-
-  it("movedIds: đổi chỗ với hàng xóm; đầu không lên, cuối không xuống, id lạ => null", () => {
-    const list = [mod("a", 1), mod("b", 2), mod("c", 3)];
-    expect(movedIds(list, "b", -1)).toEqual(["b", "a", "c"]);
-    expect(movedIds(list, "b", 1)).toEqual(["a", "c", "b"]);
-    expect(movedIds(list, "a", -1)).toBeNull();
-    expect(movedIds(list, "c", 1)).toBeNull();
-    expect(movedIds(list, "zzz", 1)).toBeNull();
-  });
-
-  it("requiredModuleTypes + missingModuleTypes: cột Module ôn luyện của giáo trình đối chiếu với module đã gắn (AI_* gộp AI_PRACTICE)", () => {
-    const item = { moduleOnLuyen: [{ moduleType: "quiz", moduleContent: "Bài tập" }, { moduleType: "AI_WRITING" }, { moduleType: "QUIZ" }, { moduleType: "" }] };
-    expect(requiredModuleTypes(item)).toEqual(["QUIZ", "AI_PRACTICE"]);
-    expect(missingModuleTypes(["QUIZ", "AI_PRACTICE"], [mod("m", 1, "QUIZ")])).toEqual(["AI_PRACTICE"]);
-    expect(missingModuleTypes(["QUIZ", "AI_PRACTICE"], [mod("m", 1, "QUIZ"), mod("n", 2, "AI_READING")])).toEqual([]);
-    expect(requiredModuleTypes({ moduleOnLuyen: undefined })).toEqual([]);
-  });
-
-  it("moduleActionErrorMessage: công tắc đóng / chưa cấu hình => 'chưa được tích hợp'; ApiError => thông điệp; lỗi lạ => câu dự phòng", () => {
-    expect(moduleActionErrorMessage(new WriteDisabledError("content"), "x")).toContain("WAITING FOR BACKEND");
-    expect(moduleActionErrorMessage(new ApiNotConfiguredError(), "x")).toContain("WAITING FOR BACKEND");
-    expect(moduleActionErrorMessage(new ApiError("Bạn không có quyền thực hiện thao tác này.", 403), "x")).toBe("Bạn không có quyền thực hiện thao tác này.");
-    expect(moduleActionErrorMessage(new Error("boom"), "Không thể xóa module")).toBe("Không thể xóa module");
+  it("movedResourceIds: đổi chỗ với hàng xóm theo displayOrder; đầu không lên, cuối không xuống, id lạ => null", () => {
+    const list = [link("a", 1), link("b", 2), link("c", 3)];
+    expect(movedResourceIds(list, "b", -1)).toEqual(["b", "a", "c"]);
+    expect(movedResourceIds(list, "b", 1)).toEqual(["a", "c", "b"]);
+    expect(movedResourceIds(list, "a", -1)).toBeNull();
+    expect(movedResourceIds(list, "c", 1)).toBeNull();
+    expect(movedResourceIds(list, "zzz", 1)).toBeNull();
   });
 });

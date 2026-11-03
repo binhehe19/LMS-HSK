@@ -2,6 +2,7 @@
 // Hợp đồng là ĐỀ XUẤT (kế thừa core/types/flashcard.type.ts, storage.type.ts, learning-path.type.ts của LMS_Frontend; backend chung chưa có) — xem
 // docs/api-requirements/content-tree.md. Mục nội dung (thẻ/từ/quiz/điểm ngữ pháp/mục phát âm) là generic: mỗi module khai báo kiểu riêng kế thừa ContentItemBase.
 import type { ComponentType, ReactNode } from "react";
+import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import type { ContentModule } from "@/lib/tickets/ticket-access";
 
 export type ContentPublishStatus = "DRAFT" | "PUBLISHED";
@@ -181,4 +182,23 @@ export interface ContentModuleConfig<TItem extends ContentItemBase = ContentItem
   /** Nhập nhanh nhiều mục từ văn bản (mỗi dòng một mục) ở trang sửa bộ. */
   parseBulkText?: (text: string) => ContentItemInput<TItem>[];
   setEditorRoutes?: ContentSetEditorRoutes;
+  /** Dòng mô tả dưới tiêu đề module ở đầu trang (FlatContentManager); không set thì không hiện (mặc định mọi module khác). */
+  subtitle?: string;
+  /** Giao diện cấp mục tuỳ biến (vd Grammar: breadcrumb + thanh tiêu đề riêng thay khung gói bên trái mặc định); không set thì dùng FlatItemsView. */
+  ItemsView?: ComponentType<FlatItemsViewProps<TItem>>;
+}
+
+/** Props của giao diện cấp mục trên nền phẳng (FlatContentManager) — dùng chung cho FlatItemsView và các biến thể riêng từng module. */
+export interface FlatItemsViewProps<TItem extends ContentItemBase> {
+  config: ContentModuleConfig<TItem>;
+  pkg: ContentPackage | null;
+  state: FetchState<TItem[]>;
+  items: TItem[];
+  canWrite: boolean;
+  busy: boolean;
+  onCreate: () => void;
+  onEdit: (item: TItem) => void;
+  onDelete: (item: TItem) => void;
+  onBack: () => void;
+  onRetry: () => void;
 }
