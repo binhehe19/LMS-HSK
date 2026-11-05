@@ -1,0 +1,149 @@
+.student-dashboard-wrapper.student-preview { min-height: 100vh; background: #f8f9fa; color: #30343b; }
+.student-dashboard-wrapper.student-preview .student-topbar { height: 74px; padding: 0 44px; background: #b5090b; display: flex; align-items: center; gap: 44px; color: #fff; }
+.student-dashboard-wrapper.student-preview .student-brand { width: 76px; height: 50px; object-fit: contain; }
+.student-dashboard-wrapper.student-preview .student-topnav { display: flex; align-items: center; gap: 36px; flex: 1; }
+.student-dashboard-wrapper.student-preview .student-topnav a { color: #fff; font-size: 14px; font-weight: 700; white-space: nowrap; padding: 6px 12px; }
+.student-dashboard-wrapper.student-preview .student-topnav .is-active { border: 1px solid #fff; border-radius: 24px; }
+.student-dashboard-wrapper.student-preview .student-topbar-account { display: flex; align-items: center; gap: 20px; }
+.student-dashboard-wrapper.student-preview .student-topbar button { border: 0; background: transparent; color: #fff; padding: 0; position: relative; }
+.student-dashboard-wrapper.student-preview .notification-dot { position: absolute; right: -1px; top: 0; width: 5px; height: 5px; background: #ffcb42; border-radius: 50%; }
+.student-dashboard-wrapper.student-preview .student-account { display: flex; align-items: center; gap: 6px; text-align: left; font-size: 13px; font-weight: 800; }
+.student-dashboard-wrapper.student-preview .student-account img { width: 38px; height: 38px; border: 2px solid white; border-radius: 50%; }
+.student-dashboard-wrapper.student-preview .student-account small { display: block; color: #b5090b; background: white; border-radius: 20px; text-align: center; font-size: 10px; margin-top: 2px; }
+.student-dashboard-wrapper.student-preview .student-menu-toggle { display: none; }
+.student-dashboard-wrapper.student-preview .student-page-content { padding: 24px 0 100px; background: #f8f9fa; }
+.student-dashboard-wrapper.student-preview .student-dashboard-container { padding: 0 40px; }
+.student-dashboard-wrapper.student-preview .student-preview-row { --bs-gutter-x: 24px; }
+.student-dashboard-wrapper.student-preview .student-sidebar-sticky-wrapper { display: flex; flex-direction: column; gap: 24px; }
+.student-dashboard-wrapper.student-preview .modern-sidebar { border: 1px solid #cbd0d7; border-radius: 16px; padding: 18px 14px; box-shadow: 0 2px 5px #00000012; }
+.student-dashboard-wrapper.student-preview .modern-sidebar h6 { font-size: 14px; color: #6b7280; margin: 14px 18px 22px; }
+.student-dashboard-wrapper.student-preview .modern-sidebar-menu { padding: 0; margin: 0; list-style: none; }
+.student-dashboard-wrapper.student-preview .modern-sidebar-menu li a { padding: 18px 20px; border-radius: 14px; font-size: 14px; font-weight: 500; color: #6b7280; margin: 0; }
+.student-dashboard-wrapper.student-preview .modern-sidebar-menu li a.active { color: #b5090b; font-weight: 700; }
+.student-dashboard-wrapper.student-preview .modern-sidebar-menu li a i { font-size: 22px; }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid { gap: 24px; grid-template-columns: repeat(9, minmax(0, 1fr)); }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .streak-widget-card { grid-column: span 6; min-height: 264px; padding: 24px; }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .next-session-card { grid-column: span 3; height: auto; padding: 20px 16px; min-width: 0; }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .achievements-card { grid-column: span 4; height: auto; }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .skill-progress-card { grid-column: span 5; height: auto; padding-bottom: 38px; }
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .vocabulary-card,
+.student-dashboard-wrapper.student-preview .student-dashboard-grid .mentor-advice-card { height: auto; min-height: 380px; }
+.student-dashboard-wrapper.student-preview .premium-card { border: 1px solid #cbd0d7; border-radius: 22px; box-shadow: none; min-width: 0; }
+.student-dashboard-wrapper.student-preview .modern-title { font-size: 16px; letter-spacing: -.3px; }
+.student-dashboard-wrapper.student-preview .premium-card > .border-bottom { border: 0 !important; padding-bottom: 0 !important; }
+.student-dashboard-wrapper.student-preview .next-session-card .modern-title { font-size: 15px; }
+.student-dashboard-wrapper.student-preview .next-session-card .widget-head-icon { width: 28px; height: 28px; }
+.student-dashboard-wrapper.student-preview .next-session-card .mini-card-link { font-size: 12px; white-space: nowrap; }
+.student-dashboard-wrapper.student-preview .achievement-icon-box { width: 38px; height: 38px; border-radius: 12px; }
+.student-dashboard-wrapper.student-preview .achievement-tile { border-color: #b8bec8; }
+.student-dashboard-wrapper.student-preview .achievement-value { font-size: 26px; }
+.student-dashboard-wrapper.student-preview .skill-progress-row { gap: 6px; }
+.student-dashboard-wrapper.student-preview .skill-progress-label, .student-dashboard-wrapper.student-preview .skill-progress-percent { font-size: 14px; }
+.student-dashboard-wrapper.student-preview .skill-progress-bar-track { height: 8px; }
+.student-dashboard-wrapper.student-preview .activity-log-card { background: #fff3f4; box-shadow: none; padding: 14px; }
+.student-dashboard-wrapper.student-preview .activity-log-card h6 { margin: 0; color: #30343b; }
+.student-dashboard-wrapper.student-preview .student-preview-modal-backdrop { position: fixed; inset: 0; background: #0006; z-index: 10000; display: grid; place-items: center; padding: 20px; }
+.student-dashboard-wrapper.student-preview .student-preview-modal { position: fixed; margin: auto; border: 0; border-radius: 20px; padding: 28px; max-width: 440px; width: 100%; box-shadow: 0 12px 50px #0003; }
+.student-dashboard-wrapper.student-preview .student-preview-modal h2 { font-size: 20px; margin-bottom: 16px; }
+.student-dashboard-wrapper.student-preview .student-preview-modal p { line-height: 1.6; }
+@media (max-width: 1199px) {
+  .student-dashboard-wrapper.student-preview .student-topbar { gap: 20px; padding: 0 24px; }
+  .student-dashboard-wrapper.student-preview .student-topnav { gap: 8px; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-container { padding: 0 24px; }
+  .student-dashboard-wrapper.student-preview .student-hero-card { gap: 12px; padding: 20px; }
+  .student-dashboard-wrapper.student-preview .student-hero-left { padding: 0; gap: 12px; }
+  .student-dashboard-wrapper.student-preview .student-hero-avatar { width: 74px; height: 74px; }
+  .student-dashboard-wrapper.student-preview .student-hero-left-text { min-height: 100px; }
+  .student-dashboard-wrapper.student-preview .student-hero-card { min-height: 200px; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar-menu li a { padding: 17px 12px; font-size: 12px; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-grid .streak-widget-card { padding: 20px; }
+}
+@media (max-width: 991px) {
+  .student-dashboard-wrapper.student-preview .student-topnav { gap: 0; }
+  .student-dashboard-wrapper.student-preview .student-topnav a { padding: 6px 8px; font-size: 12px; }
+  .student-dashboard-wrapper.student-preview .student-sidebar-col { margin-bottom: 20px; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar-menu { display: flex; overflow-x: auto; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar-menu li { flex-shrink: 0; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar h6 { margin: 0 12px 12px; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar-menu li a { white-space: nowrap; }
+}
+@media (max-width: 767px) {
+  .student-dashboard-wrapper.student-preview .student-topbar { height: 64px; padding: 0 16px; gap: 16px; position: relative; }
+  .student-dashboard-wrapper.student-preview .student-brand { width: 62px; }
+  .student-dashboard-wrapper.student-preview .student-menu-toggle { display: block; font-size: 20px; }
+  .student-dashboard-wrapper.student-preview .student-topbar-account { margin-left: auto; }
+  .student-dashboard-wrapper.student-preview .student-topnav { display: none; }
+  .student-dashboard-wrapper.student-preview .student-topnav.is-open { display: flex; position: absolute; top: 64px; left: 0; right: 0; background: #b5090b; padding: 16px; flex-direction: column; align-items: stretch; gap: 12px; z-index: 50; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-grid > .premium-card { grid-column: 1 / -1; height: auto; min-height: 0; padding: 20px; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-grid > .student-hero-card { grid-column: 1 / -1; }
+  .student-dashboard-wrapper.student-preview .student-sidebar-sticky-wrapper { gap: 12px; }
+  .student-dashboard-wrapper.student-preview .student-page-content { padding: 16px 0 40px; }
+  .student-dashboard-wrapper.student-preview .student-dashboard-container { padding: 0 12px; }
+  .student-dashboard-wrapper.student-preview .modern-sidebar-menu li a { padding: 12px; }
+  .student-dashboard-wrapper.student-preview .premium-card.mentor-advice-card { min-height: 340px; }
+}
+
+.student-dashboard-wrapper.student-preview .modern-sidebar { margin-bottom: 0; }
+.student-dashboard-wrapper.student-preview .premium-card .mini-card-link { color: #b5090b; text-decoration: none; white-space: nowrap; }
+.student-dashboard-wrapper.student-preview .mentor-advice-card .mini-card-link { color: #8b5cf6; }
+.student-dashboard-wrapper.student-preview .student-hero-card { gap: 8px 24px; min-height: 200px; }
+.student-dashboard-wrapper.student-preview .student-hero-left-text { min-height: 100px; }
+.student-dashboard-wrapper.student-preview .student-preview-modal::backdrop { background: #0006; }
+.student-dashboard-wrapper.student-preview .student-hero-card .level-value { font-size: 20px; }
+.student-dashboard-wrapper.student-preview .btn-danger { background: #b5090b; border-color: #b5090b; }
+.student-dashboard-wrapper.student-preview .student-hero-card .mini-card-value { font-size: 26px; }
+.student-dashboard-wrapper.student-preview .student-hero-card .mini-card-sessions-left { display: none; }
+@media (max-width: 767px) {
+ .student-dashboard-wrapper.student-preview .student-hero-card { gap: 14px; }
+ .student-dashboard-wrapper.student-preview .student-hero-left-text { min-height: 0; }
+ .student-dashboard-wrapper.student-preview .streak-widget-card > div:first-child { flex-wrap: wrap !important; }
+}
+
+@media (min-width: 992px) {
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .premium-card.vocabulary-card { grid-column: span 5; }
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .premium-card.mentor-advice-card { grid-column: span 4; }
+ .student-dashboard-wrapper.student-preview .student-hero-card { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'intro course' 'continue course'; grid-template-rows: 1fr auto; }
+ .student-dashboard-wrapper.student-preview .student-hero-right { max-width: none; justify-self: stretch; }
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+ .student-dashboard-wrapper.student-preview .student-hero-greeting { font-size: 18px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card { padding: 20px; gap: 8px 16px; }
+ .student-dashboard-wrapper.student-preview .student-hero-left-text { min-height: 84px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card .mini-card-value { font-size: 23px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card .course-progress-ring { width: 80px; height: 80px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card .mini-card-fraction { font-size: 30px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card .mini-card-title { font-size: 11px; }
+ .student-dashboard-wrapper.student-preview .student-hero-card .student-hero-course-dates { font-size: 9px; }
+ .student-dashboard-wrapper.student-preview .student-hero-course-card,
+ .student-dashboard-wrapper.student-preview .student-hero-progress-card { padding: 12px; }
+ .student-dashboard-wrapper.student-preview .modern-title { font-size: 14px; }
+ .student-dashboard-wrapper.student-preview .premium-card { padding: 20px; }
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .streak-widget-card { min-height: 220px; }
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .next-session-card { gap: 0; }
+ .student-dashboard-wrapper.student-preview .next-session-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .student-dashboard-wrapper.student-preview .next-session-meta { font-size: 11px; }
+ .student-dashboard-wrapper.student-preview .achievement-tile { padding: 14px; }
+ .student-dashboard-wrapper.student-preview .achievement-label { font-size: 11px; }
+ .student-dashboard-wrapper.student-preview .achievement-value { font-size: 22px; }
+ .student-dashboard-wrapper.student-preview .achievement-icon-box { width: 32px; height: 32px; }
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .skill-progress-card { padding: 20px; }
+ .student-dashboard-wrapper.student-preview .skill-progress-card .gap-4 { gap: 20px !important; }
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .vocabulary-card,
+ .student-dashboard-wrapper.student-preview .student-dashboard-grid .mentor-advice-card { min-height: 360px; padding: 20px; }
+ .student-dashboard-wrapper.student-preview .mentor-advice-card .mini-card-link { font-size: 11px; }
+ .student-dashboard-wrapper.student-preview .mentor-quote-box { padding: 16px; }
+ .student-dashboard-wrapper.student-preview .mentor-task-title { font-size: 12px; }
+ .student-dashboard-wrapper.student-preview .activity-log-card { padding: 14px; }
+ .student-dashboard-wrapper.student-preview .activity-log-toggle { font-size: 12px; gap: 8px; }
+}
+
+.student-dashboard-wrapper.student-preview .student-account { color: #fff; }
+
+@media (max-width: 767px) {
+ .student-dashboard-wrapper.student-preview .student-sidebar-col .activity-log-card h6 { display: block; }
+ .student-dashboard-wrapper.student-preview .streak-days-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+ .student-dashboard-wrapper.student-preview .streak-day-col { min-width: 0; }
+ .student-dashboard-wrapper.student-preview .streak-day-icon,
+ .student-dashboard-wrapper.student-preview .streak-day-icon img { width: 28px; height: 28px; }
+}

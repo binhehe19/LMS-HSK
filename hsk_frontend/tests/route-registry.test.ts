@@ -213,15 +213,17 @@ describe("registry khớp với App Router thực tế", () => {
   const pages = appPages();
   const placeholderPage = pages.filter((p) => p.url.includes("[...slug]"));
   // Trang ĐỘC LẬP ngoài khu quản lý (không phải route HSK cũ, không cần đăng nhập): chỉ /demo — chọn tài khoản giả lập của chế độ xem trước cục bộ.
-  const STANDALONE_PAGES = ["/demo"];
+  // Student frontend previews are a separate App Router group, outside the management registry.
+  const STUDENT_PAGES = ["student-dashboard", "student-courses", "student-wishlist", "student-quiz", "student-tickets", "student-profile"].map((name) => `/student/${name}`);
+  const STANDALONE_PAGES = ["/demo", ...STUDENT_PAGES];
   const realPages = pages.filter((p) => !p.url.includes("[...slug]") && !STANDALONE_PAGES.includes(p.url));
 
   it("có đúng MỘT trang động phục vụ placeholder, nằm trong nhóm (management)", () => {
     expect(placeholderPage.map((p) => p.file)).toEqual(["src/app/(management)/[...slug]/page.tsx"]);
   });
 
-  it("trang độc lập ngoài khu quản lý chỉ gồm /demo (ngoài nhóm (management), không được bọc guard)", () => {
-    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file)).toEqual(["src/app/demo/page.tsx"]);
+  it("trang độc lập gồm /demo và đúng sáu màn học sinh được yêu cầu, ngoài nhóm quản lý", () => {
+    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file).sort()).toEqual(["src/app/demo/page.tsx", ...STUDENT_PAGES.map((url) => `src/app/(student)${url}/page.tsx`)].sort());
   });
 
   it("tập trang thật (page.tsx) chính là MIGRATED_ROUTES, trừ các route đã RENAMED_ROUTES sang URL mới — không thiếu, không thừa", () => {
