@@ -37,7 +37,7 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       href: "/instructor/instructor-support-tickets",
     },
     {
-      header: "HỆ THỐNG ÔN LUYỆN",
+      header: "HỆ THỐNG HỌC LIỆU",
       title: "Quản lý Luyện viết (Hán tự)",
       icon: "isax isax-pen-add",
       href: "/hanzi/manage",
@@ -52,7 +52,7 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
     {
       title: "Quản lý Thẻ ghi nhớ",
       icon: "isax isax-folder-2",
-      href: "/flashcard/create-package",
+      href: "/flashcard/package",
       activePrefix: "/flashcard",
     },
     {
@@ -78,13 +78,6 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       icon: "isax isax-book-1",
       href: "/vocabulary/manage",
       activePrefix: "/vocabulary",
-    },
-    {
-      header: "KHÓA HỌC TRỰC TUYẾN",
-      title: "Quản lý Khóa học Trực tuyến",
-      icon: "isax isax-teacher",
-      href: "/online-course/manage",
-      activePrefix: "/online-course/manage",
     },
     {
       title: "Quản lý Tài liệu học tập",

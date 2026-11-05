@@ -44,7 +44,7 @@
       "header": null,
       "title": "Quản lý Thẻ ghi nhớ",
       "icon": "isax isax-folder-2",
-      "route": "/flashcard/create-package",
+      "route": "/flashcard/package",
       "subRoute": null,
       "activePrefix": "/flashcard"
     },
@@ -135,7 +135,7 @@
     "/hanzi/manage/create": [
       3
     ],
-    "/flashcard/create-package": [
+    "/flashcard/package": [
       5
     ],
     "/vocab-set/manage": [

@@ -36,7 +36,7 @@ Ký hiệu UI: UI_COMPLETE (parity HSK cũ) · UI_STD (chuẩn hoá theo IELTS p
 | Chương trình | `/learning-path/syllabus/manage` | `syllabus/*` | ADMIN,TEACHER,MENTOR | `GET /syllabuses`, `/syllabuses/{id}`, `/versions` (chỉ đọc, Auth) | UI_PARTIAL (danh sách + chi tiết + module buổi học; modal 4.345 dòng cũ không chuyển hết) | **AVAILABLE** (đọc) / module buổi học MISSING |
 | Tài liệu | `/learning-path/lesson-materials/manage` | `lesson-materials/*` | ADMIN | gần: content-packages MATERIAL/SLIDE + storage presign | UI_COMPLETE | PARTIAL (chưa map) → mock |
 | Kho tài nguyên | `/instructor/manage-storage` | `storage/*` | ADMIN,TEACHER,MENTOR | storage presign/upload/tải; không có listing | UI_PARTIAL (tree + upload mô phỏng; phụ đề karaoke không chuyển) | MISSING → mock |
-| Nội dung HSK | `/flashcard/create-package`, `/flashcard/manage*`, `/sets/create`, `/sets/:id/edit` | `content/flashcard*` | ADMIN,TEACHER,MENTOR | gần: learning-resources VOCABULARY (khác mô hình) | UI_PARTIAL (tree + thẻ; Excel import chưa chuyển) | MISSING → mock |
+| Nội dung HSK | `/flashcard/package`, `/flashcard/manage*`, `/sets/create`, `/sets/:id/edit` | `content/flashcard*` | ADMIN,TEACHER,MENTOR | gần: learning-resources VOCABULARY (khác mô hình) | UI_PARTIAL (tree + thẻ; Excel import chưa chuyển) | MISSING → mock |
 | Nội dung HSK | `/vocab-set/manage` | dùng chung flashcard | như trên | như trên | UI_PARTIAL | MISSING |
 | Nội dung HSK | `/quiz/manage` | `content/quiz*` | như trên | gần: learning-resources ASSESSMENT | UI_PARTIAL (tree + quiz + câu hỏi cốt lõi) | MISSING |
 | Nội dung HSK | `/hanzi/manage`, `/hanzi/create`, `/hanzi/edit/:id`, `/hanzi/manage/create-package`, `/hanzi/manage/select-type` | `content/hanzi*` | như trên | không có | UI_PARTIAL | MISSING |

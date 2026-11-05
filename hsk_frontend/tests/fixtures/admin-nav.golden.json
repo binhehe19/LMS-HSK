@@ -34,7 +34,7 @@
       "activePrefix": null
     },
     {
-      "header": "HỆ THỐNG ÔN LUYỆN",
+      "header": "HỆ THỐNG HỌC LIỆU",
       "title": "Quản lý Luyện viết (Hán tự)",
       "icon": "isax isax-pen-add",
       "route": "/hanzi/manage",
@@ -53,7 +53,7 @@
       "header": null,
       "title": "Quản lý Thẻ ghi nhớ",
       "icon": "isax isax-folder-2",
-      "route": "/flashcard/create-package",
+      "route": "/flashcard/package",
       "subRoute": null,
       "activePrefix": "/flashcard"
     },
@@ -88,14 +88,6 @@
       "route": "/vocabulary/manage",
       "subRoute": null,
       "activePrefix": "/vocabulary"
-    },
-    {
-      "header": "KHÓA HỌC TRỰC TUYẾN",
-      "title": "Quản lý Khóa học Trực tuyến",
-      "icon": "isax isax-teacher",
-      "route": "/online-course/manage",
-      "subRoute": null,
-      "activePrefix": "/online-course/manage"
     },
     {
       "header": null,
@@ -147,17 +139,14 @@
     "/quiz/manage": [
       9
     ],
-    "/online-course/manage": [
-      11
-    ],
     "/learning-path/syllabus/manage": [
-      13
+      12
     ],
     "/instructor/instructor-support-tickets": [
       3
     ],
     "/admin/users": [
-      14
+      13
     ],
     "/": [],
     "/admin": []

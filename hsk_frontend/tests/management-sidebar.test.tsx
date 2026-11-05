@@ -102,7 +102,7 @@ describe("ManagementSidebar — khu vực Admin", () => {
   it("đánh dấu trạng thái đích theo registry trên từng mục (số lượng từng trạng thái: tests/route-registry.test.ts); 1 unknown ('Yêu cầu hỗ trợ': HSK cũ không có PrivateRoute), 1 external; không mục nào bị ẩn", () => {
     renderSidebar();
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(".sidebar-middle .sidebar-menu a"));
-    expect(links).toHaveLength(15);
+    expect(links).toHaveLength(14);
     for (const a of links) {
       const href = a.getAttribute("href") ?? "";
       expect(a.dataset.migrationStatus, `${a.textContent} (${href})`).toBe(getNavTargetStatus(href).toLowerCase().replace("_", "-"));

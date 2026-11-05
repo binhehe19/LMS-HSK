@@ -100,12 +100,12 @@ const items = () => screen.getAllByTestId("set-editor-item");
 
 describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
   it("chọn trước gói/thư mục từ query; một thẻ trống sẵn; thiếu tên => lỗi; lưu => createStudySet rồi createItemsBulk theo thứ tự; về returnUrl", async () => {
-    nav.set(`/sets/create?packageId=p1&folderId=f1&returnUrl=${encodeURIComponent("/flashcard/create-package?packageId=p1&folderId=f1")}`);
+    nav.set(`/sets/create?packageId=p1&folderId=f1&returnUrl=${encodeURIComponent("/flashcard/package?packageId=p1&folderId=f1")}`);
     renderEditor();
     expect(await screen.findByDisplayValue("Gói 1")).toBeInTheDocument();
     expect(screen.getByLabelText("Thư mục")).toHaveValue("f1");
     expect(items()).toHaveLength(1);
-    expect(screen.getByRole("link", { name: "Quay lại" })).toHaveAttribute("href", "/flashcard/create-package?packageId=p1&folderId=f1");
+    expect(screen.getByRole("link", { name: "Quay lại" })).toHaveAttribute("href", "/flashcard/package?packageId=p1&folderId=f1");
     await userEvent.click(screen.getByTestId("set-editor-save"));
     expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên Bộ học");
     expect(client.createStudySet).not.toHaveBeenCalled();
@@ -125,7 +125,7 @@ describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
     expect(setId).toBe("s-new");
     expect((inputs as FlashcardCardInput[]).map((i) => [i.term, i.meaning, i.index])).toEqual([["你好", "xin chào", 0], ["谢谢", "cảm ơn", 1]]);
     expect(toast.success).toHaveBeenCalledWith("Tạo Bộ học thành công!");
-    expect(nav.push.at(-1)).toBe("/flashcard/create-package?packageId=p1&folderId=f1");
+    expect(nav.push.at(-1)).toBe("/flashcard/package?packageId=p1&folderId=f1");
   });
 
   it("đổi gói => thư mục về rỗng và tải thư mục gói mới; 'Nhập nhanh' thêm thẻ từ văn bản; xoá thẻ", async () => {
@@ -149,12 +149,12 @@ describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
     nav.set("/sets/create?packageId=p1&folderId=f1&returnUrl=https%3A%2F%2Fevil.test%2F");
     renderEditor();
     await screen.findByDisplayValue("Gói 1");
-    expect(screen.getByRole("link", { name: "Quay lại" })).toHaveAttribute("href", "/flashcard/create-package?packageId=p1&folderId=f1");
+    expect(screen.getByRole("link", { name: "Quay lại" })).toHaveAttribute("href", "/flashcard/package?packageId=p1&folderId=f1");
     await userEvent.type(screen.getByLabelText("Tên Bộ học"), "B");
     await userEvent.type(within(items()[0]).getByLabelText(/Chữ Hán/), "一");
     await userEvent.type(within(items()[0]).getByLabelText(/Nghĩa tiếng Việt/), "một");
     await userEvent.click(screen.getByTestId("set-editor-save"));
-    await waitFor(() => expect(nav.push.at(-1)).toBe("/flashcard/create-package?packageId=p1&folderId=f1&studySetId=s-new"));
+    await waitFor(() => expect(nav.push.at(-1)).toBe("/flashcard/package?packageId=p1&folderId=f1&studySetId=s-new"));
   });
 });
 
@@ -180,7 +180,7 @@ describe("/sets/:id/edit — sửa bộ thẻ", () => {
     expect(client.deleteItem).toHaveBeenCalledWith(TARGET, "c2", false);
     expect(client.createItemsBulk).toHaveBeenCalledWith(TARGET, "s1", [expect.objectContaining({ term: "新", meaning: "mới", index: 1 })], false);
     expect(toast.success).toHaveBeenCalledWith("Cập nhật Bộ học thành công!");
-    expect(nav.push.at(-1)).toBe("/flashcard/create-package?packageId=p1&folderId=f1&studySetId=s1");
+    expect(nav.push.at(-1)).toBe("/flashcard/package?packageId=p1&folderId=f1&studySetId=s1");
   });
 
   it("id không hợp lệ => thông báo, không gọi API; dịch vụ chưa cấu hình => WAITING FOR BACKEND", async () => {

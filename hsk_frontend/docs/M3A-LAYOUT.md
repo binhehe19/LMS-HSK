@@ -63,7 +63,7 @@ của `InstructorSidebar` cũ cho ROLE_TEACHER) — cột cuối là trạng th�
 | 5 |  | Yêu cầu hỗ trợ | `/instructor/instructor-support-tickets` | not-migrated (*) |
 | 6 | HỆ THỐNG ÔN LUYỆN | Quản lý Luyện viết (Hán tự) | `/hanzi/manage` | not-migrated |
 | 7 |  | Quản lý Luyện Phát âm | `/pronunciation/manage` | not-migrated |
-| 8 |  | Quản lý Thẻ ghi nhớ | `/flashcard/create-package` | not-migrated |
+| 8 |  | Quản lý Thẻ ghi nhớ | `/flashcard/package` | not-migrated |
 | 9 |  | Quản lý Ngữ pháp | `/grammar/manage` | not-migrated |
 | 10 |  | Quản lý Từ vựng | `/vocab-set/manage` | not-migrated |
 | 11 |  | Quản lý Bài tập | `/quiz/manage` | not-migrated |

@@ -13,8 +13,8 @@ import { emptyFlashcardInput, flashcardSummary, flashcardToInput, normalizeFlash
 import type { ContentItemColumn, ContentModuleConfig } from "@/types/content";
 import type { FlashcardCard } from "@/types/content-flashcard";
 
-/** Màn chính của mục menu "Thẻ ghi nhớ" (HSK cũ: /flashcard/create-package, cùng component với /flashcard/manage*). */
-export const FLASHCARD_MANAGE_PATH = "/flashcard/create-package";
+/** Màn chính của mục menu "Thẻ ghi nhớ" (HSK cũ: /flashcard/package, cùng component với /flashcard/manage*). */
+export const FLASHCARD_MANAGE_PATH = "/flashcard/package";
 
 const enc = encodeURIComponent;
 
@@ -96,7 +96,7 @@ export const FLASHCARD_CONFIG: ContentModuleConfig<FlashcardCard> = {
   key: "flashcard",
   apiPrefix: "/flashcard",
   itemsPath: "cards",
-  title: "Quản lý Flashcards",
+  title: "Quản lý Thẻ ghi nhớ",
   icon: "isax-cards",
   pageClassName: "manage-flashcard-page",
   labels: { package: "Package", folder: "Thư mục", studySet: "Bộ học", item: "Thẻ" },

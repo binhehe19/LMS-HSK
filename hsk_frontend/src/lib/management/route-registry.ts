@@ -84,6 +84,7 @@ export const MIGRATED_ROUTES: readonly string[] = [
  */
 export const RENAMED_ROUTES: Readonly<Record<string, string>> = {
   "/learning-path/online-course/manage": "/online-course/manage",
+  "/flashcard/create-package": "/flashcard/package",
 };
 
 export interface UiRoleDecision {

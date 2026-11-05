@@ -45,7 +45,7 @@ const VOCABULARY_PACKAGE_TYPE: ContentPackageTypeMeta = {
 
 const FLASHCARD_FLAT_CONFIG = { ...FLASHCARD_CONFIG, packageTypes: [VOCABULARY_PACKAGE_TYPE] };
 
-/** Màn "Quản lý Flashcards" (HSK cũ: ManageFlashcard, dùng chung cho /flashcard/create-package, /flashcard/manage, /flashcard/manage-learning-path, /flashcard/manage-learning). */
+/** Màn "Quản lý Flashcards" (HSK cũ: ManageFlashcard, dùng chung cho /flashcard/package, /flashcard/manage, /flashcard/manage-learning-path, /flashcard/manage-learning). */
 export function FlashcardManagePageContent() {
   return <FlatContentManager config={FLASHCARD_FLAT_CONFIG} client={FLASHCARD_CLIENT} />;
 }

@@ -43,7 +43,7 @@ export function buildInstructorNav(): NavItem[] {
     {
       title: "Quản lý Thẻ ghi nhớ",
       icon: "isax isax-folder-2",
-      href: "/flashcard/create-package",
+      href: "/flashcard/package",
       activePrefix: "/flashcard",
     },
     {

@@ -110,7 +110,7 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
   });
 
   it("route dùng chung có guard rõ ràng: kho lưu trữ và các trang */manage cho ADMIN + TEACHER + MENTOR", () => {
-    for (const url of ["/instructor/manage-storage", "/hanzi/manage", "/quiz/manage", "/flashcard/create-package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
+    for (const url of ["/instructor/manage-storage", "/hanzi/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
       expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
     }
   });
@@ -262,8 +262,8 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 15 mục = 13 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 14 mục = 12 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 12, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
   });

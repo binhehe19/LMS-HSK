@@ -63,7 +63,7 @@ Nền dùng chung: cây **Package → Folder → Study set → mục**, URL stat
 
 | Module | URL | UI | Ghi chú |
 |---|---|---|---|
-| Thẻ ghi nhớ | `/flashcard/create-package`, `/flashcard/manage`, `/flashcard/manage-learning-path`, `/flashcard/manage-learning` | **UI PARTIAL**: tree + bảng thẻ + xem nhanh lật thẻ; **không** chuyển import Excel | tiền tố `/flashcard`; ticket FLASHCARD |
+| Thẻ ghi nhớ | `/flashcard/package`, `/flashcard/manage`, `/flashcard/manage-learning-path`, `/flashcard/manage-learning` | **UI PARTIAL**: tree + bảng thẻ + xem nhanh lật thẻ; **không** chuyển import Excel | tiền tố `/flashcard`; ticket FLASHCARD |
 | Bộ từ vựng | `/vocab-set/manage` | UI PARTIAL (dùng chung module thẻ) | tiền tố `/flashcard`; ticket FLASHCARD |
 | Bộ thẻ (tạo/sửa kèm thẻ) | `/sets/create`, `/sets/:id/edit` | UI COMPLETE cho phần tạo/sửa bộ + thẻ; `returnUrl` về đúng vị trí cây | |
 | Luyện viết (Hán tự) | `/hanzi/manage`, `/hanzi/manage/select-type`, `/hanzi/manage/create-package`, `/hanzi/create`, `/hanzi/edit/:id` | **UI COMPLETE** cho cây 4 cấp (bản cũ 3 cấp: nay thêm cấp chữ với Thêm/Sửa/Xoá + xem nhanh ô 田字格, đọc bằng Web Speech), tạo gói theo 4 loại, tạo/sửa bộ kèm chữ (bắt buộc chữ Hán + pinyin + nghĩa, báo lỗi thay vì lặng lẽ bỏ dòng); **không** chuyển import Excel 2 kiểu + tệp mẫu (nút chỉ báo "chưa chuyển"), hoạt hình nét chữ (`hanzi-writer`) | tiền tố `/writing`; ticket WRITING |
