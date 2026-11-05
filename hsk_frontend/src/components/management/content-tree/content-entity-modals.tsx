@@ -5,24 +5,21 @@
 // Không gọi API: `onSubmit(values)` do container xử lý; giá trị khởi tạo lấy một lần lúc mount (container remount bằng `key` mỗi lần mở).
 import { Modal } from "antd";
 import { useState } from "react";
-import type { ContentFolderInput, ContentLabels, ContentPackageInput, ContentPackageTypeMeta, ContentSkillOption, ContentStudySetInput } from "@/types/content";
+import type { ContentFolderInput, ContentLabels, ContentPackageInput, ContentSkillOption, ContentStudySetInput } from "@/types/content";
 
 const LABEL_CLASS = "form-label small fw-700 text-uppercase mb-2";
 const LABEL_STYLE = { letterSpacing: "0.5px" } as const;
 
 export interface PackageFormModalProps {
   labels: ContentLabels;
-  types: ContentPackageTypeMeta[];
   mode: "create" | "edit";
   initialValues: ContentPackageInput;
-  /** Loại cố định theo tab đang chọn (bản cũ: lockType) hoặc khi sửa. */
-  lockType: boolean;
   submitting: boolean;
   onCancel: () => void;
   onSubmit: (values: ContentPackageInput) => void;
 }
 
-export function PackageFormModal({ labels, types, mode, initialValues, lockType, submitting, onCancel, onSubmit }: PackageFormModalProps) {
+export function PackageFormModal({ labels, mode, initialValues, submitting, onCancel, onSubmit }: PackageFormModalProps) {
   const [values, setValues] = useState<ContentPackageInput>(initialValues);
   const isEdit = mode === "edit";
   const noun = labels.package;
@@ -46,24 +43,6 @@ export function PackageFormModal({ labels, types, mode, initialValues, lockType,
             Tên {noun}
           </label>
           <input id="content-package-name" type="text" className="form-control form-control-lg shadow-sm rounded-3" placeholder={`VD: ${noun} Tiếng Trung HSK 1`} value={values.name} onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))} />
-        </div>
-        <div className="mb-4">
-          <label className={LABEL_CLASS} style={LABEL_STYLE} htmlFor="content-package-type">
-            Loại {noun}
-          </label>
-          <select id="content-package-type" className="form-select form-select-lg shadow-sm rounded-3" value={values.type} onChange={(e) => setValues((v) => ({ ...v, type: e.target.value }))} disabled={lockType || isEdit}>
-            {types.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-          {lockType && !isEdit && (
-            <div className="mt-2 text-primary small fw-600">
-              <i className="isax isax-info-circle me-1" />
-              Loại {noun.toLowerCase()} được cố định theo tab bạn đang chọn
-            </div>
-          )}
         </div>
         <div className="mb-2">
           <label className={LABEL_CLASS} style={LABEL_STYLE} htmlFor="content-package-description">

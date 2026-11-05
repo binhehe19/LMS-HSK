@@ -271,17 +271,17 @@ describe("form chữ và xem nhanh chữ", () => {
 });
 
 describe("/hanzi/manage — màn quản lý luyện viết trên nền content-tree", () => {
-  it("tải gói với target /writing+words; tiêu đề/khung DOM/nhãn bản hanzi; tab loại theo WRITING_PACKAGE_TYPES; không có tab tìm toàn cây; Nhập Excel chỉ báo chưa chuyển", async () => {
+  it("tải gói với target /writing+words; tiêu đề/khung DOM/nhãn bản hanzi; không tab lọc theo loại, không có tab tìm toàn cây; Nhập Excel chỉ báo chưa chuyển", async () => {
     renderPage(HanziManagePageContent);
     await screen.findByText("Gói 1");
     expect(client.listPackages).toHaveBeenCalledWith(TARGET);
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Luyện viết/ })).toBeInTheDocument();
     expect(document.querySelector(".content.manage-hanzi-page.content-tree-page .card.manage-lp-container")).not.toBeNull();
-    // Tiêu đề khối gói xuất hiện 2 lần (đầu danh sách + khối "Chọn loại gói để bắt đầu tạo mới"): kiểm tra h5 của khối gói.
+    // Tiêu đề trang (config.title) đã bỏ vì trùng với tiêu đề khối gói ngay dưới — chỉ còn h5 của khối gói.
     expect(screen.getByRole("heading", { level: 5, name: /Danh sách Gói Luyện viết/ })).toBeInTheDocument();
     expect(screen.getByText("Thiết lập các gói, thư mục và bộ học để luyện viết chữ Hán")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Học miễn phí \(1\)/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Lộ trình học \(1\)/ })).toBeInTheDocument();
+    // Tab lọc theo loại (Học miễn phí/Lộ trình học/...) đã bỏ — chỉ còn thanh tìm kiếm.
+    expect(screen.queryByRole("button", { name: /Học miễn phí \(/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Lộ trình học \(/ })).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.getByRole("button", { name: "Tạo package" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Nhập Excel/ }));

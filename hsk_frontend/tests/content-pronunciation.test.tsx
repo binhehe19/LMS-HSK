@@ -257,18 +257,17 @@ describe("form mục phát âm và xem nhanh", () => {
 });
 
 describe("/pronunciation/manage — màn quản lý phát âm trên nền content-tree", () => {
-  it("tải gói với target /pronunciation+pronunciation-items; tiêu đề/mô tả bản cũ; class trang; tab loại bản phát âm; không tab tìm toàn cây", async () => {
+  it("tải gói với target /pronunciation+pronunciation-items; tiêu đề/mô tả bản cũ; class trang; không tab lọc theo loại, không tab tìm toàn cây", async () => {
     renderPage(PronunciationManagePageContent);
     await screen.findByText("Gói 1");
     expect(client.listPackages).toHaveBeenCalledWith(TARGET);
-    // Bản cũ dùng cùng chữ "Quản lý Phát âm" cho tiêu đề trang và khối gói => hai h5; h5 đầu là tiêu đề trang.
-    const headings = screen.getAllByRole("heading", { level: 5, name: /Quản lý Phát âm/ });
-    expect(headings).toHaveLength(2);
-    expect(headings[0]).toHaveClass("section-title");
+    // Tiêu đề trang (config.title, trùng chữ "Quản lý Phát âm" với khối gói) đã bỏ — chỉ còn h5 của khối gói.
+    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Phát âm/ })).toBeInTheDocument();
     expect(screen.getByText("Quản lý toàn bộ nội dung luyện phát âm tiếng Trung")).toBeInTheDocument();
     expect(document.querySelector(".content.manage-pronunciation-page.content-tree-page .card.manage-lp-container")).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Tất Cả \(3\)/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Khóa học video \(1\)/ })).toBeInTheDocument();
+    // Tab lọc theo loại (Tất Cả/Khóa học video/...) đã bỏ — chỉ còn thanh tìm kiếm.
+    expect(screen.queryByRole("button", { name: /Tất Cả \(/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Khóa học video \(/ })).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.getAllByTestId("content-package-row")).toHaveLength(3);
     await userEvent.click(screen.getByRole("button", { name: /Nhập Excel/ }));

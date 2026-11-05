@@ -10,7 +10,7 @@ import { Pagination } from "antd";
 import { useState } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
-import { countPackagesByType, filterPackages, formatContentDate, isPublished, packageTypeMeta, paginate, publishStatusInfo } from "@/lib/content/content-tree-model";
+import { filterPackages, formatContentDate, isPublished, packageTypeMeta, paginate, publishStatusInfo } from "@/lib/content/content-tree-model";
 import type { ContentItemBase, ContentModuleConfig, ContentPackage } from "@/types/content";
 
 const PACKAGES_PAGE_SIZE = 12;
@@ -33,21 +33,15 @@ export interface ContentPackagesViewProps<TItem extends ContentItemBase> {
 
 export function ContentPackagesView<TItem extends ContentItemBase>({ config, state, packages, canWrite, canPublish, busy, onOpen, onCreate, onEdit, onDelete, onTogglePublish, onImport, onRetry }: ContentPackagesViewProps<TItem>) {
   const [keyword, setKeyword] = useState("");
-  const [activeType, setActiveType] = useState<string>("ALL");
   const [page, setPage] = useState(1);
   const { labels, packageTypes } = config;
   const noun = labels.package.toLowerCase();
 
-  const filtered = filterPackages(packages, activeType, keyword);
+  const filtered = filterPackages(packages, "ALL", keyword);
   const visible = paginate(filtered, page, PACKAGES_PAGE_SIZE);
   const loading = state.kind === "loading" && packages.length === 0;
   const notice = state.kind === "waiting" || state.kind === "error";
-  const activeMeta = activeType === "ALL" ? null : packageTypeMeta(packageTypes, activeType);
 
-  const changeType = (type: string) => {
-    setActiveType(type);
-    setPage(1);
-  };
   const changeKeyword = (value: string) => {
     setKeyword(value);
     setPage(1);
@@ -88,24 +82,6 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
             <input type="text" className="form-control bg-white border-0 py-2" placeholder="Tìm kiếm gói..." value={keyword} onChange={(e) => changeKeyword(e.target.value)} aria-label="Tìm kiếm gói" />
           </div>
         </div>
-
-        <div className="type-tabs-container">
-          <div className="d-flex gap-2 overflow-x-auto pb-2" style={{ scrollBehavior: "smooth" }}>
-            <button type="button" className={`type-tab-btn btn rounded-pill fw-600 px-4 py-2 ${activeType === "ALL" ? "active" : ""}`} onClick={() => changeType("ALL")} style={{ background: activeType === "ALL" ? "linear-gradient(135deg, #FFD700 0%, #D4AF37 100%)" : "#f5f5f5", color: activeType === "ALL" ? "white" : "#333", border: "none", whiteSpace: "nowrap", transition: "all 0.3s ease" }}>
-              <i className="isax isax-filter me-2" />
-              Tất Cả ({packages.length})
-            </button>
-            {packageTypes.map((type) => {
-              const active = activeType === type.value;
-              return (
-                <button key={type.value} type="button" className={`type-tab-btn btn rounded-pill fw-600 px-4 py-2 ${active ? "active" : ""}`} onClick={() => changeType(type.value)} style={{ background: active ? type.color : "#f5f5f5", color: active ? "white" : "#333", border: `2px solid ${active ? type.color : "#e0e0e0"}`, whiteSpace: "nowrap", transition: "all 0.3s ease" }}>
-                  <i className={`${type.icon} me-2`} />
-                  {type.label} ({countPackagesByType(packages, type.value)})
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       <div className="row g-4">
@@ -115,7 +91,7 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
               <div className="d-flex justify-content-between align-items-center">
                 <h6 className="card-title mb-0 fw-700">
                   <i className="isax isax-folder-2 me-2" />
-                  {activeMeta ? activeMeta.label : "Tất cả gói"}
+                  Tất cả gói
                 </h6>
                 <span className="badge bg-light text-dark">{filtered.length}</span>
               </div>
@@ -224,34 +200,6 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
             </div>
           </div>
         </div>
-
-        {canWrite && !notice && (
-          <div className="col-12">
-            <div className="mb-4">
-              <h4 className="fw-800">{config.packagesHeader.title}</h4>
-              <p className="text-muted">Chọn loại gói để bắt đầu tạo mới</p>
-            </div>
-            <div className="row g-3 mt-2">
-              {packageTypes.map((type) => (
-                <div key={type.value} className="col-md-6">
-                  <button type="button" className="btn h-100 w-100 rounded-4 p-4 text-start border-2 transition-all content-type-card" onClick={() => onCreate(type.value)} style={{ background: `${type.color}10`, borderColor: `${type.color}30`, color: type.color, minHeight: "160px" }}>
-                    <div className="mb-3">
-                      <i className={type.icon} style={{ fontSize: "32px" }} />
-                    </div>
-                    <h6 className="fw-700 mb-2">{type.label}</h6>
-                    <p className="small mb-0" style={{ opacity: 0.8 }}>
-                      {type.description}
-                    </p>
-                    <div className="mt-3 d-flex align-items-center">
-                      <span className="small fw-600">Tạo mới</span>
-                      <i className="isax isax-arrow-right-3 ms-2" />
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

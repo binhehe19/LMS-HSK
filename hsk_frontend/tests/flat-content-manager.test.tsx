@@ -124,9 +124,10 @@ describe("cấp gói (Admin)", () => {
     expect(packageRows()).toHaveLength(2);
     expect(within(packageRows()[0]).getByTestId("content-package-status")).toHaveTextContent("Draft");
     expect(within(packageRows()[1]).getByTestId("content-package-status")).toHaveTextContent("Published");
-    expect(screen.getByRole("button", { name: /Tất Cả \(2\)/ })).toBeInTheDocument();
+    // Tab lọc theo loại (Tất Cả/...) đã bỏ — chỉ còn thanh tìm kiếm.
+    expect(screen.queryByRole("button", { name: /Tất Cả \(/ })).toBeNull();
     expect(screen.getByRole("button", { name: "Tạo package" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Flashcards/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 5, name: /Quản Lý Packages Flashcard/ })).toBeInTheDocument();
     expect(screen.queryByTestId("flat-content-missing")).toBeNull();
   });
 
@@ -160,7 +161,7 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     await userEvent.click(screen.getByRole("button", { name: "Tạo package" }));
     const modal = antModal();
-    expect(within(modal).getByLabelText("Loại Package")).toHaveValue("VOCABULARY");
+    // Không còn ô "Loại Package" trong modal — type gán mặc định (VOCABULARY), xác nhận qua createFlashcardPackage bên dưới.
     await userEvent.click(modalOk(modal, "Tạo Package"));
     expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên package");
     expect(client.createFlashcardPackage).not.toHaveBeenCalled();

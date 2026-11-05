@@ -201,13 +201,14 @@ export function ContentTreeManager<TItem extends ContentItemBase>({ config }: { 
     <ManagementPageFrame contentClassName={`${config.pageClassName} content-tree-page`}>
       <div className="card manage-lp-container border-0 shadow-sm" data-testid="content-tree" data-module={config.key} data-level={searchView ? "search" : level}>
         <div className="manage-lp-header px-4 pt-4 border-0">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="section-title mb-0 fw-800">
-              <i className={`isax ${config.icon.replace(/^isax\s+/, "")} me-2 text-primary`} />
-              {config.title}
-            </h5>
-          </div>
-
+          {(searchView || level !== "packages") && (
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="section-title mb-0 fw-800">
+                <i className={`isax ${config.icon.replace(/^isax\s+/, "")} me-2 text-primary`} />
+                {config.title}
+              </h5>
+            </div>
+          )}
           {tree.access.status !== "loading" && !tree.access.canManage && (
             <div className="mb-3">
               <Alert message="Chế độ Xem duy nhất" description="Bạn hiện không có Ticket được cấp cho Module này. Bạn vẫn có thể xem các nội dung nhưng không thể Thêm, Sửa hoặc Xóa." type="warning" showIcon className="rounded-3 border-warning bg-soft-warning" data-testid="content-readonly-alert" />
@@ -242,10 +243,8 @@ export function ContentTreeManager<TItem extends ContentItemBase>({ config }: { 
         <PackageFormModal
           key={packageModal.key}
           labels={labels}
-          types={config.packageTypes}
           mode={packageModal.mode}
           initialValues={packageModal.editing ? { name: packageModal.editing.name, type: packageModal.editing.type, description: packageModal.editing.description ?? "" } : { name: "", type: packageModal.type ?? config.packageTypes[0]?.value ?? "", description: "" }}
-          lockType={packageModal.type !== null}
           submitting={tree.busy}
           onCancel={() => setPackageModal(null)}
           onSubmit={(values) => void submitPackage(packageModal.editing, values)}

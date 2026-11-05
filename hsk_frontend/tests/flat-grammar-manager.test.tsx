@@ -121,7 +121,7 @@ describe("cấp gói (Admin)", () => {
     expect(within(packageRows()[0]).getByTestId("content-package-status")).toHaveTextContent("Draft");
     expect(within(packageRows()[1]).getByTestId("content-package-status")).toHaveTextContent("Published");
     expect(screen.getByRole("button", { name: "Tạo package" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Ngữ pháp/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 5, name: /Quản lý ngữ pháp theo khóa học/ })).toBeInTheDocument();
     expect(screen.queryByTestId("flat-content-missing")).toBeNull();
   });
 
@@ -149,7 +149,7 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     await userEvent.click(screen.getByRole("button", { name: "Tạo package" }));
     const modal = antModal();
-    expect(within(modal).getByLabelText("Loại Package")).toHaveValue("GRAMMAR");
+    // Không còn ô "Loại Package" trong modal — type gán mặc định (GRAMMAR), xác nhận qua createGrammarPackage bên dưới.
     await userEvent.click(modalOk(modal, "Tạo Package"));
     expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên package");
     expect(client.createGrammarPackage).not.toHaveBeenCalled();

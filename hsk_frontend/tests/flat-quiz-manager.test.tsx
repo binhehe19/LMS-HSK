@@ -129,7 +129,7 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     expect(client.listQuizPackages).toHaveBeenCalledWith();
     expect(packageRows()).toHaveLength(2);
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Bài tập/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 5, name: /Quản lý bài tập theo khóa học/ })).toBeInTheDocument();
   });
 
   it("xoá gói: huỷ => không gọi API; đồng ý => deleteQuizPackage + toast", async () => {
