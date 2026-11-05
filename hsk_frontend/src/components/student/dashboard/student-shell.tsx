@@ -55,11 +55,11 @@ export default function StudentShell({ children, profileHeader = false, fullWidt
           <Link to={dashboardPath} aria-label="Học Bá - Bảng điều khiển"><Image src="assets/hocba/hocbadentrang.png" className="student-brand" alt="Học Bá" /></Link>
           <button className="student-menu-toggle" aria-label="Mở menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><i aria-hidden="true" className="fa-solid fa-bars" /></button>
           <nav className={menuOpen ? "student-topnav is-open" : "student-topnav"} aria-label="Điều hướng chính">
-            <Link to={dashboardPath} className={pathname !== all_routes.studentCourses ? "is-active" : ""} aria-current={pathname === dashboardPath ? "page" : undefined}>Bảng điều khiển</Link>
+            <Link to={dashboardPath} className={pathname !== all_routes.studentCourses && !pathname.startsWith(all_routes.vocabulary) ? "is-active" : ""} aria-current={pathname === dashboardPath ? "page" : undefined}>Bảng điều khiển</Link>
             <Link to={all_routes.studentCourses} className={pathname === all_routes.studentCourses ? "is-active" : ""} aria-current={pathname === all_routes.studentCourses ? "page" : undefined}>Khóa học</Link>
             <Link to="Thời khóa biểu">Thời khóa biểu⌄</Link>
             <Link to={all_routes.studentQuiz}>Luyện tập⌄</Link>
-            <Link to="Từ vựng">Từ vựng⌄</Link>
+            <Link to={all_routes.vocabulary} className={pathname.startsWith(all_routes.vocabulary) ? "is-active" : ""} aria-current={pathname === all_routes.vocabulary ? "page" : undefined}>Từ điển</Link>
           </nav>
           <div className="student-topbar-account">
             <StudentNotifications />
