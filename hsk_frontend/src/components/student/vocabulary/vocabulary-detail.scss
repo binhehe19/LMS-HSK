@@ -1,0 +1,859 @@
+// Nguyên văn LMS_Frontend/src/features/learning-path/vocabulary/detail/vocabulary-detail.scss. Khác bản cũ: gốc đổi từ .vocabulary-detail
+// thành .hsk-vocab-detail (tránh trùng tên lớp với khu quản lý) và thêm khối "a.vd-node" ở cuối (chữ thành phần có id là liên kết).
+/* Chi tiết từ vựng — bám thiết kế Figma "Thẻ từ vựng chi tiết" (node 1543:2479).
+   Token lấy từ design system HB, khai báo cục bộ vì project chưa có biến toàn cục. */
+.hsk-vocab-detail {
+  --vd-red: #b90e0a;
+  --vd-brand: #b00d0e;
+  --vd-brand-2: #e11d1d;
+  --vd-outline: #64748b;
+  --vd-dark: #1e293b;
+  --vd-ink: #373737;
+  --vd-icon: #9ca3af;
+  /* viền khối phân tích — 0.5px #9ca3af của Figma render ra sắc xanh-xám nhạt */
+  --vd-line: #dfe3ec;
+  --vd-btn-hover: #fdebeb;
+  --vd-card-hover: #fffafa;
+  --vd-surface: #f8fafc;
+  --vd-danger-light: #fef2f2;
+
+  background: var(--vd-surface);
+  min-height: 100%;
+  padding-bottom: 50px;
+
+  .vd-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* ───────── trạng thái ───────── */
+  .vd-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 80px 0;
+    color: var(--vd-outline);
+
+    i {
+      font-size: 40px;
+      color: var(--vd-red);
+    }
+  }
+
+  .vd-empty {
+    margin: 0;
+    color: var(--vd-outline);
+    font-size: 14px;
+  }
+
+  /* ───────── breadcrumb ───────── */
+  .vd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  .vd-crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--vd-outline);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--vd-red);
+    }
+  }
+
+  .vd-sep {
+    color: var(--vd-outline);
+  }
+
+  .vd-crumb-active {
+    background: var(--vd-btn-hover);
+    color: #b10019;
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 4px 12px;
+    line-height: 16px;
+  }
+
+  /* ───────── nút dùng chung ───────── */
+  .vd-btn-primary,
+  .vd-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .vd-btn-primary {
+    padding: 14px 24px;
+    border: 0;
+    color: #fff;
+    background: linear-gradient(90deg, var(--vd-brand), var(--vd-brand-2));
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .vd-btn-outline {
+    padding: 12.5px 24px;
+    background: #fff;
+    border: 0.5px solid var(--vd-red);
+    color: var(--vd-red);
+
+    &:hover {
+      background: var(--vd-card-hover);
+      box-shadow: 4px 7px 5px rgba(229, 0, 0, 0.1);
+    }
+  }
+
+  .vd-btn-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 0.5px solid var(--vd-red);
+    background: #fff;
+    color: var(--vd-red);
+    cursor: pointer;
+
+    i {
+      font-size: 28px;
+    }
+
+    /* bookmark SVG: currentColor = màu đỏ của nút */
+    .vd-bookmark {
+      width: 28px;
+      height: 28px;
+      transition: fill 0.15s ease;
+    }
+
+    &:hover {
+      background: var(--vd-danger-light);
+    }
+
+    /* đã lưu: nút vẫn nền trắng, chỉ biểu tượng được tô đầy đỏ */
+    &.is-saved {
+      background: var(--vd-danger-light);
+    }
+  }
+
+  /* huy hiệu Pro trên nút Hội thoại */
+  .vd-pro {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--vd-brand), var(--vd-brand-2));
+    box-shadow: inset 3px -1px 4px 0 rgba(0, 0, 0, 0.25);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    line-height: 14px;
+
+    i {
+      font-size: 8px;
+    }
+  }
+
+  /* nút loa */
+  .vd-speaker {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 0.5px solid var(--vd-red);
+    background: var(--vd-danger-light);
+    color: var(--vd-red);
+    cursor: pointer;
+
+    i {
+      font-size: 18px;
+    }
+
+    /* trạng thái nhấn — Component 312 */
+    &:active {
+      background: var(--vd-brand);
+      border-color: var(--vd-brand);
+      color: #fff;
+      filter: drop-shadow(1px 4px 8.7px rgba(185, 14, 10, 0.5));
+    }
+
+    &--sm {
+      width: 28px;
+      height: 28px;
+
+      i {
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* ───────── nhãn ───────── */
+  .vd-tag-hsk {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 4.695px;
+    background: linear-gradient(90deg, var(--vd-brand), var(--vd-brand-2));
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 18.781px;
+  }
+
+  .vd-tag-type {
+    align-self: flex-start;
+    display: inline-flex;
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: var(--vd-btn-hover);
+    color: var(--vd-outline);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.24px;
+    line-height: 16px;
+  }
+
+  /* ───────── Hero ───────── */
+  .vd-hero {
+    display: flex;
+    gap: 32px;
+    padding: 32px;
+    border-radius: 16px;
+    background: #fff;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
+
+    &__left {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 15.9px;
+    }
+
+    &__right {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+  }
+
+  .vd-hanzi {
+    margin: 0;
+    color: #b61722;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 56px;
+    letter-spacing: -0.96px;
+  }
+
+  .vd-pinyin-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .vd-pinyin {
+    color: #434655;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+  }
+
+  .vd-meaning {
+    margin: 0;
+    max-width: 672px;
+    color: #141b2b;
+    font-size: 18px;
+    line-height: 29.25px;
+  }
+
+  .vd-sino {
+    margin: 0;
+    padding-top: 8px;
+    color: var(--vd-outline);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+
+  .vd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  // Nhóm nhãn từ loại trong panel chi tiết
+  .vd-panel__types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .vd-actions {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  /* ───────── Phân tích thành phần ───────── */
+  .vd-analysis {
+    border-radius: 16px;
+    background: var(--vd-card-hover);
+    padding: 14px 19px 24px;
+
+    /* tiêu đề — không phải dropdown */
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: #1a1c1e;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 24px;
+
+      i {
+        font-size: 22px;
+      }
+    }
+
+    /* stretch: card trái và khung phải luôn cao bằng nhau */
+    &__body {
+      display: flex;
+      align-items: stretch;
+      margin-top: 16px;
+    }
+  }
+
+  /* đường nối: gạch ngang + gạch dọc ngắn ở giữa (Line 1 + Line 2) */
+  .vd-connector {
+    align-self: stretch;
+    width: 54px;
+    position: relative;
+    flex-shrink: 0;
+
+    /* gạch ngang */
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid var(--vd-line);
+    }
+
+    /* gạch dọc ngắn, canh giữa */
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      border-left: 1px solid var(--vd-line);
+    }
+  }
+
+  /* khung bọc ngoài bên phải (Rectangle 7072) — ôm vừa nội dung, không kéo dãn */
+  .vd-node-group {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--vd-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .vd-node {
+    border: 1px solid var(--vd-line);
+    border-radius: 12px;
+    padding: 12px 14px;
+
+    &--main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 124px;
+      flex-shrink: 0;
+      background: var(--vd-btn-hover);
+    }
+
+    &--sub {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--vd-card-hover);
+    }
+
+    &__hanzi {
+      color: var(--vd-dark);
+      font-size: 35px;
+      font-weight: 700;
+      line-height: 1.2;
+
+      &--sm {
+        font-size: 30px;
+      }
+    }
+
+    &__pinyin,
+    &__gloss {
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 24px;
+      text-align: center;
+    }
+
+    &__text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__title {
+      color: var(--vd-dark);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    &__desc {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 24px;
+    }
+  }
+
+  /* ───────── Grid ───────── */
+  .vd-grid {
+    display: grid;
+    grid-template-columns: 4fr 8fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ảnh minh hoạ */
+  .vd-illustration {
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+
+    &__head {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #737686;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.65px;
+      line-height: 16px;
+      text-transform: uppercase;
+    }
+
+    &__body {
+      aspect-ratio: 1 / 1;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &__empty {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--vd-icon);
+      font-size: 14px;
+
+      i {
+        font-size: 32px;
+      }
+    }
+  }
+
+  .vd-main {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    min-width: 0;
+  }
+
+  /* ───────── Tabs ───────── */
+  .vd-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding: 6px;
+    border-radius: 38px;
+    background: #fff;
+  }
+
+  .vd-tab {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    border: 0;
+    border-radius: 38px;
+    background: transparent;
+    color: var(--vd-outline);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    i {
+      font-size: 18px;
+    }
+
+    &.is-active {
+      background: var(--vd-btn-hover);
+      color: var(--vd-red);
+    }
+  }
+
+  /* ───────── Panel nội dung ───────── */
+  .vd-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px;
+    border-radius: 16px;
+    background: #fff;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
+
+    &--center {
+      align-items: center;
+    }
+
+    &__hanzi {
+      color: var(--vd-ink);
+      font-size: 35px;
+      font-weight: 700;
+      line-height: 28px;
+    }
+  }
+
+  .vd-def {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &__label {
+      color: var(--vd-outline);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 16px;
+    }
+
+    &__text {
+      margin: 0;
+      color: var(--vd-ink);
+      font-size: 18px;
+      line-height: 28px;
+    }
+  }
+
+  /* ───────── Ví dụ ───────── */
+  .vd-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 33px;
+    border-top: 1px solid #e5e7eb;
+
+    &__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    &__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #141b2b;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 32px;
+
+      i {
+        font-size: 20px;
+        color: var(--vd-red);
+      }
+    }
+  }
+
+  .vd-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--vd-red);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 16px;
+    cursor: pointer;
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  .vd-example {
+    display: flex;
+    gap: 16px;
+    padding: 16.5px;
+    border: 0.5px solid var(--vd-icon);
+    border-radius: 16px;
+    background: #fff;
+
+    &__body {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__pinyin {
+      margin: 0;
+      color: #737686;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 16px;
+    }
+
+    &__cn {
+      margin: 0;
+      color: #191c1e;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      line-height: 27.5px;
+    }
+
+    &__vi {
+      margin: 0;
+      padding-top: 9px;
+      border-top: 1px solid rgba(229, 231, 235, 0.5);
+      color: var(--vd-ink);
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+
+  .hl {
+    color: var(--vd-red);
+  }
+
+  /* ───────── Luyện viết ───────── */
+  .vd-writer {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    padding: 8px;
+  }
+
+  .vd-writer__meta {
+    display: flex;
+    gap: 16px;
+    color: var(--vd-outline);
+    font-size: 14px;
+    font-weight: 600;
+
+    .is-error {
+      color: var(--vd-red);
+    }
+
+    .is-success {
+      color: #16a34a;
+    }
+  }
+
+  .vd-writer__actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ───────── Từ đã xem ───────── */
+  .vd-recent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--vd-card-hover);
+
+    &__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    &__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--vd-ink);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 24px;
+
+      i {
+        font-size: 18px;
+      }
+    }
+
+    &__count {
+      padding: 0 8px;
+      border-radius: 8px;
+      background: var(--vd-icon);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 16px;
+    }
+
+    &__list {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    &__card {
+      flex-shrink: 0;
+      min-width: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12.2px 16px;
+      border: 0.2px solid var(--vd-icon);
+      border-radius: 12px;
+      background: #fff;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--vd-red);
+      }
+    }
+
+    &__hanzi {
+      color: var(--vd-red);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 32px;
+    }
+
+    &__pinyin {
+      color: var(--vd-icon);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 16px;
+    }
+  }
+
+  /* ───────── responsive ───────── */
+  @media (max-width: 991.98px) {
+    .vd-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .vd-hero {
+      flex-direction: column;
+    }
+
+    .vd-hero__right {
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .vd-page {
+      padding: 16px;
+      gap: 24px;
+    }
+
+    .vd-hero,
+    .vd-panel {
+      padding: 20px;
+    }
+
+    .vd-actions {
+      flex-wrap: wrap;
+    }
+
+    .vd-tabs {
+      height: auto;
+      flex-wrap: wrap;
+      border-radius: 16px;
+    }
+
+    .vd-tab {
+      flex: 1 1 auto;
+    }
+  }
+
+  /* [Từ điển HV] chữ thành phần có id trong từ điển là liên kết tới trang của chữ đó (bản cũ là div, không bấm được) */
+  a.vd-node {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      border-color: var(--vd-red);
+    }
+  }
+}

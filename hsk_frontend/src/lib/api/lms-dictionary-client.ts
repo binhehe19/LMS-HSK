@@ -11,7 +11,7 @@
 import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { PageResponse as BackendPageResponse } from "@/types/lms";
-import type { Vocabulary, VocabularyInput, VocabularyPage, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
+import type { HskLevelCount, StudentVocabularySearchParams, Vocabulary, VocabularyDetail, VocabularyInput, VocabularyPage, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
 
 const enc = encodeURIComponent;
 
@@ -190,4 +190,37 @@ export async function updateVocabulary(id: number | string, input: VocabularyInp
 export async function deleteVocabulary(id: number | string, demoActive: boolean): Promise<void> {
   assertWriteEnabled("content", demoActive);
   await lmsClient.delete(`/learning-resources/${enc(String(id))}`);
+}
+
+// ---- Học viên (/vocabulary): endpoint ĐỌC, chỉ từ đã xuất bản, mọi người dùng đã đăng nhập (không cần ROLE_ADMIN) ----
+// Tìm/lọc chạy bằng SQL trên cột chuẩn hoá của learning_resources (không nạp toàn bộ từ điển vào bộ nhớ).
+
+function toStudentQuery(params: StudentVocabularySearchParams): string {
+  const q = new URLSearchParams();
+  const key = params.keySearch?.trim();
+  if (key) q.set("keySearch", key);
+  if (params.hskLevel !== undefined) q.set("hskLevel", String(params.hskLevel));
+  if (params.radical) q.set("radical", params.radical);
+  q.set("page", String(params.page));
+  q.set("size", String(params.size));
+  return `?${q.toString()}`;
+}
+
+/** Danh sách từ đã xuất bản theo từ khoá (Hán tự / pinyin không dấu / nghĩa), cấp HSK, bộ thủ; thứ tự như từ điển cũ. */
+export async function searchPublishedVocabularies(params: StudentVocabularySearchParams): Promise<VocabularyPage> {
+  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary-hanzi/words${toStudentQuery(params)}`);
+  if (!res || !Array.isArray(res.items)) throw new Error("Dữ liệu từ điển trả về không đúng định dạng.");
+  return { items: res.items, totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
+}
+
+/** Chi tiết một từ đã xuất bản (404 nếu không có hoặc chưa xuất bản). */
+export async function getPublishedVocabulary(id: string): Promise<VocabularyDetail> {
+  const res = await lmsClient.get<VocabularyDetail>(`/learning-resources/dictionary-hanzi/words/${enc(id)}`);
+  return { ...res, components: Array.isArray(res.components) ? res.components : [] };
+}
+
+/** Cấp HSK có từ đã xuất bản kèm số từ (bộ lọc "Lọc theo Trình độ HSK"). */
+export async function listHskLevelCounts(): Promise<HskLevelCount[]> {
+  const res = await lmsClient.get<HskLevelCount[]>("/learning-resources/dictionary-hanzi/levels");
+  return Array.isArray(res) ? res.filter((l) => Number.isInteger(l.level) && l.count > 0).sort((a, b) => a.level - b.level) : [];
 }

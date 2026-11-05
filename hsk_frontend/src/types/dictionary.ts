@@ -94,3 +94,34 @@ export interface VocabularySearchParams {
   page: number;
   size: number;
 }
+
+// ---- Màn Từ điển của HỌC VIÊN (/vocabulary, /vocabulary/:id) — chỉ từ ĐÃ XUẤT BẢN, endpoint đọc của repo-lms cho mọi người dùng đã đăng nhập ----
+
+/** Một chữ thành phần của từ ghép (thay `componentVocabs` của bản cũ): backend tra từng chữ của `hanzi` trong từ điển đã xuất bản. */
+export interface VocabularyComponent {
+  /** Id từ đơn tương ứng trong từ điển; null nếu chữ này chưa có trong từ điển (vẫn hiện chữ, không bấm được). */
+  id: string | null;
+  hanzi: string;
+  pinyin?: string;
+  meaning?: string;
+}
+
+/** Chi tiết một từ cho học viên = `Vocabulary` + chữ thành phần. */
+export interface VocabularyDetail extends Vocabulary {
+  components: VocabularyComponent[];
+}
+
+/** Số từ đã xuất bản theo cấp HSK (chỉ cấp có từ) — thay 9 lời gọi dò cấp của bản cũ. */
+export interface HskLevelCount {
+  level: number;
+  count: number;
+}
+
+/** Tham số tìm kiếm của học viên; `radical` là CHÍNH ký tự bộ thủ (vd "口"), `page` từ 0. */
+export interface StudentVocabularySearchParams {
+  keySearch?: string;
+  hskLevel?: number;
+  radical?: string;
+  page: number;
+  size: number;
+}
