@@ -17,6 +17,8 @@ interface Props {
     variant: 'all' | 'mine';
     /** Mã khoá hiển thị trong pill ở biến thể "Khoá học của tôi" */
     currentCourseCode?: string;
+    /** Nhãn ưu đãi trên banner (NEXT_PUBLIC_STUDENT_COURSE_PROMO), ví dụ "20%"; trống thì ẩn cả dòng ưu đãi */
+    promoLabel?: string;
 }
 
 /** 3 vệt tròn mờ trang trí, dùng chung cho cả 2 biến thể panel mascot. */
@@ -36,6 +38,7 @@ const CourseHero: React.FC<Props> = ({
     levelGoal,
     variant,
     currentCourseCode,
+    promoLabel,
 }) => {
     const mine = variant === 'mine';
 
@@ -69,13 +72,15 @@ const CourseHero: React.FC<Props> = ({
                                 <br />
                                 TIẾNG TRUNG TẠI HỌC BÁ
                             </h2>
+                            {promoLabel && (
                             <div className="hb-course__hero-offer">
                                 <span className="hb-course__hero-offer-label">ƯU ĐÃI</span>
                                 <span className="hb-course__hero-offer-pill">
-                                    <span>20%</span>
+                                    <span>{promoLabel}</span>
                                 </span>
                                 <span className="hb-course__hero-offer-note">Học phí tháng này*</span>
                             </div>
+                            )}
                         </>
                     )}
                     </div>

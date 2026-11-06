@@ -4,35 +4,15 @@ import Modal from '../../native-modal';
 import { useNavigate } from '../../dashboard/preview-navigation';
 import { all_routes } from '../../dashboard/preview-navigation';
 import { stripHtml } from '../html-utils';
-import { CourseVM } from './course-card';
+import { fallbackCourseImage, type CourseDetailData, type CourseVM, type DetailMaterial, type DetailSession } from '@/lib/student-course/course-view-model';
+
+export type { CourseDetailData, DetailMaterial, DetailSession };
 
 /** Thư mục icon export từ Figma */
 const IC = '/assets/hocba/courses';
 
-export interface DetailSession {
-    id: string | number;
-    /** "Buổi 1" */
-    label: string;
-    /** Tiêu đề bài học bên cạnh nhãn buổi */
-    topic: string;
-    /** Nội dung buổi học, xuống dòng giữ nguyên */
-    content: string;
-}
-
-export interface DetailMaterial {
-    id: string | number;
-    title: string;
-    url?: string;
-}
-
-export interface CourseDetailData {
-    sessions: DetailSession[];
-    materials: DetailMaterial[];
-    /** Các trường dưới đây lấy từ API, ghi đè dữ liệu tĩnh khi có. */
-    title?: string;
-    description?: string;
-    totalSessions?: number;
-}
+/** Khu học viên chưa có trang Thời khoá biểu riêng (route trỏ về chính trang Khoá học) thì ẩn nút "Vào thời khoá biểu". */
+const HAS_TIMETABLE_PAGE = all_routes.studentTimetable !== all_routes.studentCourses;
 
 interface Props {
     show: boolean;
@@ -40,6 +20,11 @@ interface Props {
     course: CourseVM | null;
     detail: CourseDetailData | null;
     isLoading?: boolean;
+    /** Lỗi tải chi tiết (đã gọi API nhưng thất bại) */
+    error?: string | null;
+    onRetry?: () => void;
+    /** Trang đăng ký/mở khoá (NEXT_PUBLIC_STUDENT_COURSE_UNLOCK_URL); trống thì nút mở hộp thông báo như bản xem trước */
+    unlockUrl?: string;
 }
 
 const LockIcon = ({ size = 18 }: { size?: number }) => (
@@ -100,7 +85,7 @@ const useDragScroll = () => {
     };
 };
 
-const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLoading }) => {
+const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLoading, error, onRetry, unlockUrl }) => {
     const navigate = useNavigate();
     const [tab, setTab] = useState<'syllabus' | 'materials'>('syllabus');
     const syllabusDrag = useDragScroll();
@@ -119,10 +104,29 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
     const description = stripHtml(detail?.description || course.description || fallbackDescription);
     const totalSessions = detail?.totalSessions || course.totalSessions;
 
-    const lockedSessions = Array.from({ length: LOCKED_PREVIEW_SESSIONS }, (_, i) => ({
-        id: `locked-${i}`,
-        label: `Buổi ${i + 1}`,
-    }));
+    // Chưa sở hữu: chỉ hiện tên các buổi đầu (backend không trả nội dung), không có thì vài ô khoá trống.
+    const previewTopics = detail?.previewTopics ?? [];
+    const lockedSessions = (previewTopics.length > 0 ? previewTopics : Array.from({ length: Math.min(LOCKED_PREVIEW_SESSIONS, totalSessions || LOCKED_PREVIEW_SESSIONS) }, () => ''))
+        .map((topic, i) => ({ id: `locked-${i}`, label: `Buổi ${i + 1}`, topic: topic || 'Nội dung bị khoá' }));
+
+    const syllabusEmptyText = detail?.syllabusStatus === 'UNAVAILABLE'
+        ? 'Không tải được lộ trình từ hệ thống đào tạo, vui lòng thử lại sau.'
+        : 'Chưa có dữ liệu lộ trình cho khoá học này.';
+    const errorBlock = error ? (
+        <div className="hb-course__empty" role="alert">
+            {error}
+            {onRetry && (
+                <button type="button" className="btn btn-sm btn-outline-danger ms-2" onClick={onRetry}>
+                    Thử lại
+                </button>
+            )}
+        </div>
+    ) : null;
+    const loadingBlock = (
+        <div className="hb-course__loading">
+            <div className="spinner-border text-danger" role="status" aria-label="Đang tải" />
+        </div>
+    );
 
     return (
         <Modal
@@ -203,7 +207,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                     </div>
                 </div>
 
-                <img className="hb-course-modal__thumb" src={course.image} alt={course.title} />
+                <img className="hb-course-modal__thumb" src={course.image} alt={course.title} onError={(e) => fallbackCourseImage(e, course.category)} />
             </div>
 
             <div className="hb-course-modal__body">
@@ -248,6 +252,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                             />
                                         </div>
                                     </div>
+                                    {HAS_TIMETABLE_PAGE && (
                                     <button
                                         type="button"
                                         className="hb-course-modal__timetable-btn"
@@ -259,13 +264,10 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                         </svg>
                                         Vào thời khoá biểu
                                     </button>
+                                    )}
                                 </div>
 
-                                {isLoading ? (
-                                    <div className="hb-course__loading">
-                                        <div className="spinner-border text-danger" role="status" />
-                                    </div>
-                                ) : (
+                                {isLoading ? loadingBlock : errorBlock ?? (
                                     <div {...syllabusDrag}>
                                         {(detail?.sessions ?? []).map((s) => (
                                             <article className="hb-course-modal__session" key={s.id}>
@@ -277,37 +279,50 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                             </article>
                                         ))}
                                         {(detail?.sessions ?? []).length === 0 && (
-                                            <div className="hb-course__empty">Chưa có dữ liệu lộ trình cho khoá học này.</div>
+                                            <div className="hb-course__empty">{syllabusEmptyText}</div>
                                         )}
                                     </div>
                                 )}
                             </>
                         ) : (
+                            isLoading ? loadingBlock : errorBlock ?? (
                             <div className="hb-course-modal__materials">
                                 {(detail?.materials ?? []).map((m) => (
                                     <div className="hb-course-modal__material" key={m.id}>
-                                        <span>• {m.title}</span>
+                                        {m.url ? (
+                                            <a href={m.url} target="_blank" rel="noopener noreferrer">• {m.title}</a>
+                                        ) : (
+                                            <span>• {m.title}</span>
+                                        )}
                                     </div>
                                 ))}
                                 {(detail?.materials ?? []).length === 0 && (
                                     <div className="hb-course__empty">Khoá học chưa có tài liệu đính kèm.</div>
                                 )}
                             </div>
+                            )
                         )}
                     </>
                 ) : (
                     <>
-                        <button type="button" className="hb-course-modal__unlock-banner" onClick={() => navigate("Đăng ký khóa học")}>
-                            <LockIcon />
-                            Mở khoá ngay!
-                        </button>
+                        {unlockUrl ? (
+                            <a className="hb-course-modal__unlock-banner text-decoration-none" href={unlockUrl} target="_blank" rel="noopener noreferrer">
+                                <LockIcon />
+                                Mở khoá ngay!
+                            </a>
+                        ) : (
+                            <button type="button" className="hb-course-modal__unlock-banner" onClick={() => navigate("Đăng ký khóa học")}>
+                                <LockIcon />
+                                Mở khoá ngay!
+                            </button>
+                        )}
 
                         <div {...lockedDrag}>
                             {lockedSessions.map((s) => (
                                 <article className="hb-course-modal__session hb-course-modal__session--locked" key={s.id}>
                                     <header className="hb-course-modal__session-head">
                                         <span className="hb-course-modal__session-no">{s.label}</span>
-                                        <span className="hb-course-modal__session-topic">第六课： 你怎么不吃了？</span>
+                                        <span className="hb-course-modal__session-topic">{s.topic}</span>
                                     </header>
                                     <div className="hb-course-modal__session-body">
                                         <img src="/assets/hocba/courses/ic-lock-lg.svg" alt="" width={52} height={52} />

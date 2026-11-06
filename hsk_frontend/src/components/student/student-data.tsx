@@ -52,7 +52,7 @@ export function StudentDataProvider({ children }: { children: ReactNode }) {
  const path = usePathname();
  const dashboard = path.endsWith("student-dashboard");
  const historyPage = path.endsWith("student-quiz");
- const classes = useStudentRequest(loadClasses, dashboard || path.endsWith("student-courses"));
+ const classes = useStudentRequest(loadClasses, dashboard);
  const orbit = useStudentRequest(studentApi.orbit, dashboard);
  const history = useStudentRequest(loadHistory, dashboard || historyPage);
  const dictionary = useStudentRequest(loadDictionary, dashboard || historyPage);

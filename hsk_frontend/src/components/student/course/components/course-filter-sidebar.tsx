@@ -2,31 +2,19 @@
 import React, { useState } from 'react';
 import {
     AUDIENCES,
-    AudienceId,
     CategoryId,
     COURSE_CATEGORIES,
     PRICE_MAX,
     STUDY_FORMS,
     StudyFormId,
 } from '../data/catalog-courses';
+import { DEFAULT_FILTERS, type CourseFilterState } from '@/lib/student-course/course-view-model';
+
+export { DEFAULT_FILTERS, type CourseFilterState };
 
 /** Icon export thẳng từ Figma node 3362:9968 */
 const IC = '/assets/hocba/courses';
 
-export interface CourseFilterState {
-    /** rỗng = "Tất cả" */
-    categories: CategoryId[];
-    audience: AudienceId | 'all';
-    studyForms: StudyFormId[];
-    maxPrice: number;
-}
-
-export const DEFAULT_FILTERS: CourseFilterState = {
-    categories: [],
-    audience: 'all',
-    studyForms: [],
-    maxPrice: PRICE_MAX,
-};
 
 interface GroupProps {
     icon: string;
@@ -73,6 +61,8 @@ interface Props {
     onClose?: () => void;
     /** số khoá theo từng hình thức học, hiển thị ở badge bên phải */
     studyFormCounts: Record<StudyFormId, number>;
+    /** Đầu thanh kéo giá (mặc định 2 triệu như bản cũ; trang tính theo khoá đắt nhất) */
+    priceMax?: number;
 }
 
 const formatPrice = (value: number) =>
@@ -96,7 +86,7 @@ const Checkbox: React.FC<{ checked: boolean; onToggle: () => void; label: string
     </label>
 );
 
-const CourseFilterSidebar: React.FC<Props> = ({ value, onChange, studyFormCounts, onClose }) => {
+const CourseFilterSidebar: React.FC<Props> = ({ value, onChange, studyFormCounts, onClose, priceMax = PRICE_MAX }) => {
     const toggleCategory = (id: CategoryId) => {
         const next = value.categories.includes(id)
             ? value.categories.filter((c) => c !== id)
@@ -111,7 +101,8 @@ const CourseFilterSidebar: React.FC<Props> = ({ value, onChange, studyFormCounts
         onChange({ ...value, studyForms: next });
     };
 
-    const pricePercent = Math.round((value.maxPrice / PRICE_MAX) * 100);
+    const maxPrice = value.maxPrice ?? priceMax;
+    const pricePercent = Math.round((maxPrice / priceMax) * 100);
 
     return (
         <aside className="hb-course__sidebar">
@@ -184,16 +175,19 @@ const CourseFilterSidebar: React.FC<Props> = ({ value, onChange, studyFormCounts
                             className="hb-course__price-slider"
                             type="range"
                             min={0}
-                            max={PRICE_MAX}
+                            max={priceMax}
                             step={100_000}
-                            value={value.maxPrice}
-                            onChange={(e) => onChange({ ...value, maxPrice: Number(e.target.value) })}
+                            value={maxPrice}
+                            onChange={(e) => {
+                                const next = Number(e.target.value);
+                                onChange({ ...value, maxPrice: next >= priceMax ? null : next });
+                            }}
                             aria-label="Giá tối đa"
                         />
                     </div>
                     <div className="hb-course__price-legend">
                         <span>0đ</span>
-                        <span>{formatPrice(value.maxPrice)}</span>
+                        <span>{formatPrice(maxPrice)}</span>
                     </div>
                 </div>
             </FilterGroup>

@@ -1,20 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useRef, useState } from 'react';
-import { CatalogCourse, CourseCategory } from '../data/catalog-courses';
+import { CourseCategory } from '../data/catalog-courses';
+import { fallbackCourseImage, type CourseVM } from '@/lib/student-course/course-view-model';
 
 const IC = '/assets/hocba/courses';
 
-/** Khoá học sau khi ghép dữ liệu tĩnh với danh sách đã đăng ký từ API. */
-export interface CourseVM extends CatalogCourse {
-    owned: boolean;
-    progress: number;
-    doneSessions: number;
-    /** id của LMS (`/online-learning/courses`) — dùng cho mọi API chi tiết/tài liệu */
-    apiCourseId?: string;
-    /** id của CMS (khác hệ thống với `apiCourseId`) — chỉ để đối chiếu đăng ký */
-    cmsCourseId?: string;
-    syllabusId?: string;
-}
+export type { CourseVM };
 
 const progressTone = (progress: number) => {
     if (progress >= 100) return { label: 'Hoàn thành', modifier: 'done' };
@@ -44,7 +35,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onOpen }) => {
             }}
         >
             <div className="hb-course__card-media">
-                <img src={course.image} alt={course.title} loading="lazy" />
+                <img src={course.image} alt={course.title} loading="lazy" onError={(e) => fallbackCourseImage(e, course.category)} />
                 {/* Figma làm mờ ảnh bằng lớp phủ trắng 60%, không phải giảm opacity ảnh */}
                 {!course.owned && <span className="hb-course__card-veil" aria-hidden="true" />}
             </div>
@@ -204,7 +195,7 @@ export const CourseSection: React.FC<CourseSectionProps> = ({ category, courses,
 
             <div className="hb-course__grid" ref={gridRef} aria-label={`Khoá học ${category.sectionTitle}`}>
                 {courses.map((course) => (
-                    <CourseCard key={course.code} course={course} onOpen={onOpen} />
+                    <CourseCard key={course.id} course={course} onOpen={onOpen} />
                 ))}
             </div>
             <div className="hb-course__scroll-track" aria-hidden="true">
