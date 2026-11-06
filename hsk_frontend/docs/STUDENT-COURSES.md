@@ -34,6 +34,8 @@ Backend (`backend/.env.*.example`, `docker-compose.yml`):
 - `HSK_COURSE_SYNC_ON_STARTUP` (mặc định `true`): đồng bộ một lần sau khi khởi động, chạy ở luồng riêng.
 - `HSK_COURSE_SYNC_CRON` (mặc định `0 0 */6 * * *`): đồng bộ định kỳ; đặt `-` để tắt.
 - `HSK_CMS_CONNECT_TIMEOUT_MS` / `HSK_CMS_READ_TIMEOUT_MS` (mặc định 5000 / 8000).
+- `SPRING_DATA_REDIS_TIMEOUT` / `SPRING_DATA_REDIS_CONNECT_TIMEOUT` (mặc định 3s / 2s): áp cho toàn bộ repo-lms. Trước đây chưa đặt nên Redis
+  sập là mọi request dùng cache treo khoảng 60 giây (mặc định của Lettuce).
 
 Frontend (`hsk_frontend/.env.example`, đọc lúc build):
 
@@ -57,13 +59,19 @@ Frontend (`hsk_frontend/.env.example`, đọc lúc build):
 - Bản cũ gọi 4–5 API; bản mới chỉ 1 request cho trang và 1 request khi mở chi tiết.
 - Thanh giá có trần theo khoá đắt nhất, không ẩn khoá trên 2 triệu.
 - Ảnh bìa lỗi thì đổi sang ảnh mặc định của danh mục.
+- Ghép sở hữu: theo id ERP trước. Chỉ ghép theo mã khi id của bản ghi đăng ký không trỏ vào khoá nào, để một đăng ký không đánh dấu hai khoá.
+  Đăng ký có trạng thái CANCELLED/CANCELED/DROPPED/WITHDRAWN/REFUNDED/REMOVED không tính là sở hữu.
+- Cache (Redis) chỉ là phao: lưu dạng chuỗi JSON, Redis lỗi hoặc bản lưu hỏng thì trang vẫn chạy (đã kiểm khi tắt Redis thật).
+- Nhập dữ liệu: không thấy `externalId` thì khớp theo mã khoá và giữ nguyên id ERP của khoá đã đồng bộ, nên id hệ cũ khác id ERP cũng không tạo
+  khoá trùng. Nhập trước khi đồng bộ được ERP thì lần đồng bộ sau nhận lại đúng khoá đó. Hai lần đồng bộ không chạy đồng thời.
 - Nút "Vào thời khoá biểu" bị ẩn vì khu học viên mới chưa có trang thời khoá biểu.
 - Tab "Khoá học của tôi" quay lại hành vi của bản cũ: lọc các khoá đã sở hữu trong cùng lưới. Component `registered-courses.tsx`
   hiển thị lớp IELTS (`/me/classes`, ERP IELTS) nên không còn dùng ở màn này.
 
 ## Kiểm thử
 
-- Backend: `HskCourseBackendTest` (H2 cô lập, ERP giả lập).
+- Backend: `HskCourseBackendTest` (H2 cô lập, ERP giả lập) và `HskCourseCmsClientTest` (HTTP giả lập; cache đi qua đúng serializer Redis
+  của `CacheConfig`, giả lập Redis sập).
 - Frontend: `tests/student-course-view-model.test.ts`, `tests/student-courses-page.test.tsx`.
 - Đã chạy đầu-cuối trên máy (2026-11-06): Postgres/Redis tạm, `repo-lms` thật, ERP HSK giả lập (token nội bộ + 17 khoá), gateway giả lập
   oauth2-proxy và bản build production. Đã kiểm: đồng bộ khi khởi động, sở hữu và tiến độ, modal lộ trình/tài liệu/khoá bị khoá,
