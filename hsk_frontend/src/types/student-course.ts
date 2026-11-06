@@ -1,6 +1,6 @@
-// Hợp đồng API màn "Khoá học" học viên (/student/student-courses) với repo-lms (/hsk-courses, HskCourseController).
+// Dữ liệu màn "Khoá học" học viên (/student/student-courses), ghép ở frontend từ API có sẵn của repo-lms (lib/api/lms-course-client.ts).
 
-/** LIVE = sở hữu lấy từ ERP HSK lúc gọi; CACHED = ERP lỗi, dùng bản lưu gần nhất; UNAVAILABLE = ERP lỗi, chưa có bản lưu. */
+/** LIVE = đọc được lớp của học viên (/me/classes); UNAVAILABLE = không đọc được nên mọi khoá hiện "chưa sở hữu". CACHED giữ cho tương thích. */
 export type EnrollmentSource = "LIVE" | "CACHED" | "UNAVAILABLE";
 
 export interface StudentCourseApi {
@@ -46,7 +46,7 @@ export interface StudentCourseMaterial {
   url?: string | null;
 }
 
-/** OK; NONE = khoá chưa gắn giáo trình; UNAVAILABLE = ERP HSK lỗi. */
+/** OK; NONE = khoá chưa gắn giáo trình; UNAVAILABLE = không tải được giáo trình. */
 export type SyllabusStatus = "OK" | "NONE" | "UNAVAILABLE";
 
 export interface StudentCourseDetailApi {

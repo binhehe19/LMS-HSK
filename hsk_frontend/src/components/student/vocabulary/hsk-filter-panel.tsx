@@ -1,10 +1,10 @@
 "use client";
 
 // Panel "Lọc theo Trình độ HSK" (HSK cũ: features/learning-path/vocabulary/components/hsk-filter-panel.tsx), giữ nguyên giao diện.
-// Khác bản cũ: danh sách cấp lấy từ GET /dictionary-hanzi/levels (một lời gọi) thay vì dò 9 lần search; header là <button> để dùng được bằng bàn phím.
+// Khác bản cũ: hiện cố định HSK 1–9 (khung HSK 3.0) thay vì dò 9 lần search để ẩn cấp chưa có từ; header là <button> để dùng được bằng bàn phím.
 import { useState } from "react";
 
-export function HskFilterPanel({ selectedHsk, levels, onHskChange }: { selectedHsk?: number; levels: number[]; onHskChange: (hsk: number | undefined) => void }) {
+export function HskFilterPanel({ selectedHsk, levels, onHskChange }: { selectedHsk?: number; levels: readonly number[]; onHskChange: (hsk: number | undefined) => void }) {
   // Tự mở panel nếu đang có cấp được chọn (khôi phục từ URL).
   const [isExpanded, setIsExpanded] = useState<boolean>(() => selectedHsk !== undefined);
 

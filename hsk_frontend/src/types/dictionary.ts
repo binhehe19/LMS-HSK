@@ -111,12 +111,6 @@ export interface VocabularyDetail extends Vocabulary {
   components: VocabularyComponent[];
 }
 
-/** Số từ đã xuất bản theo cấp HSK (chỉ cấp có từ) — thay 9 lời gọi dò cấp của bản cũ. */
-export interface HskLevelCount {
-  level: number;
-  count: number;
-}
-
 /** Tham số tìm kiếm của học viên; `radical` là CHÍNH ký tự bộ thủ (vd "口"), `page` từ 0. */
 export interface StudentVocabularySearchParams {
   keySearch?: string;

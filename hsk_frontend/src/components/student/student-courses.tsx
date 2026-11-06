@@ -1,9 +1,9 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 // Màn "Khoá học" học viên (/student/student-courses) — chuyển từ HSK cũ features/student/student-course/student-course.tsx.
-// Dữ liệu thật từ repo-lms GET /hsk-courses (danh mục + sở hữu/tiến độ từ ERP HSK) và GET /hsk-courses/{id} (lộ trình, tài liệu).
+// Dữ liệu thật từ API có sẵn của repo-lms: /syllabuses (danh mục), /me/classes (sở hữu, tiến độ), /syllabuses/{id} (lộ trình, tài liệu).
 // Khác bản cũ có chủ đích: không còn danh sách khoá mẫu khi API rỗng, không còn tiến độ minh hoạ 65% và trình độ cố định trên banner;
-// lỗi tải có thông báo + "Thử lại"; ERP không trả được đăng ký thì báo cho học viên thay vì hiện "chưa sở hữu" lặng lẽ.
+// lỗi tải có thông báo + "Thử lại"; không đọc được lớp của học viên thì báo thay vì hiện "chưa sở hữu" lặng lẽ.
 import { useMemo, useState } from "react";
 import StudentShell from "./dashboard/student-shell";
 import { useStudentIdentity } from "./student-data";

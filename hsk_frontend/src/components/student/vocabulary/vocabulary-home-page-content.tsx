@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import StudentShell from "@/components/student/dashboard/student-shell";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
-import { listHskLevelCounts, searchPublishedVocabularies } from "@/lib/api/lms-dictionary-client";
+import { searchPublishedVocabularies } from "@/lib/api/lms-dictionary-client";
 import { readVocabularyListState, VOCABULARY_PAGE_SIZE, vocabularyListKey, vocabularyListQuery, type VocabularyListState } from "@/lib/dictionary/vocabulary-list-params";
 import { VocabularyHomeView } from "./vocabulary-home-view";
 import "./vocabulary-home.scss";
 
 const SEARCH_DEBOUNCE_MS = 400;
+/** Khung HSK 3.0: 9 cấp. */
+const HSK_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export function VocabularyHomePageContent() {
   const router = useRouter();
@@ -33,7 +35,6 @@ export function VocabularyHomePageContent() {
   const list = useKeyedFetch(vocabularyListKey(state), () =>
     searchPublishedVocabularies({ keySearch: state.keySearch, hskLevel: state.hskLevel, radical: state.radical, page: state.page, size: VOCABULARY_PAGE_SIZE }),
   );
-  const levels = useKeyedFetch("hsk-levels", listHskLevelCounts);
 
   return (
     <StudentShell fullWidth>
@@ -42,7 +43,7 @@ export function VocabularyHomePageContent() {
         onKeywordDraftChange={setDraft}
         onSubmitSearch={() => navigate({ keySearch: draft, page: 0 })}
         hskLevel={state.hskLevel}
-        levels={levels.state.kind === "ok" ? levels.state.data : []}
+        levels={HSK_LEVELS}
         onHskChange={(hskLevel) => navigate({ hskLevel, page: 0 })}
         radicalFilter={{ radical: state.radical, strokeFilter: state.strokeFilter }}
         onRadicalFilterChange={(next) => navigate({ radical: next.radical, strokeFilter: next.strokeFilter, page: next.radical === state.radical ? state.page : 0 })}

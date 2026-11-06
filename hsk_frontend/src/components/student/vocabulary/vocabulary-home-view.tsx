@@ -9,7 +9,7 @@ import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { getWordTypeBadgeStyle } from "@/lib/dictionary/word-type-style";
 import { paginationSlots, vocabularyCardSummary } from "@/lib/dictionary/vocabulary-list-params";
-import type { HskLevelCount, VocabularyPage } from "@/types/dictionary";
+import type { VocabularyPage } from "@/types/dictionary";
 import { HskFilterPanel } from "./hsk-filter-panel";
 import { RadicalFilterPanel, type RadicalFilterValue } from "./radical-filter-panel";
 
@@ -18,7 +18,7 @@ export interface VocabularyHomeViewProps {
   onKeywordDraftChange: (value: string) => void;
   onSubmitSearch: () => void;
   hskLevel?: number;
-  levels: HskLevelCount[];
+  levels: readonly number[];
   onHskChange: (hsk: number | undefined) => void;
   radicalFilter: RadicalFilterValue;
   onRadicalFilterChange: (next: RadicalFilterValue) => void;
@@ -78,7 +78,7 @@ export function VocabularyHomeView(props: VocabularyHomeViewProps) {
         </div>
 
         <div className="mb-4">
-          <HskFilterPanel selectedHsk={props.hskLevel} levels={props.levels.map((l) => l.level)} onHskChange={props.onHskChange} />
+          <HskFilterPanel selectedHsk={props.hskLevel} levels={props.levels} onHskChange={props.onHskChange} />
         </div>
         <div className="mb-4">
           <RadicalFilterPanel value={props.radicalFilter} onChange={props.onRadicalFilterChange} />
