@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VocabularyHomePageContent } from "@/components/student/vocabulary/vocabulary-home-page-content";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { listHskLevelCounts, searchPublishedVocabularies } from "@/lib/api/lms-dictionary-client";
+import { searchPublishedVocabularies } from "@/lib/api/lms-dictionary-client";
 import type { Vocabulary, VocabularyPage } from "@/types/dictionary";
 
 // Router giả CÓ trạng thái: replace đổi URL và báo cho useSearchParams (bộ lọc nằm trong URL).
@@ -41,7 +41,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 vi.mock("@/components/student/dashboard/student-shell", () => ({ default: ({ children }: { children: ReactNode }) => <div data-testid="shell">{children}</div> }));
-vi.mock("@/lib/api/lms-dictionary-client", () => ({ searchPublishedVocabularies: vi.fn(), listHskLevelCounts: vi.fn() }));
+vi.mock("@/lib/api/lms-dictionary-client", () => ({ searchPublishedVocabularies: vi.fn() }));
 
 const word = (i: number, over: Partial<Vocabulary> = {}): Vocabulary => ({
   id: `w${i}`,
@@ -57,7 +57,6 @@ beforeEach(() => {
   nav.replace.length = 0;
   nav.set("/vocabulary");
   vi.mocked(searchPublishedVocabularies).mockReset().mockResolvedValue(pageOf([word(1), word(2), word(3)]));
-  vi.mocked(listHskLevelCounts).mockReset().mockResolvedValue([{ level: 1, count: 500 }, { level: 2, count: 700 }]);
 });
 
 describe("màn Từ điển học viên /vocabulary", () => {
@@ -106,7 +105,7 @@ describe("màn Từ điển học viên /vocabulary", () => {
     }
   });
 
-  it("lọc HSK: cấp lấy từ API, chọn rồi bấm lại để bỏ; 'Xóa lọc' bỏ lọc", async () => {
+  it("lọc HSK: cố định HSK 1–9, chọn rồi bấm lại để bỏ; 'Xóa lọc' bỏ lọc", async () => {
     const user = userEvent.setup();
     render(<VocabularyHomePageContent />);
     await screen.findAllByTestId("vocabulary-card");
@@ -114,7 +113,7 @@ describe("màn Từ điển học viên /vocabulary", () => {
     await user.click(await screen.findByRole("button", { name: "HSK 2" }));
     expect(nav.get()).toBe("/vocabulary?hskLevel=2&page=0");
     await waitFor(() => expect(lastSearch()?.hskLevel).toBe(2));
-    expect(screen.queryByRole("button", { name: "HSK 9" })).toBeNull();
+    expect(screen.getByRole("button", { name: "HSK 9" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "HSK 2" }));
     expect(nav.get()).toBe("/vocabulary?page=0");
     await user.click(screen.getByRole("button", { name: "HSK 1" }));

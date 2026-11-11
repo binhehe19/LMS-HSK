@@ -12,7 +12,7 @@
 import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { PageResponse as BackendPageResponse } from "@/types/lms";
-import type { HskLevelCount, StudentVocabularySearchParams, Vocabulary, VocabularyDetail, VocabularyInput, VocabularyPage, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
+import type { StudentVocabularySearchParams, Vocabulary, VocabularyDetail, VocabularyInput, VocabularyPage, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
 
 const enc = encodeURIComponent;
 
@@ -207,9 +207,12 @@ function toStudentQuery(params: StudentVocabularySearchParams): string {
   return `?${q.toString()}`;
 }
 
-/** Danh sách từ đã xuất bản theo từ khoá (Hán tự / pinyin không dấu / nghĩa), cấp HSK, bộ thủ; thứ tự như từ điển cũ. */
+/**
+ * Danh sách từ theo từ khoá (Hán tự / pinyin không dấu / nghĩa), cấp HSK, bộ thủ; thứ tự như từ điển cũ. Dùng chung endpoint tìm kiếm có sẵn của
+ * màn quản lý: backend chỉ trả từ ĐÃ XUẤT BẢN cho người không phải Admin.
+ */
 export async function searchPublishedVocabularies(params: StudentVocabularySearchParams): Promise<VocabularyPage> {
-  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary-hanzi/words${toStudentQuery(params)}`);
+  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary-hanzi/search${toStudentQuery(params)}`);
   if (!res || !Array.isArray(res.items)) throw new Error("Dữ liệu từ điển trả về không đúng định dạng.");
   return { items: res.items, totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
 }
@@ -218,10 +221,4 @@ export async function searchPublishedVocabularies(params: StudentVocabularySearc
 export async function getPublishedVocabulary(id: string): Promise<VocabularyDetail> {
   const res = await lmsClient.get<VocabularyDetail>(`/learning-resources/dictionary-hanzi/words/${enc(id)}`);
   return { ...res, components: Array.isArray(res.components) ? res.components : [] };
-}
-
-/** Cấp HSK có từ đã xuất bản kèm số từ (bộ lọc "Lọc theo Trình độ HSK"). */
-export async function listHskLevelCounts(): Promise<HskLevelCount[]> {
-  const res = await lmsClient.get<HskLevelCount[]>("/learning-resources/dictionary-hanzi/levels");
-  return Array.isArray(res) ? res.filter((l) => Number.isInteger(l.level) && l.count > 0).sort((a, b) => a.level - b.level) : [];
 }
