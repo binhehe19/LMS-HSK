@@ -340,12 +340,30 @@ export async function listPackageQuizItems(packageId: string): Promise<QuizItem[
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 
+/** Backend bắt buộc bài tập phải có ít nhất 1 câu hỏi ngay khi tạo (`"Quiz must have at least one question"`), nhưng màn tạo bài tập
+ * (ô metadata: tiêu đề, kỹ năng, thời gian...) chưa có soạn câu hỏi — soạn câu hỏi là trình riêng (nút "Soạn câu hỏi", QUIZ_ID_PARAM).
+ * Nên tạo kèm 1 câu hỏi placeholder hợp lệ để qua được kiểm tra của backend; admin sửa/thay nó ngay trong trình soạn câu hỏi sau khi tạo. */
+function placeholderQuestion(): QuizQuestion {
+  return {
+    id: crypto.randomUUID(),
+    quizId: "",
+    index: 0,
+    type: "MULTIPLE_CHOICE",
+    prompt: 'Câu hỏi 1 (chưa soạn — vào "Soạn câu hỏi" để chỉnh sửa)',
+    points: 10,
+    options: [
+      { text: "Đáp án A", isCorrect: true },
+      { text: "Đáp án B", isCorrect: false },
+    ],
+  };
+}
+
 export async function createQuizItem(packageId: string, input: ContentItemInput<QuizItem>, demo: boolean): Promise<QuizItem> {
   assertWriteEnabled("content", demo);
   const versionId = await ensureDraftVersionId(packageId);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
     type: PACKAGE_TYPE,
-    content: toQuizContent(input, []),
+    content: toQuizContent(input, [toBackendQuestion(placeholderQuestion())]),
     publishImmediately: true,
     inLibrary: false,
   });

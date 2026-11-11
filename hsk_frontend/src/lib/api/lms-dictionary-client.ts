@@ -1,7 +1,8 @@
 "use client";
 
 // Client "nối thử" Từ điển Hán tự (HSK) vào repo-lms thật, thay cho dictionary-client.ts (mock, trỏ
-// NEXT_PUBLIC_HSK_API_BASE_PATH chưa có backend). Backend: LearningResourceType.DICTIONARY + DictionaryContent
+// NEXT_PUBLIC_HSK_API_BASE_PATH chưa có backend). Backend: LearningResourceType.DICTIONARY, content dùng chung
+// class VocabularyContent.java với VOCABULARY (tách nhau bằng type, không phải bằng class)
 // (tài nguyên độc lập trong Kho, inLibrary=true, không gắn ContentPackage — tra từ điển không thuộc syllabus nào).
 // Khác hẳn bộ /learning-resources/dictionary/** cũ (từ điển tiếng Anh/IELTS, type=VOCABULARY) — không đụng tới.
 //

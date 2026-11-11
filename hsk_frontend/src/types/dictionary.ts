@@ -1,6 +1,7 @@
 // DTO của TỪ ĐIỂN (dịch vụ /dictionary/vocabularies của HSK cũ — core/types/vocabulary.type.ts, "matches backend DTOs exactly").
-// Đã nối vào repo-lms thật qua lms-dictionary-client.ts: LearningResourceType.DICTIONARY/DictionaryContent (tài nguyên độc lập
-// trong Kho, id là ULID chuỗi — không phải số tự tăng như backend từ điển cũ).
+// Đã nối vào repo-lms thật qua lms-dictionary-client.ts: LearningResourceType.DICTIONARY, content dùng chung class
+// VocabularyContent.java với VOCABULARY (từ điển Anh/IELTS) — tách nhau bằng type, không phải bằng class (tài nguyên
+// độc lập trong Kho, id là ULID chuỗi — không phải số tự tăng như backend từ điển cũ).
 // Rút gọn có chủ đích: bỏ các trường "legacy flat" (pinyin/wordTypes/meanings ở cấp từ) và componentVocabs — màn quản lý mới chỉ dùng mô hình pinyins[].
 
 export interface VocabularyMeaning {
