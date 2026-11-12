@@ -1,0 +1,91 @@
+/* Bridges production Bootstrap markup to the existing StudentShell and Ant Design dialogs. */
+.student-preview:has(.hsk-timetable) .student-page-content{padding:0 0 64px}
+.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding:0}
+.hsk-timetable{color:#263238;background:#f8f9fc;min-height:100vh}
+.hsk-timetable .tkb-hero{padding:82px 0 30px}
+.hsk-timetable .tkb-hero__inner{max-width:1360px}
+.hsk-timetable .tkb-hero__mascot-owl{right:20px;bottom:0;width:180px;max-height:220px;object-fit:contain}
+.hsk-timetable .tkb-hero__title{color:white}
+.hsk-timetable .tkb-hero__greeting{display:table;border-radius:28px;background:#a30b0d;padding:8px 22px;font-size:21px;font-weight:700;margin:16px 0}
+.hsk-timetable .tkb-hero__chips{margin-top:10px;flex-wrap:wrap}
+.hsk-timetable .tkb-hero__chip{gap:8px}
+.hsk-timetable-body{max-width:1360px;margin:auto;padding:0 16px}
+.tkb-preview-data{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;margin:12px 0;color:#7b5015;background:#fff9ec;border:1px solid #f1e3c5;border-radius:10px;font-size:12px}
+.tkb-preview-data button{border:0;background:none;color:#9c1116;text-decoration:underline;white-space:nowrap}
+.hsk-timetable .tkb-navbar{flex-wrap:wrap;gap:12px}
+.hsk-timetable .tkb-navbar__course-filter{display:flex;align-items:center;gap:6px}
+.hsk-timetable .tkb-navbar__course-select{max-width:240px}
+.hsk-timetable .tkb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.hsk-timetable .tkb-card{height:100%;position:relative;overflow:hidden}
+.tkb-open-session{width:100%;padding:0;border:0;background:none;text-align:left;color:inherit;display:block}
+.tkb-open-session>.tkb-card__info{padding:20px 22px 6px;min-height:118px}
+.hsk-timetable .tkb-card__body{padding:12px 22px 24px;display:block}
+.hsk-timetable .tkb-card__body>.tkb-card__cta{width:100%;max-width:none}
+.hsk-timetable .tkb-card__hw-badge{position:absolute;right:20px;bottom:76px;color:#55b98a}
+.hsk-timetable .tkb-list .tkb-card{display:grid;grid-template-columns:1fr 230px;align-items:center;gap:20px}
+.hsk-timetable .tkb-list .tkb-open-session{display:grid;grid-template-columns:235px 1fr;align-items:center}
+.hsk-timetable .tkb-list .tkb-card__head{height:100%;gap:12px}
+.hsk-timetable .tkb-list .tkb-card__hw-badge{display:none}
+.hsk-timetable .tkb-list .tkb-card__body{padding:20px}
+.hsk-timetable .tkb-card__cta:disabled{cursor:not-allowed;opacity:.6}
+.hsk-timetable .tkb-empty{padding:80px 20px;text-align:center;border:1px dashed #ddd;border-radius:16px;background:white}
+.tkb-empty>i{font-size:42px;color:#c71820;margin-bottom:18px}
+.tkb-empty h2{font-size:22px}
+.tkb-empty>button{margin:20px auto 0}
+.hsk-timetable-modal .ant-modal-content{padding:0;overflow:hidden;border-radius:20px}
+.hsk-timetable-modal .ant-modal-header{margin:0;padding:0}
+.hsk-session-modal-body{padding:24px;background:#f8f9fa;max-height:70vh;overflow:auto}
+.hsk-timetable-modal .tkb-session-modal__header{padding:22px 26px;background:white}
+.hsk-timetable-modal .tkb-session-modal__top{display:flex;justify-content:space-between;align-items:center}
+.hsk-timetable-modal .tkb-session-modal__session{display:flex;gap:12px;align-items:center}
+.hsk-timetable-modal .tkb-session-modal__close{border:0;background:#fff0f1;border-radius:50%;font-size:28px;line-height:32px;width:34px;color:#ba1318}
+.hsk-timetable-modal .tkb-session-modal__title{margin-top:14px;display:flex;gap:10px;font-size:19px;font-weight:700}
+.hsk-timetable-modal .tkb-session-modal__info{display:flex;justify-content:space-between;align-items:center;gap:24px}
+.hsk-timetable-modal .tkb-practice__header{margin-top:24px}
+.hsk-timetable-modal .tkb-module-card{border:1px solid #e3e6ee;text-align:left;background:white;min-width:0;font:inherit}
+.hsk-timetable-modal .tkb-practice__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.hsk-timetable-modal .tkb-module-card:focus-visible,.tkb-open-session:focus-visible{outline:3px solid #b71b1b;outline-offset:-3px}
+.hsk-timetable-modal .tkb-practice__ring{color:#b5090b;flex-shrink:0;position:relative}
+.hsk-timetable-modal .tkb-practice__ring span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800}
+.hsk-timetable-modal .tkb-practice__summary{margin-bottom:20px}
+.hsk-timetable-modal .tkb-practice__summary-half:only-child{grid-column:1 / -1}
+.hsk-mentor-score{font-size:24px;min-width:82px;font-weight:800;color:#b5090b}
+.hsk-timetable-destination{padding:16px 0;line-height:1.8}
+.hsk-timetable .tkb-card__hw-badge span,.hsk-timetable .tkb-hero-ring span{position:absolute;inset:0;display:grid;place-items:center}
+.hsk-timetable .tkb-hero-ring{position:relative;flex-shrink:0}
+.hsk-timetable .tkb-glass-card__standard-progress .tkb-hero-ring{color:#b5090b}
+@media(max-width:1100px){.hsk-timetable .tkb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hsk-timetable .tkb-list .tkb-open-session{grid-template-columns:190px 1fr}.hsk-timetable .tkb-list .tkb-card{grid-template-columns:1fr 180px}}
+@media(max-width:767px){.hsk-timetable .tkb-hero{padding:44px 12px 24px}.hsk-timetable .tkb-hero__title{font-size:32px}.hsk-timetable .tkb-grid{grid-template-columns:1fr}.hsk-timetable .tkb-navbar__switch{flex-wrap:wrap}.hsk-timetable .tkb-navbar__month{font-size:21px}.hsk-timetable .tkb-list .tkb-card,.hsk-timetable .tkb-list .tkb-open-session{display:block}.hsk-timetable .tkb-list .tkb-card__body{padding-top:0}.hsk-timetable-modal .tkb-practice__grid{grid-template-columns:1fr}.hsk-timetable-modal .tkb-session-modal__info{align-items:stretch;flex-direction:column}.hsk-timetable-modal .tkb-practice__summary{grid-template-columns:1fr}.tkb-preview-data{align-items:flex-start;flex-direction:column}.hsk-session-modal-body{padding:16px}.hsk-timetable .tkb-navbar__course-select{max-width:190px}}
+@media(prefers-reduced-motion:reduce){.hsk-timetable *{animation:none!important;scroll-behavior:auto!important}}
+
+.hsk-timetable .tkb-glass-card__standard-progress .tkb-hero-ring span{color:#b5090b;font-weight:800}
+.hsk-timetable .tkb-list .tkb-card,.hsk-timetable .tkb-list .tkb-card-wrap{min-height:0;height:auto}
+.hsk-timetable .tkb-list .tkb-open-session>.tkb-card__info{min-height:0}
+.hsk-timetable .tkb-list .tkb-card{padding:0}
+.hsk-timetable .tkb-list .tkb-card__head{padding:16px}
+
+.tkb-syllabus-content{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:14px 0;line-height:1.7}
+.tkb-syllabus-content h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.tkb-syllabus-content p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.tkb-resource-content{max-height:360px;overflow:auto;padding:12px;background:#f7f8fa;border-radius:10px;margin-bottom:18px}
+.tkb-resource-content pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+.hsk-timetable .tkb-card.is-unscheduled .tkb-card__head{background:#fff1f1}
+.hsk-timetable .tkb-card.is-unscheduled .tkb-card__cta{background:#fff0f1;color:#b5090b;cursor:pointer}
+.hsk-timetable .tkb-preview-data{flex-wrap:wrap}
+
+.tkb-attempt-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #e5e7eb}.tkb-attempt-row p{margin:6px 0 0}.tkb-attempt-row button{white-space:nowrap}
+
+/* Keep the timetable actions visible even for long ERP syllabus text. */
+.hsk-timetable-modal .tkb-session-modal__title>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tkb-syllabus-details{margin-top:20px;border:1px solid #e2e8f0;border-radius:12px;background:white;overflow:hidden}
+.tkb-syllabus-details>summary{display:flex;align-items:center;gap:10px;list-style:none;cursor:pointer;padding:14px 16px;font-size:14px;font-weight:700;color:#931016}
+.tkb-syllabus-details>summary::-webkit-details-marker{display:none}
+.tkb-syllabus-details>summary>span{flex:1}
+.tkb-syllabus-details[open]>summary>i:last-child{transform:rotate(180deg)}
+.tkb-syllabus-details>summary:focus-visible{outline:2px solid #b5090b;outline-offset:-3px}
+.tkb-syllabus-details-body{padding:0 14px 14px}
+.tkb-syllabus-details-body>.tkb-syllabus-content{border:0;padding:12px 0;margin:0}
+.tkb-syllabus-details-body>.tkb-syllabus-content+.tkb-syllabus-content{border-top:1px solid #eef0f4;border-radius:0}
+/* Session details: match the production two-column activity modal. */
+.hsk-timetable-modal .ant-modal-content{border-radius:4px}.hsk-timetable-modal .hsk-session-modal-body{padding:24px;max-height:calc(90vh - 120px)}.hsk-timetable-modal .tkb-session-modal__header{padding:20px 24px 16px}.hsk-timetable-modal .tkb-session-modal__title{font-size:15px;line-height:22px;margin-top:10px}.hsk-timetable-modal .tkb-session-modal__session-no{font-size:15px}.hsk-timetable-modal .tkb-session-modal__close{background:transparent;color:#18334d;font-size:24px}.hsk-timetable-modal .tkb-practice__summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0}.hsk-timetable-modal .tkb-practice__summary-half{min-height:172px;gap:14px;padding:18px 16px;justify-content:flex-start}.hsk-timetable-modal .tkb-practice__summary-title{font-size:14px;line-height:20px}.hsk-timetable-modal .tkb-practice__summary-body p{font-size:12px;line-height:18px;margin:0;color:#7c8ca3}.hsk-timetable-modal .tkb-practice__grid{gap:12px 16px}.hsk-timetable-modal .tkb-activity-cards .tkb-module-card{padding:16px 17px;min-height:118px;border-radius:7px;gap:12px;background:#fff;box-shadow:none}.hsk-timetable-modal .tkb-activity-cards .tkb-module-card--material{background:#fff3f3}.hsk-timetable-modal .tkb-module-card__title{font-size:14px;line-height:20px;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.hsk-timetable-modal .tkb-module-card__top{gap:12px}.hsk-timetable-modal .tkb-module-card__icon{display:grid;place-items:center;color:#d72b27;font-size:23px}.hsk-timetable-modal .tkb-module-card__state.is-complete{color:#17c964}.hsk-timetable-modal .tkb-module-card__state{font-size:14px}.hsk-timetable-modal .tkb-syllabus-details{margin-top:16px}
+@media(max-width:767px){.hsk-timetable-modal .tkb-practice__summary{grid-template-columns:1fr}.hsk-timetable-modal .hsk-session-modal-body{padding:16px}.hsk-timetable-modal .tkb-practice__grid{grid-template-columns:1fr}}

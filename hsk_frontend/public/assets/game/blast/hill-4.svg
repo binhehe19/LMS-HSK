@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1512" height="580" viewBox="0 0 1512 580" preserveAspectRatio="none" fill="none">
+<path d="M0 0C120 0 232 118 332 232C412 322 470 470 562 492C702 524 762 516 862 500C982 480 1012 358 1112 354C1232 349 1302 452 1422 512C1470 536 1500 558 1512 568L1512 580L0 580Z" fill="url(#paint0_linear_hill4)"/>
+<defs>
+<linearGradient id="paint0_linear_hill4" x1="756" y1="0" x2="756" y2="580" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E7E4E0"/>
+<stop offset="1" stop-color="#FFF9F3" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>

@@ -6,7 +6,7 @@ export const dashboardPath = "/student/student-dashboard";
 // Implemented student routes use Next.js links; other actions stay in the preview.
 export const all_routes = {
   studentDashboard: dashboardPath,
-  studentTimetable: "/student/student-courses",
+  studentTimetable: "/student/student-timetable",
   studentQuiz: "/student/student-quiz",
   studentCourses: "/student/student-courses",
   studentWishlist: "/student/student-wishlist",
@@ -16,7 +16,7 @@ export const all_routes = {
   vocabulary: "/vocabulary",
 };
 /** Route đã có trang thật trong khu học viên (đi bằng next/link); đích khác vẫn mở hộp thông báo xem trước. */
-export const isImplementedRoute = (to: string) => to.startsWith("/student/") || to === all_routes.vocabulary || to.startsWith(`${all_routes.vocabulary}/`) || to.startsWith(`${all_routes.vocabulary}?`);
+export const isImplementedRoute = (to: string) => to.startsWith("/student/") || to.startsWith("/learning-path/online-course/homework/") || to === all_routes.vocabulary || to.startsWith(`${all_routes.vocabulary}/`) || to.startsWith(`${all_routes.vocabulary}?`);
 export const PreviewActionContext = createContext<(title: string) => void>(() => {});
 
 export function useNavigate() {

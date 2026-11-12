@@ -36,6 +36,10 @@ export interface ScheduleResourceLink {
   sessionNo: number;
   displayOrder: number;
   resourceType: string;
+  publication?: "DRAFT" | "PUBLISHED";
+  resourceTitle?: string;
+  assessmentType?: string;
+  contentPackageVersionId?: string;
   resourceContent: unknown;
 }
 
@@ -68,7 +72,8 @@ export async function listScheduleResources(syllabusId: string, type: ScheduleRe
   const pkg = found.items[0];
   const versionId = pkg ? pkg.draftVersionId ?? pkg.publishedVersionId : null;
   if (!versionId) return [];
-  return lmsClient.get<ScheduleResourceLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
+  const resources=await lmsClient.get<ScheduleResourceLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
+  return resources.map(resource=>({...resource,publication:pkg.draftVersionId ? "DRAFT" : "PUBLISHED"}));
 }
 
 export interface AttachFailure {
