@@ -58,7 +58,7 @@ const QUIZ_COLUMNS: ContentItemColumn<QuizItem>[] = [
         <div className="min-width-0">
           <div className="fw-700 text-dark">{quiz.title}</div>
           {quiz.description && <div className="small text-muted text-truncate" style={{ maxWidth: 320 }}>{quiz.description}</div>}
-          <span className="badge bg-info-subtle text-info border small">{quiz.skill ? quizSkillLabel(quiz.skill) : "Theo bộ đề"}</span>
+          <span className="badge bg-info-subtle text-info border small">{quiz.skill ? quizSkillLabel(quiz.skill) : "Chưa chọn kỹ năng"}</span>
         </div>
       </div>
     ),

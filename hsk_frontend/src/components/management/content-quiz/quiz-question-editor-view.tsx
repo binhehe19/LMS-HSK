@@ -12,7 +12,7 @@ import { AssetImage } from "@/components/shared/asset-image";
 import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import type { ContentAccess } from "@/hooks/use-content-access";
 import { fileUrl } from "@/lib/api/storage-client";
-import { quizDifficultyMeta, quizSkillLabel } from "@/lib/content/quiz-item";
+import { quizDifficultyMeta, quizSkillLabel, quizSkillWarnings } from "@/lib/content/quiz-item";
 import type { QuizItem, QuizQuestion } from "@/types/content-quiz";
 
 export interface QuizQuestionEditorViewProps {
@@ -165,6 +165,12 @@ export function QuizQuestionEditorView({ state, quiz, questions, packageName, ac
               </div>
 
               {quiz && <QuizMedia quiz={quiz} />}
+
+              {quiz &&
+                state.kind === "ok" &&
+                quizSkillWarnings(quiz, questions).map((warning) => (
+                  <Alert key={warning} message={warning} type="warning" showIcon className="rounded-3 mb-3" data-testid="quiz-skill-warning" />
+                ))}
 
               {state.kind === "loading" ? (
                 <div className="text-center py-5">

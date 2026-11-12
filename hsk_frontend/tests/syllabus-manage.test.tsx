@@ -424,6 +424,54 @@ describe("tab Lịch trình + module ôn luyện (Admin) — gắn trực tiếp
   );
 
   it(
+    "Thêm module Bài tập: lọc theo kỹ năng thu hẹp danh sách, bỏ lựa chọn cũ; 'Chọn tất cả' chỉ chọn mục đang hiện",
+    async () => {
+      vi.mocked(listQuizPackages).mockResolvedValue([{ id: "pkg-quiz-1", name: "Bài tập HSK 1", type: "ASSESSMENT", publishStatus: "DRAFT" }]);
+      const quizItem = (id: string, title: string, skill?: string) => ({ id, studySetId: "", index: 0, title, skill, questionCount: 2 });
+      vi.mocked(listPackageQuizItems).mockResolvedValue([quizItem("qz-1", "Nghe 1", "LISTENING"), quizItem("qz-2", "Đọc 1", "READING"), quizItem("qz-3", "Bài cũ")]);
+      renderPage();
+      await screen.findAllByTestId("module-item");
+      await userEvent.click(addButtons()[1]);
+      await screen.findByText(/Thêm module ôn luyện — Buổi 2: Gia đình/, {}, { timeout: 5000 });
+      await userEvent.selectOptions(screen.getByLabelText("Loại nội dung"), "ASSESSMENT");
+      await userEvent.selectOptions(await screen.findByLabelText("Bộ nội dung trong Kho"), "pkg-quiz-1");
+      const list = await screen.findByTestId("available-list");
+      expect(within(list).getAllByRole("button")).toHaveLength(3);
+      expect(within(list).getByText("Chưa chọn kỹ năng")).toBeInTheDocument();
+      await userEvent.click(within(list).getByText("Đọc 1").closest("button") as HTMLButtonElement);
+      expect(screen.getByText("Đã chọn 1 / 3 mục")).toBeInTheDocument();
+
+      await userEvent.selectOptions(screen.getByLabelText("Lọc theo kỹ năng"), "LISTENING");
+      expect(screen.getByText("Đã chọn 0 / 1 mục")).toBeInTheDocument();
+      expect(within(screen.getByTestId("available-list")).queryByText("Đọc 1")).toBeNull();
+      await userEvent.click(button("Chọn tất cả"));
+      await userEvent.click(button("Thêm 1 mục vào buổi"));
+      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "ASSESSMENT", 2, [{ id: "qz-1", label: "Nghe 1" }], false));
+    },
+    LONG,
+  );
+
+  it(
+    "Thêm module Bài tập: kỹ năng không có bài nào => thông báo, không có mục để chọn",
+    async () => {
+      vi.mocked(listQuizPackages).mockResolvedValue([{ id: "pkg-quiz-1", name: "Bài tập HSK 1", type: "ASSESSMENT", publishStatus: "DRAFT" }]);
+      vi.mocked(listPackageQuizItems).mockResolvedValue([{ id: "qz-1", studySetId: "", index: 0, title: "Nghe 1", skill: "LISTENING" }]);
+      renderPage();
+      await screen.findAllByTestId("module-item");
+      await userEvent.click(addButtons()[1]);
+      await screen.findByText(/Thêm module ôn luyện — Buổi 2: Gia đình/, {}, { timeout: 5000 });
+      await userEvent.selectOptions(screen.getByLabelText("Loại nội dung"), "ASSESSMENT");
+      await userEvent.selectOptions(await screen.findByLabelText("Bộ nội dung trong Kho"), "pkg-quiz-1");
+      await screen.findByTestId("available-list");
+      await userEvent.selectOptions(screen.getByLabelText("Lọc theo kỹ năng"), "SPEAKING");
+      expect(screen.getByText("Bộ này không có bài tập nào thuộc kỹ năng đã chọn.")).toBeInTheDocument();
+      expect(screen.queryByTestId("available-list")).toBeNull();
+      expect(button("Chọn tất cả")).toBeDisabled();
+    },
+    LONG,
+  );
+
+  it(
     "Kho chưa có bộ nội dung => thông báo, không có mục để chọn; Kho chưa cấu hình (lỗi) => notice WAITING",
     async () => {
       vi.mocked(listFlashcardPackages).mockRejectedValue(new ApiNotConfiguredError());

@@ -11,7 +11,7 @@ export interface QuizItem extends ContentItemBase {
   description?: string;
   /** Hướng dẫn làm bài (instruction của bản cũ). */
   instruction?: string;
-  /** Kỹ năng; trống = kế thừa kỹ năng của bộ đề (bản cũ hiển thị "kế thừa từ bộ đề"). */
+  /** Kỹ năng (QUIZ_SKILLS), bắt buộc khi lưu; trống chỉ gặp ở bài tạo trước khi có quy định này. Lưu trong `layout.meta` của QuizContent. */
   skill?: string;
   difficulty?: QuizDifficulty;
   /** Thời gian làm bài (phút); 0/trống = không giới hạn (bản cũ: timeLimitSeconds). */

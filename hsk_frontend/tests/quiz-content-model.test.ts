@@ -1,20 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PASSING_SCORE, emptyQuizInput, normalizeQuizInput, quizDifficultyMeta, quizSkillLabel, QUIZ_SKILLS, quizToInput, validateQuizInput } from "@/lib/content/quiz-item";
+import { DEFAULT_PASSING_SCORE, emptyQuizInput, normalizeQuizInput, quizDifficultyMeta, quizSkillLabel, quizSkillWarnings, QUIZ_SKILLS, quizToInput, validateQuizInput } from "@/lib/content/quiz-item";
 import { countBlanks, DEFAULT_QUESTION_POINTS, emptyQuestionInput, normalizeQuestionInput, parseAcceptable, questionSummary, questionToInput, questionTypeMeta, QUIZ_QUESTION_TYPES, sortQuestions, validateQuestionInput } from "@/lib/content/quiz-question";
 import type { QuizItem, QuizQuestion } from "@/types/content-quiz";
 
 const quiz: QuizItem = { id: "q1", studySetId: "s1", index: 2, title: "  Đọc hiểu  ", description: "mô tả", skill: "READING", difficulty: "HARD", durationMinutes: 15, passingScore: 70, shuffleQuestions: true, audioFileId: "", passageText: "我是学生。" };
 
 describe("quiz-item — form bài tập", () => {
-  it("validate: thiếu tiêu đề; thời gian âm/lẻ; điểm đạt ngoài 0–100; hợp lệ => null", () => {
-    expect(validateQuizInput({ ...emptyQuizInput(), title: "  " })).toBe("Vui lòng nhập tiêu đề bài tập");
-    expect(validateQuizInput({ ...emptyQuizInput(), title: "A", durationMinutes: -1 })).toMatch(/số phút nguyên không âm/);
-    expect(validateQuizInput({ ...emptyQuizInput(), title: "A", durationMinutes: 1.5 })).toMatch(/số phút nguyên/);
-    expect(validateQuizInput({ ...emptyQuizInput(), title: "A", passingScore: 101 })).toMatch(/0–100/);
-    expect(validateQuizInput({ ...emptyQuizInput(), title: "A", durationMinutes: undefined, passingScore: undefined })).toBeNull();
+  it("validate: thiếu tiêu đề; thiếu kỹ năng; thời gian âm/lẻ; điểm đạt ngoài 0–100; hợp lệ => null", () => {
+    const base = { ...emptyQuizInput(), title: "A", skill: "READING" };
+    expect(validateQuizInput({ ...base, title: "  " })).toBe("Vui lòng nhập tiêu đề bài tập");
+    expect(validateQuizInput({ ...base, skill: "" })).toBe("Vui lòng chọn kỹ năng của bài tập");
+    expect(validateQuizInput({ ...base, skill: undefined })).toBe("Vui lòng chọn kỹ năng của bài tập");
+    expect(validateQuizInput({ ...base, durationMinutes: -1 })).toMatch(/số phút nguyên không âm/);
+    expect(validateQuizInput({ ...base, durationMinutes: 1.5 })).toMatch(/số phút nguyên/);
+    expect(validateQuizInput({ ...base, passingScore: 101 })).toMatch(/0–100/);
+    expect(validateQuizInput({ ...base, durationMinutes: undefined, passingScore: undefined })).toBeNull();
   });
 
-  it("normalize: cắt khoảng trắng, bỏ trường rỗng, 0 phút => không gửi (không giới hạn), điểm đạt mặc định 80, kỹ năng rỗng => kế thừa bộ đề", () => {
+  it("cảnh báo kỹ năng: Nghe thiếu audio (ở bài tập lẫn câu hỏi); Nói thiếu câu Ghi âm; kỹ năng khác hoặc đã đủ => không cảnh báo", () => {
+    const mc = { type: "MULTIPLE_CHOICE" };
+    expect(quizSkillWarnings({ skill: "LISTENING" }, [mc])).toEqual(["Bài Nghe chưa có audio: thêm audio bài nghe cho bài tập hoặc cho câu hỏi."]);
+    expect(quizSkillWarnings({ skill: "LISTENING", audioFileId: "f1" }, [mc])).toEqual([]);
+    expect(quizSkillWarnings({ skill: "LISTENING" }, [{ ...mc, audioFileId: "f2" }])).toEqual([]);
+    expect(quizSkillWarnings({ skill: "SPEAKING" }, [mc])).toEqual(["Bài Nói chưa có câu hỏi Ghi âm nào."]);
+    expect(quizSkillWarnings({ skill: "SPEAKING" }, [mc, { type: "AUDIO_RESPONSE" }])).toEqual([]);
+    expect(quizSkillWarnings({ skill: "READING" }, [mc])).toEqual([]);
+    expect(quizSkillWarnings({ skill: undefined }, [])).toEqual([]);
+  });
+
+  it("normalize: cắt khoảng trắng, bỏ trường rỗng, 0 phút => không gửi (không giới hạn), điểm đạt mặc định 80", () => {
     const body = normalizeQuizInput({ ...emptyQuizInput(), title: " HSK 1 ", description: "  ", skill: "", durationMinutes: 0, passingScore: undefined, passageText: " 你好 " });
     expect(body).toMatchObject({ title: "HSK 1", description: undefined, skill: undefined, durationMinutes: undefined, passingScore: DEFAULT_PASSING_SCORE, passageText: "你好", difficulty: "MEDIUM", shuffleQuestions: false });
     expect(normalizeQuizInput({ ...emptyQuizInput(), title: "A", durationMinutes: 12.7 }).durationMinutes).toBe(12);

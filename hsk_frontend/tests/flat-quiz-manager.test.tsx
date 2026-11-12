@@ -162,7 +162,7 @@ describe("cấp bài tập qua URL (?packageId=)", () => {
     expect(screen.getByRole("link", { name: "Soạn câu hỏi Quiz 1" })).toHaveAttribute("href", "/quiz/manage?packageId=p1&quizId=q1");
   });
 
-  it("'Thêm bài tập' => form quiz; thiếu tiêu đề => toast; đủ => createQuizItem(packageId, body chuẩn hoá + index cuối, demo)", async () => {
+  it("'Thêm bài tập' => form quiz; thiếu tiêu đề => toast; thiếu kỹ năng => toast, không gọi API; đủ => createQuizItem(packageId, body chuẩn hoá + index cuối, demo)", async () => {
     nav.set("/quiz/manage?packageId=p1");
     renderPage();
     await screen.findByText("Quiz 1");
@@ -172,11 +172,15 @@ describe("cấp bài tập qua URL (?packageId=)", () => {
     await userEvent.click(modalOk(modal, "Thêm bài tập"));
     expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tiêu đề bài tập");
     await userEvent.type(within(modal).getByLabelText(/Tiêu đề/), " Nghe bài 2 ");
+    await userEvent.click(modalOk(modal, "Thêm bài tập"));
+    expect(toast.error).toHaveBeenCalledWith("Vui lòng chọn kỹ năng của bài tập");
+    expect(client.createQuizItem).not.toHaveBeenCalled();
+    await userEvent.selectOptions(within(modal).getByLabelText(/Kỹ năng/), "LISTENING");
     await userEvent.selectOptions(within(modal).getByLabelText("Độ khó"), "HARD");
     await userEvent.clear(within(modal).getByLabelText("Thời gian (phút)"));
     await userEvent.type(within(modal).getByLabelText("Thời gian (phút)"), "25");
     await userEvent.click(modalOk(modal, "Thêm bài tập"));
-    await waitFor(() => expect(client.createQuizItem).toHaveBeenCalledWith("p1", expect.objectContaining({ title: "Nghe bài 2", difficulty: "HARD", durationMinutes: 25, passingScore: 80, index: 2 }), false));
+    await waitFor(() => expect(client.createQuizItem).toHaveBeenCalledWith("p1", expect.objectContaining({ title: "Nghe bài 2", skill: "LISTENING", difficulty: "HARD", durationMinutes: 25, passingScore: 80, index: 2 }), false));
     expect(toast.success).toHaveBeenCalledWith("Đã thêm bài tập mới");
   });
 });
@@ -194,6 +198,8 @@ describe("trình soạn câu hỏi (?quizId=)", () => {
     expect(rows[0]).toHaveTextContent("Đáp án: Sai");
     expect(rows[1]).toHaveTextContent("Trắc nghiệm");
     expect(screen.getByTestId("quiz-question-count")).toHaveTextContent("2 câu");
+    // quiz kỹ năng Nghe nhưng chưa có audio ở bài tập lẫn câu hỏi => cảnh báo (không chặn)
+    expect(screen.getByTestId("quiz-skill-warning")).toHaveTextContent("Bài Nghe chưa có audio");
     expect(screen.getByTestId("quiz-media")).toHaveTextContent("我是学生。");
     expect(await screen.findByText("Gói 1")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Quay lại/ })).toHaveAttribute("href", "/quiz/manage?packageId=p1");

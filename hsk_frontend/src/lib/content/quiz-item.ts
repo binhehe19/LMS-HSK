@@ -57,6 +57,7 @@ const isWholeNumber = (n: number | undefined) => n === undefined || (Number.isFi
 
 export function validateQuizInput(input: QuizItemInput): string | null {
   if (!input.title.trim()) return "Vui lòng nhập tiêu đề bài tập";
+  if (!input.skill?.trim()) return "Vui lòng chọn kỹ năng của bài tập";
   if (!isWholeNumber(input.durationMinutes)) return "Thời gian làm bài phải là số phút nguyên không âm (0 = không giới hạn)";
   if (input.passingScore !== undefined && !(Number.isFinite(input.passingScore) && input.passingScore >= 0 && input.passingScore <= 100)) return "Điểm đạt phải nằm trong khoảng 0–100 (%)";
   return null;
@@ -83,6 +84,13 @@ export function normalizeQuizInput(input: QuizItemInput): QuizItemInput {
     passageImageFileId: clean(input.passageImageFileId),
     index: input.index,
   };
+}
+
+/** Cảnh báo (không chặn lưu) khi nội dung bài tập chưa khớp kỹ năng đã chọn; kỹ năng và loại câu hỏi không ràng buộc nhau ở máy chủ. */
+export function quizSkillWarnings(quiz: Pick<QuizItem, "skill" | "audioFileId">, questions: readonly { type: string; audioFileId?: string }[]): string[] {
+  if (quiz.skill === "LISTENING" && !quiz.audioFileId && !questions.some((q) => q.audioFileId)) return ["Bài Nghe chưa có audio: thêm audio bài nghe cho bài tập hoặc cho câu hỏi."];
+  if (quiz.skill === "SPEAKING" && !questions.some((q) => q.type === "AUDIO_RESPONSE")) return ["Bài Nói chưa có câu hỏi Ghi âm nào."];
+  return [];
 }
 
 export function quizSummary(quiz: QuizItem): string {

@@ -10,6 +10,7 @@ import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { listFlashcardPackages, listPackageItems } from "@/lib/api/lms-content-client";
 import { listGrammarPackages, listPackageGrammarPoints } from "@/lib/api/lms-grammar-client";
 import { listPackageQuizItems, listQuizPackages } from "@/lib/api/lms-quiz-client";
+import { QUIZ_SKILLS, quizSkillLabel } from "@/lib/content/quiz-item";
 import { SCHEDULE_RESOURCE_TYPE_LABELS, SCHEDULE_RESOURCE_TYPES, type ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import { displayText } from "@/lib/syllabus/syllabus-model";
 import type { ContentPackage } from "@/types/content";
@@ -19,6 +20,8 @@ interface PickItem {
   id: string;
   title: string;
   subtitle?: string;
+  /** Kỹ năng của bài tập (chỉ loại ASSESSMENT), dùng để lọc trước khi chọn. */
+  skill?: string;
 }
 
 async function listPackagesOf(type: ScheduleResourceType): Promise<ContentPackage[]> {
@@ -34,7 +37,7 @@ async function listItemsOf(type: ScheduleResourceType, packageId: string): Promi
   }
   if (type === "ASSESSMENT") {
     const items = await listPackageQuizItems(packageId);
-    return items.map((q) => ({ id: q.id, title: q.title, subtitle: q.description || (q.questionCount ? `${q.questionCount} câu` : undefined) }));
+    return items.map((q) => ({ id: q.id, title: q.title, subtitle: q.description || (q.questionCount ? `${q.questionCount} câu` : undefined), skill: q.skill }));
   }
   const items = await listPackageGrammarPoints(packageId);
   return items.map((g) => ({ id: g.id, title: g.title, subtitle: g.generalDefinition || undefined }));
@@ -55,6 +58,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
   const [type, setType] = useState<ScheduleResourceType>("VOCABULARY");
   const [packageId, setPackageId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Map<string, string>>(new Map()); // id => title (label cho toast lỗi)
+  const [skill, setSkill] = useState("");
 
   const open = schedule !== null;
   const packages = useKeyedFetch<ContentPackage[]>(open ? `schedule-add-packages:${type}` : null, () => listPackagesOf(type));
@@ -64,6 +68,12 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
     const t = SCHEDULE_RESOURCE_TYPES.find((v) => v === next) ?? "VOCABULARY";
     setType(t);
     setPackageId(null);
+    setSelected(new Map());
+    setSkill("");
+  };
+  // Đổi bộ lọc thì bỏ lựa chọn cũ: mục đã tick mà bị ẩn sẽ không lặng lẽ được thêm vào buổi.
+  const changeSkill = (next: string) => {
+    setSkill(next);
     setSelected(new Map());
   };
   const pickPackage = (id: string) => {
@@ -77,10 +87,8 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
       else next.set(item.id, item.title);
       return next;
     });
-  const selectAll = () => {
-    if (items.state.kind !== "ok") return;
-    setSelected(new Map(items.state.data.map((i) => [i.id, i.title])));
-  };
+  const visible = items.state.kind === "ok" ? items.state.data.filter((i) => !skill || i.skill === skill) : [];
+  const selectAll = () => setSelected(new Map(visible.map((i) => [i.id, i.title])));
 
   const canSubmit = schedule !== null && selected.size > 0 && !busy;
   const submit = async () => {
@@ -149,16 +157,30 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
           {packageId && items.state.kind === "ok" && (
             <>
               <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Đã chọn {selected.size} / {items.state.data.length} mục</span>
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={selectAll} disabled={busy || items.state.data.length === 0}>
-                  Chọn tất cả
-                </button>
+                <span className="text-muted small">Đã chọn {selected.size} / {visible.length} mục</span>
+                <div className="d-flex align-items-center gap-2">
+                  {type === "ASSESSMENT" && (
+                    <select className="form-select form-select-sm" style={{ width: "auto" }} aria-label="Lọc theo kỹ năng" value={skill} onChange={(e) => changeSkill(e.target.value)} disabled={busy}>
+                      <option value="">Tất cả kỹ năng</option>
+                      {QUIZ_SKILLS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={selectAll} disabled={busy || visible.length === 0}>
+                    Chọn tất cả
+                  </button>
+                </div>
               </div>
               {items.state.data.length === 0 ? (
                 <div className="text-muted small py-2">Bộ này chưa có mục nào.</div>
+              ) : visible.length === 0 ? (
+                <div className="text-muted small py-2">Bộ này không có bài tập nào thuộc kỹ năng đã chọn.</div>
               ) : (
                 <div className="list-group syllabus-available-list" data-testid="available-list" style={{ maxHeight: 320, overflowY: "auto" }}>
-                  {items.state.data.map((item) => (
+                  {visible.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -171,6 +193,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
                         <span className="fw-semibold">{item.title || item.id}</span>
                         {item.subtitle && <span className={`d-block small${selected.has(item.id) ? "" : " text-muted"}`}>{item.subtitle}</span>}
                       </span>
+                      {type === "ASSESSMENT" && <span className="badge bg-info-subtle text-info border flex-shrink-0">{item.skill ? quizSkillLabel(item.skill) : "Chưa chọn kỹ năng"}</span>}
                     </button>
                   ))}
                 </div>

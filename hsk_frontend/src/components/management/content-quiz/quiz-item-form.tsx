@@ -1,8 +1,8 @@
 "use client";
 
 // Form một BÀI TẬP (quiz) — port create-quiz-modal.tsx của HSK cũ: hai cột (thông tin chung | audio bài nghe, đoạn văn đọc, ảnh đoạn đọc).
-// Thuần: nhận/trả giá trị qua props (ContentItemFormProps). Khác bản cũ có chủ đích: kỹ năng là ô chọn với "Theo bộ đề" (bản cũ chỉ hiển thị
-// kỹ năng kế thừa từ bộ đề, form không biết bộ đề); audio/ảnh là tệp của repo-storage (ContentFileField) thay cho MediaUploadService.
+// Thuần: nhận/trả giá trị qua props (ContentItemFormProps). Khác bản cũ có chủ đích: kỹ năng là ô chọn BẮT BUỘC trên từng bài tập (bản cũ kế thừa
+// từ bộ đề, cấp đó không còn ở repo-lms); audio/ảnh là tệp của repo-storage (ContentFileField) thay cho MediaUploadService.
 import type { ChangeEvent } from "react";
 import { ContentFileField } from "@/components/management/content-tree/content-file-field";
 import { QUIZ_DIFFICULTIES, QUIZ_SKILLS } from "@/lib/content/quiz-item";
@@ -39,10 +39,12 @@ export function QuizItemForm({ value, onChange, disabled, idPrefix }: ContentIte
         </div>
         <div className="mb-3">
           <label className={LABEL} htmlFor={id("skill")}>
-            Kỹ năng
+            Kỹ năng <span className="text-danger">*</span>
           </label>
           <select id={id("skill")} className="form-select rounded-3" value={value.skill ?? ""} onChange={setText("skill")} disabled={disabled}>
-            <option value="">Theo bộ đề (kế thừa)</option>
+            <option value="" disabled>
+              — Chọn kỹ năng —
+            </option>
             {QUIZ_SKILLS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
