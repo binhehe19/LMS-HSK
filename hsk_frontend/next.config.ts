@@ -75,15 +75,20 @@ const nextConfig: NextConfig = {
     silenceDeprecations: ["import", "global-builtin", "color-functions", "mixed-decls"],
     quietDeps: true,
   },
+  // Đăng nhập dev mở app ở http://127.0.0.1:3000 (origin phải khớp allowlist của trang tài khoản), khác `localhost` (giống IELTS).
+  allowedDevOrigins: ["127.0.0.1"],
   async rewrites() {
     // Chỉ khi chạy `next dev` trên máy cá nhân (giống IELTS): đưa đường dẫn cùng origin tới backend dev để tránh CORS.
     // Production: gateway/Traefik định tuyến trực tiếp.
     if (!isDev) return [];
-    return API_SERVICES.flatMap(({ basePath, proxyTarget }) =>
+    // /api/auth/* (users/me, refresh, logout) cùng origin, dev server chuyển tới trang tài khoản (xem lib/auth/dev-token-session.ts).
+    const authBase = process.env.NEXT_PUBLIC_AUTH_API_BASE_URL?.trim().replace(/\/+$/, "");
+    const authRewrites = authBase ? [{ source: "/api/auth/:path*", destination: `${authBase}/:path*` }] : [];
+    return [...authRewrites, ...API_SERVICES.flatMap(({ basePath, proxyTarget }) =>
       basePath?.startsWith("/") && proxyTarget
         ? [{ source: `${basePath.replace(/\/+$/, "")}/:path*`, destination: `${proxyTarget.replace(/\/+$/, "")}/:path*` }]
         : [],
-    );
+    )];
   },
 };
 

@@ -18,8 +18,7 @@ import { TicketWelcomeToast } from "@/components/management/tickets/ticket-welco
 import { useAuthFrontendUrl } from "@/components/management/use-auth-frontend-url";
 import { SidebarCollapseButton, useSidebarCollapse } from "@/components/management/use-sidebar-collapse";
 import { AssetImage } from "@/components/shared/asset-image";
-import { logoutRemote } from "@/lib/api/auth-client";
-import { redirectToAuthFrontend } from "@/lib/auth/auth-redirect";
+import { redirectToSignOut } from "@/lib/auth/auth-redirect";
 import type { ManagementArea } from "@/lib/management/area";
 import { getNavTargetStatus } from "@/lib/management/route-registry";
 import { formatUnreadBadge } from "@/lib/notifications/unread-badge";
@@ -56,11 +55,10 @@ export function ManagementSidebar({ area }: { area: ManagementArea }) {
   const displayName = user?.fullName || user?.email || config.fallbackDisplayName;
   const displayEmail = user?.email || "";
 
-  const handleLogout = async (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleLogout = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    await logoutRemote();
     dispatch(signout());
-    redirectToAuthFrontend("/login", "");
+    redirectToSignOut();
   };
 
   return (

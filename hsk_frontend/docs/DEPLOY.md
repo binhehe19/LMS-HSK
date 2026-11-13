@@ -9,7 +9,8 @@ Tài liệu cho người đưa bản build lên môi trường thật (dev/stagi
 ```
 trình duyệt ──▶ Traefik (docker/infra của LMS_IELTS) ──┬── /api/lms, /api/notification, /api/storage ──▶ backend chung (priority cao hơn)
                                                        └── còn lại (Host = HSK_DOMAIN, priority 1) ──▶ lms-hsk-frontend (Next.js standalone, cổng 3000)
-Authentication: NEXT_PUBLIC_AUTH_FRONTEND_URL (SSO) + NEXT_PUBLIC_AUTH_API_BASE_URL (/users/me, /refresh, /logout) — hệ Auth dùng chung, không nằm trong repo này.
+Authentication: đăng nhập qua oauth2-proxy (/oauth2/start, /oauth2/sign_out) cùng origin theo luồng IdP của IELTS — xem docs/AUTH-INTEGRATION.md.
+  ⚠ Sơ đồ trên là mô hình hiện tại của compose; luồng IdP cần thêm gateway oauth2-proxy cho HSK_DOMAIN đứng trước FE (chưa dựng, AUTH-INTEGRATION.md mục 5).
 ```
 
 Cùng mẫu `LMS_IELTS/frontend/Dockerfile` + `docker-compose.yml`: build multi-stage (`npm ci` → `next build --webpack` → `output: standalone`), chạy bằng user `node`, `TZ=Asia/Bangkok`.
@@ -19,8 +20,8 @@ Khác với IELTS: dùng **webpack** (Turbopack làm rơi `.shadow-sm` của SCS
 
 | Biến | Bắt buộc | Giá trị khuyến nghị | Ghi chú |
 |---|---|---|---|
-| `NEXT_PUBLIC_AUTH_FRONTEND_URL` | **có** | URL Authentication_Frontend | chưa đăng nhập ⇒ `/login?redirect=<url hiện tại>` |
-| `NEXT_PUBLIC_AUTH_API_BASE_URL` | **có** | `https://<host>/api/auth` | `GET /users/me`, `POST /refresh`, `POST /logout` |
+| `NEXT_PUBLIC_AUTH_FRONTEND_URL` | **có** | URL Authentication_Frontend | đăng xuất (IdP kết thúc phiên chung) và liên kết trang tài khoản; `next dev` dùng để đăng nhập |
+| `NEXT_PUBLIC_AUTH_API_BASE_URL` | **có** | `https://<host>/api/auth` | chỉ `next dev` dùng (đích proxy `/api/auth/*`); trình duyệt luôn gọi `/api/auth/users/me` cùng origin qua gateway |
 | `NEXT_PUBLIC_LMS_API_BASE_PATH` | nên | `/api/lms` | repo-lms (Java): lớp/học viên/giáo trình chỉ đọc (proxy ERP) — các màn Admin đã nối |
 | `NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH` | nên | `/api/notification` | repo-notification (Go) — chuông, Thông báo của tôi, danh sách thông báo Admin |
 | `NEXT_PUBLIC_STORAGE_API_BASE_PATH` | nên | `/api/storage` | repo-storage (Go) — presign/upload/confirm (tải tệp trong tài liệu học tập / kho lưu trữ) |
@@ -48,7 +49,7 @@ Lưu ý: vì `next.config.ts` đặt `output: "standalone"` (cho Docker), `next 
 
 ## 4. Kiểm tra sau khi lên
 
-1. `https://<HSK_DOMAIN>/admin/dashboard` khi chưa đăng nhập ⇒ chuyển sang Authentication_Frontend `/login?redirect=…` đúng **một lần** (không vòng lặp).
+1. `https://<HSK_DOMAIN>/admin/dashboard` khi chưa đăng nhập ⇒ chuyển `/oauth2/start?rd=…` rồi sang IdP đúng **một lần** (không vòng lặp).
 2. Đăng nhập tài khoản `ROLE_ADMIN` ⇒ về đúng URL, sidebar Admin 22 mục, `/admin/class-management` tải danh sách lớp từ `/api/lms/classes` (PageResponse snake_case).
 3. Tài khoản `ROLE_TEACHER`/`ROLE_MENTOR` ⇒ `/instructor/welcome`; các màn giảng viên hiện **WAITING FOR BACKEND** cho tới khi `NEXT_PUBLIC_QUIZ_API_BASE_PATH` có backend thật (B0).
 4. Role khác (Teacher-manager, Collaborator, học viên) ⇒ "Không có quyền truy cập", không lộ menu; URL không trong registry ⇒ 404.

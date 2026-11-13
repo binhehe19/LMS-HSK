@@ -7,11 +7,11 @@
 //
 // Mapping (đã chốt với người phụ trách):
 //  - QuizItem HSK gộp vào LearningResourceType.ASSESSMENT/ContentPackageType.ASSESSMENT có sẵn, dùng QuizContent: title/description giữ tên,
-//    durationMinutes*60→timeLimitSeconds, shuffleQuestions giữ tên. Field KHÔNG có cột riêng ở QuizContent (instruction, skill, difficulty,
+//    durationMinutes*60→timeLimits.default, shuffleQuestions giữ tên; layout v2 (một phần chứa mọi câu). Field KHÔNG có cột riêng ở QuizContent (instruction, skill, difficulty,
 //    passingScore, audioFileId, passageText, passageImageFileId) → nhét vào `layout.meta` (JSON tự do, backend "chỉ lưu và trả lại", không đụng tới).
-//  - Câu hỏi: type đổi tên để khớp ExerciseQuestionType (SHORT_ANSWER→ESSAY, còn lại giữ tên); TRUE_FALSE không có field boolean riêng ở backend
-//    (dùng chung options[] như MULTIPLE_CHOICE) → tự đổi correctAnswer (boolean) thành 2 options cố định "Đúng"/"Sai" khi gửi lên, đọc lại theo
-//    option nào correct=true. Field câu hỏi KHÔNG có chỗ lưu (imageFileId, difficulty, fillBlankMode, choices, gradingMode, referenceAnswer) →
+//  - Câu hỏi: type đổi tên để khớp ExerciseQuestionType (SHORT_ANSWER→ESSAY, MATCHING_PAIRS→MATCHING, còn lại giữ tên); TRUE_FALSE là trắc
+//    nghiệm có variant "TRUE_FALSE" với 2 options cố định "Đúng"/"Sai" (đọc lại theo option nào correct=true); nối cặp có danh sách lựa chọn
+//    chung (các vế phải); câu mẫu điền chỗ trống đổi {blank}/___ thành {{n}} khi gửi và ngược lại khi đọc; audio là media[] với đường dẫn storage. Field câu hỏi KHÔNG có chỗ lưu (imageFileId, difficulty, fillBlankMode, choices, gradingMode, referenceAnswer) →
 //    TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend. questionId do frontend tự sinh
 //    (crypto.randomUUID) khi tạo câu hỏi mới, giữ cố định qua các lần sửa (đúng tinh thần "ULID ổn định" của backend).
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
@@ -44,7 +44,8 @@ interface BackendPackage {
   createdAt?: string;
   updatedAt?: string;
 }
-type BackendQuestionType = "MULTIPLE_CHOICE" | "MULTIPLE_SELECT" | "TRUE_FALSE" | "CHOOSE_FROM_LIST" | "MATCHING_PAIRS" | "FILL_IN_BLANK" | "SENTENCE_BUILDER" | "AUDIO_RESPONSE" | "ESSAY" | "FILE_UPLOAD";
+// 8 loại câu của backend (ExerciseQuestionType). Nối nhiều dòng là MATCHING (danh sách lựa chọn chung + matchingPairs); điền chỗ trống dùng {{n}} trong questionText.
+type BackendQuestionType = "MULTIPLE_CHOICE" | "MULTIPLE_SELECT" | "MATCHING" | "FILL_IN_BLANK" | "SENTENCE_BUILDER" | "AUDIO_RESPONSE" | "ESSAY" | "FILE_UPLOAD";
 interface BackendOptionItem {
   optionIndex?: number;
   content?: string;
@@ -64,8 +65,11 @@ interface BackendBlankItem {
 interface BackendQuizQuestion {
   questionId?: string;
   questionType?: BackendQuestionType;
+  /** Gợi ý hiển thị, không ảnh hưởng chấm điểm. HSK dùng "TRUE_FALSE" cho câu Đúng/Sai (trắc nghiệm hai lựa chọn Đúng/Sai). */
+  variant?: string;
   questionText?: string;
-  audioUrl?: string;
+  /** Audio của câu: chỉ nhận đường dẫn storage /api/storage/file/<mã>. */
+  media?: { kind: "audio"; url: string }[];
   explanation?: string;
   points?: number;
   options?: BackendOptionItem[];
@@ -82,12 +86,16 @@ interface QuizLayoutMeta {
   passageImageFileId?: string;
 }
 interface QuizLayout {
+  version?: number;
   meta?: QuizLayoutMeta;
+  /** Layout v2: mỗi câu hỏi nằm đúng một phần; backend kiểm tra questionIds khớp questions[]. */
+  sections?: { id: string; title?: string; questionIds: string[] }[];
 }
 interface QuizContent {
   title: string;
   description?: string;
-  timeLimitSeconds?: number;
+  /** Thời gian làm bài (giây) theo chế độ; HSK chỉ dùng default. Không còn timeLimitSeconds. */
+  timeLimits?: { default?: number | null };
   shuffleQuestions?: boolean;
   layout?: QuizLayout;
   questions?: BackendQuizQuestion[];
@@ -111,20 +119,21 @@ interface EditLockResponse {
 }
 
 // ---- dịch kiểu câu hỏi FE <-> BE ----
-const QUESTION_TYPE_TO_BACKEND: Record<QuizQuestionType, BackendQuestionType> = {
+// Câu Đúng/Sai và nối cặp của HSK không còn loại riêng ở backend: Đúng/Sai = trắc nghiệm hai lựa chọn có variant "TRUE_FALSE",
+// nối cặp = MATCHING. Hai tên này chỉ còn là kiểu giao diện của HSK.
+const TRUE_FALSE_VARIANT = "TRUE_FALSE";
+const QUESTION_TYPE_TO_BACKEND: Record<Exclude<QuizQuestionType, "TRUE_FALSE">, BackendQuestionType> = {
   MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
-  TRUE_FALSE: "TRUE_FALSE",
   FILL_IN_BLANK: "FILL_IN_BLANK",
-  MATCHING_PAIRS: "MATCHING_PAIRS",
+  MATCHING_PAIRS: "MATCHING",
   SHORT_ANSWER: "ESSAY",
   AUDIO_RESPONSE: "AUDIO_RESPONSE",
   SENTENCE_BUILDER: "SENTENCE_BUILDER",
 };
 const QUESTION_TYPE_FROM_BACKEND: Partial<Record<BackendQuestionType, QuizQuestionType>> = {
   MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
-  TRUE_FALSE: "TRUE_FALSE",
   FILL_IN_BLANK: "FILL_IN_BLANK",
-  MATCHING_PAIRS: "MATCHING_PAIRS",
+  MATCHING: "MATCHING_PAIRS",
   ESSAY: "SHORT_ANSWER",
   AUDIO_RESPONSE: "AUDIO_RESPONSE",
   SENTENCE_BUILDER: "SENTENCE_BUILDER",
@@ -135,31 +144,55 @@ function fileIdFromUrl(url: string | undefined | null): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
+/** Đường dẫn storage chuẩn mà backend chấp nhận cho tệp/audio của câu (không phải URL đầy đủ của storage service). */
+const storagePath = (fileId: string) => `/api/storage/file/${encodeURIComponent(fileId)}`;
+
+/**
+ * Câu mẫu HSK ({blank} hoặc ___) → questionText của backend với {{1}}, {{2}}… theo thứ tự. Số chỗ trống phải khớp blanks[]: thiếu thì
+ * nối thêm {{n}} ở cuối, thừa thì bỏ chữ giữ chỗ.
+ */
+function templateToBackend(template: string, blankCount: number): string {
+  let n = 0;
+  let text = template.replace(/___+|\{blank\d*\}/g, () => (++n <= blankCount ? `{{${n}}}` : ""));
+  for (let i = n + 1; i <= blankCount; i += 1) text += ` {{${i}}}`;
+  return text;
+}
+const templateFromBackend = (text: string) => text.replace(/\{\{\d+\}\}/g, "{blank}");
+
 function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
   const base: BackendQuizQuestion = {
     questionId: q.id,
-    questionType: QUESTION_TYPE_TO_BACKEND[q.type] ?? "MULTIPLE_CHOICE",
+    questionType: q.type === "TRUE_FALSE" ? "MULTIPLE_CHOICE" : QUESTION_TYPE_TO_BACKEND[q.type] ?? "MULTIPLE_CHOICE",
     questionText: q.prompt,
     points: q.points,
     explanation: q.explanation || undefined,
-    audioUrl: fileUrl(q.audioFileId) ?? undefined,
+    media: q.audioFileId ? [{ kind: "audio", url: storagePath(q.audioFileId) }] : undefined,
   };
   switch (q.type) {
     case "MULTIPLE_CHOICE":
       base.options = (q.options ?? []).map((o, i) => ({ optionIndex: i, content: o.text, correct: o.isCorrect }));
       break;
     case "TRUE_FALSE":
+      base.variant = TRUE_FALSE_VARIANT;
       base.options = [
         { optionIndex: 0, content: "Đúng", correct: q.correctAnswer === true },
         { optionIndex: 1, content: "Sai", correct: q.correctAnswer !== true },
       ];
       break;
-    case "FILL_IN_BLANK":
-      base.blanks = (q.blanks ?? []).map((b) => ({ blankIndex: b.index, correctAnswer: b.answer, acceptedAnswers: b.acceptable }));
+    case "FILL_IN_BLANK": {
+      const blanks = (q.blanks ?? []).map((b, i) => ({ blankIndex: i, correctAnswer: b.answer, acceptedAnswers: b.acceptable }));
+      base.questionText = templateToBackend(q.prompt, blanks.length);
+      base.blanks = blanks;
       break;
-    case "MATCHING_PAIRS":
-      base.matchingPairs = (q.pairs ?? []).map((p, i) => ({ pairIndex: i, prompt: p.left, answer: p.right }));
+    }
+    case "MATCHING_PAIRS": {
+      const pairs = q.pairs ?? [];
+      // Danh sách lựa chọn chung là các vế phải (không trùng); mỗi dòng chọn một trong số đó.
+      const choices = [...new Set(pairs.map((p) => p.right))];
+      base.options = choices.map((content, optionIndex) => ({ optionIndex, content }));
+      base.matchingPairs = pairs.map((p, i) => ({ pairIndex: i, prompt: p.left, answer: p.right }));
       break;
+    }
     default:
       break;
   }
@@ -167,16 +200,18 @@ function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
 }
 
 function fromBackendQuestion(quizId: string, index: number, bq: BackendQuizQuestion): QuizQuestion {
-  const type = QUESTION_TYPE_FROM_BACKEND[bq.questionType ?? "MULTIPLE_CHOICE"] ?? "MULTIPLE_CHOICE";
+  const isTrueFalse = bq.questionType === "MULTIPLE_CHOICE" && bq.variant === TRUE_FALSE_VARIANT;
+  const type: QuizQuestionType = isTrueFalse ? "TRUE_FALSE" : QUESTION_TYPE_FROM_BACKEND[bq.questionType ?? "MULTIPLE_CHOICE"] ?? "MULTIPLE_CHOICE";
+  const audio = bq.media?.find((m) => m.kind === "audio");
   const base: QuizQuestion = {
     id: bq.questionId ?? crypto.randomUUID(),
     quizId,
     index,
     type,
-    prompt: bq.questionText ?? "",
+    prompt: type === "FILL_IN_BLANK" ? templateFromBackend(bq.questionText ?? "") : bq.questionText ?? "",
     points: bq.points ?? 10,
     explanation: bq.explanation || undefined,
-    audioFileId: fileIdFromUrl(bq.audioUrl),
+    audioFileId: fileIdFromUrl(audio?.url),
   };
   switch (type) {
     case "MULTIPLE_CHOICE":
@@ -225,9 +260,13 @@ function toQuizContent(meta: QuizMetaFields, questions: BackendQuizQuestion[]): 
   return {
     title: meta.title,
     description: meta.description || undefined,
-    timeLimitSeconds: meta.durationMinutes && meta.durationMinutes > 0 ? meta.durationMinutes * 60 : undefined,
+    timeLimits: meta.durationMinutes && meta.durationMinutes > 0 ? { default: meta.durationMinutes * 60 } : undefined,
     shuffleQuestions: meta.shuffleQuestions ?? false,
-    layout: { meta: meta2 },
+    layout: {
+      version: 2,
+      meta: meta2,
+      sections: [{ id: "section-1", title: meta.title, questionIds: questions.map((q) => q.questionId ?? "") }],
+    },
     questions,
   };
 }
@@ -243,7 +282,7 @@ function fromQuizContent(id: string, index: number, content: QuizContent | null)
     instruction: meta?.instruction,
     skill: meta?.skill,
     difficulty: meta?.difficulty,
-    durationMinutes: content?.timeLimitSeconds ? Math.round(content.timeLimitSeconds / 60) : undefined,
+    durationMinutes: content?.timeLimits?.default ? Math.round(content.timeLimits.default / 60) : undefined,
     passingScore: meta?.passingScore,
     shuffleQuestions: content?.shuffleQuestions ?? false,
     audioFileId: fileIdFromUrl(meta?.audioFileId),

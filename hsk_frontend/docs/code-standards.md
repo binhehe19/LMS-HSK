@@ -16,7 +16,7 @@ src/
   lib/
     api/          Mỗi backend service một client + một file hàm theo miền: quiz-client.ts + quiz-grading-client.ts
                   (+ api-client.ts dùng chung, auth-client.ts cho Authentication)
-    auth/         auth-redirect (chuyển sang Authentication_Frontend), roles, token-store (token chỉ trong bộ nhớ), redirect-guard (chống lặp redirect)
+    auth/         auth-redirect (đăng nhập/đăng xuất qua oauth2-proxy), dev-token-session (token chỉ ở `next dev`), roles, redirect-guard (chống lặp redirect)
     <miền>/       Hàm thuần của miền (vd lib/class-management/class-display.ts). Không import React/Next, không gọi API
   redux/          store.ts (makeStore), hooks.ts, slices/ — CHỈ cho auth
   types/          DTO theo miền (vd grading.ts). Kiểu response nằm ở đây, không rải trong component
@@ -63,7 +63,7 @@ hook của một màn hình đặt cạnh component (`use-admin-classes.ts`).
 - Biến base path **trống = service chưa cấu hình** → `ApiNotConfiguredError` → màn hình hiện `WAITING FOR BACKEND`
   (khác với `ApiError` = đã gọi nhưng thất bại). Không có giá trị mặc định trỏ hệ thống thật.
 - `createApiClient.get/post/put/delete` là `async`: thiếu cấu hình hay lỗi phải là promise bị reject, **không** ném đồng bộ ra khỏi effect.
-- Phiên dựa vào cookie (`credentials: "include"`); nếu tab giữ token trong bộ nhớ thì gắn thêm `Authorization: Bearer`. 401 → refresh MỘT lần dùng chung (`lib/api/auth-session.ts`) rồi thử lại ĐÚNG MỘT lần; refresh bị 400/401/403 = hết phiên (thông báo cho `AuthInitializer`), mạng/5xx = không phải hết phiên (lỗi 503, không đổi trạng thái). Không ghi token/header/body vào log.
+- Phiên là cookie của oauth2-proxy (`credentials: "include"`, cùng origin); proxy gắn `Authorization` cho service phía sau nên FE không giữ token (riêng `next dev`: Bearer + refresh một lần, `lib/auth/dev-token-session.ts`). 401 → thông báo hết phiên (`lib/api/auth-session.ts`) cho `AuthInitializer`/`RequireAuth`, không tự thử lại. Không ghi token/header/body vào log.
 - Hàm client trả đúng kiểu DTO (`types/`); việc kiểm tra hình dạng dữ liệu bất thường (vd không phải mảng) làm ở hook, hiển thị thành trạng thái lỗi.
 - Backend chưa có endpoint: vẫn hoàn thiện UI, ghi header comment `WAITING FOR BACKEND` ở client và hợp đồng ở `docs/api-requirements/`.
 
@@ -87,7 +87,7 @@ hook của một màn hình đặt cạnh component (`use-admin-classes.ts`).
 - `ReduxProvider` ở root layout; `AuthInitializer` + `RequireAuth` ở layout của nhóm route cần đăng nhập (không ở root để route công khai/lỗi không bị chặn).
 - **Không có đường tắt bỏ qua kiểm tra ở môi trường nào** (IELTS bỏ qua khi `NODE_ENV=development` — không sao chép).
 - Role so khớp nguyên văn (`lib/auth/roles.ts`); không ánh xạ/gộp role (Auth chung có `ROLE_MANAGER` và `ROLE_TEACHER_MANAGER` là hai role riêng). `/admin/*` = `ROLE_ADMIN`; `/instructor/*` = `ROLE_TEACHER`|`ROLE_MENTOR` theo bằng chứng `router.link.tsx` cũ.
-- Token chỉ trong bộ nhớ (`token-store.ts`), không bao giờ vào web storage/log. Callback hash chỉ nhận token đúng hình dạng JWT và luôn được dọn khỏi URL.
+- Production không có token ở FE. Token dev (chỉ `next dev`) nằm ở `localStorage`, nhận qua hash ở `/dev-auth/callback` và được dọn khỏi URL ngay; không bao giờ vào log.
 - Chống lặp: mỗi tab tự chuyển sang Auth tối đa một lần/2 phút (`redirect-guard.ts`); lần sau hiện `redirect-loop` để người dùng bấm.
 - Mock không được lọt production: guard ở `next.config.ts` + guard lúc chạy ở `AuthInitializer` (host không phải loopback) + mock server tách riêng; xem `docs/AUTH-INTEGRATION.md` mục 6.
 - Guard ở frontend chỉ là rào giao diện; backend phải kiểm tra quyền ở mọi API.
@@ -115,7 +115,7 @@ hook của một màn hình đặt cạnh component (`use-admin-classes.ts`).
 | Vị trí guard | `RequireAuth` ở root | Ở layout nhóm route | Route công khai/lỗi không bị chặn |
 | Slice auth | `{user,isAuthenticated,loading}` | `{status,user,errorMessage}` (có `redirect-loop`, `error`, `signed-out`) | Phân biệt lỗi mạng/lặp redirect với chưa đăng nhập |
 | Token | localStorage + Bearer | Chỉ trong bộ nhớ (+ cookie HttpOnly do Auth set) | Không lưu token vào web storage; production là cookie-only |
-| Refresh | trong `auth-client`, api-client import ngược (vòng import) | `auth-session.ts` tách riêng, single-flight, 1 lần thử lại | Không vòng import, không refresh song song, không lặp |
+| Hết phiên | trong `auth-client`, api-client import ngược (vòng import) | `auth-session.ts` tách riêng (chỉ danh sách người nghe) | Không vòng import; refresh do gateway lo |
 | Base path API | Một `/api/lms` | Mỗi service một biến | Backend HSK nhiều service, đường dẫn chưa chốt |
 | Trạng thái chưa cấu hình | Không có | `ApiNotConfiguredError` → WAITING FOR BACKEND | Yêu cầu phân biệt với lỗi API |
 | Sidebar trong trang | Shell/layout có sidebar | `ManagementPageFrame` đặt sidebar trong từng trang (khu vực lấy từ `ManagementShell`) | Giữ đúng DOM `.content > .container > .row` của HSK cũ (CSS `.content` đổi theo trang) |

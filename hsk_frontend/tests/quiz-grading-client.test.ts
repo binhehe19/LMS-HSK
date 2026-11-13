@@ -37,13 +37,12 @@ describe("listAdminGradingClasses (hợp đồng GET /grading/admin/classes củ
     expect(fetchMock.mock.calls[0][0]).toBe("/api/quiz/grading/admin/classes");
   });
 
-  it("HTTP 401 => làm mới phiên; refresh bị từ chối thì ApiError 401 (không thử lại vô hạn)", async () => {
+  it("HTTP 401 => ApiError 401, không tự thử lại (phiên do oauth2-proxy giữ)", async () => {
     vi.stubEnv("NEXT_PUBLIC_QUIZ_API_BASE_PATH", "/api/quiz");
-    vi.stubEnv("NEXT_PUBLIC_AUTH_API_BASE_URL", "http://auth.test.invalid/api/auth");
     const fetchMock = vi.fn().mockResolvedValue(new Response("", { status: 401 }));
     vi.stubGlobal("fetch", fetchMock);
     await expect(listAdminGradingClasses()).rejects.toMatchObject({ name: "ApiError", status: 401 });
-    expect(fetchMock).toHaveBeenCalledTimes(2); // gọi gốc + một lần refresh
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it.each([403, 404, 500])("HTTP %i => ApiError mang đúng status", async (status) => {
