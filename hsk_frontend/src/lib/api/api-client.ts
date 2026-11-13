@@ -1,13 +1,14 @@
 // Lớp gọi API dùng chung cho frontend HSK. Theo conventions của LMS_IELTS/frontend (lib/api/api-client.ts): ApiError,
 // bóc envelope { success, data, errorCode, errorMessage }, thông báo lỗi thân thiện, createApiClient(baseUrl) cho từng service.
 //
-// Xác thực (M2): luôn gửi cookie (credentials: "include"); nếu tab đang giữ token trong bộ nhớ (chế độ hash của Auth
-// non-prod, xem lib/auth/token-store.ts) thì gắn thêm Authorization: Bearer. Gặp 401 => làm mới phiên MỘT lần dùng chung
-// (auth-session.ts) rồi thử lại ĐÚNG MỘT lần; không thử lại lần hai nên không có vòng lặp. KHÔNG ghi token/header/body vào log.
+// Xác thực (luồng IdP như LMS_IELTS): phiên là cookie của oauth2-proxy (cùng origin, luôn gửi `credentials: "include"`), proxy
+// tự gắn Authorization cho service phía sau và tự làm mới token, nên FE không giữ token. Riêng `next dev` (không có proxy) thì
+// gắn Bearer từ dev-token-session.ts và làm mới bằng refresh token, thử lại ĐÚNG MỘT lần. Gặp 401 => phiên không còn hiệu lực:
+// thông báo "hết phiên" (auth-session.ts) để RequireAuth đưa đi đăng nhập lại. KHÔNG ghi token/header/body vào log.
 "use client";
 
-import { notifySessionExpired, refreshSessionOnce } from "@/lib/api/auth-session";
-import { getAccessToken } from "@/lib/auth/token-store";
+import { notifySessionExpired } from "@/lib/api/auth-session";
+import { bearerHeaders, fetchWithDevRefresh } from "@/lib/auth/dev-token-session";
 
 export class ApiError extends Error {
   status: number;
@@ -55,11 +56,6 @@ interface ApiEnvelope<T> {
   data?: T;
 }
 
-interface ApiRequestInit extends RequestInit {
-  /** Không làm mới phiên khi gặp 401 (dùng cho chính lời gọi đăng xuất). */
-  skipRefresh?: boolean;
-}
-
 function joinUrl(baseUrl: string, path: string): string {
   const base = baseUrl.replace(/\/+$/, "");
   // "?query" gắn thẳng vào gốc dịch vụ (".../notification?page=0"): thêm "/" sẽ thành ".../notification/?page=0", một URL khác
@@ -72,10 +68,9 @@ function joinUrl(baseUrl: string, path: string): string {
 
 async function send(url: string, init: RequestInit): Promise<Response> {
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
-  const token = getAccessToken();
   const headers: Record<string, string> = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...bearerHeaders(),
     ...(init.headers as Record<string, string> | undefined),
   };
   try {
@@ -87,23 +82,12 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   }
 }
 
-export async function apiFetch<T>(baseUrl: string, path: string, requestInit: ApiRequestInit = {}): Promise<T> {
-  const { skipRefresh, ...init } = requestInit;
+export async function apiFetch<T>(baseUrl: string, path: string, init: RequestInit = {}): Promise<T> {
   const url = joinUrl(baseUrl, path);
 
-  let res = await send(url, init);
-
-  if (res.status === 401 && !skipRefresh) {
-    const outcome = await refreshSessionOnce();
-    if (outcome === "refreshed") {
-      res = await send(url, init); // thử lại đúng một lần
-    } else if (outcome === "expired") {
-      notifySessionExpired(); // refresh bị từ chối: phiên đã hết; response 401 gốc được trả về bên dưới
-    } else {
-      // Auth không phản hồi/lỗi tạm thời: KHÔNG coi là hết phiên.
-      throw new ApiError("Không thể làm mới phiên đăng nhập lúc này. Vui lòng thử lại.", 503);
-    }
-  }
+  const res = await fetchWithDevRefresh(() => send(url, init));
+  // Phiên không còn hiệu lực (proxy đã thử làm mới mà không được); response 401 gốc được trả về bên dưới.
+  if (res.status === 401) notifySessionExpired();
   const rawText = await res.text().catch(() => "");
   let body: ApiEnvelope<T> | string | null = null;
   try {

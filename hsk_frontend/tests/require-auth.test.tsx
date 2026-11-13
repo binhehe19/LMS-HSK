@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthInitializer } from "@/components/auth/auth-initializer";
 import { RequireAuth } from "@/components/auth/require-auth";
-import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
+import { ApiError } from "@/lib/api/api-client";
 import { notifySessionExpired } from "@/lib/api/auth-session";
 import { getCurrentUser, type AuthUser } from "@/lib/api/auth-client";
 import { ROLES } from "@/lib/auth/roles";
@@ -22,7 +22,7 @@ beforeEach(() => {
   Object.defineProperty(window, "location", {
     configurable: true,
     writable: true,
-    value: { href: "http://localhost:3100/admin/class-management", hostname: "localhost", assign },
+    value: { href: "http://localhost:3100/admin/class-management", origin: "http://localhost:3100", hostname: "localhost", pathname: "/admin/class-management", search: "", assign },
   });
   vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
 });
@@ -55,25 +55,27 @@ describe("RequireAuth + AuthInitializer (phiên giả lập cách ly)", () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it("401 => chuyển sang Authentication_Frontend kèm redirect, không render nội dung", async () => {
+  it("401 => chuyển sang /oauth2/start của gateway, quay về đúng trang hiện tại, không render nội dung", async () => {
+    getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
+    setup();
+    await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
+    expect(assign).toHaveBeenCalledWith("/oauth2/start?rd=%2Fadmin%2Fclass-management");
+    expect(screen.queryByTestId("protected")).toBeNull();
+  });
+
+  it("KHÔNG có đường tắt bỏ qua kiểm tra khi NODE_ENV=development: đăng nhập ở trang tài khoản rồi về callback của app", async () => {
+    vi.stubEnv("NODE_ENV", "development");
     getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
     setup();
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
     const target = new URL(assign.mock.calls[0][0] as string);
     expect(target.origin + target.pathname).toBe("http://auth.test.invalid/login");
-    expect(target.searchParams.get("redirect")).toBe("http://localhost:3100/admin/class-management");
+    expect(target.searchParams.get("continue")).toBe("http://localhost:3100/dev-auth/callback?rd=%2Fadmin%2Fclass-management");
     expect(screen.queryByTestId("protected")).toBeNull();
   });
 
-  it("KHÔNG có đường tắt bỏ qua kiểm tra khi NODE_ENV=development", async () => {
+  it("`next dev` thiếu NEXT_PUBLIC_AUTH_FRONTEND_URL => báo chưa cấu hình, không chuyển trang, không render nội dung", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
-    setup();
-    await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
-    expect(screen.queryByTestId("protected")).toBeNull();
-  });
-
-  it("thiếu NEXT_PUBLIC_AUTH_FRONTEND_URL => báo chưa cấu hình, không chuyển trang, không render nội dung", async () => {
     vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "");
     getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
     setup();
@@ -114,12 +116,11 @@ describe("RequireAuth + AuthInitializer (phiên giả lập cách ly)", () => {
     expect(await screen.findByTestId("protected")).toBeInTheDocument();
   });
 
-  it("chưa cấu hình Auth API => panel lỗi, không bypass", async () => {
-    getCurrentUserMock.mockRejectedValue(new ApiNotConfiguredError());
+  it("production không cần NEXT_PUBLIC_AUTH_FRONTEND_URL để đăng nhập (gateway cùng origin)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "");
+    getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
     setup();
-    const panel = await screen.findByTestId("auth-error");
-    expect(panel).toHaveTextContent("NEXT_PUBLIC_AUTH_API_BASE_URL");
-    expect(screen.queryByTestId("protected")).toBeNull();
+    await waitFor(() => expect(assign).toHaveBeenCalledWith("/oauth2/start?rd=%2Fadmin%2Fclass-management"));
   });
 });
 
@@ -160,18 +161,6 @@ describe("chống vòng lặp redirect + callback + phiên hết hạn giữa ch
     expect(window.sessionStorage.getItem("hsk.auth.redirected-at")).toBeNull();
   });
 
-  it("nhận token callback ở URL hash trước khi kiểm tra phiên, rồi xóa hash", async () => {
-    const jwt = "eyJhbGciOiJub25lIn0.cccpayload.mocksig";
-    // location đã bị thay bằng đối tượng giả trong beforeEach; dùng history thật của jsdom.
-    Object.defineProperty(window, "location", { configurable: true, writable: true, value: { ...window.location, href: "http://localhost:3100/p", hostname: "localhost", assign, pathname: "/p", search: "", hash: `#access_token=${jwt}` } });
-    const replaceState = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
-    getCurrentUserMock.mockResolvedValue(adminUser);
-    setup();
-    expect(await screen.findByTestId("protected")).toBeInTheDocument();
-    expect(replaceState).toHaveBeenCalled();
-    expect(String(replaceState.mock.calls[0][2])).not.toContain("access_token");
-  });
-
   it("cấu hình MOCK trên host không phải loopback bị chặn, KHÔNG gọi Auth", async () => {
     Object.defineProperty(window, "location", { configurable: true, writable: true, value: { href: "https://lms.hoc-ba.edu.vn/admin", hostname: "lms.hoc-ba.edu.vn", assign } });
     vi.stubEnv("NEXT_PUBLIC_AUTH_API_BASE_URL", "http://localhost:3190/api/auth");
@@ -182,7 +171,7 @@ describe("chống vòng lặp redirect + callback + phiên hết hạn giữa ch
     expect(screen.queryByTestId("protected")).toBeNull();
   });
 
-  it("phiên hết hạn giữa chừng (refresh bị từ chối) => quay về unauthenticated và chuyển sang Auth", async () => {
+  it("phiên hết hạn giữa chừng (một API trả 401) => quay về unauthenticated và chuyển sang đăng nhập", async () => {
     getCurrentUserMock.mockResolvedValue(adminUser);
     setup();
     expect(await screen.findByTestId("protected")).toBeInTheDocument();

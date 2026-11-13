@@ -1,15 +1,9 @@
-// Gọi Authentication_Backend dùng chung (KHÔNG phải backend LMS). Chỉ gồm các endpoint mà LMS_Frontend cũ và LMS_IELTS
-// đều dùng: GET /users/me và POST /logout (+ POST /refresh trong auth-session.ts). Không có login/đăng ký: đăng nhập diễn ra
-// trên Authentication_Frontend (xem lib/auth/auth-redirect.ts).
-import { apiFetch, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { getAuthApiBase } from "@/lib/api/auth-session";
-import { clearTokens, getRefreshToken } from "@/lib/auth/token-store";
+// Gọi Authentication_Backend dùng chung (KHÔNG phải backend LMS) qua host của app: gateway (oauth2-proxy) chỉ chuyển tiếp
+// /users/me kèm phiên của proxy. Chỉ có GET /users/me; đăng nhập/đăng xuất đi qua /oauth2/* (xem lib/auth/auth-redirect.ts).
+// Khi `next dev`, next.config.ts chuyển /api/auth/* tới NEXT_PUBLIC_AUTH_API_BASE_URL.
+import { apiFetch } from "@/lib/api/api-client";
 
-function authApiBase(): string {
-  const base = getAuthApiBase();
-  if (!base) throw new ApiNotConfiguredError();
-  return base;
-}
+const AUTH_API_BASE_URL = "/api/auth";
 
 // Hình dạng tối thiểu của GET /users/me (ProfileResponse của Authentication_Backend) mà giao diện cần.
 export interface AuthUser {
@@ -23,24 +17,5 @@ export interface AuthUser {
 }
 
 export async function getCurrentUser(): Promise<AuthUser> {
-  return apiFetch<AuthUser>(authApiBase(), "/users/me", { method: "GET" });
-}
-
-/**
- * Đăng xuất phía server (Auth thu hồi refresh token và xóa cookie) rồi quên token trong bộ nhớ. Idempotent: luôn thành công
- * ở phía gọi, lỗi mạng/Auth không được chặn việc rời phiên cục bộ (như HSK cũ).
- */
-export async function logoutRemote(): Promise<void> {
-  try {
-    const refreshToken = getRefreshToken();
-    await apiFetch<void>(authApiBase(), "/logout", {
-      method: "POST",
-      body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
-      skipRefresh: true,
-    });
-  } catch {
-    // Không chặn việc rời phiên cục bộ.
-  } finally {
-    clearTokens();
-  }
+  return apiFetch<AuthUser>(AUTH_API_BASE_URL, "/users/me", { method: "GET" });
 }

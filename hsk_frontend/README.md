@@ -63,7 +63,7 @@ src/
     demo/                    băng-rôn xem trước + Reset/Đổi vai trò
   hooks/                     useWriteGate, useDemoMode, useContentAccess (quyền theo ticket)
   lib/
-    api/                     api-client, auth-client/auth-session, lms-client + lms-*-client, notification-client, storage-client, hsk-client + *-client, quiz-grading-client, ticket-client, write-gate
+    api/                     api-client, auth-client (chỉ /users/me)/auth-session (thông báo hết phiên), lms-client + lms-*-client, notification-client, storage-client, hsk-client + *-client, quiz-grading-client, ticket-client, write-gate
     auth/ management/ tickets/ demo/ notifications/ class-management/ grading/ content/ …   hàm thuần theo miền
   redux/                     store, slices/auth-slice (chỉ auth)
   types/                     DTO theo dịch vụ (lms, grading, content-*, payment, ticket, …)

@@ -4,7 +4,6 @@ import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ManagementSidebar } from "@/components/management/management-sidebar";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
-import { logoutRemote } from "@/lib/api/auth-client";
 import { fetchNotifications, getUnreadCount, markAllNotificationsRead, markNotificationRead } from "@/lib/api/notification-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { getNavTargetStatus } from "@/lib/management/route-registry";
@@ -15,7 +14,7 @@ import instructorGolden from "./fixtures/instructor-nav.golden.json";
 const router = { push: vi.fn() };
 let pathname = "/admin/class-management";
 vi.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => router }));
-vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/lib/api/notification-client", () => ({
   getUnreadCount: vi.fn(),
   fetchNotifications: vi.fn(),
@@ -30,7 +29,6 @@ const teacherUser = { ...adminUser, id: "u-teacher-1", fullName: "Giáo Viên M�
 beforeEach(() => {
   assign.mockClear();
   router.push.mockClear();
-  vi.mocked(logoutRemote).mockClear();
   // Mặc định: dịch vụ thông báo/ticket CHƯA cấu hình (WAITING FOR BACKEND).
   vi.mocked(getUnreadCount).mockReset().mockRejectedValue(new ApiNotConfiguredError());
   vi.mocked(fetchNotifications).mockReset().mockRejectedValue(new ApiNotConfiguredError());
@@ -43,7 +41,7 @@ beforeEach(() => {
   Object.defineProperty(window, "location", {
     configurable: true,
     writable: true,
-    value: { href: "http://localhost:3100/admin/class-management", hostname: "localhost", assign },
+    value: { href: "http://localhost:3100/admin/class-management", origin: "http://localhost:3100", hostname: "localhost", pathname: "/admin/class-management", search: "", assign },
   });
   vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
 });
@@ -77,13 +75,13 @@ describe("ManagementSidebar — khu vực Admin", () => {
     expect(users).toHaveAttribute("data-migration-status", "external");
   });
 
-  it("đăng xuất: gọi logoutRemote, đổi trạng thái 'signed-out', chuyển /login KHÔNG kèm redirect (như HSK cũ)", async () => {
+  it("đăng xuất: đổi trạng thái 'signed-out', xóa phiên proxy rồi sang IdP kết thúc phiên chung và quay về trang gốc", async () => {
     const store = renderSidebar();
     await userEvent.click(screen.getByRole("link", { name: "Đăng xuất" }));
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
-    expect(logoutRemote).toHaveBeenCalledTimes(1);
     expect(store.getState().auth.status).toBe("signed-out");
-    expect(assign).toHaveBeenCalledWith("http://auth.test.invalid/login");
+    const idpLogout = "http://auth.test.invalid/api/auth/logout/idp?client_id=lms&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3100%2F";
+    expect(assign).toHaveBeenCalledWith(`/oauth2/sign_out?rd=${encodeURIComponent(idpLogout)}`);
   });
 
   it("thu gọn sidebar đổi class và lưu localStorage; mở lại thì bỏ class", async () => {
@@ -161,7 +159,7 @@ describe("ManagementSidebar — khu vực Giảng viên", () => {
   it("đăng xuất giống Admin", async () => {
     const store = renderSidebar("instructor");
     await userEvent.click(screen.getByRole("link", { name: "Đăng xuất" }));
-    await waitFor(() => expect(assign).toHaveBeenCalledWith("http://auth.test.invalid/login"));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(expect.stringMatching(/^\/oauth2\/sign_out\?rd=/)));
     expect(store.getState().auth.status).toBe("signed-out");
   });
 });
