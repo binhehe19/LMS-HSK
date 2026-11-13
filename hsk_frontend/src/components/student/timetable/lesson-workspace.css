@@ -42,3 +42,49 @@
 .hsk-flashcard{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;width:100%;min-height:380px;background:linear-gradient(130deg,#fff7f7,#fff);border:1px solid #f1ccd1;border-radius:20px;padding:30px;color:#b91224}.hsk-flashcard>strong{font-size:60px;line-height:1.5}.hsk-flashcard.is-flipped>strong{font-size:30px}.hsk-flashcard small,.hsk-flashcard>span{color:#8192a8}.hsk-writing-practice{border:1px solid #e1e6ef;border-radius:16px;display:grid;grid-template-columns:35% 65%;overflow:hidden}.hsk-writing-practice aside{padding:24px;background:#fff7f7;border-right:1px solid #ecdce0;text-align:center}.hsk-writing-word{display:block;font-size:68px;color:#ba1325;margin:18px 0}.hsk-writing-practice aside>small{font-size:11px;letter-spacing:2px;color:#98a4b6}.hsk-writing-practice aside p{font-size:14px;color:#677c97;line-height:1.7}.hsk-writing-practice aside>span{font-size:11px;background:white;padding:4px 12px;border-radius:20px}.hsk-writing-tips{background:#fff8dc;border:1px solid #f3df9e;border-radius:10px;text-align:left;padding:14px;margin-top:24px;font-size:12px}.hsk-writing-tips p{font-size:12px!important;margin:6px 0}.hsk-writing-practice>section{text-align:center;padding:24px}.hsk-writing-practice>section>small{color:#8b99ac}.hsk-character-grid{display:grid;place-items:center;border:1px solid #f2aeb6;background:linear-gradient(45deg,transparent 49.7%,#f8d9dc 50%,transparent 50.3%),linear-gradient(-45deg,transparent 49.7%,#f8d9dc 50%,transparent 50.3%),linear-gradient(90deg,transparent 49.7%,#f8d9dc 50%,transparent 50.3%),linear-gradient(0deg,transparent 49.7%,#f8d9dc 50%,transparent 50.3%);width:230px;height:230px;margin:24px auto;font-size:150px;color:#e3c5c9}.hsk-writing-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:16px}.hsk-writing-controls button{background:#c62030;border:0;color:white;padding:10px 16px;border-radius:8px;font-size:13px}.hsk-writing-controls button:first-child{background:white;border:1px solid #e4c5cc;color:#ba1427}.hsk-word-dialog-backdrop{position:fixed;inset:0;background:#0006;z-index:1100;display:grid;place-items:center;padding:20px}.hsk-word-dialog{background:white;padding:32px;border-radius:16px;max-width:550px;width:100%;max-height:85vh;overflow:auto}.hsk-word-dialog>button{float:right;border:0;background:#fff0f1;border-radius:50%;width:32px;height:32px;color:#c21423;font-size:22px}
 @media(max-width:767px){.hsk-vocab-heading{align-items:start;flex-direction:column}.hsk-answer-options{grid-template-columns:1fr}.hsk-exercise-question{padding:18px}.hsk-audio-player{gap:8px;padding:12px}.hsk-word-card{padding-left:48px;gap:8px;flex-wrap:wrap}.hsk-word-number{left:10px}.hsk-word-row{gap:8px}.hsk-writing-practice{grid-template-columns:1fr}.hsk-writing-practice aside{border-right:0;border-bottom:1px solid #ecdce0}.hsk-flashcard>strong{font-size:42px}}
 .hsk-writing-practice>*{min-width:0}.hsk-writing-word{overflow-wrap:anywhere;line-height:1.3}.hsk-flashcard strong{overflow-wrap:anywhere;max-width:100%}.hsk-vocabulary{min-width:0}
+
+.hsk-exercise .hsk-answer-options button.is-selected{background:#dbeafe;border-color:#087bff;color:#064a9b;font-weight:700;box-shadow:0 0 0 1px #087bff}
+.hsk-exercise .hsk-answer-options button.is-selected>span{background:#087bff;color:#fff;border-color:#087bff;font-weight:800}
+.hsk-exercise .hsk-question-map button.is-answered{border:1px solid #00bd83;border-radius:9px;background:#ecfdf5;color:#00a875;font-size:21px;font-weight:800}
+.hsk-exercise .hsk-question-map button.is-answered.is-active{outline:2px solid #00a875;outline-offset:3px}
+
+.hsk-exercise button.lesson-submit-button{background:#e50012;color:#fff;border:1px solid #e50012;border-radius:999px;font-weight:700;padding:12px 22px}
+.lesson-submit-overlay{position:fixed;inset:0;background:#0006;z-index:1100;display:grid;place-items:center;padding:20px}
+.lesson-submit-dialog{background:#fff;border-radius:16px;padding:24px;width:min(100%,480px);box-shadow:0 16px 60px #0003}
+.lesson-submit-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+
+/* Exercise card follows the student lesson reference. */
+.hsk-exercise .hsk-exercise-title{font-size:24px;line-height:1.4;font-weight:750;color:#080b10;margin:0 0 22px}
+.hsk-exercise .hsk-exercise-frame{border:1px solid #dce3ee;border-radius:24px;background:#fff;overflow:hidden}
+.hsk-exercise .hsk-exercise-question{padding:30px 40px 26px;background:#fff}
+.hsk-exercise .hsk-question-meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;padding:0 0 14px;border-bottom:1px solid #e5e7eb}
+.hsk-exercise .hsk-question-meta>span{font-size:13px;line-height:1.3}
+.hsk-exercise .hsk-question-meta .hsk-question-counter{background:#e4e5e7;color:#f7ab00;font-weight:750;border-radius:999px;padding:5px 17px;min-width:100px;text-align:center}
+.hsk-exercise .hsk-question-meta .hsk-question-kind{background:#f8f8f9;border:1px solid #e5e7eb;color:#df001b;border-radius:999px;padding:8px 17px;font-weight:650}
+.hsk-exercise .hsk-question-meta .hsk-question-help{color:#8197b0;background:transparent;padding:0 10px}
+.hsk-exercise .hsk-question-meta .hsk-question-working{margin-left:auto;background:#fff5ce;color:#d49a35;border:1px solid #e9a93b;border-radius:999px;padding:4px 20px;font-weight:600;display:flex;gap:8px;align-items:center}
+.hsk-exercise .hsk-exercise-prompt{font-size:21px;font-weight:700;line-height:1.55;color:#14243c;white-space:pre-line}
+.hsk-exercise button.lesson-submit-button:disabled{background:#e5e7eb;border-color:#e5e7eb;color:#9ca3af;cursor:not-allowed;box-shadow:none;opacity:1}
+.hsk-exercise .hsk-question-map{background:transparent;border-top:0;padding:24px}
+@media(max-width:600px){.hsk-exercise .hsk-exercise-question{padding:20px 16px}.hsk-exercise .hsk-exercise-title{font-size:20px}.hsk-exercise .hsk-question-meta{gap:8px}.hsk-exercise .hsk-question-meta .hsk-question-working{padding:4px 10px}.hsk-exercise .hsk-exercise-prompt{font-size:18px}}
+
+.hsk-exercise fieldset.lesson-answer-inputs{display:block;border:0;margin:0;padding:0;min-width:0}
+.hsk-exercise .hsk-question-meta .hsk-question-working.is-done{border-color:#00be71;background:#e8f9ed;color:#00a660}
+.hsk-exercise .hsk-answer-field{position:relative}
+.hsk-exercise .hsk-answer-field textarea{box-sizing:border-box;width:100%;min-height:180px;padding:18px;border:1px solid #ff3446;border-radius:11px;background:#f8f9fb;color:#0b233c;font-size:15px;line-height:1.6;resize:vertical}
+.hsk-exercise .hsk-answer-field textarea:disabled{opacity:1;-webkit-text-fill-color:#0b233c}
+.hsk-exercise .hsk-answer-field small{display:block;text-align:right;color:#8693a4;font-size:11px;margin-top:-26px;margin-right:12px;position:relative;pointer-events:none}
+.lesson-answer-review{display:flex;gap:14px;margin:24px 10px 20px;color:#738399;font-size:13px;line-height:1.6}
+.lesson-answer-review strong{color:#405168;font-size:14px}.lesson-answer-review p{margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.lesson-review-icon{color:#426380;font-size:20px;align-self:center}
+.lesson-result-footer{border-top:1px solid #e7ecf3;margin-top:18px;padding-top:20px}
+.lesson-received{display:inline-flex;background:#e3fae9;border:1px solid #00bf71;color:#00a361;border-radius:999px;padding:7px 14px;font-size:12px;margin:0 0 14px}
+.lesson-result-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lesson-retry{border:1px solid #ff3645;border-radius:999px;background:#fff;color:#f12438;padding:8px 15px;font-size:13px}
+.lesson-retry:disabled{opacity:.5;cursor:not-allowed}
+.lesson-grading-state{border:1px solid #f4c456;color:#e4ac24;background:#fffaf0;border-radius:999px;padding:8px 15px;font-size:13px}
+
+.hsk-exercise .hsk-exercise-nav.is-review{display:none}
+.lesson-result-previous{border:1px solid #e2e8f0;border-radius:999px;background:#fff;color:#637b99;padding:8px 15px;font-size:13px}.lesson-result-previous:disabled{opacity:.45;cursor:not-allowed}
+
+.lesson-submit-inline{display:flex;align-items:flex-end;flex-direction:column;gap:10px}.lesson-submit-inline [role="alert"]{margin:0;max-width:480px;color:#c7192a;font-size:13px;text-align:right}

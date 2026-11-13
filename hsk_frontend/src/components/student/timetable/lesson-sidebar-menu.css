@@ -1,0 +1,23 @@
+/* Keep the existing groups and nested rows; strengthen selection without shifting them. */
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel{border-color:#e3e7ef;background:#fff;box-shadow:0 3px 12px #26374d05;overflow:hidden}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item,
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab,
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button{position:relative;isolation:isolate;transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;color:#52637b;cursor:pointer}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item:hover,
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab:hover,
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button:hover{background:#fff7f8;color:#a71120}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active{outline:0;border-radius:8px;background:linear-gradient(100deg,#ffe7eb,#fff4f5);box-shadow:inset 0 0 0 1px #efb8c0;color:#b00d25;font-weight:700}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:4px;border-radius:0 4px 4px 0;background:#c6122f}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__label{color:#a60d24;font-weight:700}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__icon img{filter:none;opacity:1}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__pct:not(.is-complete){background:#fff;border-radius:12px;color:#b00d25;padding:2px 7px;box-shadow:0 1px 3px #b00d0e0b}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item .ochp-menu__pct.is-complete{color:#119947}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab{min-height:42px;border-color:#e0e5ee;border-radius:9px}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab.is-active,
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button.is-active{border-color:#ecadb8;background:linear-gradient(100deg,#ffe7eb,#fff4f5);color:#a60d24;font-weight:700;box-shadow:inset 3px 0 0 #c6122f,0 2px 6px #b00d0e08}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab.is-active>i{color:#c6122f}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-children{border-left-color:#f4dbe0}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-toggle{font-weight:650;color:#38475b;transition:color .18s ease}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-toggle:hover{color:#b00d25}
+.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel button:focus-visible{outline:2px solid #b00d25;outline-offset:-3px;z-index:1}
+@media(prefers-reduced-motion:reduce){.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel button{transition:none!important}}

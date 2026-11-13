@@ -15,3 +15,8 @@ describe("lesson assessment delivery",()=>{
  it("starts with the actual class/session/resource/package IDs only on explicit start",async()=>{api.start.mockResolvedValue({learningResourceId:"resource",attemptId:"a",questions:[]});await startLessonAssessment(resource,session);expect(api.start).toHaveBeenCalledWith({classId:"class",sessionId:"session",sessionNo:3,contentPackageVersionId:"package-version",learningResourceId:"resource"});});
  it("does not post when required package metadata is absent",async()=>{await expect(startLessonAssessment({...resource,packageVersionId:undefined},session)).rejects.toThrow("Thiếu");expect(api.start).not.toHaveBeenCalled();});
 });
+
+it("preserves the server-directed grading poll delay and clears it when grading finishes",()=>{
+ const pending=attemptResource(resource,{attemptId:"a",questions:[],nextPollMs:1500});expect(pending.content).toMatchObject({resultNextPollMs:1500});
+ const graded=attemptResource(pending,{attemptId:"a",questions:[],nextPollMs:null});expect(graded.content).toMatchObject({resultNextPollMs:null});
+});

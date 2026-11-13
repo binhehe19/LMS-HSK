@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useStudentIdentity, useStudentRequest } from "../student-data";
 import { loadLesson, activityResources, additionalResources } from "./lesson-source";
 import LessonSlides from "./lesson-slides";
@@ -22,6 +22,8 @@ export default function LessonWorkspace() {
  const syllabusId=query.get("syllabusId") || "";const classId=query.get("classId") || "";const sessionId=query.get("sessionId") || "";const sessionNumber=Number(query.get("sessionNo"));
  const context=useMemo(()=>({scheduleId:route.scheduleId,syllabusId,classId,sessionId,sessionNo:sessionNumber}),[route.scheduleId,syllabusId,classId,sessionId,sessionNumber]);
  const source=useStudentRequest(useCallback(()=>loadLesson(context,isAdmin),[context,isAdmin]));
+ const reloadSource=source.reload;
+ useEffect(()=>{window.addEventListener("hsk:lesson-submitted",reloadSource);return ()=>window.removeEventListener("hsk:lesson-submitted",reloadSource);},[reloadSource]);
  const modules=useMemo(()=>source.data?.modules ?? [],[source.data]);const extra=useMemo(()=>additionalResources(modules),[modules]);
  // Legacy unclassified links open an available skill tab.
  const rawTab=query.get("tab");const tab=rawTab === "practice"?(["reading","listening","writing","speaking"] as const).find(key=>activityResources(modules,key).length > 0) || "reading":rawTab;const vocabularyView:VocabularyView|null=tab === "vocabulary" || tab === "flashcards" || tab === "handwriting"?tab:null;const comments=tab === "comments";const activity=lessonActivity(tab || query.get("moduleType"));

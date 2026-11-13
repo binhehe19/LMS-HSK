@@ -98,3 +98,12 @@
 .hsk-timetable .tkb-list .tkb-open-session{min-width:0}
 .hsk-timetable .tkb-list .tkb-card__info{min-width:0;overflow-wrap:anywhere}
 @media(min-width:768px){.hsk-timetable .tkb-list .tkb-card__head{height:auto;min-height:100%;align-content:center}}
+
+.hsk-timetable-modal .tkb-module-card__state.is-complete{color:#14c566;font-weight:700}
+.hsk-timetable-modal .tkb-module-card__pill--view{color:#14c566;font-weight:750}
+
+.hsk-timetable .tkb-attendance{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff}.hsk-timetable .tkb-attendance>span{font-size:10px;font-weight:700}.hsk-timetable .tkb-navbar__course-filter>i{color:#b00d0e;font-size:12px}.hsk-timetable .tkb-navbar__scope{white-space:nowrap}.hsk-timetable .tkb-navbar__left{flex-wrap:wrap;gap:16px}
+
+@media(max-width:575px){.hsk-timetable .tkb-navbar__switch{width:100%;flex-wrap:nowrap}.hsk-timetable .tkb-navbar__course-filter{flex:1;min-width:0;gap:2px}.hsk-timetable .tkb-navbar__course-select{width:100%;min-width:0;max-width:none;padding-left:0}.hsk-timetable .tkb-navbar__scope{font-size:10px;padding:8px 6px}.hsk-timetable .tkb-navbar__view{flex-shrink:0}}
+
+.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-page-content{padding-top:0}.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding-left:0;padding-right:0}.hsk-timetable .tkb-hero{width:100%;margin-left:0;margin-right:0}.hsk-timetable .tkb-hero__inner{max-width:1360px}

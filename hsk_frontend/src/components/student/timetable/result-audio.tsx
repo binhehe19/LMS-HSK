@@ -1,0 +1,8 @@
+"use client";
+import {useRef,useState} from "react";
+import {safeResourceUrl} from "./lesson-source";
+export default function ResultAudio({url}:{url?:string}){
+ const ref=useRef<HTMLAudioElement>(null),[playing,setPlaying]=useState(false),[time,setTime]=useState(0),[duration,setDuration]=useState(0),[speed,setSpeed]=useState(1),[muted,setMuted]=useState(false);
+ const source=safeResourceUrl(url),stamp=(n:number)=>`${Math.floor(n/60)}:${Math.floor(n%60).toString().padStart(2,"0")}`;
+ return <div className="hsk-audio-player">{source && <audio ref={ref} src={source} onLoadedMetadata={()=>setDuration(Number.isFinite(ref.current?.duration)?ref.current!.duration:0)} onTimeUpdate={()=>setTime(ref.current?.currentTime || 0)} onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>setPlaying(false)}/>}<button type="button" disabled={!source} aria-label={playing?"Tạm dừng":"Phát âm thanh"} onClick={()=>{if(playing)ref.current?.pause();else void ref.current?.play().catch(()=>{});}}>{playing?"Ⅱ":"▷"}</button><span>{stamp(time)}</span><input type="range" aria-label="Vị trí âm thanh" min={0} max={duration || 1} step=".1" value={time} disabled={!source} onChange={e=>{if(ref.current){ref.current.currentTime=Number(e.target.value);setTime(Number(e.target.value));}}}/><span>{stamp(duration)}</span><button type="button" aria-label={muted?"Bật âm thanh":"Tắt âm thanh"} disabled={!source} onClick={()=>{setMuted(!muted);if(ref.current)ref.current.muted=!muted;}}>{muted?"♩":"♫"}</button><button type="button" aria-label="Tốc độ phát" disabled={!source} onClick={()=>{const next=speed>=2?.75:speed+.25;setSpeed(next);if(ref.current)ref.current.playbackRate=next;}}>{speed}x</button></div>;
+}

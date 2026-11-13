@@ -1,3 +1,19 @@
+## Current behavior (2026-11-14)
+
+The notes below include historical read-only milestones. Current lesson pages support explicit attempt submission and admin practice:
+
+- Admin may answer attached assessments and submit via `POST /assessment-attempts/admin-practice`, followed by the existing lock/submit endpoints. The start/history endpoints require ROLE_ADMIN at controller and service layers, validate the package version/resource/session link, and use the linked resource version (including drafts).
+- Admin attempts are SELF_STUDY, owned by the authenticated admin, keyed by package version and session number. They do not populate classroom session progress. `GET /assessment-attempts/admin-practice` returns only the caller's history for that exact context.
+- The lesson modal reads admin practice history for the admin, and classroom history for students. Only a confirmed SUBMITTED attempt marks completion; a browser draft does not. Opening pages/tabs does not create or submit attempts.
+- Browser drafts persist by user, lesson, skill, resource/package version and attempt. A question is checked only after leaving it. Submit is available only on the last question after every required response is filled.
+- Submission uses the same flow for all four skill tabs and all sessions. Payloads cover all eight question types. Audio/file responses require configured and enabled storage and are complete only after upload confirmation. Sentence-builder answers preserve chunk indices; multiple-select preserves the selected option indices. Submitted question ticks come from the API, independent of browser drafts. Result polling follows nextPollMs and stops on completion/error/unmount.
+- Package reads paginate all matches; an empty new package cannot hide older attached data. Admin reads draft (or published fallback) separately from student published snapshots.
+- The timetable reads actual classes/sessions for admins (`/classes`) and enrolled classes for students (`/me/classes`); class and month filters compose, while whole-course scope ignores the month. Syllabus content is joined to each class session.
+- Vocabulary mastery uses the authenticated user's `/user-learning-resources/states` and `/vocabulary-state` endpoints; only a server-confirmed KNOWN state marks completion. A failed save remains incomplete.
+- Timetable reads use a memory-only cache isolated by user/role/class/session: 60 seconds for class lists, 30 seconds for session details. Successful submissions/vocabulary writes invalidate cached reads locally and in other tabs of the same user. In-flight reads invalidated by a write cannot overwrite the newer response. Logout clears the cache.
+- Review buttons open Slides consistently; Continue selects an attached incomplete skill. Results open `/quiz-session/[attemptId]/result`, resolving submitted attempts from the actual session and rendering only answer keys/feedback supplied by the result API.
+- Backend must be restarted for the new admin practice endpoints. Tests use mocked APIs/repositories and never submit real account answers.
+
 # Thời khóa biểu HSK local
 
 Route: `/student/student-timetable`. Navigation in the student header, dashboard and course-detail modal now uses this route.
