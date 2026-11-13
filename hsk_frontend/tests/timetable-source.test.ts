@@ -1,6 +1,7 @@
 import { describe,it,expect,vi,beforeEach } from "vitest";
 import { loadTimetable, syllabusSessions, classSession, loadSessionModules, mapLimited, loadSessionStudy, classifyModule, publishedModules } from "@/components/student/timetable/timetable-source";
 import { sessionProgress, getSessionState } from "@/components/student/timetable/timetable-data";
+import { activityResources } from "@/components/student/timetable/lesson-source";
 import type { SyllabusDetailResponse } from "@/types/lms";
 const api=vi.hoisted(()=>({list:vi.fn(),detail:vi.fn(),classes:vi.fn(),classDetail:vi.fn(),resources:vi.fn(),draft:vi.fn(),progress:vi.fn(),sessionProgress:vi.fn(),attempts:vi.fn()}));
 vi.mock("@/lib/api/lms-syllabus-client",()=>({listSyllabuses:api.list,getSyllabus:api.detail}));
@@ -26,4 +27,25 @@ describe("progress and assessment integration",()=>{
  it("reads backend progress and maps submitted attempts without confusing grade with completion",async()=>{api.resources.mockResolvedValue({quiz:{freeResources:[{id:"link",learningResourceId:"res",assessmentType:"LISTENING",resourceType:"ASSESSMENT",resourceContent:null}]}});api.sessionProgress.mockResolvedValue({homeworkProgress:42});api.attempts.mockResolvedValue({attempts:[{attemptId:"a",status:"SUBMITTED",gradingStatus:"GRADED",earnedPoints:2,totalPoints:10}]});const session=classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus);const result=await loadSessionStudy(session,false);expect(result.progress).toBe(42);expect(result.modules.find(m=>m.id === "link")?.progress).toBe(100);expect(result.attempts[0].earnedPoints).toBe(2);expect(api.attempts).toHaveBeenCalledWith("res","session");});
  it("admin never requests personal progress or someone else's attempts",async()=>{await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);expect(api.sessionProgress).not.toHaveBeenCalled();expect(api.attempts).not.toHaveBeenCalled();});
  it("keeps progress unavailable when its API fails",async()=>{api.sessionProgress.mockRejectedValue(Error("Progress service offline"));const result=await loadSessionStudy(classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus),false);expect(result.progress).toBeNull();expect(result.warnings.some(w=>w.includes("Progress service offline"))).toBe(true);});
+});
+
+it("admin replaces student metadata with the full content of the same attachment",async()=>{
+ api.resources.mockResolvedValue({quiz:{freeResources:[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",assessmentType:"QUIZ",resourceTitle:"Quiz",resourceContent:null}]}});
+ api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",assessmentType:"QUIZ",resourceContent:{title:"Quiz",layout:{meta:{skill:"READING"}},questions:[{questionId:"q1",questionType:"ESSAY",questionText:"Read and answer"}]}}]:[]);
+ const result=await loadSessionModules(syllabusSessions(syllabus,true)[0],true);
+ const attached=result.modules.filter(m=>m.id === "same-link");
+ expect(attached).toHaveLength(1);
+ expect(attached[0].skill).toBe("READING");
+ expect(attached[0].content).toMatchObject({questions:[{questionId:"q1"}]});
+});
+
+it("loads restored HSK quizzes into the matching session and skill, retaining their questions",async()=>{
+ const rows=[{id:"reading-link",sessionNo:1,resourceType:"ASSESSMENT",assessmentType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test",layout:{meta:{skill:"READING"}},questions:[{questionId:"r1"},{questionId:"r2"}]}},{id:"listening-link",sessionNo:2,resourceType:"ASSESSMENT",assessmentType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test1",layout:{meta:{skill:"LISTENING"}},questions:[{questionId:"l1"},{questionId:"l2"},{questionId:"l3"},{questionId:"l4"}]}}];
+ api.draft.mockImplementation(async(_id:string,type:string,sessionNo:number)=>type === "ASSESSMENT"?rows.filter(row=>row.sessionNo===sessionNo):[]);
+ const sessions=syllabusSessions({...syllabus,schedule:[{id:"row1"},{id:"row2"}]},true);
+ const first=await loadSessionModules(sessions[0],true);const second=await loadSessionModules(sessions[1],true);
+ expect(activityResources(first.modules,"reading")[0].content).toMatchObject({questions:[{questionId:"r1"},{questionId:"r2"}]});
+ expect(activityResources(first.modules,"listening")).toEqual([]);
+ expect(activityResources(second.modules,"listening")[0].content).toMatchObject({questions:[{questionId:"l1"},{questionId:"l2"},{questionId:"l3"},{questionId:"l4"}]});
+ expect(activityResources(second.modules,"reading")).toEqual([]);
 });

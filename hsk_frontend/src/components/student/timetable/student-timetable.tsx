@@ -1,4 +1,5 @@
 "use client";
+import { assessmentSkill } from "./assessment-skill";
 /* eslint-disable @next/next/no-img-element */
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -76,7 +77,7 @@ export default function StudentTimetable() {
   setSelected(session);
  };
  const openLink=(url: string|undefined,title: string)=>{if(url){try{const target=new URL(url,window.location.origin);if(["https:","http:"].includes(target.protocol)){window.open(target.href,"_blank","noopener,noreferrer");return;}}catch{/* Show an explicit unavailable state below. */}}setNotice({title,text:"Nguồn dữ liệu chưa cung cấp liên kết cho tác vụ này."});};
- const openPractice=(item?: TimetableModule)=>{if(!selected)return;const kinds:Record<string,LessonActivity>={LISTENING:"listening",READING:"reading",WRITING:"writing",SPEAKING:"speaking",PRONUNCIATION:"speaking"};const activity=item?.kind === "material"?"slides":kinds[item?.assessmentType ?? ""] ?? "listening";router.push(lessonHref({scheduleId:selected.scheduleItemId || selected.id,sessionId:selected.id,title:selected.title,sessionNo:selected.sessionNo,syllabusId:selected.syllabusId,classId:selected.classId,className:selected.courseName,returnUrl:pathname+(params.size?`?${params}`:"")},activity));};
+ const openPractice=(item?: TimetableModule)=>{if(!selected)return;const kinds:Record<string,LessonActivity>={LISTENING:"listening",READING:"reading",WRITING:"writing",SPEAKING:"speaking",PRONUNCIATION:"speaking"};const activity=item?.kind === "material"?"slides":kinds[item ? assessmentSkill(item) : ""] ?? "listening";router.push(lessonHref({scheduleId:selected.scheduleItemId || selected.id,sessionId:selected.id,title:selected.title,sessionNo:selected.sessionNo,syllabusId:selected.syllabusId,classId:selected.classId,className:selected.courseName,returnUrl:pathname+(params.size?`?${params}`:"")},activity));};
  const selectedProgress=detail.data?.sessionId === selected?.id ? detail.data?.progress ?? null : selected ? sessionProgress(selected) : null;
  const sessionAttempts=detail.data?.sessionId === selected?.id ? detail.data?.attempts ?? [] : [];
  const latestAttempts=[...new Map([...sessionAttempts].reverse().map(attempt=>[attempt.moduleId,attempt])).values()];

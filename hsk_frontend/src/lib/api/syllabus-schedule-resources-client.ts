@@ -39,6 +39,7 @@ export interface ScheduleResourceLink {
   publication?: "DRAFT" | "PUBLISHED";
   resourceTitle?: string;
   assessmentType?: string;
+  skill?: string;
   contentPackageVersionId?: string;
   resourceContent: unknown;
 }

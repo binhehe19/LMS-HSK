@@ -1,3 +1,4 @@
+import { assessmentSkill } from "./assessment-skill";
 import { getSyllabus, listSyllabuses } from "@/lib/api/lms-syllabus-client";
 import { studentApi } from "@/lib/api/student-client";
 import { classSession, syllabusSessions, loadSessionStudy, mapLimited } from "./timetable-source";
@@ -28,13 +29,17 @@ export async function loadLesson(context:LessonContext,isAdmin:boolean):Promise<
 export function activityResources(modules:TimetableModule[],activity:LessonActivity):TimetableModule[] {
  if(activity === "slides")return modules.filter(item=>item.kind === "material");
  const type={listening:"LISTENING",reading:"READING",writing:"WRITING",speaking:"SPEAKING"}[activity];
- return modules.filter(item=>item.assessmentType?.toUpperCase() === type || (activity === "speaking" && item.assessmentType?.toUpperCase() === "PRONUNCIATION"));
+ return modules.filter(item=>assessmentSkill(item) === type || (activity === "speaking" && assessmentSkill(item) === "PRONUNCIATION"));
 }
 export function additionalResources(modules:TimetableModule[]):TimetableModule[] {
  const mapped=new Set(["LISTENING","READING","WRITING","SPEAKING","PRONUNCIATION"]);
- return modules.filter(item=>item.kind !== "material" && !mapped.has(item.assessmentType?.toUpperCase() || ""));
+ return modules.filter(item=>item.kind !== "material" && !mapped.has(assessmentSkill(item) || ""));
 }
 export function safeResourceUrl(value:string|undefined):string|null {
  if(!value)return null;
  try{const url=new URL(value,"http://localhost");if(!["https:","http:"].includes(url.protocol))return null;return value.startsWith("/") && !value.startsWith("//")?value:url.href;}catch{return null;}
+}
+
+export function unclassifiedAssessments(modules:TimetableModule[]):TimetableModule[] {
+ return modules.filter(item=>item.resourceType === "ASSESSMENT" && (!assessmentSkill(item) || assessmentSkill(item) === "QUIZ"));
 }
