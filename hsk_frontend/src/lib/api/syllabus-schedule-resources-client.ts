@@ -39,6 +39,7 @@ export interface ScheduleResourceLink {
   publication?: "DRAFT" | "PUBLISHED";
   resourceTitle?: string;
   assessmentType?: string;
+  skill?: string;
   contentPackageVersionId?: string;
   resourceContent: unknown;
 }
@@ -67,13 +68,30 @@ async function ensureDraftVersionId(packageId: string): Promise<string> {
 }
 
 /** Resource đã gắn vào buổi (sessionNo) của giáo trình, theo 1 loại; package chưa tồn tại => []. */
-export async function listScheduleResources(syllabusId: string, type: ScheduleResourceType, sessionNo: number): Promise<ScheduleResourceLink[]> {
-  const found = await lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${type}&syllabusId=${encodeURIComponent(syllabusId)}&size=1`);
-  const pkg = found.items[0];
-  const versionId = pkg ? pkg.draftVersionId ?? pkg.publishedVersionId : null;
-  if (!versionId) return [];
-  const resources=await lmsClient.get<ScheduleResourceLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
-  return resources.map(resource=>({...resource,publication:pkg.draftVersionId ? "DRAFT" : "PUBLISHED"}));
+export type ScheduleReadResourceType = ScheduleResourceType | "SLIDE" | "MATERIAL";
+
+export async function listScheduleResources(syllabusId: string, type: ScheduleReadResourceType, sessionNo: number): Promise<ScheduleResourceLink[]> {
+  // A syllabus can contain several packages of the same type. A newly created empty
+  // package must not hide resources already attached to another package.
+  const packages: BackendPackage[] = [];
+  for (let page = 0; ; page++) {
+    const found = await lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${type}&syllabusId=${encodeURIComponent(syllabusId)}&page=${page}&size=100`);
+    packages.push(...found.items);
+    if (page + 1 >= found.total_pages || found.items.length === 0) break;
+  }
+  const resources: ScheduleResourceLink[] = [];
+  const seen = new Set<string>();
+  for (const pkg of packages) {
+    const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
+    if (!versionId) continue;
+    const rows = await lmsClient.get<ScheduleResourceLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
+    for (const row of rows) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      resources.push({...row, contentPackageVersionId:row.contentPackageVersionId || versionId, publication:pkg.draftVersionId ? "DRAFT" : "PUBLISHED"});
+    }
+  }
+  return resources;
 }
 
 export interface AttachFailure {

@@ -240,18 +240,22 @@ describe("registry khớp với App Router thực tế", () => {
   // Trang ĐỘC LẬP ngoài khu quản lý (không phải route HSK cũ, không cần đăng nhập): /demo — chọn tài khoản giả lập của chế độ xem trước cục bộ;
   // /dev-auth/callback — nhận token đăng nhập khi `next dev` (production trả 404).
   // Student frontend previews are a separate App Router group, outside the management registry.
-  const STUDENT_PAGES = ["student-dashboard", "student-courses", "student-wishlist", "student-quiz", "student-tickets", "student-profile"].map((name) => `/student/${name}`);
+  const STUDENT_PAGES = ["student-dashboard", "student-timetable", "student-courses", "student-wishlist", "student-quiz", "student-tickets", "student-profile"].map((name) => `/student/${name}`);
   // Màn Từ điển học viên giữ URL HSK cũ /vocabulary và /vocabulary/:id (nhóm (student), cùng guard đăng nhập như các màn học sinh khác).
   const STUDENT_DICTIONARY_PAGES: Record<string, string> = { "/vocabulary": "src/app/(student)/vocabulary/page.tsx", "/vocabulary/:id": "src/app/(student)/vocabulary/[id]/page.tsx" };
-  const STANDALONE_PAGES = ["/demo", "/dev-auth/callback", ...STUDENT_PAGES, ...Object.keys(STUDENT_DICTIONARY_PAGES)];
+  const STUDENT_LESSON_PAGES: Record<string,string> = {
+    "/learning-path/online-course/homework/:scheduleId":"src/app/(student)/learning-path/online-course/homework/[scheduleId]/page.tsx",
+    "/quiz-session/:attemptId/result":"src/app/(student)/quiz-session/[attemptId]/result/page.tsx",
+  };
+  const STANDALONE_PAGES = ["/demo", "/dev-auth/callback", ...STUDENT_PAGES, ...Object.keys(STUDENT_DICTIONARY_PAGES), ...Object.keys(STUDENT_LESSON_PAGES)];
   const realPages = pages.filter((p) => !p.url.includes("[...slug]") && !STANDALONE_PAGES.includes(p.url));
 
   it("có đúng MỘT trang động phục vụ placeholder, nằm trong nhóm (management)", () => {
     expect(placeholderPage.map((p) => p.file)).toEqual(["src/app/(management)/[...slug]/page.tsx"]);
   });
 
-  it("trang độc lập gồm /demo, /dev-auth/callback, sáu màn học sinh và hai màn Từ điển học viên, ngoài nhóm quản lý", () => {
-    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file).sort()).toEqual(["src/app/demo/page.tsx", "src/app/dev-auth/callback/page.tsx", ...STUDENT_PAGES.map((url) => `src/app/(student)${url}/page.tsx`), ...Object.values(STUDENT_DICTIONARY_PAGES)].sort());
+  it("trang độc lập gồm /demo, /dev-auth/callback, các màn học sinh, bài học, kết quả và Từ điển học viên, ngoài nhóm quản lý", () => {
+    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file).sort()).toEqual(["src/app/demo/page.tsx", "src/app/dev-auth/callback/page.tsx", ...STUDENT_PAGES.map((url) => `src/app/(student)${url}/page.tsx`), ...Object.values(STUDENT_DICTIONARY_PAGES), ...Object.values(STUDENT_LESSON_PAGES)].sort());
   });
 
   it("tập trang thật (page.tsx) chính là MIGRATED_ROUTES, trừ các route đã RENAMED_ROUTES sang URL mới — không thiếu, không thừa", () => {

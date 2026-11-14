@@ -1,22 +1,27 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { studentApi, type StudentClass, type LearningOrbit, type PracticeHistory, type DictionarySession } from "@/lib/api/student-client";
+import {useTimetableCacheEvents} from "./timetable/use-timetable-read";
 import { useAppSelector } from "@/redux/hooks";
 
 export interface Remote<T> { data: T | null; loading: boolean; error: string | null; reload?: () => void }
 const initial = <T,>(): Remote<T> => ({ data: null, loading: true, error: null });
-export function useStudentRequest<T>(request: () => Promise<T>, enabled = true): Remote<T> & { reload: () => void } {
+export function useStudentRequest<T>(request: () => Promise<T>, enabled = true, options: {keepPreviousData?:boolean} = {}): Remote<T> & { reload: () => void } {
  const [state, setState] = useState<Remote<T>>(initial);
  const [revision, setRevision] = useState(0);
+ const previousRequest=useRef<(() => Promise<T>) | null>(null);
+ const keepPreviousData=options.keepPreviousData ?? false;
  useEffect(() => {
   if (!enabled) return;
   let active = true;
-  Promise.resolve().then(() => { if (active) setState(initial()); }).then(request)
+  const retain=keepPreviousData && previousRequest.current===request;
+  previousRequest.current=request;
+  Promise.resolve().then(() => { if (active) setState(previous=>retain?{...previous,loading:true,error:null}:initial()); }).then(request)
    .then(data => { if (active) setState({ data, loading: false, error: null }); })
-   .catch((error: unknown) => { if (active) setState({ data: null, loading: false, error: error instanceof Error ? error.message : "Không tải được dữ liệu." }); });
+   .catch((error: unknown) => { if (active) setState(previous=>({ data: retain?previous.data:null, loading: false, error: error instanceof Error ? error.message : "Không tải được dữ liệu." })); });
   return () => { active = false; };
- }, [request, enabled, revision]);
+ }, [request, enabled, revision, keepPreviousData]);
  return { ...state, reload: useCallback(() => setRevision(value => value + 1), []) };
 }
 export interface HistoryEntry extends PracticeHistory { moduleType: string }
@@ -49,6 +54,8 @@ interface StudentData {
 }
 const Context = createContext<StudentData | null>(null);
 export function StudentDataProvider({ children }: { children: ReactNode }) {
+ const userId=useAppSelector(state=>state.auth.user?.id);
+ useTimetableCacheEvents(userId);
  const path = usePathname();
  const dashboard = path.endsWith("student-dashboard");
  const historyPage = path.endsWith("student-quiz");

@@ -1,4 +1,5 @@
 "use client";
+import {studentApi} from "@/lib/api/student-client";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type HanziWriter from "hanzi-writer";
 import { loadHanziChar } from "@/lib/dictionary/hanzi-writer-loader";
@@ -43,12 +44,15 @@ function WordPractice({word,count,learned,onComplete}:{word:Word;count:number;le
 }
 export default function LessonHandwriting({words}:{words:Word[]}){
  const [counts,setCounts]=useState<Record<string,number>>({});const [filter,setFilter]=useState<Filter>("all");const [activeId,setActiveId]=useState(words[0]?.id || "");
+ const [saveError,setSaveError]=useState("");
+ const complete=async(word:Word)=>{if(!word.resourceId){setSaveError("Từ vựng chưa có mã học liệu để lưu tiến độ.");return;}try{const state=await studentApi.saveVocabularyState(word.resourceId,true);if(state.learningResourceId!==word.resourceId || state.comprehensionLevel!=="KNOWN")throw Error("Máy chủ chưa xác nhận tiến độ.");setCounts(previous=>({...previous,[word.id]:(previous[word.id] || 0)+1}));setSaveError("");window.dispatchEvent(new Event("hsk:vocabulary-updated"));}catch(error){setSaveError(error instanceof Error?error.message:"Không lưu được tiến độ luyện viết.");}};
  const learned=(word:Word)=>word.learned || (counts[word.id] || 0)>0;const learnedCount=words.filter(learned).length;
  const visible=words.filter(word=>filter === "all" || (filter === "learned"?learned(word):!learned(word)));
  const index=Math.max(0,visible.findIndex(word=>word.id===activeId));const word=visible[index];const percent=words.length?Math.round(learnedCount/words.length*100):0;
  const chooseFilter=(next:Filter)=>{setFilter(next);setActiveId("");};
  return <div className="lesson-handwriting"><div className="lh-breadcrumb">• Tài liệu học tập <span>/</span> Từ vựng <span>/</span> <strong>Luyện viết</strong></div><div className="lh-heading"><h2>Flashcard - Luyện viết</h2><div className="lh-progress"><div>Tiến độ luyện viết <strong>{learnedCount}/{words.length}</strong> <b>{percent}%</b></div><progress aria-label="Tiến độ luyện viết" value={percent} max={100}/></div></div><div className="lh-filters">{([{key:"all",label:"Tất cả",count:words.length},{key:"new",label:"Chưa luyện",count:words.length-learnedCount},{key:"learned",label:"Đã học",count:learnedCount}] as const).map(item=><button key={item.key} type="button" className={filter===item.key?"is-active":""} aria-pressed={filter===item.key} onClick={()=>chooseFilter(item.key)}>{item.label} ({item.count})</button>)}</div>
- {word?<><WordPractice key={word.id} word={word} count={counts[word.id] || 0} learned={learned(word)} onComplete={()=>setCounts(previous=>({...previous,[word.id]:(previous[word.id] || 0)+1}))}/><nav className="lh-bottom-nav" aria-label="Chọn thẻ luyện viết"><button type="button" disabled={index===0} onClick={()=>setActiveId(visible[index-1].id)}>‹ Thẻ trước</button><div><strong>{index+1} / {visible.length}</strong><progress aria-label="Vị trí thẻ" value={index+1} max={visible.length}/></div><button type="button" disabled={index===visible.length-1} onClick={()=>setActiveId(visible[index+1].id)}>Thẻ sau ›</button></nav></>:<div className="lh-empty" role="status"><h3>{words.length?"Không có thẻ trong bộ lọc này":"Chưa có dữ liệu"}</h3><p>{words.length?"Chọn bộ lọc khác để tiếp tục luyện viết.":"Từ vựng của buổi học chưa được gắn vào giáo trình."}</p></div>}
+ {saveError && <p role="alert">{saveError}</p>}
+ {word?<><WordPractice key={word.id} word={word} count={counts[word.id] || 0} learned={learned(word)} onComplete={()=>void complete(word)}/><nav className="lh-bottom-nav" aria-label="Chọn thẻ luyện viết"><button type="button" disabled={index===0} onClick={()=>setActiveId(visible[index-1].id)}>‹ Thẻ trước</button><div><strong>{index+1} / {visible.length}</strong><progress aria-label="Vị trí thẻ" value={index+1} max={visible.length}/></div><button type="button" disabled={index===visible.length-1} onClick={()=>setActiveId(visible[index+1].id)}>Thẻ sau ›</button></nav></>:<div className="lh-empty" role="status"><h3>{words.length?"Không có thẻ trong bộ lọc này":"Chưa có dữ liệu"}</h3><p>{words.length?"Chọn bộ lọc khác để tiếp tục luyện viết.":"Từ vựng của buổi học chưa được gắn vào giáo trình."}</p></div>}
  {words.length>0 && learnedCount===words.length && <div className="lh-completed" role="status">🎉 Bạn đã hoàn thành toàn bộ nội dung trong study-set này.</div>}
  </div>;
 }

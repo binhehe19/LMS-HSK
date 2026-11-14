@@ -99,7 +99,7 @@ describe("màn Khoá học học viên nối /hsk-courses", () => {
     await user.click(cards()[0]);
     expect(getStudentCourse).toHaveBeenCalledWith("h40");
     expect(await screen.findByText("第一课 你好")).toBeInTheDocument();
-    expect(screen.queryByText("Vào thời khoá biểu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Vào thời khoá biểu" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Tài liệu khoá học/ }));
     expect(screen.getByRole("link", { name: /Giáo trình Hán ngữ/ })).toHaveAttribute("href", "https://drive.example/a.pdf");
     await user.click(screen.getByRole("button", { name: "Đóng" }));

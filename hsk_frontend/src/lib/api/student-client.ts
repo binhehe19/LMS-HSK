@@ -5,13 +5,15 @@ import { ApiError } from "./api-client";
 export interface StudentSession {
  id: string; classId: string; sessionNo?: number; topic?: string; content?: string;
  startAt?: string; endAt?: string; status?: string; meetingLink?: string;
- scheduleItemId?: string; teacherName?: string; myAttendanceStatus?: string;
+ scheduleItemId?: string; teacherName?: string; teacher?: { fullName?: string }; myAttendanceStatus?: string;
 }
 export interface StudentClass {
  id: string; detailError?: string; code?: string; courseId?: string; syllabusId?: string; syllabusName?: string;
  educationLevelCode?: string; startDate?: string; lifecycleStatus?: string; meetingLink?: string;
  totalSessions?: number; completedSessions?: number; sessions?: StudentSession[];
  teacher?: { fullName?: string };
+ schedulePatterns?: { dayOfWeek: string; startTime: string; endTime: string }[];
+ myAttendanceSummary?: { totalRecorded: number; attendanceRate: number | null };
 }
 export interface LearningOrbit {
  vocabulary: { total: number; known: number; learning: number; saved: number; due: number };
@@ -40,6 +42,8 @@ export function arrayResponse<T>(value: unknown): T[] {
  return value as T[];
 }
 export const studentApi = {
+ vocabularyStates: (resourceIds:string[])=>lmsClient.post<{learningResourceId:string;comprehensionLevel:string|null}[]>("/user-learning-resources/states",{resourceIds}),
+ saveVocabularyState: (resourceId:string,known:boolean)=>lmsClient.put<{learningResourceId:string;comprehensionLevel:string|null}>(`/user-learning-resources/${encodeURIComponent(resourceId)}/vocabulary-state`,{comprehensionLevel:known?"KNOWN":"LEARNING"}),
  classes: async () => arrayResponse<StudentClass>(await lmsClient.get("/me/classes")),
  classDetail: (id: string) => lmsClient.get<StudentClass>(`/me/classes/${encodeURIComponent(id)}`),
  orbit: () => lmsClient.get<LearningOrbit>("/me/learning-orbit?timezone=Asia%2FHo_Chi_Minh"),
@@ -51,5 +55,10 @@ export const studentApi = {
  resources: (syllabusId: string, sessionNo: number) => lmsClient.get<Record<string, unknown>>(`/content-packages/syllabus/${encodeURIComponent(syllabusId)}/session-resources?sessionNo=${sessionNo}`),
  attempt: (id:string) => lmsClient.get<Record<string,unknown>>(`/assessment-attempts/${encodeURIComponent(id)}`),
  startAttempt: (input:{sessionId:string;classId:string;sessionNo:number;contentPackageVersionId:string;learningResourceId:string}) => lmsClient.post<Record<string,unknown>>("/assessment-attempts",input),
+ startAdminPractice: (input:{learningResourceId:string;contentPackageVersionId:string;sessionNo:number}) => lmsClient.post<Record<string,unknown>>("/assessment-attempts/admin-practice",input),
+ adminAttempts: (resourceId:string,versionId:string,sessionNo:number) => lmsClient.get<TimetableAttemptHistory>(`/assessment-attempts/admin-practice?learningResourceId=${encodeURIComponent(resourceId)}&contentPackageVersionId=${encodeURIComponent(versionId)}&sessionNo=${sessionNo}`),
+ lockAttempt: (id:string,sessionToken:string) => lmsClient.post<{acquired:boolean}>(`/assessment-attempts/${encodeURIComponent(id)}/lock`,{sessionToken,force:false}),
+ releaseAttemptLock: (id:string,sessionToken:string) => lmsClient.delete(`/assessment-attempts/${encodeURIComponent(id)}/lock?sessionToken=${encodeURIComponent(sessionToken)}`),
+ submitAttempt: (id:string,sessionToken:string,answers:{questionId:string;answerJson:string}[]) => lmsClient.post<{attemptId:string;answersIgnored:boolean}>(`/assessment-attempts/${encodeURIComponent(id)}/submit`,{sessionToken,answers}),
  result: (id: string) => lmsClient.get<Record<string, unknown>>(`/assessment-attempts/${encodeURIComponent(id)}/result`),
 };

@@ -1,7 +1,13 @@
 import { act, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import "@/components/shared/antd-static-render";
 import { confirmAction } from "@/components/shared/confirm-action";
+
+afterEach(async () => {
+  // Modal.confirm resolves before its animated root has finished unmounting.
+  await waitFor(() => expect(document.querySelector(".ant-modal-root")).toBeNull());
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+});
 
 // Modal.confirm là API tĩnh của antd: với React 19 nó chỉ render khi đã cấu hình unstableSetRender (antd-static-render.tsx). Test này render THẬT trong jsdom
 // (không mock confirmAction) để chắc rằng hộp xác nhận xuất hiện và trả về đúng lựa chọn.

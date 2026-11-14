@@ -1,19 +1,20 @@
+import { assessmentSkill } from "./assessment-skill";
 import { getSyllabus, listSyllabuses } from "@/lib/api/lms-syllabus-client";
 import { studentApi } from "@/lib/api/student-client";
-import { classSession, syllabusSessions, loadSessionStudy, mapLimited } from "./timetable-source";
+import { loadAdminTimetableClass, classSession, syllabusSessions, loadSessionStudy, mapLimited } from "./timetable-source";
 import type { TimetableModule, TimetableSession } from "./timetable-data";
 import type { LessonActivity } from "./lesson-navigation";
 export interface LessonContext { scheduleId:string; syllabusId:string; sessionNo:number; classId:string; sessionId:string; }
 export interface LessonData { session:TimetableSession; modules:TimetableModule[]; warnings:string[]; }
 export async function loadLesson(context:LessonContext,isAdmin:boolean):Promise<LessonData> {
- if(!isAdmin){
+ if(!isAdmin || (context.classId && context.sessionId && !context.sessionId.startsWith("syllabus:"))){
   if(!context.classId || !context.sessionId)throw Error("Thiếu thông tin lớp hoặc buổi học. Hãy mở lại từ thời khóa biểu.");
-  const course=await studentApi.classDetail(context.classId);
+  const course=isAdmin?await loadAdminTimetableClass(context.classId):await studentApi.classDetail(context.classId);
   const actual=course.sessions?.find(item=>item.id === context.sessionId);
   if(!actual)throw Error("Buổi học không có trong lớp được cấp quyền.");
   if(!course.syllabusId)throw Error("Lớp học chưa được gắn giáo trình.");
   const syllabus=await getSyllabus(course.syllabusId);
-  const session=classSession(course,actual,syllabus);const detail=await loadSessionStudy(session,false);
+  const session=classSession(course,actual,syllabus);const detail=await loadSessionStudy(session,isAdmin);
   return {session:{...session,homeworkProgress:detail.progress},modules:detail.modules,warnings:detail.warnings};
  }
  let syllabus=context.syllabusId?await getSyllabus(context.syllabusId):null;
@@ -28,13 +29,17 @@ export async function loadLesson(context:LessonContext,isAdmin:boolean):Promise<
 export function activityResources(modules:TimetableModule[],activity:LessonActivity):TimetableModule[] {
  if(activity === "slides")return modules.filter(item=>item.kind === "material");
  const type={listening:"LISTENING",reading:"READING",writing:"WRITING",speaking:"SPEAKING"}[activity];
- return modules.filter(item=>item.assessmentType?.toUpperCase() === type || (activity === "speaking" && item.assessmentType?.toUpperCase() === "PRONUNCIATION"));
+ return modules.filter(item=>assessmentSkill(item) === type || (activity === "speaking" && assessmentSkill(item) === "PRONUNCIATION"));
 }
 export function additionalResources(modules:TimetableModule[]):TimetableModule[] {
  const mapped=new Set(["LISTENING","READING","WRITING","SPEAKING","PRONUNCIATION"]);
- return modules.filter(item=>item.kind !== "material" && !mapped.has(item.assessmentType?.toUpperCase() || ""));
+ return modules.filter(item=>item.kind !== "material" && !mapped.has(assessmentSkill(item) || ""));
 }
 export function safeResourceUrl(value:string|undefined):string|null {
  if(!value)return null;
  try{const url=new URL(value,"http://localhost");if(!["https:","http:"].includes(url.protocol))return null;return value.startsWith("/") && !value.startsWith("//")?value:url.href;}catch{return null;}
+}
+
+export function unclassifiedAssessments(modules:TimetableModule[]):TimetableModule[] {
+ return modules.filter(item=>item.resourceType === "ASSESSMENT" && (!assessmentSkill(item) || assessmentSkill(item) === "QUIZ"));
 }
