@@ -1,0 +1,124 @@
+{
+  "items": [
+    {
+      "header": "TỔNG QUAN",
+      "title": "Tổng quan",
+      "icon": "isax isax-home",
+      "route": "/instructor/welcome",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Thông báo của tôi",
+      "icon": "isax isax-notification-bing",
+      "route": "/instructor/instructor-notifications",
+      "subRoute": null,
+      "activePrefix": "/instructor/settings/notifications"
+    },
+    {
+      "header": null,
+      "title": "Yêu cầu hỗ trợ",
+      "icon": "isax isax-ticket",
+      "route": "/instructor/instructor-support-tickets",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "HỆ THỐNG ÔN LUYỆN",
+      "title": "Quản lý Luyện Phát âm",
+      "icon": "isax isax-microphone",
+      "route": "/pronunciation/manage",
+      "subRoute": null,
+      "activePrefix": "/pronunciation"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Ngữ pháp",
+      "icon": "isax isax-book",
+      "route": "/grammar/manage",
+      "subRoute": null,
+      "activePrefix": "/grammar"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Từ vựng",
+      "icon": "isax isax-book-1",
+      "route": "/vocab-set/manage",
+      "subRoute": null,
+      "activePrefix": "/vocab-set"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Bài tập",
+      "icon": "isax isax-document-text",
+      "route": "/quiz/manage",
+      "subRoute": null,
+      "activePrefix": "/quiz"
+    },
+    {
+      "header": null,
+      "title": "Quản lý Từ điển",
+      "icon": "isax isax-book-1",
+      "route": "/vocabulary/manage",
+      "subRoute": null,
+      "activePrefix": "/vocabulary"
+    },
+    {
+      "header": "CHƯƠNG TRÌNH HỌC",
+      "title": "Quản lý Giáo trình",
+      "icon": "isax isax-book-saved",
+      "route": "/learning-path/syllabus/manage",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "HỌC VIÊN & LỚP HỌC",
+      "title": "Quản lý lớp học",
+      "icon": "isax isax-teacher",
+      "route": "/instructor/list-class",
+      "subRoute": null,
+      "activePrefix": "/instructor/list-class"
+    }
+  ],
+  "active": {
+    "/instructor/welcome": [
+      0
+    ],
+    "/instructor/list-class": [
+      9
+    ],
+    "/instructor/list-class/grading": [
+      9
+    ],
+    "/instructor/instructor-notifications": [
+      1
+    ],
+    "/instructor/settings/notifications": [
+      1
+    ],
+    "/vocab-set/manage": [
+      5
+    ],
+    "/quiz/manage": [
+      6
+    ],
+    "/vocabulary/manage": [
+      7
+    ],
+    "/learning-path/syllabus/manage": [
+      8
+    ],
+    "/instructor/instructor-support-tickets": [
+      2
+    ],
+    "/pronunciation/manage": [
+      3
+    ],
+    "/grammar/manage": [
+      4
+    ],
+    "/": [],
+    "/instructor": []
+  }
+}
