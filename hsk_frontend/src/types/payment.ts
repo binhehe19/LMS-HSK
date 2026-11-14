@@ -57,22 +57,3 @@ export interface PaymentSummary {
   totalCoursesSold?: number;
   totalMembershipsSold?: number;
 }
-
-export interface MembershipPlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  durationInDays: number;
-  active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface MembershipPlanRequest {
-  name: string;
-  description: string;
-  price: number;
-  durationInDays: number;
-  active: boolean;
-}

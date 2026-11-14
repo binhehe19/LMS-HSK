@@ -8,6 +8,7 @@ import { OLD_OUT_OF_SCOPE_PATHS, OLD_ROUTE_COUNTS, type OldRouteFact } from "@/l
 import {
   MANAGEMENT_ROUTES,
   MIGRATED_ROUTES,
+  REMOVED_ROUTES,
   RENAMED_ROUTES,
   UI_ROLE_DECISIONS,
   UI_ROLE_GRANTS,
@@ -121,19 +122,25 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
     expect(classifyRoute(base, ["/x/grading"], {}, {}).roleSource).toBe("private-route");
   });
 
-  it("/instructor/instructor-tickets: HSK cũ TEACHER, MENTOR, COLLABORATOR → app mới chỉ TEACHER, MENTOR (Admin không có; Collaborator chưa xác minh)", () => {
-    expect(roles("/instructor/instructor-tickets")).toEqual(sorted(ROLES.TEACHER, ROLES.MENTOR));
-    expect(findRoute("/instructor/instructor-tickets")?.oldRoles).toContain(ROLES.COLLABORATOR);
+  it("chức năng đã gỡ (REMOVED_ROUTES): vẫn có trong registry nhưng OUT_OF_SCOPE, không role nào, không được phục vụ (404, không placeholder)", () => {
+    expect([...REMOVED_ROUTES].sort()).toEqual(["/admin/membership-management", "/admin/teacher-management", "/admin/tickets", "/instructor/instructor-tickets", "/instructor/manage-storage", "/learning-path/online-course/leads", "/learning-path/online-course/manage"]);
+    for (const url of REMOVED_ROUTES) {
+      expect(findRoute(url)?.status, url).toBe("OUT_OF_SCOPE");
+      expect(findRoute(url)?.allowedRoles, url).toEqual([]);
+      expect(getServedRoute(url), url).toBeNull();
+      expect(MIGRATED_ROUTES, url).not.toContain(url);
+    }
+    expect(getServedRoute("/online-course/manage")).toBeNull();
   });
 
-  it("route dùng chung có guard rõ ràng: kho lưu trữ và các trang */manage cho ADMIN + TEACHER + MENTOR", () => {
-    for (const url of ["/instructor/manage-storage", "/hanzi/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
+  it("route dùng chung có guard rõ ràng: các trang */manage cho ADMIN + TEACHER + MENTOR", () => {
+    for (const url of ["/hanzi/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
       expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
     }
   });
 
-  it("khóa học trực tuyến / tài liệu học tập: HSK cũ ADMIN + TEACHER_MANAGER → app mới chỉ ADMIN", () => {
-    for (const url of ["/learning-path/online-course/manage", "/learning-path/online-course/leads", "/learning-path/lesson-materials/manage"]) {
+  it("tài liệu học tập: HSK cũ ADMIN + TEACHER_MANAGER → app mới chỉ ADMIN", () => {
+    for (const url of ["/learning-path/lesson-materials/manage"]) {
       expect(roles(url), url).toEqual([ROLES.ADMIN]);
     }
   });
@@ -289,8 +296,8 @@ describe("navigation khớp với registry", () => {
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
   });
 
-  it("Giảng viên: 14 mục = 13 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
-    expect(count(teacher)).toEqual({ MIGRATED: 13, UNKNOWN: 1 });
+  it("Giảng viên: 12 mục = 11 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
+    expect(count(teacher)).toEqual({ MIGRATED: 11, UNKNOWN: 1 });
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "MIGRATED").map((m) => m.title)).toEqual([
       "Tổng quan",
@@ -304,8 +311,6 @@ describe("navigation khớp với registry", () => {
       "Quản lý Từ điển",
       "Quản lý Giáo trình",
       "Quản lý lớp học",
-      "Quản lý Kho lưu trữ Đa phương tiện",
-      "Phân công công việc",
     ]);
   });
 

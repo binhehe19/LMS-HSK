@@ -14,7 +14,7 @@ import { adminUser } from "./fixtures/classes";
 vi.mock("next/navigation", () => ({ usePathname: () => "/admin/statements", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }) }));
 vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
-vi.mock("@/lib/api/payment-client", () => ({ getPaymentSummary: vi.fn(), getTransactionReport: vi.fn(), listAdminMembershipPlans: vi.fn(), createMembershipPlan: vi.fn(), updateMembershipPlan: vi.fn(), deleteMembershipPlan: vi.fn() }));
+vi.mock("@/lib/api/payment-client", () => ({ getPaymentSummary: vi.fn(), getTransactionReport: vi.fn() }));
 
 // antd Table/Select trong jsdom tính style rất chậm: bỏ kiểm tra pointer-events của user-event, tránh getByRole không giới hạn phạm vi, nới timeout.
 const user = userEvent.setup({ pointerEventsCheck: 0 });

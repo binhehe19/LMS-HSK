@@ -60,7 +60,7 @@ Những điều **chưa từng được xác minh trên môi trường thật** 
 
 ## 5. Mở từng thao tác ghi (sau khi backend xác nhận hợp đồng)
 
-Mỗi nhóm thao tác ghi có một công tắc riêng, mặc định ĐÓNG (giao diện hiện "chưa tích hợp", `assertWriteEnabled` ném lỗi trước khi tạo request — `src/lib/api/write-gate.ts`):
+Mỗi nhóm thao tác ghi có một công tắc riêng, mặc định ĐÓNG — trừ kho nội dung (`content`), đã nối repo-lms thật nên mặc định MỞ (giao diện hiện "chưa tích hợp", `assertWriteEnabled` ném lỗi trước khi tạo request — `src/lib/api/write-gate.ts`):
 
 | Công tắc | Màn | Hợp đồng |
 |---|---|---|
@@ -68,13 +68,8 @@ Mỗi nhóm thao tác ghi có một công tắc riêng, mặc định ĐÓNG (gi
 | `NEXT_PUBLIC_WRITE_QUIZ_GRADING=enabled` | chấm bài, lưu, gửi kết quả | `docs/api-requirements/instructor-grading.md` |
 | `NEXT_PUBLIC_WRITE_TEACHER_NOTE=enabled` | nhận xét trong phân tích học tập | `docs/api-requirements/learning-analysis.md` |
 | `NEXT_PUBLIC_WRITE_LESSON_DETAIL=enabled` | sửa chi tiết bài học | `docs/api-requirements/instructor-grading.md` |
-| `NEXT_PUBLIC_WRITE_TEACHER_MANAGEMENT=enabled` | thêm/sửa/khoá giảng viên | `docs/api-requirements/teacher-management.md` |
-| `NEXT_PUBLIC_WRITE_CONTENT=enabled` | CRUD kho nội dung (thẻ, từ vựng, hán tự, phát âm, bài tập, ngữ pháp, từ điển) | `docs/api-requirements/content-tree.md` |
-| `NEXT_PUBLIC_WRITE_ONLINE_COURSE=enabled` | khoá học trực tuyến, đăng ký | `docs/api-requirements/online-course.md` |
+| *(không cần đặt, mặc định mở)*; `NEXT_PUBLIC_WRITE_CONTENT=disabled` để tạm khoá | CRUD kho nội dung (thẻ, từ vựng, hán tự, phát âm, bài tập, ngữ pháp, từ điển) | `docs/api-requirements/content-tree.md` |
 | `NEXT_PUBLIC_WRITE_LESSON_MATERIALS=enabled` | tài liệu học tập | `docs/api-requirements/lesson-materials.md` |
-| `NEXT_PUBLIC_WRITE_STORAGE=enabled` | kho lưu trữ đa phương tiện | `docs/api-requirements/hsk-storage.md` |
-| `NEXT_PUBLIC_WRITE_WORK_TICKETS=enabled` | phân công công việc | `docs/api-requirements/work-tickets.md` |
-| `NEXT_PUBLIC_WRITE_MEMBERSHIP=enabled` | gói thành viên | `docs/api-requirements/payment.md` |
 
 Thứ tự an toàn: đặt base path của dịch vụ (đọc) → kiểm tra màn đọc đúng trên staging → mới đặt công tắc ghi → build lại.
 

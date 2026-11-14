@@ -259,7 +259,7 @@ describe("quyền theo ticket + công tắc ghi", () => {
   });
 
   it("công tắc ghi ĐÓNG (Admin): WriteLockedNotice, không nút ghi, không Alert ticket", async () => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     renderPage();
     await screen.findByText("Gói 1");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");

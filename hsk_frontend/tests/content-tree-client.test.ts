@@ -53,9 +53,9 @@ describe("content-tree-client — URL theo config (prefix + itemsPath), hợp đ
     expect(lastCall(fetchMock).url).toBe("http://lms.test.invalid/api/hsk/grammar/packages");
   });
 
-  it("ghi khi công tắc ĐÓNG (không demo, không NEXT_PUBLIC_WRITE_CONTENT): WriteDisabledError, KHÔNG có request", async () => {
+  it("ghi khi công tắc ĐÓNG (không demo, NEXT_PUBLIC_WRITE_CONTENT=disabled): WriteDisabledError, KHÔNG có request", async () => {
     vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "/api/hsk");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     expect(() => createPackage(flashcard, { name: "A", type: "FREE" }, false)).toThrow(WriteDisabledError);
@@ -89,7 +89,7 @@ describe("content-tree-client — URL theo config (prefix + itemsPath), hợp đ
 
   it("chế độ demo mở công tắc dù không có cờ", async () => {
     vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "/api/hsk");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     const fetchMock = respond(200, { success: true, data: { id: "p1" } });
     vi.stubGlobal("fetch", fetchMock);
     await publishPackage(flashcard, "p1", true);

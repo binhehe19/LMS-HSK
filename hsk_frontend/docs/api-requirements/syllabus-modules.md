@@ -54,7 +54,7 @@ Khác hợp đồng HSK cũ (`online-course.service.ts`) có chủ đích, cần
 ## 3. Quyền và công tắc ghi phía frontend
 
 - Route: ADMIN, TEACHER, MENTOR (Teacher-manager/Collaborator chưa được app mới phục vụ).
-- Sửa module: `useContentAccess("OTHER")` (quy tắc ticket HSK cũ: Admin luôn có; giảng viên cần ticket OPEN/DONE module `OTHER` giao cho mình) **và** `useWriteGate("content")` (`NEXT_PUBLIC_WRITE_CONTENT=enabled` hoặc chế độ demo). Không có quyền ⇒ Alert "Chế độ Xem duy nhất" (chữ bản cũ), module vẫn **xem** được (bản cũ ẩn "Không có quyền truy cập"); công tắc đóng ⇒ `WriteLockedNotice`, nút ghi không hiện, hàm client ném `WriteDisabledError` — **không có request ghi nào được tạo**.
+- Sửa module: `useContentAccess("OTHER")` (quy tắc ticket HSK cũ: Admin luôn có; giảng viên cần ticket OPEN/DONE module `OTHER` giao cho mình) **và** `useWriteGate("content")` (mặc định mở; đóng khi `NEXT_PUBLIC_WRITE_CONTENT=disabled`). Không có quyền ⇒ Alert "Chế độ Xem duy nhất" (chữ bản cũ), module vẫn **xem** được (bản cũ ẩn "Không có quyền truy cập"); công tắc đóng ⇒ `WriteLockedNotice`, nút ghi không hiện, hàm client ném `WriteDisabledError` — **không có request ghi nào được tạo**.
 - Backend **phải** kiểm quyền ở mọi API (guard frontend chỉ là rào giao diện).
 
 ## 4. Hành vi frontend theo tình huống (đã kiểm thử với vitest/mock)

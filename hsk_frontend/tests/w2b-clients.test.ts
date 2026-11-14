@@ -35,7 +35,7 @@ describe("quiz-question-client — /quiz/questions theo hợp đồng đề xu�
 
   it("ghi khi công tắc ĐÓNG => WriteDisabledError, không request; MỞ => POST /questions/{quizId}, PUT/DELETE /questions/{id} với body", async () => {
     vi.stubEnv("NEXT_PUBLIC_HSK_API_BASE_PATH", "/api/hsk");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     const blocked = vi.fn();
     vi.stubGlobal("fetch", blocked);
     expect(() => createQuestion("q1", question, false)).toThrow(WriteDisabledError);

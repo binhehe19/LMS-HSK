@@ -27,7 +27,7 @@ export interface SyllabusManageViewProps {
   mode: SyllabusManageMode;
   /** Module ôn luyện theo buổi dùng nguyên `/content-packages*` (ADMIN-only ở backend) — chỉ Admin thao tác được, không theo ticket. */
   isAdmin: boolean;
-  /** Công tắc ghi "content" đang mở (demo hoặc NEXT_PUBLIC_WRITE_CONTENT=enabled). */
+  /** Công tắc ghi "content" đang mở (mặc định mở; đóng khi NEXT_PUBLIC_WRITE_CONTENT=disabled). */
   writeEnabled: boolean;
   // danh sách
   listState: FetchState<SyllabusSummaryResponse[]>;

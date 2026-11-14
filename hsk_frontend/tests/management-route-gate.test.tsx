@@ -60,10 +60,7 @@ const MATRIX: [url: string, allowed: string[]][] = [
   ["/instructor/list-class", ["ADMIN", "TEACHER", "MENTOR"]], // luồng chấm bài: thêm ADMIN theo quyết định chủ dự án (UI_ROLE_GRANTS)
   ["/instructor/list-class/grading", ["ADMIN", "TEACHER", "MENTOR"]],
   ["/instructor/list-class/lesson-detail", ["TEACHER", "MENTOR"]], // phần còn lại của /instructor/list-class: Admin KHÔNG vào
-  ["/instructor/instructor-tickets", ["TEACHER", "MENTOR"]], // cũ còn COLLABORATOR → chưa xác minh → chặn
   ["/hanzi/manage", ["ADMIN", "TEACHER", "MENTOR"]], // dùng chung, guard liệt kê đủ
-  ["/instructor/manage-storage", ["ADMIN", "TEACHER", "MENTOR"]], // dưới /instructor nhưng cũ cho phép ADMIN
-  ["/online-course/manage", ["ADMIN"]], // cũ ADMIN + TEACHER_MANAGER
   ["/learning-path/syllabus/manage", ["ADMIN", "TEACHER", "MENTOR"]],
   ["/hanzi/edit/42", ["ADMIN", "TEACHER", "MENTOR"]], // route có tham số
   ["/instructor/welcome", ["TEACHER", "MENTOR"]], // HSK cũ không có PrivateRoute; quyết định giao diện của chủ dự án (M3B.2), KHÔNG Admin
@@ -89,17 +86,17 @@ describe("sidebar theo ROLE (không theo tiền tố URL) trên route dùng chun
   });
 
   it("MENTOR", async () => {
-    expect(await visit("/instructor/manage-storage", ["ROLE_MENTOR"])).toBe("page-instructor");
+    expect(await visit("/grammar/manage", ["ROLE_MENTOR"])).toBe("page-instructor");
   });
 
   it("người có cả ADMIN và TEACHER: menu Admin ưu tiên (như InstructorSidebar cũ); /instructor/list-class vẫn do guard route quyết định", async () => {
     expect(await visit("/hanzi/manage", ["ROLE_TEACHER", "ROLE_ADMIN"])).toBe("page-admin");
   });
 
-  it("ADMIN vào được /instructor/manage-storage nhưng KHÔNG vào được /instructor/instructor-tickets (không cấp quyền theo tiền tố /instructor)", async () => {
-    expect(await visit("/instructor/manage-storage", ["ROLE_ADMIN"])).toBe("page-admin");
+  it("ADMIN vào được /instructor/list-class nhưng KHÔNG vào được /instructor/list-class/lesson-detail (không cấp quyền theo tiền tố /instructor)", async () => {
+    expect(await visit("/instructor/list-class", ["ROLE_ADMIN"])).toBe("page-admin");
     document.body.innerHTML = "";
-    expect(await visit("/instructor/instructor-tickets", ["ROLE_ADMIN"])).toBe("forbidden");
+    expect(await visit("/instructor/list-class/lesson-detail", ["ROLE_ADMIN"])).toBe("forbidden");
   });
 });
 
@@ -109,6 +106,9 @@ describe("route không được phục vụ: không yêu cầu đăng nhập, kh
     "/instructor/instructor-dashboard",
     "/teacher-manager/dashboard", // UNKNOWN: role chưa xác minh
     "/admin/courses", // OUT_OF_SCOPE
+    "/admin/tickets", // chức năng đã gỡ (REMOVED_ROUTES)
+    "/instructor/manage-storage",
+    "/admin/teacher-management",
     "/admin/does-not-exist", // không đăng ký
     "/random",
   ])("%s", (url) => {

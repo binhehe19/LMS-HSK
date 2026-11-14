@@ -1,6 +1,6 @@
-// Hàm thuần của hai màn thanh toán: sao kê (instructor-financial-statement.tsx) và gói thành viên (membership-management.tsx của HSK cũ).
+// Hàm thuần của màn sao kê (instructor-financial-statement.tsx của HSK cũ).
 import dayjs from "dayjs";
-import type { MembershipPlan, MembershipPlanRequest, TransactionBuyer, TransactionItem, TransactionItemType, TransactionReportItem } from "@/types/payment";
+import type { TransactionBuyer, TransactionItem, TransactionItemType, TransactionReportItem } from "@/types/payment";
 
 /** core/utils/currency-formatter.ts của HSK cũ: Intl vi-VN, VND => "1.500.000 ₫". */
 export function formatCurrency(amount: number): string {
@@ -89,35 +89,4 @@ export function buyerDisplayName(buyer: TransactionBuyer | undefined): string {
 /** Chữ cái đầu của username (bản cũ); thiếu => "?". */
 export function buyerInitial(buyer: TransactionBuyer | undefined): string {
   return buyer?.username?.charAt(0).toUpperCase() || "?";
-}
-
-// ---- gói thành viên ----
-
-export type MembershipPlanForm = MembershipPlanRequest;
-
-export const EMPTY_MEMBERSHIP_FORM: MembershipPlanForm = { name: "", description: "", price: 0, durationInDays: 30, active: true };
-
-export function planToForm(plan: MembershipPlan): MembershipPlanForm {
-  return { name: plan.name, description: plan.description ?? "", price: plan.price, durationInDays: plan.durationInDays, active: plan.active };
-}
-
-/** Kiểm tra của bản cũ (!name || price <= 0) + thời hạn phải ≥ 1 ngày (InputNumber min=1 của bản cũ chỉ chặn ở giao diện). null = hợp lệ. */
-export function validateMembershipPlan(form: MembershipPlanForm): string | null {
-  if (!form.name.trim() || !(form.price > 0)) return "Vui lòng điền đầy đủ tên và giá hợp lệ";
-  if (!Number.isInteger(form.durationInDays) || form.durationInDays < 1) return "Thời hạn phải là số ngày nguyên, tối thiểu 1";
-  return null;
-}
-
-/** Bản cũ: price.toLocaleString("vi-VN") + " ₫" => "199.000 ₫". */
-export function formatPlanPrice(price: number): string {
-  return `${price.toLocaleString("vi-VN")} ₫`;
-}
-
-export function truncateDescription(text: string | undefined, max = 40): string {
-  const value = text ?? "";
-  return value.length > max ? `${value.substring(0, max)}...` : value;
-}
-
-export function membershipStatusMeta(active: boolean): { label: string; className: string } {
-  return active ? { label: "Đang bán", className: "bg-success-light text-success" } : { label: "Đã ẩn", className: "bg-danger-light text-danger" };
 }

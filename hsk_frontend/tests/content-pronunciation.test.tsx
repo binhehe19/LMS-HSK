@@ -364,7 +364,7 @@ describe("/pronunciation/manage — màn quản lý phát âm trên nền conten
 
     vi.mocked(client.listPackages).mockResolvedValue([pkg(1)]);
     vi.mocked(client.listItems).mockRejectedValueOnce(new ApiError("Lỗi mục", 500)).mockResolvedValue([item(1)]);
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     nav.set("/pronunciation/manage?packageId=p1&folderId=f1&studySetId=s1");
     renderPage(PronunciationManagePageContent);
     const notice = await screen.findByTestId("content-items-notice");

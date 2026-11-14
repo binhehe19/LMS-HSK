@@ -530,7 +530,7 @@ describe("/hanzi/manage/select-type và /hanzi/manage/create-package", () => {
   });
 
   it("create-package: công tắc ghi đóng => WriteLockedNotice + form khoá; giảng viên không ticket WRITING => 'Chế độ Xem duy nhất' + form khoá", async () => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     nav.set("/hanzi/manage/create-package");
     const first = render(
       <Provider store={makeStore({ status: "authenticated", user: adminUser })}>

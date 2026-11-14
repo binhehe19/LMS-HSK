@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  EMPTY_MEMBERSHIP_FORM,
   ITEM_TYPE_META,
   PAYMENT_STATUS_META,
   buyerDisplayName,
@@ -8,14 +7,9 @@ import {
   filterTransactions,
   formatCurrency,
   formatPaidAt,
-  formatPlanPrice,
-  membershipStatusMeta,
   normalizeItemType,
   normalizeStatus,
-  planToForm,
   transactionTypes,
-  truncateDescription,
-  validateMembershipPlan,
 } from "@/lib/payment/payment-model";
 import type { TransactionReportItem } from "@/types/payment";
 
@@ -28,10 +22,9 @@ const tx = (code: number, over: Partial<TransactionReportItem> = {}): Transactio
 });
 
 describe("định dạng tiền và ngày (currency-formatter + moment của bản cũ)", () => {
-  it("formatCurrency vi-VN VND; formatPlanPrice 'x ₫'; formatPaidAt DD/MM/YYYY HH:mm hoặc '-'", () => {
+  it("formatCurrency vi-VN VND; formatPaidAt DD/MM/YYYY HH:mm hoặc '-'", () => {
     expect(nbsp(formatCurrency(1500000))).toBe("1.500.000 ₫");
     expect(nbsp(formatCurrency(0))).toBe("0 ₫");
-    expect(nbsp(formatPlanPrice(199000))).toBe("199.000 ₫");
     expect(formatPaidAt("2026-10-20T09:15:00")).toBe("20/10/2026 09:15");
     expect(formatPaidAt(undefined)).toBe("-");
   });
@@ -75,23 +68,5 @@ describe("trạng thái và loại mục", () => {
     expect(buyerDisplayName(undefined)).toBe("—");
     expect(buyerInitial({ userId: "u", username: "anng" })).toBe("A");
     expect(buyerInitial(undefined)).toBe("?");
-  });
-});
-
-describe("gói thành viên", () => {
-  it("validateMembershipPlan: thiếu tên / giá <= 0 => thông điệp cũ; thời hạn < 1 => lỗi riêng; hợp lệ => null", () => {
-    expect(validateMembershipPlan({ ...EMPTY_MEMBERSHIP_FORM, name: "  ", price: 100 })).toBe("Vui lòng điền đầy đủ tên và giá hợp lệ");
-    expect(validateMembershipPlan({ ...EMPTY_MEMBERSHIP_FORM, name: "VIP", price: 0 })).toBe("Vui lòng điền đầy đủ tên và giá hợp lệ");
-    expect(validateMembershipPlan({ ...EMPTY_MEMBERSHIP_FORM, name: "VIP", price: 1000, durationInDays: 0 })).toBe("Thời hạn phải là số ngày nguyên, tối thiểu 1");
-    expect(validateMembershipPlan({ ...EMPTY_MEMBERSHIP_FORM, name: "VIP", price: 1000 })).toBeNull();
-  });
-
-  it("planToForm, truncateDescription (40 ký tự), membershipStatusMeta", () => {
-    expect(planToForm({ id: "p", name: "VIP", description: "D", price: 5, durationInDays: 7, active: false })).toEqual({ name: "VIP", description: "D", price: 5, durationInDays: 7, active: false });
-    expect(truncateDescription("a".repeat(41))).toBe(`${"a".repeat(40)}...`);
-    expect(truncateDescription("ngắn")).toBe("ngắn");
-    expect(truncateDescription(undefined)).toBe("");
-    expect(membershipStatusMeta(true)).toEqual({ label: "Đang bán", className: "bg-success-light text-success" });
-    expect(membershipStatusMeta(false).label).toBe("Đã ẩn");
   });
 });

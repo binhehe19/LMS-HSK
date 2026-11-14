@@ -9,17 +9,11 @@ import "@/components/management/instructor-class-list/class-management.css";
 // M5 — W1-A: màn chấm bài bỏ padding cột nội dung (ManagementPageFrame không nhận class cho .col-lg-9 như bản cũ).
 import "@/components/management/instructor-grading/instructor-grading.css";
 import "@/components/management/class-management/class-management.css";
-// M5 — W1-C: gói thành viên (SCSS nguyên văn; router.link.tsx cũ import ở dòng ~750, sau class-management).
-import "@/components/management/membership-management/membership-management.scss";
 // M5 — W1-E: dashboard Admin (.premium-card/.dash-widget-card lấy từ CSS học viên của HSK cũ, chỉ phần cần).
 import "@/components/management/admin-dashboard/admin-dashboard.css";
-// M5 — W1-D: quản lý giảng viên (SCSS nguyên văn HSK cũ, mọi rule dưới .teacher-management-page/.tm-*).
-import "@/components/management/teacher-management/teacher-management-page.scss";
 // M5 — W2-D: giáo trình (gồm khối .manage-lp-container nguyên văn manage-learning-path.scss).
 import "@/components/management/syllabus/syllabus-management.scss";
-// M5 — W2-C: theo thứ tự route trong router.link.tsx cũ (1704 → 1822 → 1837).
-import "@/components/management/manage-storage/manage-storage.scss";
-import "@/components/management/online-course-management/online-course-management.scss";
+// M5 — W2-C: tài liệu học tập.
 import "@/components/management/lesson-materials-management/lesson-material-management-page.scss";
 // Dùng chung cho các màn chuyển ở M5 (page-header của HSK cũ là CSS toàn cục, import ở core/common/page-header).
 import "@/components/shared/page-header.scss";

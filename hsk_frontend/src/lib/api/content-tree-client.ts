@@ -4,7 +4,7 @@
 //   - thư mục/bộ gắn cha ngay khi tạo (`packageId`/`folderId` trong body) thay cho 2 bước "tạo rồi POST /packages/{id}/folders/{folderId}";
 //   - một tên tài nguyên mục theo module (`itemsPath`: cards/words/quizzes/grammar-points/pronunciation-items) thay cho `/cards/study-set?studySetId=`.
 // Hợp đồng chi tiết + bảng module: docs/api-requirements/content-tree.md. Mock: scripts/mock/handlers/content-tree.mjs.
-// Thao tác GHI đi qua công tắc an toàn "content" (lib/api/write-gate.ts): chỉ chạy ở chế độ xem trước cục bộ hoặc khi NEXT_PUBLIC_WRITE_CONTENT=enabled.
+// Thao tác GHI đi qua công tắc an toàn "content" (lib/api/write-gate.ts): mặc định MỞ, chỉ bị chặn khi NEXT_PUBLIC_WRITE_CONTENT=disabled.
 "use client";
 
 import { hskClient } from "@/lib/api/hsk-client";

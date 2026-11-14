@@ -10,7 +10,7 @@ Trạng thái: **UI_PARTIAL · API MISSING (hợp đồng ĐỀ XUẤT)**. Backe
 | Biến | Ý nghĩa | Trống thì |
 |---|---|---|
 | `NEXT_PUBLIC_HSK_API_BASE_PATH` | Gốc các dịch vụ HSK (hsk-client); tiền tố module nối sau: `/flashcard`, `/writing`, `/quiz`, `/grammar`, `/pronunciation` | Màn hiện "WAITING FOR BACKEND", không gọi mạng |
-| `NEXT_PUBLIC_WRITE_CONTENT` | Công tắc an toàn cho THAO TÁC GHI (tạo/sửa/xoá/publish). Chỉ `enabled` mới mở; chế độ demo mở sẵn | Nút ghi ẩn + `WriteLockedNotice`; client tự chặn (`assertWriteEnabled("content")`): **không request ghi nào được tạo** |
+| `NEXT_PUBLIC_WRITE_CONTENT` | Công tắc an toàn cho THAO TÁC GHI (tạo/sửa/xoá/publish). Mặc định MỞ (đã nối repo-lms); chỉ `disabled` mới đóng | Nút ghi ẩn + `WriteLockedNotice`; client tự chặn (`assertWriteEnabled("content")`): **không request ghi nào được tạo** |
 | `NEXT_PUBLIC_STORAGE_API_BASE_PATH` | repo-storage (ảnh/âm thanh của thẻ: presign → PUT → confirm, `lib/api/storage-client.ts`) | Ô tải tệp khoá, báo "Kho lưu trữ chưa được cấu hình"; vẫn lưu được thẻ không kèm tệp |
 | `NEXT_PUBLIC_TICKET_API_BASE_PATH` | Ticket phân công: quyền Thêm/Sửa/Xoá của giảng viên (`useContentAccess`) | Giảng viên = chỉ xem (fail-closed); Admin không ảnh hưởng |
 

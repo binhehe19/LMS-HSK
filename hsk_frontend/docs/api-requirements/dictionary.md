@@ -11,7 +11,7 @@ Package → Folder → Study set (khác các module content-tree.md): tìm kiế
 | Biến | Ý nghĩa | Trống thì |
 |---|---|---|
 | `NEXT_PUBLIC_HSK_API_BASE_PATH` | Gốc dịch vụ HSK (`lib/api/hsk-client.ts`); tiền tố `/dictionary/vocabularies` nối sau | Màn hiện "WAITING FOR BACKEND", không gọi mạng |
-| `NEXT_PUBLIC_WRITE_CONTENT` | Công tắc an toàn cho THAO TÁC GHI (tạo/sửa/xoá). Chỉ `enabled` mới mở; chế độ demo mở sẵn | Nút ghi ẩn + `WriteLockedNotice`; client tự chặn (`assertWriteEnabled("content")`): **không request ghi nào được tạo** |
+| `NEXT_PUBLIC_WRITE_CONTENT` | Công tắc an toàn cho THAO TÁC GHI (tạo/sửa/xoá). Mặc định MỞ (đã nối repo-lms); chỉ `disabled` mới đóng | Nút ghi ẩn + `WriteLockedNotice`; client tự chặn (`assertWriteEnabled("content")`): **không request ghi nào được tạo** |
 | `NEXT_PUBLIC_TICKET_API_BASE_PATH` | Ticket phân công: quyền Thêm/Sửa/Xoá của giảng viên (`useContentAccess("DICTIONARY")`) | Giảng viên = chỉ xem (fail-closed); Admin không ảnh hưởng |
 
 Quyền giao diện (quy tắc HSK cũ `useTicketAccess(TicketModule.DICTIONARY)`): Admin/Teacher-manager luôn ghi; Teacher/Mentor cần ticket DICTIONARY OPEN/DONE

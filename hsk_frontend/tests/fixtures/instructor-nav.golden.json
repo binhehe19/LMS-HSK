@@ -95,22 +95,6 @@
       "route": "/instructor/list-class",
       "subRoute": null,
       "activePrefix": "/instructor/list-class"
-    },
-    {
-      "header": "KHO TÀI NGUYÊN",
-      "title": "Quản lý Kho lưu trữ Đa phương tiện",
-      "icon": "isax isax-video-play",
-      "route": "/instructor/manage-storage",
-      "subRoute": null,
-      "activePrefix": "/instructor/manage-storage"
-    },
-    {
-      "header": null,
-      "title": "Phân công công việc",
-      "icon": "isax isax-ticket",
-      "route": "/instructor/instructor-tickets",
-      "subRoute": null,
-      "activePrefix": null
     }
   ],
   "active": {
@@ -150,14 +134,8 @@
     "/learning-path/syllabus/manage": [
       10
     ],
-    "/instructor/instructor-tickets": [
-      13
-    ],
     "/instructor/instructor-support-tickets": [
       2
-    ],
-    "/instructor/manage-storage": [
-      12
     ],
     "/pronunciation/manage": [
       4

@@ -35,23 +35,3 @@ export interface TicketResponse {
   createdAt?: string;
   updatedAt?: string;
 }
-
-/** Một người có thể được giao việc (GET /assignees): giảng viên, cộng tác viên... */
-export interface TicketAssigneeOptionResponse {
-  id: string;
-  email: string;
-  fullName: string;
-  roles: string[];
-}
-
-export interface TicketCreateRequest {
-  description: string;
-  module: TicketModule;
-  assignedId: string;
-}
-
-export interface TicketUpdateRequest {
-  description?: string;
-  module?: TicketModule;
-  assignedId?: string;
-}

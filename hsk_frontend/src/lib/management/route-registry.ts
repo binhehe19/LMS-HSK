@@ -10,7 +10,7 @@
 //                 → hiện trang "Chức năng đang được chuyển đổi" ở đúng URL cũ
 //   UNKNOWN       KHÔNG đủ bằng chứng để phục vụ: HSK cũ không bọc PrivateRoute (không có guard ở tầng route) và chưa có quyết định của chủ dự án
 //                 (UI_ROLE_DECISIONS), hoặc chỉ dành cho role chưa xác minh (Teacher-manager, Collaborator). Hiển thị 404
-//   OUT_OF_SCOPE  HSK cũ chỉ hiển thị UnderConstructionContent (chưa từng có chức năng thật). Route học viên/công khai không nằm trong
+//   OUT_OF_SCOPE  HSK cũ chỉ hiển thị UnderConstructionContent (chưa từng có chức năng thật), hoặc chức năng đã gỡ (REMOVED_ROUTES). Route học viên/công khai không nằm trong
 //                 registry (ngoài phạm vi frontend quản lý, xem docs/OLD-ROUTE-SURVEY.md) và cũng trả 404
 import { MANAGEMENT_SUPPORTED_ROLES, ROLES } from "@/lib/auth/roles";
 import { OLD_MANAGEMENT_ROUTES, type OldRouteFact } from "@/lib/management/old-routes.generated";
@@ -40,8 +40,6 @@ export const MIGRATED_ROUTES: readonly string[] = [
   // M5 — W1-B: phân tích học tập
   "/instructor/list-class/learning-analysis",
   "/instructor/list-class/learning-analysis/detail",
-  // M5 — W1-D: quản lý giảng viên
-  "/admin/teacher-management",
   // M5 — W2-D: giáo trình (đọc thật từ backend chung) + module ôn luyện theo buổi
   "/learning-path/syllabus/manage",
   // M5 — W2-T: nền quản lý nội dung dạng cây; thẻ ghi nhớ / bộ từ vựng / bộ thẻ
@@ -52,16 +50,10 @@ export const MIGRATED_ROUTES: readonly string[] = [
   "/vocab-set/manage",
   "/sets/create",
   "/sets/:id/edit",
-  // M5 — W2-C: khoá học trực tuyến, đăng ký, tài liệu học tập, kho lưu trữ đa phương tiện
-  "/learning-path/online-course/manage",
-  "/learning-path/online-course/leads",
+  // M5 — W2-C: tài liệu học tập
   "/learning-path/lesson-materials/manage",
-  "/instructor/manage-storage",
-  // M5 — W1-C: phân công công việc (Admin / giảng viên), sao kê, gói thành viên
-  "/admin/tickets",
-  "/instructor/instructor-tickets",
+  // M5 — W1-C: sao kê
   "/admin/statements",
-  "/admin/membership-management",
   // M5 — W2-E: luyện viết (Hán tự) + luyện phát âm trên nền content-tree
   "/hanzi/manage",
   "/hanzi/manage/select-type",
@@ -83,9 +75,22 @@ export const MIGRATED_ROUTES: readonly string[] = [
  * tự rơi về catch-all -> notFound() (route-registry coi là MIGRATED nên không hiện placeholder "đang chuyển đổi").
  */
 export const RENAMED_ROUTES: Readonly<Record<string, string>> = {
-  "/learning-path/online-course/manage": "/online-course/manage",
   "/flashcard/create-package": "/flashcard/package",
 };
+
+/**
+ * Route của HSK cũ thuộc chức năng ĐÃ GỠ khỏi hệ thống (quyết định chủ dự án, 2026-11-14): quản lý giảng viên, khoá học trực tuyến,
+ * kho lưu trữ đa phương tiện, phân công công việc, gói thành viên. Không phục vụ và không hiện trang "đang chuyển đổi": trả 404.
+ */
+export const REMOVED_ROUTES: readonly string[] = [
+  "/admin/teacher-management",
+  "/learning-path/online-course/manage",
+  "/learning-path/online-course/leads",
+  "/instructor/manage-storage",
+  "/admin/tickets",
+  "/instructor/instructor-tickets",
+  "/admin/membership-management",
+];
 
 export interface UiRoleDecision {
   roles: readonly string[];
@@ -145,6 +150,9 @@ export function classifyRoute(
   grants: Readonly<Record<string, UiRoleDecision>> = UI_ROLE_GRANTS,
 ): ManagementRoute {
   const base = { path: fact.path, oldComponent: fact.component, oldGuard: fact.guard, oldRoles: fact.roles };
+  if (REMOVED_ROUTES.includes(fact.path)) {
+    return { ...base, status: "OUT_OF_SCOPE", allowedRoles: [], roleSource: "none", reason: "Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14)" };
+  }
   if (fact.underConstruction) {
     return { ...base, status: "OUT_OF_SCOPE", allowedRoles: [], roleSource: "none", reason: "HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật)" };
   }

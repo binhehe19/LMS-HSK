@@ -39,7 +39,7 @@ const groups = [group("g1", "HSK 3", "SLIDE", "DRAFT"), group("g2", "HSK 4", "MA
 beforeEach(() => {
   window.sessionStorage.clear();
   vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
-  vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+  vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
   vi.mocked(getUnreadCount).mockReset().mockResolvedValue(0);
   vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
   vi.mocked(isStorageApiConfigured).mockReset().mockReturnValue(true);

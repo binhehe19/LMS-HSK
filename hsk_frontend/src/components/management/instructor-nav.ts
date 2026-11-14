@@ -83,17 +83,5 @@ export function buildInstructorNav(): NavItem[] {
       href: "/instructor/list-class",
       activePrefix: "/instructor/list-class",
     },
-    {
-      header: "KHO TÀI NGUYÊN",
-      title: "Quản lý Kho lưu trữ Đa phương tiện",
-      icon: "isax isax-video-play",
-      href: "/instructor/manage-storage",
-      activePrefix: "/instructor/manage-storage",
-    },
-    {
-      title: "Phân công công việc",
-      icon: "isax isax-ticket",
-      href: "/instructor/instructor-tickets",
-    },
   ];
 }

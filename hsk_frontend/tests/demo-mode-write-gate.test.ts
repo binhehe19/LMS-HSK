@@ -54,15 +54,26 @@ describe("write gate: mặc định ĐÓNG, mở bằng demo hoặc cờ NEXT_PU
     ["ENABLED", "waiting"],
     [" enabled ", "enabled"],
   ])("cờ=%j => %s", (flag, expected) => {
-    vi.stubEnv("NEXT_PUBLIC_WRITE_TEACHER_MANAGEMENT", flag);
-    expect(getWriteAvailability("teacher-management", false)).toBe(expected);
+    vi.stubEnv("NEXT_PUBLIC_WRITE_TEACHER_NOTE", flag);
+    expect(getWriteAvailability("teacher-note", false)).toBe(expected);
   });
 
   it("mỗi miền một cờ riêng: mở miền này không mở miền khác", () => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
-    vi.stubEnv("NEXT_PUBLIC_WRITE_STORAGE", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_LESSON_DETAIL", "");
     expect(getWriteAvailability("content", false)).toBe("enabled");
-    expect(getWriteAvailability("storage", false)).toBe("waiting");
+    expect(getWriteAvailability("lesson-detail", false)).toBe("waiting");
+  });
+
+  it.each([
+    [undefined, "enabled"],
+    ["", "enabled"],
+    ["enabled", "enabled"],
+    [" disabled ", "waiting"],
+    ["DISABLED", "enabled"],
+  ])("miền content đã có backend thật: mặc định MỞ, chỉ 'disabled' mới đóng — cờ=%j => %s", (flag, expected) => {
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", flag);
+    expect(getWriteAvailability("content", false)).toBe(expected);
   });
 
   it("công tắc gửi chiến dịch: demo mở được khi có dịch vụ HSK (hợp đồng đề xuất), vẫn đóng khi KHÔNG có dịch vụ", () => {

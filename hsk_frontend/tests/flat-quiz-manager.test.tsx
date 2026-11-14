@@ -308,7 +308,7 @@ describe("trình soạn câu hỏi (?quizId=)", () => {
     expect(screen.queryByRole("button", { name: "Thêm câu hỏi" })).toBeNull();
     unmount();
 
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     renderPage();
     await screen.findByText("再见 nghĩa là xin chào.");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");

@@ -262,7 +262,7 @@ describe("màn Từ điển — trạng thái và quyền", () => {
     expect(screen.queryByTestId("content-readonly-alert")).toBeNull();
     second.unmount();
 
-    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
     renderPage();
     await screen.findByText("字1");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
