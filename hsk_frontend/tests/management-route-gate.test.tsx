@@ -57,8 +57,9 @@ const MATRIX: [url: string, allowed: string[]][] = [
   ["/admin/class-management", ["ADMIN"]], // MIGRATED, /admin/* = ADMIN
   ["/admin/dashboard", ["ADMIN"]], // MIGRATED (M5); /admin/* = ADMIN
   ["/admin/profile", ["ADMIN"]], // NOT_MIGRATED (placeholder)
-  ["/instructor/list-class", ["TEACHER", "MENTOR"]], // Admin KHÔNG vào
-  ["/instructor/list-class/grading", ["TEACHER", "MENTOR"]],
+  ["/instructor/list-class", ["ADMIN", "TEACHER", "MENTOR"]], // luồng chấm bài: thêm ADMIN theo quyết định chủ dự án (UI_ROLE_GRANTS)
+  ["/instructor/list-class/grading", ["ADMIN", "TEACHER", "MENTOR"]],
+  ["/instructor/list-class/lesson-detail", ["TEACHER", "MENTOR"]], // phần còn lại của /instructor/list-class: Admin KHÔNG vào
   ["/instructor/instructor-tickets", ["TEACHER", "MENTOR"]], // cũ còn COLLABORATOR → chưa xác minh → chặn
   ["/hanzi/manage", ["ADMIN", "TEACHER", "MENTOR"]], // dùng chung, guard liệt kê đủ
   ["/instructor/manage-storage", ["ADMIN", "TEACHER", "MENTOR"]], // dưới /instructor nhưng cũ cho phép ADMIN

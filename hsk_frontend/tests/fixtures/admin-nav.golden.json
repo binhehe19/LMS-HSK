@@ -27,6 +27,14 @@
     },
     {
       "header": null,
+      "title": "Chấm bài",
+      "icon": "isax isax-edit-2",
+      "route": "/instructor/list-class",
+      "subRoute": null,
+      "activePrefix": "/instructor/list-class"
+    },
+    {
+      "header": null,
       "title": "Yêu cầu hỗ trợ",
       "icon": "isax isax-ticket",
       "route": "/instructor/instructor-support-tickets",
@@ -128,25 +136,31 @@
       1
     ],
     "/hanzi/manage": [
-      4
+      5
     ],
     "/hanzi/manage/create": [
-      4
+      5
     ],
     "/vocab-set/manage": [
-      8
-    ],
-    "/quiz/manage": [
       9
     ],
+    "/quiz/manage": [
+      10
+    ],
     "/learning-path/syllabus/manage": [
-      12
+      13
     ],
     "/instructor/instructor-support-tickets": [
-      3
+      4
     ],
     "/admin/users": [
-      13
+      14
+    ],
+    "/instructor/list-class": [
+      3
+    ],
+    "/instructor/list-class/grading": [
+      3
     ],
     "/": [],
     "/admin": []

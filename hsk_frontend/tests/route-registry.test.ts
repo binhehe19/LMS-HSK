@@ -10,6 +10,7 @@ import {
   MIGRATED_ROUTES,
   RENAMED_ROUTES,
   UI_ROLE_DECISIONS,
+  UI_ROLE_GRANTS,
   UNKNOWN_GROUP_LABEL,
   classifyRoute,
   findRoute,
@@ -98,10 +99,26 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
     expect(roles("/admin/class-management")).toEqual([ROLES.ADMIN]);
   });
 
-  it("/instructor/list-class(*) chỉ TEACHER và MENTOR (Admin KHÔNG được vào)", () => {
-    for (const url of ["/instructor/list-class", "/instructor/list-class/grading", "/instructor/list-class/learning-analysis/detail"]) {
+  it("luồng chấm bài /instructor/list-class(+list-lesson, submissions, grading): TEACHER, MENTOR và ADMIN (quyết định chủ dự án vì backend chỉ cho Admin chấm)", () => {
+    for (const url of ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"]) {
+      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
+      expect(findRoute(url)?.roleSource, url).toBe("owner-decision");
+    }
+  });
+
+  it("các route còn lại của /instructor/list-class chỉ TEACHER và MENTOR (Admin KHÔNG được vào)", () => {
+    for (const url of ["/instructor/list-class/lesson-detail", "/instructor/list-class/learning-analysis", "/instructor/list-class/learning-analysis/detail"]) {
       expect(roles(url), url).toEqual(sorted(ROLES.TEACHER, ROLES.MENTOR));
     }
+  });
+
+  it("classifyRoute: vai trò bổ sung chỉ thêm vào route có PrivateRoute, không trùng, không vượt role được hỗ trợ", () => {
+    const base = fact({ path: "/x/grading", roles: [ROLES.TEACHER] });
+    const grant = { "/x/grading": { roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.COLLABORATOR], note: "lý do" } };
+    const r = classifyRoute(base, ["/x/grading"], {}, grant);
+    expect([...r.allowedRoles].sort()).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER));
+    expect(r.reason).toContain("lý do");
+    expect(classifyRoute(base, ["/x/grading"], {}, {}).roleSource).toBe("private-route");
   });
 
   it("/instructor/instructor-tickets: HSK cũ TEACHER, MENTOR, COLLABORATOR → app mới chỉ TEACHER, MENTOR (Admin không có; Collaborator chưa xác minh)", () => {
@@ -173,6 +190,7 @@ describe("bất biến của registry", () => {
         expect(MANAGEMENT_SUPPORTED_ROLES, r.path).toContain(role);
         // Quyền phải có nguồn: PrivateRoute của HSK cũ, hoặc quyết định giao diện của chủ dự án (chỉ cho route không có PrivateRoute).
         if (r.roleSource === "private-route") expect(r.oldRoles, r.path).toContain(role);
+        else if (r.oldGuard === "roles") expect([...r.oldRoles, ...(UI_ROLE_GRANTS[r.path]?.roles ?? [])], r.path).toContain(role);
         else expect(UI_ROLE_DECISIONS[r.path]?.roles, r.path).toContain(role);
       }
     }
@@ -265,8 +283,8 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 14 mục = 12 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 12, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 15 mục = 13 MIGRATED (có Chấm bài) + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
   });

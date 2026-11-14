@@ -110,6 +110,18 @@ export const UI_ROLE_DECISIONS: Readonly<Record<string, UiRoleDecision>> = {
   },
 };
 
+/**
+ * Vai trò được THÊM vào route đã có PrivateRoute ở HSK cũ (HSK cũ giữ nguyên, không sửa dữ kiện trong old-routes.generated.ts).
+ * Chấm bài ở backend chung chỉ cho ROLE_ADMIN (AssessmentGradingManagementController) nên Admin được vào luồng lớp → buổi → nộp bài → chấm bài
+ * (quyết định chủ dự án, 2026-11-14). Muốn cho vai trò khác chấm bài: thêm vai trò vào đây VÀ mở quyền ở backend. Chỉ là rào chắn giao diện.
+ */
+export const UI_ROLE_GRANTS: Readonly<Record<string, UiRoleDecision>> = Object.fromEntries(
+  ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"].map((path) => [
+    path,
+    { roles: [ROLES.ADMIN], note: "Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài" } satisfies UiRoleDecision,
+  ]),
+);
+
 export interface ManagementRoute {
   path: string;
   status: RouteStatus;
@@ -130,6 +142,7 @@ export function classifyRoute(
   fact: OldRouteFact,
   migrated: readonly string[] = MIGRATED_ROUTES,
   decisions: Readonly<Record<string, UiRoleDecision>> = UI_ROLE_DECISIONS,
+  grants: Readonly<Record<string, UiRoleDecision>> = UI_ROLE_GRANTS,
 ): ManagementRoute {
   const base = { path: fact.path, oldComponent: fact.component, oldGuard: fact.guard, oldRoles: fact.roles };
   if (fact.underConstruction) {
@@ -149,11 +162,15 @@ export function classifyRoute(
     return { ...base, status: "UNKNOWN", allowedRoles: [], roleSource: "none", reason: "HSK cũ chỉ yêu cầu đăng nhập, không xác lập role" };
   }
   const allowedRoles = fact.roles.filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r));
-  if (allowedRoles.length === 0) {
+  const grant = grants[fact.path];
+  const granted = (grant?.roles ?? []).filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r) && !allowedRoles.includes(r));
+  if (allowedRoles.length === 0 && granted.length === 0) {
     return { ...base, status: "UNKNOWN", allowedRoles: [], roleSource: "none", reason: `Chỉ dành cho role chưa xác minh (${fact.roles.map(shortRole).join(", ")})` };
   }
   const status: RouteStatus = migrated.includes(fact.path) ? "MIGRATED" : "NOT_MIGRATED";
-  return { ...base, status, allowedRoles, roleSource: "private-route", reason: `PrivateRoute: ${fact.roles.map(shortRole).join(", ")}` };
+  const reason = `PrivateRoute: ${fact.roles.map(shortRole).join(", ")}`;
+  if (granted.length > 0) return { ...base, status, allowedRoles: [...allowedRoles, ...granted], roleSource: "owner-decision", reason: `${reason}; thêm ${granted.map(shortRole).join(", ")}: ${grant.note}` };
+  return { ...base, status, allowedRoles, roleSource: "private-route", reason };
 }
 
 export const MANAGEMENT_ROUTES: readonly ManagementRoute[] = OLD_MANAGEMENT_ROUTES.map((fact) => classifyRoute(fact));

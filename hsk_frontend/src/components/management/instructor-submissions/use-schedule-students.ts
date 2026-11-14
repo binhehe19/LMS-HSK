@@ -3,6 +3,8 @@
 import { toast } from "sonner";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
+import { isLmsApiConfigured } from "@/lib/api/lms-client";
+import { listLmsScheduleStudents } from "@/lib/api/lms-grading-source";
 import { listScheduleStudents } from "@/lib/api/quiz-grading-client";
 import type { GradingStudentResponse } from "@/types/grading";
 
@@ -15,7 +17,8 @@ import type { GradingStudentResponse } from "@/types/grading";
 export function useScheduleStudents(params: { classId: string; scheduleId: string } | null) {
   return useKeyedFetch<GradingStudentResponse[]>(params === null ? null : `students:${params.classId}:${params.scheduleId}`, async () => {
     try {
-      const data = await listScheduleStudents((params as { scheduleId: string }).scheduleId, (params as { classId: string }).classId);
+      const { scheduleId, classId } = params as { classId: string; scheduleId: string };
+      const data = await (isLmsApiConfigured() ? listLmsScheduleStudents(classId, scheduleId) : listScheduleStudents(scheduleId, classId));
       if (!Array.isArray(data)) throw new ApiError("Dữ liệu trả về không đúng định dạng danh sách học viên.", 200);
       return data;
     } catch (error) {

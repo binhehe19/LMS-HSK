@@ -32,6 +32,12 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       activePrefix: "/admin/class-management",
     },
     {
+      title: "Chấm bài",
+      icon: "isax isax-edit-2",
+      href: "/instructor/list-class",
+      activePrefix: "/instructor/list-class",
+    },
+    {
       title: "Yêu cầu hỗ trợ",
       icon: "isax isax-ticket",
       href: "/instructor/instructor-support-tickets",

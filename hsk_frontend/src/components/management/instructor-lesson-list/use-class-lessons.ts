@@ -4,6 +4,8 @@ import { toast } from "sonner";
 // Dùng chung bộ tải theo khoá của M3B.4 (khoá = classId: đổi lớp => bỏ phản hồi của lớp cũ, không lẫn dữ liệu giữa các lớp).
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
+import { isLmsApiConfigured } from "@/lib/api/lms-client";
+import { listLmsClassSchedules } from "@/lib/api/lms-grading-source";
 import { listClassSchedules } from "@/lib/api/quiz-grading-client";
 import type { GradingScheduleResponse } from "@/types/grading";
 
@@ -15,7 +17,7 @@ import type { GradingScheduleResponse } from "@/types/grading";
 export function useClassLessons(classId: string | null) {
   return useKeyedFetch<GradingScheduleResponse[]>(classId === null ? null : `lessons:${classId}`, async () => {
     try {
-      const data = await listClassSchedules(classId as string);
+      const data = await (isLmsApiConfigured() ? listLmsClassSchedules(classId as string) : listClassSchedules(classId as string));
       if (!Array.isArray(data)) throw new ApiError("Dữ liệu trả về không đúng định dạng danh sách bài học.", 200);
       return data;
     } catch (error) {

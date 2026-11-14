@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ClassListState } from "@/components/management/class-management/use-admin-classes";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
+import { listAdminClasses } from "@/lib/api/admin-class-source";
+import { isLmsApiConfigured } from "@/lib/api/lms-client";
 import { listTeacherGradingClasses } from "@/lib/api/quiz-grading-client";
 
 /**
@@ -17,7 +19,8 @@ export function useTeacherClasses() {
 
   useEffect(() => {
     let cancelled = false;
-    listTeacherGradingClasses()
+    // Backend chung: chấm bài chỉ cho ROLE_ADMIN nên danh sách lớp là toàn bộ lớp (như màn Quản lý lớp học); dịch vụ quiz cũ: lớp của giảng viên.
+    (isLmsApiConfigured() ? listAdminClasses() : listTeacherGradingClasses())
       .then((data): ClassListState => (Array.isArray(data) ? { kind: "ok", classes: data } : { kind: "error", message: "Dữ liệu trả về không đúng định dạng danh sách lớp." }))
       .catch((error: unknown): ClassListState => {
         if (error instanceof ApiNotConfiguredError) return { kind: "not-integrated", message: "Chức năng chưa được kết nối API (WAITING FOR BACKEND)." };
