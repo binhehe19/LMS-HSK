@@ -18,7 +18,6 @@
 //    cấp URL riêng. sessionNo cố định = 1. syllabusId/syllabusVersionId dùng cặp đại diện cố định riêng cho quiz.
 import { lmsClient } from "@/lib/api/lms-client";
 import { ApiError } from "@/lib/api/api-client";
-import { fileUrl } from "@/lib/api/storage-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { PageResponse } from "@/types/lms";
@@ -46,21 +45,31 @@ interface BackendPackage {
 }
 // 8 loại câu của backend (ExerciseQuestionType). Nối nhiều dòng là MATCHING (danh sách lựa chọn chung + matchingPairs); điền chỗ trống dùng {{n}} trong questionText.
 type BackendQuestionType = "MULTIPLE_CHOICE" | "MULTIPLE_SELECT" | "MATCHING" | "FILL_IN_BLANK" | "SENTENCE_BUILDER" | "AUDIO_RESPONSE" | "ESSAY" | "FILE_UPLOAD";
+// Các kiểu dưới đây chỉ khai báo field HSK đọc/ghi; `[key: string]: unknown` giữ chỗ cho mọi field khác của backend (gợi ý, rubric AI, tệp...)
+// để khi lưu lại chúng đi nguyên vẹn, không bị bỏ rơi.
 interface BackendOptionItem {
   optionIndex?: number;
   content?: string;
   correct?: boolean;
+  [key: string]: unknown;
 }
 interface BackendMatchingPairItem {
   pairIndex?: number;
   prompt?: string;
   answer?: string;
+  [key: string]: unknown;
 }
 interface BackendBlankItem {
   blankIndex?: number;
   correctAnswer?: string;
   acceptedAnswers?: string[];
   hint?: string;
+  [key: string]: unknown;
+}
+interface BackendMedia {
+  kind: string;
+  url: string;
+  [key: string]: unknown;
 }
 interface BackendQuizQuestion {
   questionId?: string;
@@ -68,13 +77,15 @@ interface BackendQuizQuestion {
   /** Gợi ý hiển thị, không ảnh hưởng chấm điểm. HSK dùng "TRUE_FALSE" cho câu Đúng/Sai (trắc nghiệm hai lựa chọn Đúng/Sai). */
   variant?: string;
   questionText?: string;
-  /** Audio của câu: chỉ nhận đường dẫn storage /api/storage/file/<mã>. */
-  media?: { kind: "audio"; url: string }[];
+  /** Audio/video của câu: chỉ nhận đường dẫn storage /api/storage/file/<mã>. */
+  media?: BackendMedia[];
   explanation?: string;
+  referenceText?: string;
   points?: number;
   options?: BackendOptionItem[];
   matchingPairs?: BackendMatchingPairItem[];
   blanks?: BackendBlankItem[];
+  [key: string]: unknown;
 }
 interface QuizLayoutMeta {
   instruction?: string;
@@ -84,12 +95,30 @@ interface QuizLayoutMeta {
   audioFileId?: string;
   passageText?: string;
   passageImageFileId?: string;
+  [key: string]: unknown;
+}
+interface BackendFile {
+  url: string;
+  name?: string;
+  mimeType?: string;
+  [key: string]: unknown;
+}
+interface QuizLayoutSection {
+  id: string;
+  title?: string;
+  /** Văn bản chung của phần (bài đọc...). */
+  content?: string;
+  files?: BackendFile[];
+  media?: BackendMedia[];
+  questionIds: string[];
+  [key: string]: unknown;
 }
 interface QuizLayout {
   version?: number;
   meta?: QuizLayoutMeta;
   /** Layout v2: mỗi câu hỏi nằm đúng một phần; backend kiểm tra questionIds khớp questions[]. */
-  sections?: { id: string; title?: string; questionIds: string[] }[];
+  sections?: QuizLayoutSection[];
+  [key: string]: unknown;
 }
 interface QuizContent {
   title: string;
@@ -129,14 +158,18 @@ const QUESTION_TYPE_TO_BACKEND: Record<Exclude<QuizQuestionType, "TRUE_FALSE">, 
   SHORT_ANSWER: "ESSAY",
   AUDIO_RESPONSE: "AUDIO_RESPONSE",
   SENTENCE_BUILDER: "SENTENCE_BUILDER",
+  MULTIPLE_SELECT: "MULTIPLE_SELECT",
+  FILE_UPLOAD: "FILE_UPLOAD",
 };
-const QUESTION_TYPE_FROM_BACKEND: Partial<Record<BackendQuestionType, QuizQuestionType>> = {
+const QUESTION_TYPE_FROM_BACKEND: Record<BackendQuestionType, QuizQuestionType> = {
   MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  MULTIPLE_SELECT: "MULTIPLE_SELECT",
   FILL_IN_BLANK: "FILL_IN_BLANK",
   MATCHING: "MATCHING_PAIRS",
   ESSAY: "SHORT_ANSWER",
   AUDIO_RESPONSE: "AUDIO_RESPONSE",
   SENTENCE_BUILDER: "SENTENCE_BUILDER",
+  FILE_UPLOAD: "FILE_UPLOAD",
 };
 
 function fileIdFromUrl(url: string | undefined | null): string | undefined {
@@ -159,28 +192,78 @@ function templateToBackend(template: string, blankCount: number): string {
 }
 const templateFromBackend = (text: string) => text.replace(/\{\{\d+\}\}/g, "{blank}");
 
-function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
+/** Thay (hoặc bỏ, khi `next` rỗng) đúng phần tử đầu tiên thoả `isMine`; chưa có thì thêm lên đầu. Các phần tử khác giữ nguyên. */
+function replaceFirst<T>(list: T[] | undefined, isMine: (item: T) => boolean, next: T | undefined): T[] | undefined {
+  const out = [...(list ?? [])];
+  const at = out.findIndex(isMine);
+  if (at >= 0) {
+    if (next) out[at] = next;
+    else out.splice(at, 1);
+  } else if (next) out.unshift(next);
+  return out.length ? out : undefined;
+}
+
+const isAudio = (m: BackendMedia) => m.kind === "audio";
+const isImageFile = (f: BackendFile) => /^image\//i.test(f.mimeType ?? "") || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(f.name ?? "");
+
+/** Audio của câu/phần: thay mục audio đầu tiên theo `audioFileId`, giữ video và audio khác; audio không đổi thì giữ cả transcript. */
+function withAudio(media: BackendMedia[] | undefined, audioFileId: string | undefined): BackendMedia[] | undefined {
+  const previous = media?.find(isAudio);
+  const url = audioFileId ? storagePath(audioFileId) : undefined;
+  return replaceFirst(media, (m) => m === previous, url ? (previous?.url === url ? previous : { kind: "audio", url }) : undefined);
+}
+
+/** Ảnh bài đọc của phần: thay tệp ảnh đầu tiên, giữ các tệp khác. `image/*` để màn IELTS nhận ra là ảnh. */
+function withImage(files: BackendFile[] | undefined, imageFileId: string | undefined): BackendFile[] | undefined {
+  const previous = files?.find(isImageFile);
+  const url = imageFileId ? storagePath(imageFileId) : undefined;
+  return replaceFirst(files, (f) => f === previous, url ? (previous?.url === url ? previous : { url, name: "passage-image", mimeType: "image/*" }) : undefined);
+}
+
+/** Dòng cũ tương ứng với dòng đang lưu: trùng nội dung thì lấy dòng đó, nếu không thì theo vị trí khi số dòng không đổi (để giữ giải thích/gợi ý từng dòng). */
+function carry<T>(old: T[] | undefined, index: number, count: number, same: (o: T) => boolean): T | undefined {
+  return old?.find(same) ?? (old?.length === count ? old[index] : undefined);
+}
+
+/**
+ * Dựng câu gửi lên backend. Bắt đầu từ câu gốc (`q.source`) rồi chỉ ghi đè các field HSK có ô sửa, nên gợi ý, rubric AI, tệp, giải thích từng
+ * dòng... được soạn ở nơi khác vẫn còn nguyên. Đổi loại câu thì bỏ câu gốc (field của loại cũ không còn nghĩa).
+ */
+export function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
+  const source = q.source as BackendQuizQuestion | undefined;
+  // Chọn nhiều / nộp tệp chưa soạn được trong HSK: giữ nguyên câu gốc.
+  if (q.type === "MULTIPLE_SELECT" || q.type === "FILE_UPLOAD") return { ...source, questionId: q.id };
+  const questionType = q.type === "TRUE_FALSE" ? "MULTIPLE_CHOICE" : QUESTION_TYPE_TO_BACKEND[q.type];
+  const kept = source?.questionType === questionType ? source : undefined;
   const base: BackendQuizQuestion = {
+    ...kept,
     questionId: q.id,
-    questionType: q.type === "TRUE_FALSE" ? "MULTIPLE_CHOICE" : QUESTION_TYPE_TO_BACKEND[q.type] ?? "MULTIPLE_CHOICE",
+    questionType,
     questionText: q.prompt,
     points: q.points,
     explanation: q.explanation || undefined,
-    media: q.audioFileId ? [{ kind: "audio", url: storagePath(q.audioFileId) }] : undefined,
+    media: withAudio(kept?.media, q.audioFileId),
   };
+  // Câu Đúng/Sai và trắc nghiệm cùng là MULTIPLE_CHOICE: chỉ đặt/bỏ dấu Đúng/Sai, giữ các variant khác.
+  if (q.type === "TRUE_FALSE") base.variant = TRUE_FALSE_VARIANT;
+  else if (base.variant === TRUE_FALSE_VARIANT) base.variant = undefined;
   switch (q.type) {
     case "MULTIPLE_CHOICE":
       base.options = (q.options ?? []).map((o, i) => ({ optionIndex: i, content: o.text, correct: o.isCorrect }));
       break;
     case "TRUE_FALSE":
-      base.variant = TRUE_FALSE_VARIANT;
       base.options = [
         { optionIndex: 0, content: "Đúng", correct: q.correctAnswer === true },
         { optionIndex: 1, content: "Sai", correct: q.correctAnswer !== true },
       ];
       break;
     case "FILL_IN_BLANK": {
-      const blanks = (q.blanks ?? []).map((b, i) => ({ blankIndex: i, correctAnswer: b.answer, acceptedAnswers: b.acceptable }));
+      const blanks = (q.blanks ?? []).map((b, i, all) => ({
+        ...carry(kept?.blanks, i, all.length, (o) => o.correctAnswer === b.answer),
+        blankIndex: i,
+        correctAnswer: b.answer,
+        acceptedAnswers: b.acceptable,
+      }));
       base.questionText = templateToBackend(q.prompt, blanks.length);
       base.blanks = blanks;
       break;
@@ -190,20 +273,29 @@ function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
       // Danh sách lựa chọn chung là các vế phải (không trùng); mỗi dòng chọn một trong số đó.
       const choices = [...new Set(pairs.map((p) => p.right))];
       base.options = choices.map((content, optionIndex) => ({ optionIndex, content }));
-      base.matchingPairs = pairs.map((p, i) => ({ pairIndex: i, prompt: p.left, answer: p.right }));
+      base.matchingPairs = pairs.map((p, i) => ({
+        ...carry(kept?.matchingPairs, i, pairs.length, (o) => o.prompt === p.left && o.answer === p.right),
+        pairIndex: i,
+        prompt: p.left,
+        answer: p.right,
+      }));
       break;
     }
+    case "SHORT_ANSWER":
+      base.referenceText = q.referenceAnswer || undefined;
+      break;
     default:
       break;
   }
   return base;
 }
 
-function fromBackendQuestion(quizId: string, index: number, bq: BackendQuizQuestion): QuizQuestion {
+export function fromBackendQuestion(quizId: string, index: number, bq: BackendQuizQuestion): QuizQuestion {
   const isTrueFalse = bq.questionType === "MULTIPLE_CHOICE" && bq.variant === TRUE_FALSE_VARIANT;
   const type: QuizQuestionType = isTrueFalse ? "TRUE_FALSE" : QUESTION_TYPE_FROM_BACKEND[bq.questionType ?? "MULTIPLE_CHOICE"] ?? "MULTIPLE_CHOICE";
   const audio = bq.media?.find((m) => m.kind === "audio");
   const base: QuizQuestion = {
+    source: bq,
     id: bq.questionId ?? crypto.randomUUID(),
     quizId,
     index,
@@ -226,10 +318,21 @@ function fromBackendQuestion(quizId: string, index: number, bq: BackendQuizQuest
     case "MATCHING_PAIRS":
       base.pairs = (bq.matchingPairs ?? []).map((p) => ({ left: p.prompt ?? "", right: p.answer ?? "" }));
       break;
+    case "SHORT_ANSWER":
+      base.referenceAnswer = bq.referenceText || undefined;
+      break;
     default:
       break;
   }
   return base;
+}
+
+/** Số "câu" theo quy tắc của backend (QuizContent.partCount): câu nối tính theo số dòng, câu điền theo số chỗ trống, còn lại là 1. */
+export function partCount(questions: BackendQuizQuestion[] | undefined): number {
+  return (questions ?? []).reduce((sum, q) => {
+    const lines = q.questionType === "MATCHING" ? q.matchingPairs?.length : q.questionType === "FILL_IN_BLANK" ? q.blanks?.length : 1;
+    return sum + Math.max(1, lines ?? 1);
+  }, 0);
 }
 
 // ---- dịch metadata QuizItem <-> QuizContent (không đụng tới questions) ----
@@ -247,32 +350,60 @@ interface QuizMetaFields {
   passageImageFileId?: string;
 }
 
-function toQuizContent(meta: QuizMetaFields, questions: BackendQuizQuestion[]): QuizContent {
+/**
+ * Layout mới từ layout đang lưu: giữ các phần (tiêu đề, nội dung, tệp, media), bỏ id của câu đã xoá, thêm câu mới vào phần cuối, và chỉ ghi đè
+ * các khoá `meta` mà HSK sở hữu. Chưa có layout thì dựng một phần chứa mọi câu.
+ * `lead` là đoạn đọc, audio và ảnh cả bài của HSK: nằm ở phần ĐẦU TIÊN (`content`, `media`, `files`) đúng hợp đồng mới; các tệp/audio khác của phần giữ nguyên.
+ */
+export function mergeLayout(
+  existing: QuizLayout | undefined,
+  questionIds: string[],
+  metaFields: QuizLayoutMeta,
+  title: string,
+  lead?: { content?: string; audioFileId?: string; imageFileId?: string },
+): QuizLayout {
+  const alive = new Set(questionIds);
+  const sections = (existing?.sections ?? []).map((s) => ({ ...s, questionIds: s.questionIds.filter((id) => alive.has(id)) }));
+  if (sections.length === 0) sections.push({ id: "section-1", title, questionIds: [] });
+  const placed = new Set(sections.flatMap((s) => s.questionIds));
+  sections[sections.length - 1].questionIds.push(...questionIds.filter((id) => !placed.has(id)));
+  if (lead) {
+    const first = sections[0];
+    first.content = lead.content || undefined;
+    first.media = withAudio(first.media, lead.audioFileId);
+    first.files = withImage(first.files, lead.imageFileId);
+  }
+  return { ...existing, version: 2, meta: { ...existing?.meta, ...metaFields }, sections };
+}
+
+function toQuizContent(meta: QuizMetaFields, questions: BackendQuizQuestion[], existingLayout?: QuizLayout): QuizContent {
   const meta2: QuizLayoutMeta = {
     instruction: meta.instruction || undefined,
     skill: meta.skill || undefined,
     difficulty: meta.difficulty,
     passingScore: meta.passingScore,
-    audioFileId: meta.audioFileId ? fileUrl(meta.audioFileId) ?? undefined : undefined,
-    passageText: meta.passageText || undefined,
-    passageImageFileId: meta.passageImageFileId ? fileUrl(meta.passageImageFileId) ?? undefined : undefined,
+    // Đoạn đọc/audio/ảnh cả bài nay nằm ở phần đầu (mergeLayout); xoá khỏi meta để dữ liệu cũ được chuyển khi lưu.
+    audioFileId: undefined,
+    passageText: undefined,
+    passageImageFileId: undefined,
   };
   return {
     title: meta.title,
     description: meta.description || undefined,
     timeLimits: meta.durationMinutes && meta.durationMinutes > 0 ? { default: meta.durationMinutes * 60 } : undefined,
     shuffleQuestions: meta.shuffleQuestions ?? false,
-    layout: {
-      version: 2,
-      meta: meta2,
-      sections: [{ id: "section-1", title: meta.title, questionIds: questions.map((q) => q.questionId ?? "") }],
-    },
+    layout: mergeLayout(existingLayout, questions.map((q) => q.questionId ?? ""), meta2, meta.title, {
+      content: meta.passageText,
+      audioFileId: meta.audioFileId,
+      imageFileId: meta.passageImageFileId,
+    }),
     questions,
   };
 }
 
 function fromQuizContent(id: string, index: number, content: QuizContent | null): QuizItem {
   const meta = content?.layout?.meta;
+  const lead = content?.layout?.sections?.[0];
   return {
     id,
     studySetId: "",
@@ -285,10 +416,11 @@ function fromQuizContent(id: string, index: number, content: QuizContent | null)
     durationMinutes: content?.timeLimits?.default ? Math.round(content.timeLimits.default / 60) : undefined,
     passingScore: meta?.passingScore,
     shuffleQuestions: content?.shuffleQuestions ?? false,
-    audioFileId: fileIdFromUrl(meta?.audioFileId),
-    passageText: meta?.passageText,
-    passageImageFileId: fileIdFromUrl(meta?.passageImageFileId),
-    questionCount: content?.questions?.length ?? 0,
+    // Phần đầu là nơi lưu mới; meta chỉ còn để đọc dữ liệu HSK cũ.
+    audioFileId: fileIdFromUrl(lead?.media?.find(isAudio)?.url) ?? fileIdFromUrl(meta?.audioFileId),
+    passageText: lead?.content || meta?.passageText,
+    passageImageFileId: fileIdFromUrl(lead?.files?.find(isImageFile)?.url) ?? fileIdFromUrl(meta?.passageImageFileId),
+    questionCount: partCount(content?.questions),
   };
 }
 
@@ -420,7 +552,7 @@ export async function updateQuizItem(packageId: string, resourceId: string, inpu
   assertWriteEnabled("content", demo);
   const { versionId, links } = await resolveVersionAndLinksEnsuringDraft(packageId);
   const existing = links.find((l) => l.learningResourceId === resourceId)?.resourceContent ?? null;
-  const content = toQuizContent(input, existing?.questions ?? []);
+  const content = toQuizContent(input, existing?.questions ?? [], existing?.layout);
   await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, { content });
   return fromQuizContent(resourceId, input.index ?? 0, content);
 }
@@ -455,8 +587,9 @@ export async function getQuizResource(packageId: string, resourceId: string): Pr
 
 export async function saveQuizQuestions(packageId: string, resourceId: string, item: QuizItem, questions: QuizQuestion[], demo: boolean): Promise<QuizQuestion[]> {
   assertWriteEnabled("content", demo);
-  const versionId = await ensureDraftVersionId(packageId);
-  const content = toQuizContent(item, questions.map(toBackendQuestion));
+  const { versionId, links } = await resolveVersionAndLinksEnsuringDraft(packageId);
+  const existing = links.find((l) => l.learningResourceId === resourceId)?.resourceContent ?? null;
+  const content = toQuizContent(item, questions.map(toBackendQuestion), existing?.layout);
   await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, { content });
   return questions.map((q, i) => ({ ...q, index: i }));
 }

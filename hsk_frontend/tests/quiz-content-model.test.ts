@@ -52,7 +52,7 @@ describe("quiz-item — form bài tập", () => {
 
 describe("quiz-question — bảng loại và tiện ích", () => {
   it("7 loại; SENTENCE_BUILDER không hỗ trợ soạn; loại lạ có meta dự phòng không hỗ trợ", () => {
-    expect(QUIZ_QUESTION_TYPES.map((t) => t.value)).toEqual(["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_IN_BLANK", "MATCHING_PAIRS", "SHORT_ANSWER", "AUDIO_RESPONSE", "SENTENCE_BUILDER"]);
+    expect(QUIZ_QUESTION_TYPES.map((t) => t.value)).toEqual(["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_IN_BLANK", "MATCHING_PAIRS", "SHORT_ANSWER", "AUDIO_RESPONSE", "SENTENCE_BUILDER", "MULTIPLE_SELECT", "FILE_UPLOAD"]);
     expect(questionTypeMeta("SENTENCE_BUILDER").supported).toBe(false);
     expect(questionTypeMeta("MULTIPLE_CHOICE")).toMatchObject({ label: "Trắc nghiệm", badgeClass: "mc", supported: true });
     expect(questionTypeMeta("ESSAY")).toMatchObject({ label: "ESSAY", supported: false });

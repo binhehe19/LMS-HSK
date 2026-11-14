@@ -31,7 +31,7 @@ export interface QuizItem extends ContentItemBase {
 export type QuizItemInput = ContentItemInput<QuizItem>;
 
 /** Loại câu hỏi. SENTENCE_BUILDER có trong bản cũ nhưng CHƯA chuyển form soạn (chỉ hiển thị khi backend trả về). */
-export type QuizQuestionType = "MULTIPLE_CHOICE" | "TRUE_FALSE" | "FILL_IN_BLANK" | "MATCHING_PAIRS" | "SHORT_ANSWER" | "AUDIO_RESPONSE" | "SENTENCE_BUILDER";
+export type QuizQuestionType = "MULTIPLE_CHOICE" | "TRUE_FALSE" | "FILL_IN_BLANK" | "MATCHING_PAIRS" | "SHORT_ANSWER" | "AUDIO_RESPONSE" | "SENTENCE_BUILDER" | "MULTIPLE_SELECT" | "FILE_UPLOAD";
 
 export type QuizFillBlankMode = "TYPE" | "SELECT";
 
@@ -84,6 +84,8 @@ export interface QuizQuestionBody {
 }
 
 export interface QuizQuestion extends QuizQuestionBody {
+  /** Câu gốc backend trả về (không dịch). Khi lưu, các field HSK không sửa (gợi ý, rubric AI, tệp...) được lấy lại từ đây để không bị mất. */
+  source?: unknown;
   id: string;
   quizId: string;
   index: number;

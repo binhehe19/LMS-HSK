@@ -22,6 +22,8 @@ export const QUIZ_QUESTION_TYPES: QuizQuestionTypeMeta[] = [
   { value: "SHORT_ANSWER", label: "Tự luận", description: "Giáo viên chấm tay", icon: "isax-document-text", badgeClass: "fb", supported: true },
   { value: "AUDIO_RESPONSE", label: "Ghi âm", description: "Trả lời bằng audio", icon: "isax-microphone", badgeClass: "mp", supported: true },
   { value: "SENTENCE_BUILDER", label: "Xây dựng câu", description: "Chưa chuyển sang bản mới", icon: "isax-text-block", badgeClass: "sb", supported: false },
+  { value: "MULTIPLE_SELECT", label: "Chọn nhiều đáp án", description: "Soạn ở trình soạn IELTS", icon: "isax-tick-square", badgeClass: "mc", supported: false },
+  { value: "FILE_UPLOAD", label: "Nộp tệp", description: "Soạn ở trình soạn IELTS", icon: "isax-document-upload", badgeClass: "fb", supported: false },
 ];
 
 export function questionTypeMeta(type: string | undefined | null): QuizQuestionTypeMeta {
