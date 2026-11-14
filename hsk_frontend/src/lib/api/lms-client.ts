@@ -11,6 +11,11 @@ function getLmsApiBase(): string | null {
   return base || null;
 }
 
+/** Gốc API của repo-lms (rỗng khi chưa cấu hình); dùng cho request `keepalive` ngoài `lmsClient` (nhả khoá khi đóng tab). */
+export function getLmsApiBaseUrl(): string {
+  return getLmsApiBase() ?? "";
+}
+
 export function isLmsApiConfigured(): boolean {
   return getLmsApiBase() !== null;
 }
