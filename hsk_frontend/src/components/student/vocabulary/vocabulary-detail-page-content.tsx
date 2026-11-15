@@ -42,7 +42,7 @@ function deriveWord(detail: VocabularyDetail) {
     sinoVietnamese: primary?.sinoVietnamese ?? "",
     wordTypes,
     wordType: wordTypes[0] ?? "",
-    primaryMeaning: meanings[0]?.meaning ?? "",
+    primaryMeaning: meanings[0]?.meaning || meanings[0]?.meaningEn || meanings[0]?.meaningZh || "",
     examples: selectExamples(meanings),
     analysisNodes: buildAnalysisNodes(detail.hanzi, detail.components, detail.radical),
   };

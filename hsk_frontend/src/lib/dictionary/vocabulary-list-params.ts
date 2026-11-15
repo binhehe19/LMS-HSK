@@ -79,7 +79,7 @@ export function vocabularyCardSummary(v: Vocabulary): VocabularyCardSummary {
   return {
     pinyin: p?.pinyin ?? "",
     wordTypes: (p?.wordTypes ?? "").split(",").map((t) => t.trim()).filter(Boolean),
-    meaning: (p?.meanings ?? []).map((m) => m.meaning).filter(Boolean).join("; "),
+    meaning: (p?.meanings ?? []).map((m) => m.meaning || m.meaningEn || m.meaningZh).filter(Boolean).join("; "),
   };
 }
 

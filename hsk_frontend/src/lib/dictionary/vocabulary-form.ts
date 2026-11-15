@@ -5,6 +5,8 @@ import type { Vocabulary, VocabularyInput, VocabularyStatus } from "@/types/dict
 
 export interface MeaningFormItem {
   meaning: string;
+  meaningEn: string;
+  meaningZh: string;
   exampleSentenceCn: string;
   exampleSentencePinyin: string;
   exampleSentenceVi: string;
@@ -46,7 +48,7 @@ export interface VocabularyFormValues {
 export type VocabularyFormTab = "info" | "meaning" | "compounds" | "related" | "details";
 
 export function emptyMeaning(): MeaningFormItem {
-  return { meaning: "", exampleSentenceCn: "", exampleSentencePinyin: "", exampleSentenceVi: "", exampleSentenceEn: "", exampleWordType: "" };
+  return { meaning: "", meaningEn: "", meaningZh: "", exampleSentenceCn: "", exampleSentencePinyin: "", exampleSentenceVi: "", exampleSentenceEn: "", exampleWordType: "" };
 }
 
 export function emptyPinyin(isPrimary = false): PinyinFormItem {
@@ -73,7 +75,7 @@ export function vocabularyToForm(vocab: Vocabulary): VocabularyFormValues {
       notes: p.notes ?? "",
       meanings:
         p.meanings && p.meanings.length > 0
-          ? p.meanings.map((m) => ({ meaning: m.meaning ?? "", exampleSentenceCn: m.exampleSentenceCn ?? "", exampleSentencePinyin: m.exampleSentencePinyin ?? "", exampleSentenceVi: m.exampleSentenceVi ?? "", exampleSentenceEn: m.exampleSentenceEn ?? "", exampleWordType: m.exampleWordType ?? "" }))
+          ? p.meanings.map((m) => ({ meaning: m.meaning ?? "", meaningEn: m.meaningEn ?? "", meaningZh: m.meaningZh ?? "", exampleSentenceCn: m.exampleSentenceCn ?? "", exampleSentencePinyin: m.exampleSentencePinyin ?? "", exampleSentenceVi: m.exampleSentenceVi ?? "", exampleSentenceEn: m.exampleSentenceEn ?? "", exampleWordType: m.exampleWordType ?? "" }))
           : [emptyMeaning()],
     }),
   );
@@ -106,7 +108,7 @@ export function validateVocabularyForm(values: VocabularyFormValues): Vocabulary
   if (!values.hanzi.trim()) return { message: "Vui lòng nhập Hán tự!", tab: "info" };
   if (!values.pinyins.some((p) => p.isPrimary)) return { message: "Phải có ít nhất một pinyin được đặt làm chính!", tab: "info" };
   if (values.pinyins.some((p) => !p.pinyin.trim())) return { message: "Vui lòng nhập đầy đủ phiên âm cho tất cả pinyin!", tab: "info" };
-  if (values.pinyins.some((p) => p.meanings.length === 0 || p.meanings.some((m) => !m.meaning.trim()))) return { message: "Vui lòng nhập đầy đủ các nghĩa!", tab: "meaning" };
+  if (values.pinyins.some((p) => p.meanings.length === 0 || p.meanings.some((m) => !m.meaning.trim() && !m.meaningEn.trim() && !m.meaningZh.trim()))) return { message: "Vui lòng nhập đầy đủ các nghĩa!", tab: "meaning" };
   if (values.strokeCount.trim() !== "" && !(Number.isInteger(Number(values.strokeCount)) && Number(values.strokeCount) > 0)) return { message: "Số nét phải lớn hơn 0!", tab: "info" };
   return null;
 }
@@ -143,6 +145,8 @@ export function buildVocabularyPayload(values: VocabularyFormValues): Vocabulary
       notes: clean(p.notes),
       meanings: p.meanings.map((m) => ({
         meaning: m.meaning.trim(),
+        meaningEn: clean(m.meaningEn),
+        meaningZh: clean(m.meaningZh),
         exampleSentenceCn: clean(m.exampleSentenceCn),
         exampleSentencePinyin: clean(m.exampleSentencePinyin),
         exampleSentenceVi: clean(m.exampleSentenceVi),

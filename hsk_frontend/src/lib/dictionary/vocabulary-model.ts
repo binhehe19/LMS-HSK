@@ -104,7 +104,7 @@ export function splitWordTypes(value: string | undefined | null): string[] {
 
 /** Nghĩa chính gộp bằng "; " (ô "Nghĩa chính" của bảng cũ); rỗng => "---". */
 export function meaningsSummary(vocab: Pick<Vocabulary, "pinyins">): string {
-  return allMeanings(vocab).map((m) => m.meaning).filter(Boolean).join("; ") || "---";
+  return allMeanings(vocab).map((m) => m.meaning || m.meaningEn || m.meaningZh).filter(Boolean).join("; ") || "---";
 }
 
 /** Class huy hiệu "HSK n" (getHskBadgeClass của màn cũ). */
