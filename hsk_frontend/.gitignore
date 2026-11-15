@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 
@@ -12,6 +12,14 @@
 
 # production
 /build
+/dist/
+
+# caches
+.cache/
+.turbo/
+.npm/
+.eslintcache
+.stylelintcache
 
 # misc
 .DS_Store
