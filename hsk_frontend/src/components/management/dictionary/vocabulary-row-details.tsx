@@ -56,7 +56,7 @@ export function VocabularyRowDetails({ vocab, onShowStrokes }: { vocab: Vocabula
                     </span>
                   )}
                   <span>
-                    {idx + 1}. {m.meaning}
+                    {idx + 1}. {[m.meaning, m.meaningEn, m.meaningZh].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 {m.definitionCn && (

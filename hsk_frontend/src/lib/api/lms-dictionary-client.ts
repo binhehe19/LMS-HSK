@@ -1,14 +1,5 @@
 "use client";
 
-// Client "nối thử" Từ điển Hán tự (HSK) vào repo-lms thật, thay cho dictionary-client.ts (mock, trỏ
-// NEXT_PUBLIC_HSK_API_BASE_PATH chưa có backend). Backend: LearningResourceType.DICTIONARY, content dùng chung
-// class VocabularyContent.java với VOCABULARY (tách nhau bằng type, không phải bằng class)
-// (tài nguyên độc lập trong Kho, inLibrary=true, không gắn ContentPackage — tra từ điển không thuộc syllabus nào).
-// Khác hẳn bộ /learning-resources/dictionary/** cũ (từ điển tiếng Anh/IELTS, type=VOCABULARY) — không đụng tới.
-//
-// Tìm kiếm (lọc hskLevel/isSingleVocab/wordType/radical) dùng 1 endpoint riêng /dictionary-hanzi/search (các trường
-// này nằm trong JSON content, endpoint liệt kê chung /learning-resources không lọc được). Tạo/sửa/xoá/lấy 1 từ
-// dùng lại nguyên các endpoint chung (POST /learning-resources, GET/POST /{id}/versions, .../publish, DELETE /{id}).
 import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { PageResponse as BackendPageResponse } from "@/types/lms";
@@ -18,8 +9,10 @@ const enc = encodeURIComponent;
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface DictionaryMeaningContent {
-  meaning: string;
-  exampleSentenceCn?: string;
+  meaningVi?: string;
+  meaningEn?: string;
+  meaningZh?: string;
+  exampleSentenceZh?: string;
   exampleSentencePinyin?: string;
   exampleSentenceVi?: string;
   exampleSentenceEn?: string;
@@ -38,7 +31,8 @@ interface DictionaryPinyinContent {
   meanings: DictionaryMeaningContent[];
 }
 interface DictionaryContent {
-  hanzi: string;
+  word: string;
+  language: "zh";
   hskLevel?: number;
   audioUrl?: string;
   imageUrl?: string;
@@ -61,13 +55,34 @@ interface BackendLearningResource {
 interface BackendVersion {
   id: string;
 }
-/** Hình dạng trả về của /dictionary-hanzi/search — đã khớp sẵn với `Vocabulary` phía FE. */
-type DictionaryWordResponse = Vocabulary;
+type DictionaryWordResponse = Omit<VocabularyDetail, "pinyins"> & { pinyins: DictionaryPinyinContent[] };
 
-// ---- dịch VocabularyInput <-> DictionaryContent (tên trường khớp sẵn, không đổi gì) ----
+function fromMeaningContent(meaning: DictionaryMeaningContent): VocabularyPinyin["meanings"][number] {
+  return {
+    meaning: meaning.meaningVi ?? "",
+    meaningEn: meaning.meaningEn,
+    meaningZh: meaning.meaningZh,
+    exampleSentenceCn: meaning.exampleSentenceZh,
+    exampleSentencePinyin: meaning.exampleSentencePinyin,
+    exampleSentenceVi: meaning.exampleSentenceVi,
+    exampleSentenceEn: meaning.exampleSentenceEn,
+    exampleWordType: meaning.exampleWordType,
+  };
+}
+
+function fromDictionaryResponse(response: DictionaryWordResponse): VocabularyDetail {
+  return {
+    ...response,
+    pinyins: (response.pinyins ?? []).map((pinyin) => ({ ...pinyin, meanings: (pinyin.meanings ?? []).map(fromMeaningContent) })),
+    components: response.components ?? [],
+  };
+}
+
+// Chuyển giữa trường ngôn ngữ của API và dạng dữ liệu dùng trong giao diện.
 function toDictionaryContent(input: VocabularyInput): DictionaryContent {
   return {
-    hanzi: input.hanzi,
+    word: input.hanzi,
+    language: "zh",
     hskLevel: input.hskLevel,
     audioUrl: input.audioUrl,
     imageUrl: input.imageUrl,
@@ -90,8 +105,10 @@ function toDictionaryContent(input: VocabularyInput): DictionaryContent {
       antonyms: p.antonyms,
       notes: p.notes,
       meanings: (p.meanings ?? []).map((m) => ({
-        meaning: m.meaning,
-        exampleSentenceCn: m.exampleSentenceCn,
+        meaningVi: m.meaning || undefined,
+        meaningEn: m.meaningEn,
+        meaningZh: m.meaningZh,
+        exampleSentenceZh: m.exampleSentenceCn,
         exampleSentencePinyin: m.exampleSentencePinyin,
         exampleSentenceVi: m.exampleSentenceVi,
         exampleSentenceEn: m.exampleSentenceEn,
@@ -112,11 +129,11 @@ function fromDictionaryContent(id: string, status: Vocabulary["status"], content
     synonyms: p.synonyms,
     antonyms: p.antonyms,
     notes: p.notes,
-    meanings: p.meanings ?? [],
+    meanings: (p.meanings ?? []).map(fromMeaningContent),
   }));
   return {
     id,
-    hanzi: content.hanzi,
+    hanzi: content.word,
     hskLevel: content.hskLevel,
     audioUrl: content.audioUrl,
     imageUrl: content.imageUrl,
@@ -134,8 +151,8 @@ function fromDictionaryContent(id: string, status: Vocabulary["status"], content
 }
 
 function toSearchQuery(params: VocabularySearchParams): string {
-  const q = new URLSearchParams();
-  if (params.keySearch) q.set("keySearch", params.keySearch);
+  const q = new URLSearchParams({ language: "zh", includeDrafts: "true" });
+  if (params.keySearch) q.set("keyword", params.keySearch);
   if (params.hskLevel !== undefined) q.set("hskLevel", String(params.hskLevel));
   if (params.isSingleVocab !== undefined) q.set("isSingleVocab", String(params.isSingleVocab));
   if (params.wordType) q.set("wordType", params.wordType);
@@ -147,8 +164,8 @@ function toSearchQuery(params: VocabularySearchParams): string {
 
 /** Tìm kiếm + phân trang phía máy chủ (`page` từ 0). */
 export async function searchVocabularies(params: VocabularySearchParams): Promise<VocabularyPage> {
-  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary-hanzi/search${toSearchQuery(params)}`);
-  return { items: res.items ?? [], totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
+  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary${toSearchQuery(params)}`);
+  return { items: (res.items ?? []).map(fromDictionaryResponse), totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
 }
 
 /** Chi tiết đầy đủ — bản cũ gọi trước khi mở form sửa vì danh sách chỉ là bản rút gọn. */
@@ -162,7 +179,7 @@ export async function getVocabulary(id: number | string): Promise<Vocabulary> {
 export async function createVocabulary(input: VocabularyInput, demoActive: boolean): Promise<Vocabulary> {
   assertWriteEnabled("content", demoActive);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
-    type: "DICTIONARY",
+    type: "VOCABULARY",
     content: toDictionaryContent(input),
     inLibrary: true,
   });
@@ -197,9 +214,9 @@ export async function deleteVocabulary(id: number | string, demoActive: boolean)
 // Tìm/lọc chạy bằng SQL trên cột chuẩn hoá của learning_resources (không nạp toàn bộ từ điển vào bộ nhớ).
 
 function toStudentQuery(params: StudentVocabularySearchParams): string {
-  const q = new URLSearchParams();
+  const q = new URLSearchParams({ language: "zh" });
   const key = params.keySearch?.trim();
-  if (key) q.set("keySearch", key);
+  if (key) q.set("keyword", key);
   if (params.hskLevel !== undefined) q.set("hskLevel", String(params.hskLevel));
   if (params.radical) q.set("radical", params.radical);
   q.set("page", String(params.page));
@@ -212,13 +229,13 @@ function toStudentQuery(params: StudentVocabularySearchParams): string {
  * màn quản lý: backend chỉ trả từ ĐÃ XUẤT BẢN cho người không phải Admin.
  */
 export async function searchPublishedVocabularies(params: StudentVocabularySearchParams): Promise<VocabularyPage> {
-  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary-hanzi/search${toStudentQuery(params)}`);
+  const res = await lmsClient.get<BackendPageResponse<DictionaryWordResponse>>(`/learning-resources/dictionary${toStudentQuery(params)}`);
   if (!res || !Array.isArray(res.items)) throw new Error("Dữ liệu từ điển trả về không đúng định dạng.");
-  return { items: res.items, totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
+  return { items: res.items.map(fromDictionaryResponse), totalElements: res.total_elements, totalPages: res.total_pages, page: res.page, size: res.size };
 }
 
 /** Chi tiết một từ đã xuất bản (404 nếu không có hoặc chưa xuất bản). */
 export async function getPublishedVocabulary(id: string): Promise<VocabularyDetail> {
-  const res = await lmsClient.get<VocabularyDetail>(`/learning-resources/dictionary-hanzi/words/${enc(id)}`);
-  return { ...res, components: Array.isArray(res.components) ? res.components : [] };
+  const res = await lmsClient.get<DictionaryWordResponse>(`/learning-resources/dictionary/${enc(id)}?language=zh`);
+  return fromDictionaryResponse(res);
 }

@@ -394,9 +394,17 @@ export function VocabularyFormModal({ mode, initialValues, submitting, onCancel,
                     <div className="card-body p-3">
                       <div className="mb-3">
                         <label className={LABEL} htmlFor={`vocab-meaning-${index}`}>
-                          Nghĩa (Tiếng Việt) <span className="text-danger">*</span>
+                          Nghĩa (Tiếng Việt)
                         </label>
                         <input id={`vocab-meaning-${index}`} type="text" className="form-control form-control-sm" value={m.meaning} placeholder="Nhập nghĩa của từ..." onChange={(e) => patchMeaning(index, { meaning: e.target.value })} disabled={submitting} />
+                      </div>
+                      <div className="row g-2 mb-3">
+                        {([{ field: "meaningEn", label: "Nghĩa (Tiếng Anh)" }, { field: "meaningZh", label: "Nghĩa (Tiếng Trung)" }] as const).map(({ field, label }) => (
+                          <div className="col-md-6" key={field}>
+                            <label className={LABEL} htmlFor={`vocab-meaning-${index}-${field}`}>{label}</label>
+                            <input id={`vocab-meaning-${index}-${field}`} type="text" className="form-control form-control-sm" value={m[field]} onChange={(event) => patchMeaning(index, { [field]: event.target.value })} disabled={submitting} />
+                          </div>
+                        ))}
                       </div>
                       <div className="bg-white border rounded-3 p-3">
                         <div className={`${LABEL} mb-2`}>Ví Dụ</div>

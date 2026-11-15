@@ -122,14 +122,14 @@ describe("vocabulary-form — giá trị form, kiểm tra, payload", () => {
     form.strokeCount = "6";
     form.radical = "女";
     form.imageUrl = " ";
-    form.pinyins[0] = { ...form.pinyins[0], pinyin: " hǎo ", sinoVietnamese: "hảo", wordTypes: ["Tính từ", "Phó từ"], measureWord: " 个 [gè] ", compounds: [{ hanzi: "好吃", extra: "hảo cật" }], synonyms: [], antonyms: [{ hanzi: "坏", extra: "" }], notes: "", meanings: [{ meaning: " tốt ", exampleSentenceCn: "很好。", exampleSentencePinyin: "", exampleSentenceVi: "", exampleSentenceEn: "", exampleWordType: "Tính từ" }] };
+    form.pinyins[0] = { ...form.pinyins[0], pinyin: " hǎo ", sinoVietnamese: "hảo", wordTypes: ["Tính từ", "Phó từ"], measureWord: " 个 [gè] ", compounds: [{ hanzi: "好吃", extra: "hảo cật" }], synonyms: [], antonyms: [{ hanzi: "坏", extra: "" }], notes: "", meanings: [{ meaning: " tốt ", meaningEn: "good", meaningZh: "优秀", exampleSentenceCn: "很好。", exampleSentencePinyin: "", exampleSentenceVi: "", exampleSentenceEn: "", exampleWordType: "Tính từ" }] };
     const payload = buildVocabularyPayload(form);
     expect(payload).toMatchObject({ hanzi: "好", hskLevel: 2, strokeCount: 6, radical: "女", isSingleVocab: true, status: "draft" });
     expect(payload.imageUrl).toBeUndefined();
     expect(payload.pinyins[0]).toMatchObject({ pinyin: "hǎo", sinoVietnamese: "hảo", wordTypes: "Tính từ,Phó từ", isPrimary: true, measureWord: "个 [gè]", compounds: JSON.stringify([{ hanzi: "好吃", sinoVietnamese: "hảo cật" }]), antonyms: JSON.stringify([{ hanzi: "坏", pinyin: null }]) });
     expect(payload.pinyins[0].synonyms).toBeUndefined();
     expect(payload.pinyins[0].notes).toBeUndefined();
-    expect(payload.pinyins[0].meanings[0]).toEqual({ meaning: "tốt", exampleSentenceCn: "很好。", exampleSentencePinyin: undefined, exampleSentenceVi: undefined, exampleSentenceEn: undefined, exampleWordType: "Tính từ" });
+    expect(payload.pinyins[0].meanings[0]).toEqual({ meaning: "tốt", meaningEn: "good", meaningZh: "优秀", exampleSentenceCn: "很好。", exampleSentencePinyin: undefined, exampleSentenceVi: undefined, exampleSentenceEn: undefined, exampleWordType: "Tính từ" });
   });
 
   it("setPrimaryPinyin chỉ một chính; removePinyin giữ ≥1 và chuyển 'chính' sang phần tử đầu khi xoá pinyin chính", () => {

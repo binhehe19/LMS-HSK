@@ -5,8 +5,7 @@
 //
 // Mapping (đã chốt với người phụ trách): GrammarPoint HSK gộp vào LearningResourceType.GRAMMAR/ContentPackageType.GRAMMAR có sẵn, dùng GrammarContent:
 // title/category/generalDefinition/structure/explanation giữ tên; note→usageNote (đổi tên, cùng nghĩa); exampleSentenceZh/Pinyin/Vi→1 phần tử
-// examples[]{sentence: Zh, pronunciation: Pinyin, translation: Vi, exampleType: EXAMPLE} (tên trường khớp đúng GrammarContent.GrammarExampleItem
-// của backend — sentence/translation, không phải sentenceEn/translationVi). hskLevel và linkedQuizStudySetId KHÔNG có chỗ lưu ở
+// examples[]{sentenceZh, pronunciation: Pinyin, translationVi, exampleType: EXAMPLE}. hskLevel và linkedQuizStudySetId KHÔNG có chỗ lưu ở
 // GrammarContent (không có field tương ứng) → TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend.
 // Package→Folder→StudySet→Item rút gọn còn Package→resource (phẳng); sessionNo cố định = 1. syllabusId/syllabusVersionId dùng cặp đại diện cố định
 // riêng cho ngữ pháp (khác cặp của flashcard, để không trộn 2 module khi liệt kê theo syllabusId).
@@ -40,7 +39,9 @@ interface BackendPackage {
 interface GrammarExampleItem {
   exampleIndex?: number;
   exampleType?: "EXAMPLE" | "COMMON_MISTAKE";
+  sentenceZh?: string;
   sentence?: string;
+  translationVi?: string;
   translation?: string;
   pronunciation?: string;
 }
@@ -75,7 +76,7 @@ interface EditLockResponse {
 function toGrammarContent(input: GrammarPointInput): GrammarContent {
   const example: GrammarExampleItem | null =
     input.exampleSentenceZh || input.exampleSentencePinyin || input.exampleSentenceVi
-      ? { exampleIndex: 0, exampleType: "EXAMPLE", sentence: input.exampleSentenceZh || undefined, pronunciation: input.exampleSentencePinyin || undefined, translation: input.exampleSentenceVi || undefined }
+      ? { exampleIndex: 0, exampleType: "EXAMPLE", sentenceZh: input.exampleSentenceZh || undefined, pronunciation: input.exampleSentencePinyin || undefined, translationVi: input.exampleSentenceVi || undefined }
       : null;
   return {
     title: input.title,
@@ -100,9 +101,9 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
     structure: content?.structure || undefined,
     explanation: content?.explanation || undefined,
     note: content?.usageNote || undefined,
-    exampleSentenceZh: example?.sentence || undefined,
+    exampleSentenceZh: example?.sentenceZh || example?.sentence || undefined,
     exampleSentencePinyin: example?.pronunciation || undefined,
-    exampleSentenceVi: example?.translation || undefined,
+    exampleSentenceVi: example?.translationVi || example?.translation || undefined,
   };
 }
 
