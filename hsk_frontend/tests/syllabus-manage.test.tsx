@@ -409,7 +409,7 @@ describe("tab Lịch trình + module ôn luyện (Admin) — gắn trực tiếp
       expect(screen.getByText("Đã chọn 1 / 2 mục")).toBeInTheDocument();
 
       await userEvent.click(button("Thêm 1 mục vào buổi"));
-      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "VOCABULARY", 1, [{ id: "item-f1", label: "你好" }], false));
+      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "VOCABULARY", 1, [{ id: "item-f1", label: "你好" }], false, null));
       await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 mục vào buổi."));
       await waitFor(() => expect(screen.queryByText(/Thêm module ôn luyện — Buổi 1/)).toBeNull()); // hộp tự đóng
 
@@ -446,7 +446,7 @@ describe("tab Lịch trình + module ôn luyện (Admin) — gắn trực tiếp
       expect(within(screen.getByTestId("available-list")).queryByText("Đọc 1")).toBeNull();
       await userEvent.click(button("Chọn tất cả"));
       await userEvent.click(button("Thêm 1 mục vào buổi"));
-      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "ASSESSMENT", 2, [{ id: "qz-1", label: "Nghe 1" }], false));
+      await waitFor(() => expect(attachLibraryItemsToSchedule).toHaveBeenCalledWith("syl-1", "ASSESSMENT", 2, [{ id: "qz-1", label: "Nghe 1" }], false, null));
     },
     LONG,
   );

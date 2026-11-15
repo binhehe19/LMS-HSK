@@ -41,7 +41,19 @@ export interface ScheduleResourceLink {
   assessmentType?: string;
   skill?: string;
   contentPackageVersionId?: string;
+  /** Chủ đề (nhóm) trong buổi; cả ba null/thiếu = không chủ đề. */
+  topicId?: string | null;
+  topicTitle?: string | null;
+  topicOrder?: number | null;
   resourceContent: unknown;
+}
+/** Chủ đề của một buổi trong học phần của một loại (mỗi loại học liệu có học phần riêng nên chủ đề cũng theo loại). */
+export interface ScheduleTopic {
+  id: string;
+  contentPackageVersionId: string;
+  sessionNo: number;
+  title: string;
+  topicOrder: number;
 }
 
 function syllabusVersionIdOf(syllabusId: string): string {
@@ -94,6 +106,60 @@ export async function listScheduleResources(syllabusId: string, type: ScheduleRe
   return resources;
 }
 
+/** Chủ đề (kể cả rỗng) của một buổi, gộp từ mọi học phần cùng loại của giáo trình; sắp theo topicOrder. */
+export async function listScheduleTopics(syllabusId: string, type: ScheduleResourceType, sessionNo: number): Promise<ScheduleTopic[]> {
+  const topics: ScheduleTopic[] = [];
+  for (let page = 0; ; page++) {
+    const found = await lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${type}&syllabusId=${encodeURIComponent(syllabusId)}&page=${page}&size=100`);
+    for (const pkg of found.items) {
+      const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
+      if (!versionId) continue;
+      const rows = await lmsClient.get<Omit<ScheduleTopic, "contentPackageVersionId">[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/topics?sessionNo=${sessionNo}`);
+      topics.push(...rows.map((t) => ({ ...t, contentPackageVersionId: versionId })));
+    }
+    if (page + 1 >= found.total_pages || found.items.length === 0) break;
+  }
+  return topics.sort((a, b) => a.topicOrder - b.topicOrder);
+}
+
+/** Phiên bản nháp của học phần (cùng loại) mà mọi thao tác ghi trên giáo trình đang dùng. */
+async function draftVersionOf(syllabusId: string, type: ScheduleResourceType): Promise<string> {
+  const pkg = await ensureSyllabusPackage(syllabusId, type);
+  return ensureDraftVersionId(pkg.id);
+}
+
+export async function createScheduleTopic(syllabusId: string, type: ScheduleResourceType, sessionNo: number, title: string, demo: boolean): Promise<ScheduleTopic> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await draftVersionOf(syllabusId, type);
+  const created = await lmsClient.post<Omit<ScheduleTopic, "contentPackageVersionId">>(`/content-packages/versions/${encodeURIComponent(versionId)}/topics`, { sessionNo, title });
+  return { ...created, contentPackageVersionId: versionId };
+}
+
+export async function renameScheduleTopic(syllabusId: string, type: ScheduleResourceType, topicId: string, title: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await draftVersionOf(syllabusId, type);
+  await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/topics/${encodeURIComponent(topicId)}`, { title });
+}
+
+export async function deleteScheduleTopic(syllabusId: string, type: ScheduleResourceType, topicId: string, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await draftVersionOf(syllabusId, type);
+  await lmsClient.delete(`/content-packages/versions/${encodeURIComponent(versionId)}/topics/${encodeURIComponent(topicId)}`);
+}
+
+export async function reorderScheduleTopics(syllabusId: string, type: ScheduleResourceType, sessionNo: number, topicIdsInOrder: string[], demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await draftVersionOf(syllabusId, type);
+  await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/topics/reorder`, { sessionNo, topicIdsInOrder });
+}
+
+/** topicId null = bỏ khỏi chủ đề. */
+export async function assignScheduleResourceTopic(syllabusId: string, type: ScheduleResourceType, resourceId: string, topicId: string | null, demo: boolean): Promise<void> {
+  assertWriteEnabled(FEATURE, demo);
+  const versionId = await draftVersionOf(syllabusId, type);
+  await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/topic`, { topicId });
+}
+
 export interface AttachFailure {
   label: string;
   message: string;
@@ -116,6 +182,7 @@ export async function attachLibraryItemsToSchedule(
   sessionNo: number,
   sources: { id: string; label: string }[],
   demo: boolean,
+  topicId: string | null = null,
 ): Promise<AttachResult> {
   assertWriteEnabled(FEATURE, demo);
   const pkg = await ensureSyllabusPackage(syllabusId, type);
@@ -142,6 +209,7 @@ export async function attachLibraryItemsToSchedule(
         learningResourceVersionId: resourceVersionId,
         sessionNo,
         displayOrder: nextOrder++,
+        topicId,
       });
       result.added++;
     } catch (err) {

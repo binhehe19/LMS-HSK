@@ -7,6 +7,10 @@ it("prioritizes JSON skill and supports legacy types",()=>{
  expect(assessmentSkill({assessmentType:"WRITING"})).toBe("WRITING");
  expect(assessmentSkill({assessmentType:"QUIZ"})).toBe("QUIZ");
 });
+it("carries topic title and order from the published session resources",()=>{
+ const modules=publishedModules({vocabulary:{freeResources:[{id:"v1",resourceType:"VOCABULARY",topicId:"t1",topicTitle:"Gia đình",topicOrder:1,resourceContent:null},{id:"v2",resourceType:"VOCABULARY",resourceContent:null}]}});
+ expect(modules.map(m=>[m.id,m.topicTitle,m.topicOrder])).toEqual([["v1","Gia đình",1],["v2",undefined,undefined]]);
+});
 it("routes withheld questions using safe metadata without changing assessment type",()=>{
  const modules=publishedModules({quiz:{freeResources:[{id:"a",assessmentType:"QUIZ",skill:"LISTENING",resourceContent:null},{id:"b",assessmentType:"READING",resourceContent:null},{id:"c",assessmentType:"QUIZ",resourceContent:null}]}});
  expect(activityResources(modules,"listening").map(m=>m.id)).toEqual(["a"]);

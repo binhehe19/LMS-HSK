@@ -5,6 +5,7 @@ import type { FetchState } from "@/components/management/notifications/use-keyed
 import { ScheduleTable } from "@/components/management/syllabus/schedule-table";
 import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import type { ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
 import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import { buildSyllabusInfoFields, cloCodes, displayText, formatSyllabusDate, syllabusTitle, type InfoField } from "@/lib/syllabus/syllabus-model";
 import { SYLLABUS_TABS, type SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
@@ -25,6 +26,7 @@ interface SyllabusDetailPanelProps {
   onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
   onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
   onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
+  topicUi?: ScheduleTopicUi;
 }
 
 interface SectionColumn<T> {
@@ -195,6 +197,7 @@ export function SyllabusDetailPanel(p: SyllabusDetailPanelProps) {
                 onAddModule={p.onAddModule}
                 onMoveResource={p.onMoveResource}
                 onDeleteResource={p.onDeleteResource}
+                topicUi={p.topicUi}
               />
             )}
 

@@ -92,7 +92,7 @@ export function ExercisePanel({ resources, skill, session, isAdmin }: Props) {
         <div className="hsk-exercise-picker" role="tablist" aria-label="Chọn bài tập">
           {modules.map((item, i) => (
             <button type="button" role="tab" key={item.id} aria-selected={i === active} className={i === active ? "is-active" : ""} onClick={() => setActive(i)}>
-              {item.title}
+              {item.topicTitle ? `${item.topicTitle} · ${item.title}` : item.title}
             </button>
           ))}
         </div>

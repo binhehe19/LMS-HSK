@@ -1,9 +1,12 @@
 "use client";
 
 import { Alert } from "antd";
+import { useState } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
+import { groupByTopic, type ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
+import { TopicTitleModal } from "@/components/management/syllabus/topic-title-modal";
 import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
-import type { ScheduleResourceLink } from "@/lib/api/syllabus-schedule-resources-client";
+import type { ScheduleResourceLink, ScheduleTopic } from "@/lib/api/syllabus-schedule-resources-client";
 import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import { missingRawModuleTypes, requiredRawModuleTypes, SCHEDULE_RESOURCE_TYPE_LABELS, SCHEDULE_RESOURCE_TYPES, type ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import { cloCodes, displayText, isOpenableLink } from "@/lib/syllabus/syllabus-model";
@@ -19,6 +22,8 @@ interface ScheduleTableProps {
   onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
   onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
   onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
+  /** Chủ đề trong buổi; vắng = không hiện chủ đề. */
+  topicUi?: ScheduleTopicUi;
 }
 
 type MaterialLink = { materialTitle?: string; materialLink?: string };
@@ -47,54 +52,127 @@ function MaterialList({ label, items }: { label: string; items: MaterialLink[] |
   );
 }
 
+type TopicModalTarget = { scheduleId: string; type: ScheduleResourceType; sessionNo: number; topicId: string | null; initial: string };
+
 function ResourceGroupList({
   scheduleId,
+  sessionNo,
   byType,
+  topicsByType,
   busy,
   canEdit,
   onMove,
   onDelete,
+  topicUi,
+  onTopicModal,
 }: {
   scheduleId: string;
+  sessionNo: number;
   byType: Readonly<Record<ScheduleResourceType, ScheduleResourceLink[]>>;
+  topicsByType: Readonly<Record<ScheduleResourceType, ScheduleTopic[]>> | null;
   busy: boolean;
   canEdit: boolean;
   onMove: ScheduleTableProps["onMoveResource"];
   onDelete: ScheduleTableProps["onDeleteResource"];
+  topicUi: ScheduleTopicUi | undefined;
+  onTopicModal: (target: TopicModalTarget) => void;
 }) {
-  const total = SCHEDULE_RESOURCE_TYPES.reduce((n, t) => n + (byType[t]?.length ?? 0), 0);
-  if (!total) return <span className="text-muted">Chưa có module</span>;
+  const topicsOf = (type: ScheduleResourceType) => topicsByType?.[type] ?? [];
+  const total = SCHEDULE_RESOURCE_TYPES.reduce((n, t) => n + (byType[t]?.length ?? 0) + topicsOf(t).length, 0);
+  const canTopic = canEdit && topicUi !== undefined && topicsByType !== null;
   return (
     <div className="module-summary-list" data-testid="module-list" data-schedule-id={scheduleId}>
+      {!total && <span className="text-muted">Chưa có module</span>}
       {SCHEDULE_RESOURCE_TYPES.map((type) => {
         const links = byType[type] ?? [];
-        if (links.length === 0) return null;
+        const topics = topicsOf(type);
+        if (links.length === 0 && topics.length === 0) return null;
+        const groups = groupByTopic(links, topics);
+        const hasTopics = topics.length > 0;
         return (
           <div key={type} className="mb-1">
             <div className="text-muted small fw-semibold">{SCHEDULE_RESOURCE_TYPE_LABELS[type]}</div>
-            {links.map((link, i) => (
-              <div key={link.id} className="module-summary-item d-flex align-items-center justify-content-between gap-2" data-testid="module-item">
-                <span>
-                  #{link.displayOrder + 1} {resourceLabel(link)}
-                </span>
-                {canEdit && (
-                  <div className="d-flex gap-1">
-                    <button type="button" className="btn btn-sm btn-outline-secondary" title="Đưa lên" aria-label="Đưa lên" disabled={busy || i === 0} onClick={() => onMove(scheduleId, type, link.learningResourceId, -1)}>
-                      ↑
-                    </button>
-                    <button type="button" className="btn btn-sm btn-outline-secondary" title="Đưa xuống" aria-label="Đưa xuống" disabled={busy || i === links.length - 1} onClick={() => onMove(scheduleId, type, link.learningResourceId, 1)}>
-                      ↓
-                    </button>
-                    <button type="button" className="btn btn-sm btn-outline-danger" title="Xóa module" aria-label="Xóa module" disabled={busy} onClick={() => onDelete(scheduleId, type, link.learningResourceId)}>
-                      {busy ? <span className="spinner-border spinner-border-sm" /> : "Xóa"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+            {groups.map((group) => {
+              const topic = group.topic;
+              const topicIndex = topic ? topics.findIndex((t) => t.id === topic.id) : -1;
+              return (
+                <div key={topic?.id ?? "none"} className={topic ? "ms-2 mb-1 border-start ps-2" : ""} data-testid={topic ? "topic-group" : undefined}>
+                  {topic && (
+                    <div className="d-flex align-items-center justify-content-between gap-2">
+                      <span className="fw-semibold small">{topic.title}</span>
+                      {canTopic && (
+                        <div className="d-flex gap-1">
+                          <button type="button" className="btn btn-sm btn-outline-secondary" aria-label="Đưa chủ đề lên" disabled={busy || topicIndex === 0} onClick={() => topicUi.onMove(scheduleId, type, sessionNo, topic.id, -1)}>
+                            ↑
+                          </button>
+                          <button type="button" className="btn btn-sm btn-outline-secondary" aria-label="Đưa chủ đề xuống" disabled={busy || topicIndex === topics.length - 1} onClick={() => topicUi.onMove(scheduleId, type, sessionNo, topic.id, 1)}>
+                            ↓
+                          </button>
+                          <button type="button" className="btn btn-sm btn-outline-secondary" aria-label="Đổi tên chủ đề" disabled={busy} onClick={() => onTopicModal({ scheduleId, type, sessionNo, topicId: topic.id, initial: topic.title })}>
+                            Sửa
+                          </button>
+                          <button type="button" className="btn btn-sm btn-outline-danger" aria-label="Xóa chủ đề" disabled={busy} onClick={() => topicUi.onDelete(scheduleId, type, topic.id)}>
+                            Xóa
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {topic && group.links.length === 0 && <div className="text-muted small">Chủ đề chưa có module</div>}
+                  {!topic && hasTopics && group.links.length > 0 && <div className="text-muted small">Chưa phân chủ đề</div>}
+                  {group.links.map((link, i) => (
+                    <div key={link.id} className="module-summary-item d-flex align-items-center justify-content-between gap-2" data-testid="module-item">
+                      <span>
+                        #{link.displayOrder + 1} {resourceLabel(link)}
+                      </span>
+                      {canEdit && (
+                        <div className="d-flex gap-1">
+                          {canTopic && hasTopics && (
+                            <select
+                              className="form-select form-select-sm"
+                              style={{ width: "auto" }}
+                              aria-label="Chủ đề của module"
+                              value={topic?.id ?? ""}
+                              disabled={busy}
+                              onChange={(e) => topicUi.onAssign(scheduleId, type, link.learningResourceId, e.target.value || null)}
+                            >
+                              <option value="">Không chủ đề</option>
+                              {topics.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                  {t.title}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <button type="button" className="btn btn-sm btn-outline-secondary" title="Đưa lên" aria-label="Đưa lên" disabled={busy || i === 0} onClick={() => onMove(scheduleId, type, link.learningResourceId, -1)}>
+                            ↑
+                          </button>
+                          <button type="button" className="btn btn-sm btn-outline-secondary" title="Đưa xuống" aria-label="Đưa xuống" disabled={busy || i === group.links.length - 1} onClick={() => onMove(scheduleId, type, link.learningResourceId, 1)}>
+                            ↓
+                          </button>
+                          <button type="button" className="btn btn-sm btn-outline-danger" title="Xóa module" aria-label="Xóa module" disabled={busy} onClick={() => onDelete(scheduleId, type, link.learningResourceId)}>
+                            {busy ? <span className="spinner-border spinner-border-sm" /> : "Xóa"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         );
       })}
+      {canTopic && (
+        <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
+          <span className="text-muted small">Thêm chủ đề:</span>
+          {SCHEDULE_RESOURCE_TYPES.map((type) => (
+            <button key={type} type="button" className="btn btn-sm btn-outline-primary" disabled={busy} onClick={() => onTopicModal({ scheduleId, type, sessionNo, topicId: null, initial: "" })}>
+              {SCHEDULE_RESOURCE_TYPE_LABELS[type]}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -141,6 +219,14 @@ function NeedCell({ item, byType }: { item: SyllabusScheduleItem; byType: Readon
 export function ScheduleTable(p: ScheduleTableProps) {
   const rows = p.detail.schedule ?? [];
   const canEdit = p.canManage && p.writeEnabled;
+  const [topicModal, setTopicModal] = useState<TopicModalTarget | null>(null);
+  const submitTopicTitle = async (title: string) => {
+    if (!topicModal || !p.topicUi) return false;
+    const { scheduleId, type, sessionNo, topicId } = topicModal;
+    const done = topicId === null ? await p.topicUi.onCreate(scheduleId, type, sessionNo, title) : await p.topicUi.onRename(scheduleId, type, topicId, title);
+    if (done) setTopicModal(null);
+    return done;
+  };
   const byTypeOf = (scheduleId: string): Readonly<Record<ScheduleResourceType, ScheduleResourceLink[]>> | null => (p.resourcesState.kind === "ok" ? p.resourcesState.data[scheduleId] ?? null : null);
 
   return (
@@ -200,7 +286,18 @@ export function ScheduleTable(p: ScheduleTableProps) {
                     ) : byType === null ? (
                       <span className="text-muted">—</span>
                     ) : (
-                      <ResourceGroupList scheduleId={item.id} byType={byType} busy={busy} canEdit={canEdit} onMove={p.onMoveResource} onDelete={p.onDeleteResource} />
+                      <ResourceGroupList
+                        scheduleId={item.id}
+                        sessionNo={sessionNo}
+                        byType={byType}
+                        topicsByType={p.topicUi?.topics?.[item.id] ?? null}
+                        busy={busy}
+                        canEdit={canEdit}
+                        onMove={p.onMoveResource}
+                        onDelete={p.onDeleteResource}
+                        topicUi={p.topicUi}
+                        onTopicModal={setTopicModal}
+                      />
                     )}
                   </td>
                   <td className="topic-col fw-bold">{displayText(item.topic)}</td>
@@ -239,6 +336,14 @@ export function ScheduleTable(p: ScheduleTableProps) {
           </tbody>
         </table>
       </div>
+      <TopicTitleModal
+        key={topicModal ? `${topicModal.scheduleId}:${topicModal.type}:${topicModal.topicId ?? "new"}` : "closed"}
+        open={topicModal !== null}
+        initial={topicModal?.initial ?? ""}
+        busy={topicModal !== null && p.busyScheduleId === topicModal.scheduleId}
+        onCancel={() => setTopicModal(null)}
+        onSubmit={submitTopicTitle}
+      />
     </div>
   );
 }

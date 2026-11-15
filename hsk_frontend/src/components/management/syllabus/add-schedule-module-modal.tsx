@@ -51,11 +51,15 @@ interface AddScheduleModuleModalProps {
   busy: boolean;
   onCancel: () => void;
   /** true = đã thêm xong hết (cha đóng hộp); false = còn mục lỗi, hộp giữ nguyên để người dùng thấy toast lỗi. */
-  onSubmit: (type: ScheduleResourceType, sources: { id: string; label: string }[]) => Promise<boolean>;
+  onSubmit: (type: ScheduleResourceType, sources: { id: string; label: string }[], topicId: string | null) => Promise<boolean>;
+  /** Chủ đề đã có của buổi này theo loại, để chọn nơi gắn module (rỗng = không hiện ô chọn). */
+  topicsOf: (type: ScheduleResourceType) => readonly { id: string; title: string }[];
 }
 
-export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, onSubmit }: AddScheduleModuleModalProps) {
+export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, onSubmit, topicsOf }: AddScheduleModuleModalProps) {
   const [type, setType] = useState<ScheduleResourceType>("VOCABULARY");
+  const [topicId, setTopicId] = useState("");
+  const topics = topicsOf(type);
   const [packageId, setPackageId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Map<string, string>>(new Map()); // id => title (label cho toast lỗi)
   const [skill, setSkill] = useState("");
@@ -67,6 +71,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
   const changeType = (next: string) => {
     const t = SCHEDULE_RESOURCE_TYPES.find((v) => v === next) ?? "VOCABULARY";
     setType(t);
+    setTopicId("");
     setPackageId(null);
     setSelected(new Map());
     setSkill("");
@@ -93,7 +98,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
   const canSubmit = schedule !== null && selected.size > 0 && !busy;
   const submit = async () => {
     const sources = Array.from(selected, ([id, title]) => ({ id, label: title }));
-    const done = await onSubmit(type, sources);
+    const done = await onSubmit(type, sources, topicId || null);
     if (done) setSelected(new Map());
   };
 
@@ -146,6 +151,22 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
               </select>
             ))}
         </div>
+
+        {topics.length > 0 && (
+          <div className="col-12">
+            <label className="form-label fw-semibold" htmlFor="module-topic">
+              Thêm vào chủ đề
+            </label>
+            <select id="module-topic" className="form-select" value={topicId} onChange={(e) => setTopicId(e.target.value)} disabled={busy}>
+              <option value="">Không chủ đề</option>
+              {topics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="col-12">
           {packageId && items.state.kind === "loading" && (

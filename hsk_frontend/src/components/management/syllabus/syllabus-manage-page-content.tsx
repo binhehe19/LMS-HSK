@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AddScheduleModuleModal } from "@/components/management/syllabus/add-schedule-module-modal";
 import { SyllabusManageView, type SyllabusManageMode } from "@/components/management/syllabus/syllabus-manage-view";
-import { movedResourceIds, useScheduleResourceActions, useScheduleResources } from "@/components/management/syllabus/use-schedule-resources";
+import type { ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
+import { movedResourceIdsInTopic, useScheduleResourceActions, useScheduleResources, useScheduleTopics } from "@/components/management/syllabus/use-schedule-resources";
 import { useSyllabusDetail } from "@/components/management/syllabus/use-syllabus-detail";
 import { useSyllabusList } from "@/components/management/syllabus/use-syllabus-list";
 import { confirmAction } from "@/components/shared/confirm-action";
@@ -45,7 +46,12 @@ export function SyllabusManagePageContent() {
     return (scheduleId: string) => map.get(scheduleId) ?? 1;
   }, [schedule]);
   const resources = useScheduleResources(syllabusId, scheduleIds, sessionNoOf);
-  const actions = useScheduleResourceActions(write.demo, resources.reload);
+  const topics = useScheduleTopics(syllabusId, scheduleIds, sessionNoOf);
+  const reloadModules = () => {
+    resources.reload();
+    topics.reload();
+  };
+  const actions = useScheduleResourceActions(write.demo, reloadModules);
 
   const [keyword, setKeyword] = useState("");
   const items = useMemo(() => (list.state.kind === "ok" ? list.state.data : []), [list.state]);
@@ -60,13 +66,13 @@ export function SyllabusManagePageContent() {
   };
   const reloadAll = () => {
     reloadDetail();
-    if (scheduleIds !== null) resources.reload();
+    if (scheduleIds !== null) reloadModules();
   };
 
   const moveResource = (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => {
     if (syllabusId === null || resources.state.kind !== "ok") return;
     const links = resources.state.data[scheduleId]?.[type] ?? [];
-    const ids = movedResourceIds(links, resourceId, direction);
+    const ids = movedResourceIdsInTopic(links, resourceId, direction);
     if (ids) void actions.reorder(syllabusId, scheduleId, type, sessionNoOf(scheduleId), ids);
   };
   // Bản cũ xoá ngay không hỏi; ở đây hỏi xác nhận (confirmAction) vì thao tác không hoàn tác được.
@@ -75,9 +81,32 @@ export function SyllabusManagePageContent() {
     const confirmed = await confirmAction({ title: "Xóa module ôn luyện?", content: "Module sẽ bị gỡ khỏi buổi học này; bộ nội dung trong kho không bị xóa.", okText: "Xóa", danger: true });
     if (confirmed) void actions.remove(syllabusId, scheduleId, type, resourceId);
   };
-  const submitAdd = async (type: ScheduleResourceType, sources: { id: string; label: string }[]) => {
+  const topicData = topics.state.kind === "ok" ? topics.state.data : null;
+  const topicUi: ScheduleTopicUi = {
+    topics: topicData,
+    onCreate: (scheduleId, type, sessionNo, title) => (syllabusId === null ? Promise.resolve(false) : actions.createTopic(syllabusId, scheduleId, type, sessionNo, title)),
+    onRename: (scheduleId, type, topicId, title) => (syllabusId === null ? Promise.resolve(false) : actions.renameTopic(syllabusId, scheduleId, type, topicId, title)),
+    onDelete: async (scheduleId, type, topicId) => {
+      if (syllabusId === null) return;
+      const confirmed = await confirmAction({ title: "Xóa chủ đề?", content: "Chủ đề bị xóa; các module trong chủ đề vẫn còn trong buổi và chuyển về \"Chưa phân chủ đề\".", okText: "Xóa", danger: true });
+      if (confirmed) void actions.deleteTopic(syllabusId, scheduleId, type, topicId);
+    },
+    onMove: (scheduleId, type, sessionNo, topicId, direction) => {
+      if (syllabusId === null) return;
+      const ids = (topicData?.[scheduleId]?.[type] ?? []).map((t) => t.id);
+      const from = ids.indexOf(topicId);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= ids.length) return;
+      [ids[from], ids[to]] = [ids[to], ids[from]];
+      void actions.reorderTopics(syllabusId, scheduleId, type, sessionNo, ids);
+    },
+    onAssign: (scheduleId, type, resourceId, topicId) => {
+      if (syllabusId !== null) void actions.assignTopic(syllabusId, scheduleId, type, resourceId, topicId);
+    },
+  };
+  const submitAdd = async (type: ScheduleResourceType, sources: { id: string; label: string }[], topicId: string | null) => {
     if (syllabusId === null || addTarget === null) return false;
-    const done = await actions.add(syllabusId, addTarget.item.id, type, addTarget.sessionNo, sources);
+    const done = await actions.add(syllabusId, addTarget.item.id, type, addTarget.sessionNo, sources, topicId);
     if (done) setAddTarget(null);
     return done;
   };
@@ -106,6 +135,7 @@ export function SyllabusManagePageContent() {
         onAddModule={(item, sessionNo) => setAddTarget({ item, sessionNo })}
         onMoveResource={moveResource}
         onDeleteResource={(scheduleId, type, resourceId) => void deleteResource(scheduleId, type, resourceId)}
+        topicUi={topicUi}
       />
       {/* `key` theo buổi: mỗi lần mở là một form mới (không cần effect reset state). */}
       <AddScheduleModuleModal
@@ -113,6 +143,7 @@ export function SyllabusManagePageContent() {
         schedule={addTarget?.item ?? null}
         sessionNo={addTarget?.sessionNo ?? 1}
         busy={addTarget !== null && actions.busyScheduleId === addTarget.item.id}
+        topicsOf={(type) => (addTarget ? topicData?.[addTarget.item.id]?.[type] ?? [] : [])}
         onCancel={() => setAddTarget(null)}
         onSubmit={submitAdd}
       />

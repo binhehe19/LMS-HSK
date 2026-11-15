@@ -17,6 +17,7 @@ import { SyllabusDetailPanel } from "@/components/management/syllabus/syllabus-d
 import { SyllabusListTable } from "@/components/management/syllabus/syllabus-list-table";
 import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { PageHeader } from "@/components/shared/page-header";
+import type { ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
 import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import type { SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
 import type { SyllabusDetailResponse, SyllabusScheduleItem, SyllabusSummaryResponse, SyllabusVersionResponse } from "@/types/lms";
@@ -50,6 +51,7 @@ export interface SyllabusManageViewProps {
   onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
   onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
   onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
+  topicUi?: ScheduleTopicUi;
 }
 
 export function SyllabusManageView(p: SyllabusManageViewProps) {
@@ -105,6 +107,7 @@ export function SyllabusManageView(p: SyllabusManageViewProps) {
                 onAddModule={p.onAddModule}
                 onMoveResource={p.onMoveResource}
                 onDeleteResource={p.onDeleteResource}
+                topicUi={p.topicUi}
               />
             )}
           </div>

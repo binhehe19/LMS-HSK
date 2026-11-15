@@ -135,6 +135,7 @@ interface BackendLearningResource {
   draftVersionId: string | null;
   publishedVersionId: string | null;
   content: QuizContent | null;
+  skill?: string | null;
 }
 interface BackendPackageVersionResource {
   id: string;
@@ -142,6 +143,8 @@ interface BackendPackageVersionResource {
   learningResourceVersionId: string;
   displayOrder: number;
   resourceContent: QuizContent | null;
+  /** Kỹ năng của học liệu (cột skill); null với đề cũ chưa chuyển, khi đó đọc dự phòng layout.meta.skill. */
+  skill?: string | null;
 }
 interface EditLockResponse {
   acquired: boolean;
@@ -402,7 +405,7 @@ function toQuizContent(meta: QuizMetaFields, questions: BackendQuizQuestion[], e
   };
 }
 
-function fromQuizContent(id: string, index: number, content: QuizContent | null): QuizItem {
+function fromQuizContent(id: string, index: number, content: QuizContent | null, skill?: string | null): QuizItem {
   const meta = content?.layout?.meta;
   const lead = content?.layout?.sections?.[0];
   return {
@@ -412,7 +415,8 @@ function fromQuizContent(id: string, index: number, content: QuizContent | null)
     title: content?.title ?? "",
     description: content?.description || undefined,
     instruction: meta?.instruction,
-    skill: meta?.skill,
+    // Cột skill là nguồn chính; layout.meta.skill chỉ để đọc đề cũ chưa chuyển (và vẫn được ghi cho tới khi chuyển xong dữ liệu).
+    skill: skill ?? meta?.skill,
     difficulty: meta?.difficulty,
     durationMinutes: content?.timeLimits?.default ? Math.round(content.timeLimits.default / 60) : undefined,
     passingScore: meta?.passingScore,
@@ -510,7 +514,7 @@ async function resolveVersionAndLinks(packageId: string): Promise<{ versionId: s
 export async function listPackageQuizItems(packageId: string): Promise<QuizItem[]> {
   const { links } = await resolveVersionAndLinks(packageId);
   return links
-    .map((link) => fromQuizContent(link.learningResourceId, link.displayOrder, link.resourceContent))
+    .map((link) => fromQuizContent(link.learningResourceId, link.displayOrder, link.resourceContent, link.skill))
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 
@@ -540,6 +544,7 @@ export async function createQuizItem(packageId: string, input: ContentItemInput<
     content: toQuizContent(input, [toBackendQuestion(placeholderQuestion())]),
     publishImmediately: true,
     inLibrary: false,
+    skill: input.skill || undefined,
   });
   const resourceVersionId = resource.publishedVersionId ?? resource.draftVersionId;
   await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, {
@@ -548,7 +553,7 @@ export async function createQuizItem(packageId: string, input: ContentItemInput<
     sessionNo: 1,
     displayOrder: input.index ?? 0,
   });
-  return fromQuizContent(resource.id, input.index ?? 0, resource.content);
+  return fromQuizContent(resource.id, input.index ?? 0, resource.content, resource.skill);
 }
 
 export async function updateQuizItem(packageId: string, resourceId: string, input: ContentItemInput<QuizItem>, demo: boolean): Promise<QuizItem> {
@@ -557,7 +562,9 @@ export async function updateQuizItem(packageId: string, resourceId: string, inpu
   const existing = links.find((l) => l.learningResourceId === resourceId)?.resourceContent ?? null;
   const content = toQuizContent(input, existing?.questions ?? [], existing?.layout);
   await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, { content });
-  return fromQuizContent(resourceId, input.index ?? 0, content);
+  // Chuỗi rỗng = xóa kỹ năng; assessmentType/tags không gửi nên giữ nguyên.
+  await lmsClient.put(`/learning-resources/${encodeURIComponent(resourceId)}/classification`, { skill: input.skill ?? "" });
+  return fromQuizContent(resourceId, input.index ?? 0, content, input.skill ?? null);
 }
 
 export async function deleteQuizItem(packageId: string, resourceId: string, demo: boolean): Promise<void> {
@@ -583,7 +590,7 @@ export async function getQuizResource(packageId: string, resourceId: string): Pr
   const packageName = pkg.draftVersion?.title ?? pkg.publishedVersion?.title ?? "";
   return {
     packageName,
-    item: fromQuizContent(resourceId, link.displayOrder, content),
+    item: fromQuizContent(resourceId, link.displayOrder, content, link.skill),
     questions: (content?.questions ?? []).map((q, i) => fromBackendQuestion(resourceId, i, q)).sort((a, b) => a.index - b.index),
   };
 }
