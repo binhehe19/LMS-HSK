@@ -3,8 +3,8 @@
 // (tiến độ 65% cho "đang học", trình độ cố định 0 → HSK2 → HSK5, danh sách khoá mẫu khi API rỗng).
 import {
   AUDIENCES,
-  CATALOG_COURSES,
-  CATEGORY_FALLBACK_IMAGE,
+
+
   COURSE_CATEGORIES,
   inferCategory,
   PRICE_MAX,
@@ -39,6 +39,7 @@ export interface CourseVM {
   releasedAt: string;
   order: number | null;
   owned: boolean;
+  registered?: boolean | null;
   progress: number;
   doneSessions: number;
 }
@@ -57,7 +58,7 @@ export const DEFAULT_FILTERS: CourseFilterState = { categories: [], audience: "a
 const CATEGORY_IDS = new Set<string>(COURSE_CATEGORIES.map((c) => c.id));
 const AUDIENCE_IDS = new Set<string>(AUDIENCES.map((a) => a.id));
 const STUDY_FORM_IDS = new Set<string>(STUDY_FORMS.map((f) => f.id));
-const EDITORIAL_BY_CODE = new Map(CATALOG_COURSES.map((c) => [c.code.toUpperCase(), c]));
+const PLACEHOLDER = "/assets/course-placeholder.svg";
 
 const isCategory = (v: unknown): v is CategoryId => typeof v === "string" && CATEGORY_IDS.has(v);
 const isAudience = (v: unknown): v is AudienceId => typeof v === "string" && AUDIENCE_IDS.has(v);
@@ -67,7 +68,8 @@ const positive = (v: unknown): number => (typeof v === "number" && Number.isFini
 /** Ảnh bìa lỗi (vd. ảnh còn nằm ở storage cũ đã gỡ) => đổi sang ảnh mặc định của danh mục, chỉ đổi một lần để không lặp vô hạn. */
 export function fallbackCourseImage(event: { currentTarget: HTMLImageElement }, category: CategoryId) {
   const img = event.currentTarget;
-  const fallback = CATEGORY_FALLBACK_IMAGE[category];
+  const fallback = PLACEHOLDER;
+  void category;
   if (img.dataset.fallback === "1" || img.getAttribute("src") === fallback) return;
   img.dataset.fallback = "1";
   img.src = fallback;
@@ -83,34 +85,35 @@ export function safeUrl(value: string | null | undefined): string | undefined {
 
 export function toCourseVM(raw: StudentCourseApi): CourseVM {
   const code = raw.code?.trim() || raw.id;
-  const editorial = EDITORIAL_BY_CODE.get(code.toUpperCase());
-  const category = isCategory(raw.category) ? raw.category : editorial?.category ?? inferCategory(code, raw.name);
+
+  const category = isCategory(raw.category) ? raw.category : inferCategory(code, raw.name);
   const audiences = (raw.audiences ?? []).filter(isAudience);
   // courseType thật từ ERP là "GROUP" / "1-1" — 1-1 tính là "Online kết hợp" như bản cũ.
   const studyForm = isStudyForm(raw.studyForm)
     ? raw.studyForm
     : /1\s*-?\s*1|one/i.test(raw.courseType ?? "")
       ? "online-ket-hop"
-      : editorial?.studyForm ?? "online-tu-hoc";
+      : "online-tu-hoc";
   return {
     id: raw.id,
     code,
     cardLabel: code,
     title: raw.name?.trim() || "Khoá học",
     category,
-    audiences: audiences.length > 0 ? audiences : editorial?.audiences ?? [],
+    audiences: audiences.length > 0 ? audiences : [],
     studyForm,
     price: positive(Number(raw.price)),
-    levelIn: raw.levelIn?.trim() || editorial?.levelIn || "0",
-    levelOut: raw.levelOut?.trim() || editorial?.levelOut || "",
-    totalSessions: positive(raw.totalSessions) || editorial?.totalSessions || 0,
-    months: positive(raw.months) || editorial?.months || 0,
-    hoursPerSession: positive(raw.hoursPerSession) || editorial?.hoursPerSession || 0,
-    description: stripHtml(raw.description ?? "") || editorial?.description || "",
-    image: safeUrl(raw.thumbnail) ?? editorial?.image ?? CATEGORY_FALLBACK_IMAGE[category],
+    levelIn: raw.levelIn?.trim() || "",
+    levelOut: raw.levelOut?.trim() || "",
+    totalSessions: positive(raw.totalSessions) || 0,
+    months: positive(raw.months) || 0,
+    hoursPerSession: positive(raw.hoursPerSession) || 0,
+    description: stripHtml(raw.description ?? "") || "",
+    image: safeUrl(raw.thumbnail) ?? PLACEHOLDER,
     releasedAt: raw.releasedAt ?? "",
     order: typeof raw.displayOrder === "number" ? raw.displayOrder : null,
     owned: raw.owned === true,
+    registered:raw.registered,
     progress: Math.min(100, Math.max(0, Number(raw.progress) || 0)),
     doneSessions: Math.max(0, Math.round(Number(raw.doneSessions) || 0)),
   };

@@ -25,6 +25,7 @@ interface Props {
     onRetry?: () => void;
     /** Trang đăng ký/mở khoá (NEXT_PUBLIC_STUDENT_COURSE_UNLOCK_URL); trống thì nút mở hộp thông báo như bản xem trước */
     unlockUrl?: string;
+    onViewClasses?: () => void;
 }
 
 const LockIcon = ({ size = 18 }: { size?: number }) => (
@@ -85,7 +86,7 @@ const useDragScroll = () => {
     };
 };
 
-const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLoading, error, onRetry, unlockUrl }) => {
+const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLoading, error, onRetry, unlockUrl, onViewClasses }) => {
     const navigate = useNavigate();
     const [tab, setTab] = useState<'syllabus' | 'materials'>('syllabus');
     const syllabusDrag = useDragScroll();
@@ -98,10 +99,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
     const progressLabel = progress >= 100 ? 'Hoàn thành' : progress > 0 ? 'Đang học' : 'Chưa học';
 
     const title = stripHtml(detail?.title || course.title);
-    const fallbackDescription = course.category === 'hsk'
-        ? 'Lộ trình luyện thi HSK 3.0 từ cơ bản đến nâng cao, giúp học viên đạt chứng chỉ và nâng cao năng lực tiếng Trung học thuật, nghề nghiệp. Chương trình rèn luyện từ vựng, ngữ pháp, nghe, nói, đọc, viết và đánh máy, bám sát đề cương cùng hệ thống chủ đề mới của HSK 3.0.'
-        : `Khóa học ${title} giúp học viên xây dựng từ vựng, ngữ pháp và kỹ năng giao tiếp tiếng Trung theo lộ trình thực hành từng buổi.`;
-    const description = stripHtml(detail?.description || course.description || fallbackDescription);
+    const description = stripHtml(detail?.description || course.description || "");
     const totalSessions = detail?.totalSessions || course.totalSessions;
 
     // Chưa sở hữu: chỉ hiện tên các buổi đầu (backend không trả nội dung), không có thì vài ô khoá trống.
@@ -162,7 +160,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                         <circle cx="8" cy="8" r="8" fill="#fff" fillOpacity=".9" />
                                         <path d="M5.5 5.5l5 5m0-5l-5 5" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" />
                                     </svg>
-                                    Chưa sở hữu
+                                    {course.registered===null?"Chưa xác định đăng ký":course.registered?"Đã đăng ký":"Chưa đăng ký"}
                                 </>
                             )}
                         </span>
@@ -178,7 +176,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                 <circle cx="8" cy="8" r="1.8" fill="currentColor" />
                             </svg>
                             Đầu vào
-                            <span className="hb-course-modal__level-pill">{course.levelIn}</span>
+                            <span className="hb-course-modal__level-pill">{course.levelIn || '—'}</span>
                         </span>
                         <span className="hb-course-modal__level">
                             <svg viewBox="0 0 16 16" width={16} height={16} fill="none" aria-hidden="true">
@@ -186,7 +184,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                                 <circle cx="8" cy="8" r="3.4" stroke="currentColor" strokeWidth="1.4" />
                             </svg>
                             Đầu ra
-                            <span className="hb-course-modal__level-pill">{course.levelOut}</span>
+                            <span className="hb-course-modal__level-pill">{course.levelOut || '—'}</span>
                         </span>
                     </div>
 
@@ -198,11 +196,11 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                         </span>
                         <span className="hb-course-modal__meta-item">
                             <img src={`${IC}/ic-meta-months.svg`} alt="" width={24} height={27} />
-                            {course.months} tháng
+                            {course.months ? `${course.months} tháng` : 'Chưa có thời lượng'}
                         </span>
                         <span className="hb-course-modal__meta-item">
                             <img src={`${IC}/ic-meta-hours.svg`} alt="" width={26.667} height={26.667} />
-                            {course.hoursPerSession}h/buổi
+                            {course.hoursPerSession ? `${course.hoursPerSession}h/buổi` : 'Chưa có số giờ/buổi'}
                         </span>
                     </div>
                 </div>
@@ -305,7 +303,7 @@ const CourseDetailModal: React.FC<Props> = ({ show, onHide, course, detail, isLo
                     </>
                 ) : (
                     <>
-                        {unlockUrl ? (
+                        {course.registered && onViewClasses ? <button type="button" className="hb-course-modal__unlock-banner" onClick={onViewClasses}>Xem các lớp của tôi</button> : unlockUrl ? (
                             <a className="hb-course-modal__unlock-banner text-decoration-none" href={unlockUrl} target="_blank" rel="noopener noreferrer">
                                 <LockIcon />
                                 Mở khoá ngay!

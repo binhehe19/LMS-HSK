@@ -4,11 +4,14 @@ import { ApiError } from "./api-client";
 
 export interface StudentSession {
  id: string; classId: string; sessionNo?: number; topic?: string; content?: string;
+ studentTasks?: string; studentMaterials?: import("@/types/lms").SyllabusScheduleItem["studentMaterials"]; moduleOnLuyen?: import("@/types/lms").SyllabusScheduleItem["moduleOnLuyen"];
  startAt?: string; endAt?: string; status?: string; meetingLink?: string;
  scheduleItemId?: string; teacherName?: string; teacher?: { fullName?: string }; myAttendanceStatus?: string;
 }
 export interface StudentClass {
  id: string; detailError?: string; code?: string; courseId?: string; syllabusId?: string; syllabusName?: string;
+ courseName?: string; courseBannerUrl?: string; classType?: string;
+ syllabusVersionId?: string; syllabusVersionNo?: number; learningPlan?: {courseName?: string; courseBannerUrl?: string; schedule: import("@/types/lms").SyllabusScheduleItem[]};
  educationLevelCode?: string; startDate?: string; lifecycleStatus?: string; meetingLink?: string;
  totalSessions?: number; completedSessions?: number; sessions?: StudentSession[];
  teacher?: { fullName?: string };

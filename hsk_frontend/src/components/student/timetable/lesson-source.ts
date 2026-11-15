@@ -13,7 +13,7 @@ export async function loadLesson(context:LessonContext,isAdmin:boolean):Promise<
   const actual=course.sessions?.find(item=>item.id === context.sessionId);
   if(!actual)throw Error("Buổi học không có trong lớp được cấp quyền.");
   if(!course.syllabusId)throw Error("Lớp học chưa được gắn giáo trình.");
-  const syllabus=await getSyllabus(course.syllabusId);
+  const syllabus=isAdmin?await getSyllabus(course.syllabusId):undefined;
   const session=classSession(course,actual,syllabus);const detail=await loadSessionStudy(session,isAdmin);
   return {session:{...session,homeworkProgress:detail.progress},modules:detail.modules,warnings:detail.warnings};
  }

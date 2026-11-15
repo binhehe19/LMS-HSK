@@ -1,3 +1,11 @@
+# Cập nhật kiểm thử ngày 16/11/2026
+
+`package.json` hiện chỉ có `typecheck`, `lint`, `test` và `test:all`; không có các script Playwright `e2e:*`/`test:e2e` được mô tả trong tài liệu cũ bên dưới. Không dùng hướng dẫn cũ làm bằng chứng E2E đã chạy. Đợt kiểm thử trình duyệt với backend thật được ghi tại [báo cáo ngày 16/11/2026](./LMS-E2E-2026-11-16.md).
+
+Trên Node có Web Storage thử nghiệm nhưng chưa cấu hình file lưu trữ, Vitest/jsdom có thể lỗi `window.localStorage.clear()`. Chạy PowerShell với `$env:NODE_OPTIONS='--no-experimental-webstorage'` trước `npm test` để dùng Web Storage của jsdom.
+
+---
+
 # Kiểm thử
 
 Ba tầng, đều chạy từ repository (không cần thư mục tạm của phiên làm việc nào):

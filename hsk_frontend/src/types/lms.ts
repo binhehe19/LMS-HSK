@@ -121,6 +121,7 @@ export interface SyllabusVersionResponse {
 }
 
 export interface SyllabusScheduleItem {
+  sessionNo?: number;
   id: string;
   topic?: string;
   content?: string;

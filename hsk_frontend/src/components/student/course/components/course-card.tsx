@@ -35,7 +35,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onOpen }) => {
             }}
         >
             <div className="hb-course__card-media">
-                <img src={course.image} alt={course.title} loading="lazy" onError={(e) => fallbackCourseImage(e, course.category)} />
+                <img style={{aspectRatio:"16/9",objectFit:"cover"}} src={course.image} alt={course.title} loading="lazy" onError={(e) => fallbackCourseImage(e, course.category)} />
                 {/* Figma làm mờ ảnh bằng lớp phủ trắng 60%, không phải giảm opacity ảnh */}
                 {!course.owned && <span className="hb-course__card-veil" aria-hidden="true" />}
             </div>
@@ -59,8 +59,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onOpen }) => {
                                 <path d="M5.5 5.5l5 5m0-5l-5 5" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" />
                             </svg>
                             <img className="hb-course__mobile-lock-icon" src={`${IC}/ic-lock.svg`} alt="" />
-                            <span className="hb-course__desktop-label">Chưa sở hữu</span>
-                            <span className="hb-course__mobile-label">Mở khoá ngay!</span>
+                            <span className="hb-course__desktop-label">{course.registered===null?"Chưa xác định đăng ký":course.registered?"Đã đăng ký · Xem Khóa học của tôi":"Chưa sở hữu"}</span>
+                            <span className="hb-course__mobile-label">Xem giới thiệu</span>
                         </span>
                     )}
                 </div>
@@ -108,10 +108,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onOpen }) => {
                         <div className="hb-course__progress">
                             <div className="hb-course__progress-row hb-course__progress-row--idle">
                                 <span>
-                                    <span className="hb-course__desktop-label">Bạn chưa sở hữu khoá học này!</span>
-                                    <span className="hb-course__mobile-label">Chưa học</span>
+                                    <span className="hb-course__desktop-label">{course.registered===null?"Chưa xác định trạng thái đăng ký":course.registered?"Xem tiến độ trong Khóa học của tôi":"Bạn chưa đăng ký khóa học này"}</span>
+                                    <span className="hb-course__mobile-label">Xem giới thiệu</span>
                                 </span>
-                                <span>0%</span>
+                                <span>—</span>
                             </div>
                             <div className="hb-course__progress-track">
                                 <div className="hb-course__progress-fill" style={{ width: '0%' }} />
@@ -132,7 +132,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, onOpen }) => {
                                 <img className="hb-course__lock-closed" src={`${IC}/ic-lock.svg`} alt="" />
                                 <img className="hb-course__lock-open" src={`${IC}/ic-lock-open.svg`} alt="" />
                             </span>
-                            Mở khoá ngay!
+                            Xem giới thiệu
                         </button>
                         <div className="hb-course__card-foot hb-course__card-foot--mobile-locked">
                             <button type="button" className="hb-course__card-link" onClick={(e) => { e.stopPropagation(); onOpen(course); }}>

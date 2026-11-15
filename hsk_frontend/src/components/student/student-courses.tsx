@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 // Màn "Khoá học" học viên (/student/student-courses) — chuyển từ HSK cũ features/student/student-course/student-course.tsx.
-// Dữ liệu thật từ API có sẵn của repo-lms: /syllabuses (danh mục), /me/classes (sở hữu, tiến độ), /syllabuses/{id} (lộ trình, tài liệu).
+// Danh mục lấy từ Course catalog; lớp và lộ trình học viên lấy qua /me.
 // Khác bản cũ có chủ đích: không còn danh sách khoá mẫu khi API rỗng, không còn tiến độ minh hoạ 65% và trình độ cố định trên banner;
 // lỗi tải có thông báo + "Thử lại"; không đọc được lớp của học viên thì báo thay vì hiện "chưa sở hữu" lặng lẽ.
 import { useMemo, useState } from "react";
@@ -46,7 +46,7 @@ export default function StudentCourses() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selected, setSelected] = useState<CourseVM | null>(null);
 
-  const catalog = useKeyedFetch("student-courses", listStudentCourses);
+  const catalog = useKeyedFetch("student-courses:" + mode, () => listStudentCourses(mode, { allPages: true }));
   const detail = useKeyedFetch(selected ? `student-course:${selected.id}` : null, () => getStudentCourse(selected!.id));
 
   const allCourses = useMemo(() => (catalog.state.kind === "ok" ? catalog.state.data.items.map(toCourseVM) : []), [catalog.state]);
@@ -134,7 +134,7 @@ export default function StudentCourses() {
 
               {enrollmentSource === "UNAVAILABLE" && (
                 <div className="hb-course__notice" role="status" data-testid="enrollment-unavailable">
-                  Không tải được danh sách khoá học bạn đã đăng ký từ hệ thống quản lý đào tạo nên các khoá đang hiện &quot;Chưa sở hữu&quot;. Vui lòng
+                  Không tải được danh sách lớp học từ hệ thống quản lý đào tạo nên chưa xác định được trạng thái đăng ký. Vui lòng
                   tải lại trang sau ít phút.
                 </div>
               )}
@@ -192,6 +192,7 @@ export default function StudentCourses() {
             error={detail.state.kind === "error" ? detail.state.message : detail.state.kind === "waiting" ? "Khoá học chưa được kết nối API (WAITING FOR BACKEND)." : null}
             onRetry={detail.reload}
             unlockUrl={STUDENT_COURSE_UNLOCK_URL}
+            onViewClasses={() => { setSelected(null); setMode("mine"); }}
           />
         )}
       </div>

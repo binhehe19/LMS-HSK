@@ -20,8 +20,8 @@ const vm = (over: Partial<StudentCourseApi> = {}) => toCourseVM(api(over));
 describe("ghép dữ liệu API với dữ liệu biên tập (quy tắc HSK cũ)", () => {
   it("ưu tiên dữ liệu API, thiếu thì lấy dữ liệu biên tập theo mã, rồi mới suy ra", () => {
     const h20 = vm({ code: "H20", name: "KHOÁ 0 - HSK2", totalSessions: null, thumbnail: null });
-    expect(h20).toMatchObject({ category: "hsk", image: "/assets/hocba/courses/hsk-h20.jpg", totalSessions: 48, levelIn: "0", levelOut: "HSK2", months: 3, hoursPerSession: 2 });
-    expect(h20.audiences).toEqual(["hoc-sinh", "tu-do"]);
+    expect(h20).toMatchObject({ category: "hsk", image: "/assets/course-placeholder.svg", totalSessions: 0, levelIn: "", levelOut: "", months: 0, hoursPerSession: 0 });
+    expect(h20.audiences).toEqual([]);
 
     const real = vm({ code: "H20", thumbnail: "https://cdn.example/a.jpg", totalSessions: 30, category: "di-lam", audiences: ["tre-em", "lạ"], studyForm: "offline", levelOut: "HSK3" });
     expect(real).toMatchObject({ image: "https://cdn.example/a.jpg", totalSessions: 30, category: "di-lam", audiences: ["tre-em"], studyForm: "offline", levelOut: "HSK3" });
@@ -33,7 +33,7 @@ describe("ghép dữ liệu API với dữ liệu biên tập (quy tắc HSK cũ
     expect(vm({ code: "YCT1", name: "YCT 1" }).category).toBe("hsk");
     expect(vm({ courseType: "1-1" }).studyForm).toBe("online-ket-hop");
     expect(vm({ courseType: "GROUP" }).studyForm).toBe("online-tu-hoc");
-    expect(vm({ thumbnail: "javascript:alert(1)", category: "b2b" }).image).toBe("/assets/hocba/courses/gt-gt1.jpg");
+    expect(vm({ thumbnail: "javascript:alert(1)", category: "b2b" }).image).toBe("/assets/course-placeholder.svg");
     expect(vm({ progress: 140, doneSessions: -3 })).toMatchObject({ progress: 100, doneSessions: 0 });
     expect(vm({ description: "<p>Mô&nbsp;tả</p>" }).description).toBe("Mô tả");
   });
@@ -48,8 +48,8 @@ describe("ghép dữ liệu API với dữ liệu biên tập (quy tắc HSK cũ
 
 describe("lọc, sắp xếp, số liệu", () => {
   const list: CourseVM[] = [
-    vm({ id: "a", code: "H20", owned: true, progress: 100, price: 1_200_000, releasedAt: "2026-01-01T00:00:00Z", levelIn: "0", levelOut: "HSK2" }),
-    vm({ id: "b", code: "H30", owned: true, progress: 40, price: 1_400_000, releasedAt: "2026-02-01T00:00:00Z", levelIn: "HSK2", levelOut: "HSK3" }),
+    vm({ id: "a", code: "H20", studyForm:"online-ket-hop", audiences:["hoc-sinh"], owned: true, progress: 100, price: 1_200_000, releasedAt: "2026-01-01T00:00:00Z", levelIn: "0", levelOut: "HSK2" }),
+    vm({ id: "b", code: "H30", studyForm:"online-ket-hop", audiences:["hoc-sinh"], owned: true, progress: 40, price: 1_400_000, releasedAt: "2026-02-01T00:00:00Z", levelIn: "HSK2", levelOut: "HSK3" }),
     vm({ id: "c", code: "GT1", category: "di-lam", courseType: "1-1", price: 3_250_000, releasedAt: "2026-03-01T00:00:00Z" }),
   ];
 
@@ -102,7 +102,7 @@ describe("ảnh bìa lỗi", () => {
     const img = document.createElement("img");
     img.setAttribute("src", "https://old-storage.example/x.jpg");
     fallbackCourseImage({ currentTarget: img }, "di-lam");
-    expect(img.getAttribute("src")).toBe("/assets/hocba/courses/gt-gt1.jpg");
+    expect(img.getAttribute("src")).toBe("/assets/course-placeholder.svg");
     img.setAttribute("src", "/broken-again.jpg");
     fallbackCourseImage({ currentTarget: img }, "di-lam");
     expect(img.getAttribute("src")).toBe("/broken-again.jpg");

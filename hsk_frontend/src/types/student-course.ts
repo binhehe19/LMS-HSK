@@ -22,6 +22,7 @@ export interface StudentCourseApi {
   displayOrder?: number | null;
   releasedAt?: string | null;
   owned: boolean;
+  registered?: boolean | null;
   progress: number;
   doneSessions: number;
   progressStatus?: string | null;
@@ -29,6 +30,7 @@ export interface StudentCourseApi {
 
 export interface StudentCourseCatalog {
   items: StudentCourseApi[];
+  totalPages?: number;
   enrollmentSource: EnrollmentSource;
 }
 
