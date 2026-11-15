@@ -140,6 +140,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
                 {packages.state.data.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
+                    {p.syllabusName ? ` — ${p.syllabusName}` : ""}
                   </option>
                 ))}
               </select>

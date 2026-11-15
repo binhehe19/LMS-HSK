@@ -117,6 +117,11 @@ export function LessonMaterialsView(props: LessonMaterialsViewProps) {
                         {group.description ? <p className="lesson-material-management__group-desc">{group.description}</p> : null}
                         <div className="lesson-material-management__group-counts">
                           <span className="badge text-bg-light border">{LESSON_MATERIAL_TYPE_LABELS[group.type]}</span>
+                          {group.syllabusName && (
+                            <span className="badge text-bg-light border" title="Giáo trình" data-testid="lm-group-syllabus">
+                              {group.syllabusName}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="lesson-material-management__group-actions">

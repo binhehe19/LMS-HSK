@@ -13,6 +13,8 @@ export interface LessonMaterialGroup {
   description?: string | null;
   type: LessonMaterialType;
   status: LessonMaterialGroupStatus;
+  /** Nguồn của bộ: "Kho HSK" hoặc tên giáo trình thật mà bộ gắn vào. */
+  syllabusName?: string;
   createdAt?: string;
   updatedAt?: string;
 }

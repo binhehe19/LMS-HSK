@@ -132,6 +132,33 @@ describe("cấp gói (Admin)", () => {
     expect(screen.getByRole("heading", { level: 5, name: /Quản lý bài tập theo khóa học/ })).toBeInTheDocument();
   });
 
+  it("gói chỉ thuộc một nguồn (hoặc không có thông tin giáo trình) => không hiện bộ lọc giáo trình", async () => {
+    renderPage();
+    await screen.findByText("Gói 1");
+    expect(screen.queryByTestId("content-packages-syllabus-filter")).toBeNull();
+    expect(screen.queryByTestId("content-package-syllabus")).toBeNull();
+  });
+
+  it("gói của Kho HSK lẫn gói gắn giáo trình thật: mỗi dòng hiện nguồn; lọc theo giáo trình thu hẹp danh sách và đếm lại", async () => {
+    vi.mocked(client.listQuizPackages).mockResolvedValue([
+      pkg(1, { syllabusId: "HSK-LIBRARY-QUIZ", syllabusName: "Kho HSK" }),
+      pkg(2, { syllabusId: "syl-gt2", syllabusName: "GT2 (GT2-01)" }),
+      pkg(3, { syllabusId: "syl-gt2", syllabusName: "GT2 (GT2-01)" }),
+    ]);
+    renderPage();
+    await screen.findByText("Gói 1");
+    expect(packageRows()).toHaveLength(3);
+    expect(screen.getAllByTestId("content-package-syllabus").map((n) => n.textContent)).toEqual(["Kho HSK·", "GT2 (GT2-01)·", "GT2 (GT2-01)·"]);
+    const filter = screen.getByLabelText("Lọc theo giáo trình");
+    expect(within(filter).getAllByRole("option").map((o) => o.textContent)).toEqual(["Tất cả giáo trình (3)", "Kho HSK (1)", "GT2 (GT2-01) (2)"]);
+    await userEvent.selectOptions(filter, "syl-gt2");
+    expect(packageRows()).toHaveLength(2);
+    expect(screen.queryByText("Gói 1")).toBeNull();
+    await userEvent.selectOptions(filter, "HSK-LIBRARY-QUIZ");
+    expect(packageRows()).toHaveLength(1);
+    expect(screen.getByText("Gói 1")).toBeInTheDocument();
+  });
+
   it("xoá gói: huỷ => không gọi API; đồng ý => deleteQuizPackage + toast", async () => {
     vi.mocked(confirmAction).mockResolvedValueOnce(false);
     renderPage();

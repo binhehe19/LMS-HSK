@@ -12,10 +12,10 @@
 //  - Mọi thao tác ghi (attach/sửa nội dung/xoá resource) chỉ áp dụng được lên phiên bản DRAFT của package (backend từ chối nếu không phải draft) → luôn
 //    ensureDraft trước khi ghi. Publish cần khoá chỉnh sửa (POST .../lock lấy sessionToken) trước khi gọi publish.
 import { lmsClient } from "@/lib/api/lms-client";
+import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
 import { fileUrl } from "@/lib/api/storage-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
-import type { PageResponse } from "@/types/lms";
 import type { FlashcardCard, FlashcardCardInput } from "@/types/content-flashcard";
 
 const PACKAGE_TYPE = "VOCABULARY";
@@ -32,6 +32,7 @@ interface BackendPackageVersion {
 interface BackendPackage {
   id: string;
   type: string;
+  syllabusId?: string | null;
   draftVersionId: string | null;
   publishedVersionId: string | null;
   draftVersion: BackendPackageVersion | null;
@@ -133,9 +134,11 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 }
 
 // ---- gói ----
+/** Mọi gói cùng loại, kể cả gói gắn giáo trình thật; mỗi gói kèm nguồn giáo trình để giao diện hiển thị/lọc (gói tạo ở đây vẫn dùng mã Kho HSK). */
 export async function listFlashcardPackages(): Promise<ContentPackage[]> {
-  const res = await lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${PACKAGE_TYPE}&syllabusId=${encodeURIComponent(HSK_SYLLABUS_ID)}&size=200`);
-  return (res.items ?? []).map(toUiPackage);
+  const packages = await listAllContentPackages<BackendPackage>(PACKAGE_TYPE);
+  const source = await syllabusSourceResolver(packages.map((p) => p.syllabusId));
+  return packages.map((p) => ({ ...toUiPackage(p), ...source(p.syllabusId) }));
 }
 
 export async function createFlashcardPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {

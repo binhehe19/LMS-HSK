@@ -6,8 +6,8 @@
 // gắn vào bản DRAFT của package ở sessionNo cố định = 1 (tài liệu không thuộc buổi/giáo trình nào). Dùng lmsClient (base NEXT_PUBLIC_LMS_API_BASE_PATH),
 // cùng write-gate "content" như Kho (đã enabled, không còn "lesson-materials" — xem docs/api-requirements/lesson-materials.md).
 import { lmsClient } from "@/lib/api/lms-client";
+import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
-import type { PageResponse } from "@/types/lms";
 import type { CreateLessonMaterialGroupRequest, CreateLessonMaterialRequest, LessonMaterial, LessonMaterialGroup, LessonMaterialType, UpdateLessonMaterialGroupRequest } from "@/types/lesson-materials";
 
 const FEATURE = "content";
@@ -25,6 +25,7 @@ interface BackendPackageVersion {
 interface BackendPackage {
   id: string;
   type: string;
+  syllabusId?: string | null;
   draftVersionId: string | null;
   publishedVersionId: string | null;
   draftVersion: BackendPackageVersion | null;
@@ -85,8 +86,10 @@ function toUiMaterial(groupId: string, link: BackendPackageVersionResource): Les
 // ---- bộ tài liệu (ContentPackage) ----
 export async function listMaterialGroups(): Promise<LessonMaterialGroup[]> {
   const types: LessonMaterialType[] = ["SLIDE", "MATERIAL"];
-  const pages = await Promise.all(types.map((type) => lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${type}&syllabusId=${encodeURIComponent(pseudoSyllabusId(type))}&size=200`)));
-  return types.flatMap((type, i) => (pages[i].items ?? []).map((pkg) => toUiGroup(pkg, type)));
+  // Mọi bộ cùng loại, kể cả bộ gắn giáo trình thật; mỗi bộ kèm tên nguồn giáo trình (bộ tạo ở đây vẫn dùng mã Kho HSK).
+  const lists = await Promise.all(types.map((type) => listAllContentPackages<BackendPackage>(type)));
+  const source = await syllabusSourceResolver(lists.flat().map((pkg) => pkg.syllabusId));
+  return types.flatMap((type, i) => lists[i].map((pkg) => ({ ...toUiGroup(pkg, type), syllabusName: source(pkg.syllabusId).syllabusName })));
 }
 
 export async function createMaterialGroup(input: CreateLessonMaterialGroupRequest, demo: boolean): Promise<LessonMaterialGroup> {

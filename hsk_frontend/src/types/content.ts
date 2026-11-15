@@ -14,6 +14,9 @@ export interface ContentPackage {
   /** Khoá loại gói (FREE, LEARNING_PATH, LEARNING, VIDEO_COURSE...); nhãn/màu do ContentModuleConfig.packageTypes quyết định. */
   type: string;
   publishStatus?: ContentPublishStatus;
+  /** Giáo trình mà gói thuộc về (repo-lms). Gói của Kho HSK mang mã giả `HSK-LIBRARY*` và `syllabusName` = "Kho HSK". */
+  syllabusId?: string;
+  syllabusName?: string;
   folderCount?: number;
   createdAt?: string;
   updatedAt?: string;

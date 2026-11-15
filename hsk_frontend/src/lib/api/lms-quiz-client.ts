@@ -17,10 +17,10 @@
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
 //    cấp URL riêng. sessionNo cố định = 1. syllabusId/syllabusVersionId dùng cặp đại diện cố định riêng cho quiz.
 import { lmsClient } from "@/lib/api/lms-client";
+import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
 import { ApiError } from "@/lib/api/api-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
-import type { PageResponse } from "@/types/lms";
 import type { QuizDifficulty, QuizItem, QuizQuestion, QuizQuestionType } from "@/types/content-quiz";
 
 const PACKAGE_TYPE = "ASSESSMENT";
@@ -36,6 +36,7 @@ interface BackendPackageVersion {
 interface BackendPackage {
   id: string;
   type: string;
+  syllabusId?: string | null;
   draftVersionId: string | null;
   publishedVersionId: string | null;
   draftVersion: BackendPackageVersion | null;
@@ -438,9 +439,11 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 }
 
 // ---- gói ----
+/** Mọi gói cùng loại, kể cả gói gắn giáo trình thật; mỗi gói kèm nguồn giáo trình để giao diện hiển thị/lọc (gói tạo ở đây vẫn dùng mã Kho HSK). */
 export async function listQuizPackages(): Promise<ContentPackage[]> {
-  const res = await lmsClient.get<PageResponse<BackendPackage>>(`/content-packages?type=${PACKAGE_TYPE}&syllabusId=${encodeURIComponent(HSK_SYLLABUS_ID)}&size=200`);
-  return (res.items ?? []).map(toUiPackage);
+  const packages = await listAllContentPackages<BackendPackage>(PACKAGE_TYPE);
+  const source = await syllabusSourceResolver(packages.map((p) => p.syllabusId));
+  return packages.map((p) => ({ ...toUiPackage(p), ...source(p.syllabusId) }));
 }
 
 export async function createQuizPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
