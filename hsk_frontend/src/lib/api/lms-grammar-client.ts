@@ -3,10 +3,10 @@
 // Client "nối thử" kho nội dung Ngữ pháp HSK vào repo-lms thật (LearningResource + ContentPackage có sẵn), thay cho content-tree-client.ts
 // (trỏ NEXT_PUBLIC_HSK_API_BASE_PATH chưa có backend). Cùng mẫu với lms-content-client.ts (Flashcard).
 //
-// Mapping (đã chốt với người phụ trách): GrammarPoint HSK gộp vào LearningResourceType.GRAMMAR/ContentPackageType.GRAMMAR có sẵn, dùng GrammarContent:
-// title/category/generalDefinition/structure/explanation giữ tên; note→usageNote (đổi tên, cùng nghĩa); exampleSentenceZh/Pinyin/Vi→1 phần tử
-// examples[]{sentenceZh, pronunciation: Pinyin, translationVi, exampleType: EXAMPLE}. hskLevel và linkedQuizStudySetId KHÔNG có chỗ lưu ở
-// GrammarContent (không có field tương ứng) → TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend.
+// Mapping: GrammarPoint HSK là LearningResourceType.GRAMMAR với loại phụ ZH (GrammarZhContent, độc lập với ngữ pháp EN của IELTS):
+// title/category/generalDefinition/structure/explanation/hskLevel giữ tên; note→usageNote (đổi tên, cùng nghĩa); exampleSentenceZh/Pinyin/Vi→1 phần tử
+// examples[]{sentenceZh, pinyin, translationVi}. hskLevel được backend phản chiếu vào cột cefr_level để lọc. linkedQuizStudySetId KHÔNG có chỗ lưu
+// (bài tập gắn qua học phần ở LMS 2.0) → không gửi lên, không đọc lại.
 // Package→Folder→StudySet→Item rút gọn còn Package→resource (phẳng); sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
 import { listFreeContentPackages } from "@/lib/api/lms-package-list";
@@ -35,10 +35,9 @@ interface BackendPackage {
 }
 interface GrammarExampleItem {
   exampleIndex?: number;
-  exampleType?: "EXAMPLE" | "COMMON_MISTAKE";
   sentenceZh?: string;
+  pinyin?: string;
   translationVi?: string;
-  pronunciation?: string;
 }
 interface GrammarContent {
   title: string;
@@ -47,6 +46,8 @@ interface GrammarContent {
   structure?: string;
   explanation?: string;
   usageNote?: string;
+  /** Cấp HSK dạng chuỗi "1".."9". */
+  hskLevel?: string;
   examples?: GrammarExampleItem[];
 }
 interface BackendLearningResource {
@@ -71,7 +72,7 @@ interface EditLockResponse {
 function toGrammarContent(input: GrammarPointInput): GrammarContent {
   const example: GrammarExampleItem | null =
     input.exampleSentenceZh || input.exampleSentencePinyin || input.exampleSentenceVi
-      ? { exampleIndex: 0, exampleType: "EXAMPLE", sentenceZh: input.exampleSentenceZh || undefined, pronunciation: input.exampleSentencePinyin || undefined, translationVi: input.exampleSentenceVi || undefined }
+      ? { exampleIndex: 0, sentenceZh: input.exampleSentenceZh || undefined, pinyin: input.exampleSentencePinyin || undefined, translationVi: input.exampleSentenceVi || undefined }
       : null;
   return {
     title: input.title,
@@ -80,6 +81,7 @@ function toGrammarContent(input: GrammarPointInput): GrammarContent {
     structure: input.structure || undefined,
     explanation: input.explanation || undefined,
     usageNote: input.note || undefined,
+    hskLevel: input.hskLevel || undefined,
     examples: example ? [example] : undefined,
   };
 }
@@ -96,8 +98,9 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
     structure: content?.structure || undefined,
     explanation: content?.explanation || undefined,
     note: content?.usageNote || undefined,
+    hskLevel: content?.hskLevel || undefined,
     exampleSentenceZh: example?.sentenceZh || undefined,
-    exampleSentencePinyin: example?.pronunciation || undefined,
+    exampleSentencePinyin: example?.pinyin || undefined,
     exampleSentenceVi: example?.translationVi || undefined,
   };
 }
@@ -188,6 +191,7 @@ export async function createGrammarItem(packageId: string, input: ContentItemInp
   const versionId = await ensureDraftVersionId(packageId);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
     type: PACKAGE_TYPE,
+    subType: "ZH", // Ngữ pháp HSK là tiếng Trung; nội dung theo GrammarZhContent.
     content: toGrammarContent(input),
     publishImmediately: true,
     inLibrary: false,
