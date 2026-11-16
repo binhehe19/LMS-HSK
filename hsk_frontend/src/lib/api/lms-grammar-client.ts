@@ -40,9 +40,7 @@ interface GrammarExampleItem {
   exampleIndex?: number;
   exampleType?: "EXAMPLE" | "COMMON_MISTAKE";
   sentenceZh?: string;
-  sentence?: string;
   translationVi?: string;
-  translation?: string;
   pronunciation?: string;
 }
 interface GrammarContent {
@@ -101,9 +99,9 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
     structure: content?.structure || undefined,
     explanation: content?.explanation || undefined,
     note: content?.usageNote || undefined,
-    exampleSentenceZh: example?.sentenceZh || example?.sentence || undefined,
+    exampleSentenceZh: example?.sentenceZh || undefined,
     exampleSentencePinyin: example?.pronunciation || undefined,
-    exampleSentenceVi: example?.translationVi || example?.translation || undefined,
+    exampleSentenceVi: example?.translationVi || undefined,
   };
 }
 
