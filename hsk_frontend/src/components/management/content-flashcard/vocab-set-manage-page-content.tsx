@@ -15,6 +15,7 @@ import {
   updateFlashcardItem,
   updateFlashcardPackage,
 } from "@/lib/api/lms-content-client";
+import { packageTopicsClient } from "@/lib/api/package-topics-client";
 import type { ContentPackageTypeMeta } from "@/types/content";
 import type { FlashcardCard } from "@/types/content-flashcard";
 
@@ -31,6 +32,7 @@ const VOCAB_SET_CLIENT: FlatContentClient<FlashcardCard> = {
   createItem: createFlashcardItem,
   updateItem: updateFlashcardItem,
   deleteItem: deleteFlashcardItem,
+  topics: packageTopicsClient,
 };
 
 const VOCABULARY_PACKAGE_TYPE: ContentPackageTypeMeta = {

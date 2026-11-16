@@ -14,6 +14,7 @@ import { resetContentAccessCache } from "@/hooks/use-content-access";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import * as client from "@/lib/api/lms-quiz-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
+import { packageTopicsClient as topicsApi } from "@/lib/api/package-topics-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { makeStore } from "@/redux/store";
 import type { ManagementArea } from "@/lib/management/area";
@@ -58,6 +59,7 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+vi.mock("@/lib/api/package-topics-client", () => ({ packageTopicsClient: { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() } }));
 vi.mock("@/lib/api/lms-quiz-client", () => ({
   listQuizPackages: vi.fn(),
   createQuizPackage: vi.fn(),
@@ -104,6 +106,8 @@ beforeEach(() => {
   vi.mocked(client.deleteQuizItem).mockResolvedValue(undefined);
   vi.mocked(client.getQuizResource).mockResolvedValue({ packageName: "Gói 1", item: quiz(1, { passageText: "我是学生。", skill: "LISTENING" }), questions: [mc, tf] });
   vi.mocked(client.saveQuizQuestions).mockImplementation(async (_p, _r, _item, questions) => questions);
+  vi.mocked(topicsApi.list).mockReset().mockResolvedValue({ topics: [], membership: {} });
+  for (const fn of [topicsApi.create, topicsApi.rename, topicsApi.remove, topicsApi.reorder, topicsApi.assign]) vi.mocked(fn).mockReset().mockResolvedValue(undefined);
   for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
   nav.push.length = 0;
   nav.set("/quiz/manage");
@@ -132,31 +136,11 @@ describe("cấp gói (Admin)", () => {
     expect(screen.getByRole("heading", { level: 5, name: /Quản lý bài tập theo khóa học/ })).toBeInTheDocument();
   });
 
-  it("gói chỉ thuộc một nguồn (hoặc không có thông tin giáo trình) => không hiện bộ lọc giáo trình", async () => {
+  it("Kho chỉ liệt kê học phần tự do: không có bộ lọc hay nhãn nguồn giáo trình", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    expect(screen.queryByTestId("content-packages-syllabus-filter")).toBeNull();
+    expect(screen.queryByLabelText("Lọc theo giáo trình")).toBeNull();
     expect(screen.queryByTestId("content-package-syllabus")).toBeNull();
-  });
-
-  it("gói của Kho HSK lẫn gói gắn giáo trình thật: mỗi dòng hiện nguồn; lọc theo giáo trình thu hẹp danh sách và đếm lại", async () => {
-    vi.mocked(client.listQuizPackages).mockResolvedValue([
-      pkg(1, { syllabusId: "HSK-LIBRARY-QUIZ", syllabusName: "Kho HSK" }),
-      pkg(2, { syllabusId: "syl-gt2", syllabusName: "GT2 (GT2-01)" }),
-      pkg(3, { syllabusId: "syl-gt2", syllabusName: "GT2 (GT2-01)" }),
-    ]);
-    renderPage();
-    await screen.findByText("Gói 1");
-    expect(packageRows()).toHaveLength(3);
-    expect(screen.getAllByTestId("content-package-syllabus").map((n) => n.textContent)).toEqual(["Kho HSK·", "GT2 (GT2-01)·", "GT2 (GT2-01)·"]);
-    const filter = screen.getByLabelText("Lọc theo giáo trình");
-    expect(within(filter).getAllByRole("option").map((o) => o.textContent)).toEqual(["Tất cả giáo trình (3)", "Kho HSK (1)", "GT2 (GT2-01) (2)"]);
-    await userEvent.selectOptions(filter, "syl-gt2");
-    expect(packageRows()).toHaveLength(2);
-    expect(screen.queryByText("Gói 1")).toBeNull();
-    await userEvent.selectOptions(filter, "HSK-LIBRARY-QUIZ");
-    expect(packageRows()).toHaveLength(1);
-    expect(screen.getByText("Gói 1")).toBeInTheDocument();
   });
 
   it("xoá gói: huỷ => không gọi API; đồng ý => deleteQuizPackage + toast", async () => {
@@ -339,5 +323,77 @@ describe("trình soạn câu hỏi (?quizId=)", () => {
     renderPage();
     await screen.findByText("再见 nghĩa là xin chào.");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
+  });
+});
+
+// Chủ đề trong gói (Kho): gom và sắp thứ tự mục; gói không có chủ đề thì giao diện giữ như cũ.
+describe("chủ đề trong gói", () => {
+  const withTopics = () =>
+    vi.mocked(topicsApi.list).mockResolvedValue({
+      topics: [
+        { id: "t1", title: "Nghe", topicOrder: 1 },
+        { id: "t2", title: "Đọc", topicOrder: 2 },
+      ],
+      membership: { q1: "t2", q2: "t1" },
+    });
+  const openPackage = async () => {
+    renderPage();
+    await userEvent.click(await screen.findByText("Gói 1"));
+    await screen.findByText("Quiz 1");
+  };
+
+  it("gói chưa có chủ đề => khối chủ đề trống, không có cột Chủ đề, mục vẫn hiện", async () => {
+    await openPackage();
+    expect(await screen.findByTestId("flat-topic-panel")).toHaveTextContent("Chưa có chủ đề");
+    expect(screen.queryAllByTestId("flat-topic-select")).toHaveLength(0);
+    expect(topicsApi.list).toHaveBeenCalledWith("p1");
+  });
+
+  it("gói có chủ đề: khối chủ đề đếm mục, mục xếp theo thứ tự chủ đề rồi mới theo thứ tự trong gói", async () => {
+    withTopics();
+    await openPackage();
+    const rows = await screen.findAllByTestId("flat-topic-row");
+    expect(rows.map((r) => r.textContent)).toEqual(["Nghe1 mục", "Đọc1 mục"]);
+    // q2 thuộc "Nghe" (đứng trước) nên hiện trước q1 dù q1 có thứ tự nhỏ hơn
+    expect(screen.getAllByTestId("flat-topic-select").map((s) => (s as HTMLSelectElement).value)).toEqual(["t1", "t2"]);
+  });
+
+  it("chuyển mục sang chủ đề khác và bỏ khỏi chủ đề => assign theo id mục kèm tên chủ đề; sau đó tải lại chủ đề", async () => {
+    withTopics();
+    await openPackage();
+    const [first] = await screen.findAllByTestId("flat-topic-select");
+    await userEvent.selectOptions(first, "t2");
+    await waitFor(() => expect(topicsApi.assign).toHaveBeenCalledWith("p1", "q2", { id: "t2", title: "Đọc" }, false));
+    await userEvent.selectOptions(screen.getAllByTestId("flat-topic-select")[0], "");
+    await waitFor(() => expect(topicsApi.assign).toHaveBeenLastCalledWith("p1", "q2", null, false));
+    expect(vi.mocked(topicsApi.list).mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("thêm chủ đề: nhập tên trong hộp => create(packageId, tên)", async () => {
+    await openPackage();
+    await userEvent.click(await screen.findByTestId("flat-topic-add"));
+    await userEvent.type(await screen.findByPlaceholderText(/Tên chủ đề/), "Gia đình");
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+    await waitFor(() => expect(topicsApi.create).toHaveBeenCalledWith("p1", "Gia đình", false));
+  });
+
+  it("xóa chủ đề: hủy xác nhận => không gọi; đồng ý => remove; đưa chủ đề xuống => reorder đủ mọi chủ đề", async () => {
+    withTopics();
+    await openPackage();
+    vi.mocked(confirmAction).mockResolvedValueOnce(false);
+    await userEvent.click(await screen.findByRole("button", { name: "Xóa chủ đề Nghe" }));
+    expect(topicsApi.remove).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Xóa chủ đề Nghe" }));
+    await waitFor(() => expect(topicsApi.remove).toHaveBeenCalledWith("p1", { id: "t1", title: "Nghe" }, false));
+
+    await userEvent.click(screen.getByRole("button", { name: "Đưa chủ đề Nghe xuống" }));
+    await waitFor(() => expect(topicsApi.reorder).toHaveBeenCalledWith("p1", [{ id: "t2", title: "Đọc" }, { id: "t1", title: "Nghe" }], false));
+  });
+
+  it("chủ đề tải lỗi => mục vẫn hiện như cũ, không có khối chủ đề", async () => {
+    vi.mocked(topicsApi.list).mockRejectedValue(new ApiError("Lỗi chủ đề", 500));
+    await openPackage();
+    expect(screen.queryByTestId("flat-topic-panel")).toBeNull();
+    expect(screen.getByText("Quiz 2")).toBeInTheDocument();
   });
 });

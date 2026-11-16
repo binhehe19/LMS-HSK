@@ -15,17 +15,15 @@
 //    TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend. questionId do frontend tự sinh
 //    (crypto.randomUUID) khi tạo câu hỏi mới, giữ cố định qua các lần sửa (đúng tinh thần "ULID ổn định" của backend).
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
-//    cấp URL riêng. sessionNo cố định = 1. syllabusId/syllabusVersionId dùng cặp đại diện cố định riêng cho quiz.
+//    cấp URL riêng. sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
+import { listFreeContentPackages } from "@/lib/api/lms-package-list";
 import { ApiError } from "@/lib/api/api-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { QuizDifficulty, QuizItem, QuizQuestion, QuizQuestionType } from "@/types/content-quiz";
 
 const PACKAGE_TYPE = "ASSESSMENT";
-const HSK_SYLLABUS_ID = "HSK-LIBRARY-QUIZ";
-const HSK_SYLLABUS_VERSION_ID = "HSK-LIBRARY-QUIZ-V1";
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface BackendPackageVersion {
@@ -443,19 +441,15 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 }
 
 // ---- gói ----
-/** Mọi gói cùng loại, kể cả gói gắn giáo trình thật; mỗi gói kèm nguồn giáo trình để giao diện hiển thị/lọc (gói tạo ở đây vẫn dùng mã Kho HSK). */
+/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listQuizPackages(): Promise<ContentPackage[]> {
-  const packages = await listAllContentPackages<BackendPackage>(PACKAGE_TYPE);
-  const source = await syllabusSourceResolver(packages.map((p) => p.syllabusId));
-  return packages.map((p) => ({ ...toUiPackage(p), ...source(p.syllabusId) }));
+  return (await listFreeContentPackages<BackendPackage>(PACKAGE_TYPE)).map(toUiPackage);
 }
 
 export async function createQuizPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
   assertWriteEnabled("content", demo);
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: PACKAGE_TYPE,
-    syllabusId: HSK_SYLLABUS_ID,
-    syllabusVersionId: HSK_SYLLABUS_VERSION_ID,
     title: input.name,
     description: input.description || undefined,
   });
@@ -562,7 +556,7 @@ export async function updateQuizItem(packageId: string, resourceId: string, inpu
   const existing = links.find((l) => l.learningResourceId === resourceId)?.resourceContent ?? null;
   const content = toQuizContent(input, existing?.questions ?? [], existing?.layout);
   await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, { content });
-  // Chuỗi rỗng = xóa kỹ năng; assessmentType/tags không gửi nên giữ nguyên.
+  // Chuỗi rỗng = xóa kỹ năng; subType/tags không gửi nên giữ nguyên.
   await lmsClient.put(`/learning-resources/${encodeURIComponent(resourceId)}/classification`, { skill: input.skill ?? "" });
   return fromQuizContent(resourceId, input.index ?? 0, content, input.skill ?? null);
 }

@@ -24,15 +24,15 @@ describe("live timetable source",()=>{
 
 describe("progress and assessment integration",()=>{
  it("uses explicit assessment classification for the four skill labels",()=>{for(const [type,label,icon] of [["LISTENING","Phần Nghe","nghe"],["READING","Phần Đọc","doc"],["WRITING","Phần Viết","viet"],["SPEAKING","Phần Nói","noi"]])expect(classifyModule(type,"Bài 1")).toEqual({title:label+": Bài 1",icon});});
- it("preserves safe metadata when the quiz body is withheld",()=>{const [module]=publishedModules({quiz:{freeResources:[{id:"link",learningResourceId:"res",resourceTitle:"听力",assessmentType:"LISTENING",resourceType:"ASSESSMENT",resourceContent:null}]}});expect(module.title).toBe("Phần Nghe: 听力");expect(module.resourceId).toBe("res");expect(module.content).toBeNull();});
- it("reads backend progress and maps submitted attempts without confusing grade with completion",async()=>{api.resources.mockResolvedValue({quiz:{freeResources:[{id:"link",learningResourceId:"res",assessmentType:"LISTENING",resourceType:"ASSESSMENT",resourceContent:null}]}});api.sessionProgress.mockResolvedValue({homeworkProgress:42});api.attempts.mockResolvedValue({attempts:[{attemptId:"a",status:"SUBMITTED",gradingStatus:"GRADED",earnedPoints:2,totalPoints:10}]});const session=classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus);const result=await loadSessionStudy(session,false);expect(result.progress).toBe(42);expect(result.modules.find(m=>m.id === "link")?.progress).toBe(100);expect(result.attempts[0].earnedPoints).toBe(2);expect(api.attempts).toHaveBeenCalledWith("res","session");});
+ it("preserves safe metadata when the quiz body is withheld",()=>{const [module]=publishedModules({quiz:{freeResources:[{id:"link",learningResourceId:"res",resourceTitle:"听力",subType:"PRACTICE_LISTENING",resourceType:"ASSESSMENT",resourceContent:null}]}});expect(module.title).toBe("Phần Nghe: 听力");expect(module.resourceId).toBe("res");expect(module.content).toBeNull();});
+ it("reads backend progress and maps submitted attempts without confusing grade with completion",async()=>{api.resources.mockResolvedValue({quiz:{freeResources:[{id:"link",learningResourceId:"res",subType:"PRACTICE_LISTENING",resourceType:"ASSESSMENT",resourceContent:null}]}});api.sessionProgress.mockResolvedValue({homeworkProgress:42});api.attempts.mockResolvedValue({attempts:[{attemptId:"a",status:"SUBMITTED",gradingStatus:"GRADED",earnedPoints:2,totalPoints:10}]});const session=classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus);const result=await loadSessionStudy(session,false);expect(result.progress).toBe(42);expect(result.modules.find(m=>m.id === "link")?.progress).toBe(100);expect(result.attempts[0].earnedPoints).toBe(2);expect(api.attempts).toHaveBeenCalledWith("res","session");});
  it("admin never requests personal progress or someone else's attempts",async()=>{await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);expect(api.sessionProgress).not.toHaveBeenCalled();expect(api.attempts).not.toHaveBeenCalled();});
  it("keeps progress unavailable when its API fails",async()=>{api.sessionProgress.mockRejectedValue(Error("Progress service offline"));const result=await loadSessionStudy(classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus),false);expect(result.progress).toBeNull();expect(result.warnings.some(w=>w.includes("Progress service offline"))).toBe(true);});
 });
 
 it("admin replaces student metadata with the full content of the same attachment",async()=>{
- api.resources.mockResolvedValue({quiz:{freeResources:[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",assessmentType:"QUIZ",resourceTitle:"Quiz",resourceContent:null}]}});
- api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",assessmentType:"QUIZ",resourceContent:{title:"Quiz",layout:{meta:{skill:"READING"}},questions:[{questionId:"q1",questionType:"ESSAY",questionText:"Read and answer"}]}}]:[]);
+ api.resources.mockResolvedValue({quiz:{freeResources:[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",subType:"QUIZ",resourceTitle:"Quiz",resourceContent:null}]}});
+ api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"same-link",learningResourceId:"res",resourceType:"ASSESSMENT",subType:"QUIZ",resourceContent:{title:"Quiz",layout:{meta:{skill:"READING"}},questions:[{questionId:"q1",questionType:"ESSAY",questionText:"Read and answer"}]}}]:[]);
  const result=await loadSessionModules(syllabusSessions(syllabus,true)[0],true);
  const attached=result.modules.filter(m=>m.id === "same-link");
  expect(attached).toHaveLength(1);
@@ -41,7 +41,7 @@ it("admin replaces student metadata with the full content of the same attachment
 });
 
 it("loads restored HSK quizzes into the matching session and skill, retaining their questions",async()=>{
- const rows=[{id:"reading-link",sessionNo:1,resourceType:"ASSESSMENT",assessmentType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test",layout:{meta:{skill:"READING"}},questions:[{questionId:"r1"},{questionId:"r2"}]}},{id:"listening-link",sessionNo:2,resourceType:"ASSESSMENT",assessmentType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test1",layout:{meta:{skill:"LISTENING"}},questions:[{questionId:"l1"},{questionId:"l2"},{questionId:"l3"},{questionId:"l4"}]}}];
+ const rows=[{id:"reading-link",sessionNo:1,resourceType:"ASSESSMENT",subType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test",layout:{meta:{skill:"READING"}},questions:[{questionId:"r1"},{questionId:"r2"}]}},{id:"listening-link",sessionNo:2,resourceType:"ASSESSMENT",subType:"QUIZ",publication:"DRAFT",resourceContent:{title:"test1",layout:{meta:{skill:"LISTENING"}},questions:[{questionId:"l1"},{questionId:"l2"},{questionId:"l3"},{questionId:"l4"}]}}];
  api.draft.mockImplementation(async(_id:string,type:string,sessionNo:number)=>type === "ASSESSMENT"?rows.filter(row=>row.sessionNo===sessionNo):[]);
  const sessions=syllabusSessions({...syllabus,schedule:[{id:"row1"},{id:"row2"}]},true);
  const first=await loadSessionModules(sessions[0],true);const second=await loadSessionModules(sessions[1],true);
@@ -52,12 +52,12 @@ it("loads restored HSK quizzes into the matching session and skill, retaining th
 });
 
 it("admin reads all activity sources for each session without stale published content",async()=>{
- api.resources.mockResolvedValue({quiz:{freeResources:[{id:"removed-from-draft",resourceType:"ASSESSMENT",assessmentType:"READING"}]}});
+ api.resources.mockResolvedValue({quiz:{freeResources:[{id:"removed-from-draft",resourceType:"ASSESSMENT",subType:"PRACTICE_READING"}]}});
  api.draft.mockImplementation(async(_id:string,type:string,no:number)=>{
   const common={id:type+no,learningResourceId:type+no,resourceType:type,publication:"DRAFT"};
   if(type === "SLIDE" || type === "MATERIAL")return [{...common,resourceContent:{title:type,fileId:"file"+no}}];
   if(type === "VOCABULARY")return [{...common,resourceContent:{word:"你好"+no}}];
-  if(type === "ASSESSMENT")return ["LISTENING","READING","WRITING","SPEAKING"].map(skill=>({...common,id:skill+no,assessmentType:"QUIZ",resourceContent:{layout:{meta:{skill}},questions:[{questionId:skill+no}]}}));
+  if(type === "ASSESSMENT")return ["LISTENING","READING","WRITING","SPEAKING"].map(skill=>({...common,id:skill+no,subType:"QUIZ",resourceContent:{layout:{meta:{skill}},questions:[{questionId:skill+no}]}}));
   return [];
  });
  for(const no of [1,2,8]){
@@ -72,20 +72,20 @@ it("admin reads all activity sources for each session without stale published co
 });
 
 it("retains completed skill state during a later retry and opens the submitted attempt",async()=>{
- api.resources.mockResolvedValue({quiz:{freeResources:[{id:"reading",learningResourceId:"read",assessmentType:"QUIZ",skill:"READING",resourceType:"ASSESSMENT",resourceContent:null}]}});
+ api.resources.mockResolvedValue({quiz:{freeResources:[{id:"reading",learningResourceId:"read",subType:"QUIZ",skill:"READING",resourceType:"ASSESSMENT",resourceContent:null}]}});
  api.attempts.mockResolvedValue({attempts:[{attemptId:"retry",status:"IN_PROGRESS"},{attemptId:"submitted",status:"SUBMITTED",gradingStatus:"PENDING"}]});
  const result=await loadSessionStudy(classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus),false);
  expect(result.modules.find(m=>m.id==="reading")).toMatchObject({progress:100,attemptId:"submitted"});
 });
 it("does not mark unsubmitted answers complete",async()=>{
- api.resources.mockResolvedValue({quiz:{freeResources:[{id:"reading",learningResourceId:"read",assessmentType:"QUIZ",skill:"READING",resourceType:"ASSESSMENT",resourceContent:null}]}});
+ api.resources.mockResolvedValue({quiz:{freeResources:[{id:"reading",learningResourceId:"read",subType:"QUIZ",skill:"READING",resourceType:"ASSESSMENT",resourceContent:null}]}});
  api.attempts.mockResolvedValue({attempts:[{attemptId:"draft",status:"IN_PROGRESS"}]});
  const result=await loadSessionStudy(classSession({id:"c",syllabusId:"s1"},{id:"session",classId:"c",sessionNo:1},syllabus),false);
  expect(result.modules.find(m=>m.id==="reading")?.progress).toBe(0);
 });
 
 it("admin completion is read from own practice history without student class requests",async()=>{
- api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"link",learningResourceId:"quiz",contentPackageVersionId:"draft",resourceType:"ASSESSMENT",assessmentType:"QUIZ",resourceContent:{layout:{meta:{skill:"READING"}}}}]:[]);
+ api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"link",learningResourceId:"quiz",contentPackageVersionId:"draft",resourceType:"ASSESSMENT",subType:"QUIZ",resourceContent:{layout:{meta:{skill:"READING"}}}}]:[]);
  api.adminAttempts.mockResolvedValue({attempts:[{attemptId:"admin-attempt",status:"SUBMITTED",gradingStatus:"GRADED"}]});
  const result=await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);
  expect(result.modules.find(m=>m.id==="link")).toMatchObject({progress:100,attemptId:"admin-attempt"});
@@ -107,7 +107,7 @@ it("keeps learner class summaries and progress separate across classes and accou
 });
 
 it("loads admin practice progress independently for each session",async()=>{
- api.draft.mockImplementation(async(_id:string,type:string,no:number)=>type==="ASSESSMENT"?[{id:"link"+no,learningResourceId:"quiz"+no,contentPackageVersionId:"version",resourceType:"ASSESSMENT",assessmentType:"QUIZ",skill:"READING"}]:[]);
+ api.draft.mockImplementation(async(_id:string,type:string,no:number)=>type==="ASSESSMENT"?[{id:"link"+no,learningResourceId:"quiz"+no,contentPackageVersionId:"version",resourceType:"ASSESSMENT",subType:"QUIZ",skill:"READING"}]:[]);
  api.adminAttempts.mockImplementation(async(_id:string,_version:string,no:number)=>({attempts:no===1?[{attemptId:"submitted",status:"SUBMITTED",gradingStatus:"GRADED",earnedPoints:0,totalPoints:20}]:[]}));
  const first=await loadSessionStudy({...syllabusSessions(syllabus,true)[0],sessionNo:1},true);
  const second=await loadSessionStudy({...syllabusSessions(syllabus,true)[0],sessionNo:2},true);

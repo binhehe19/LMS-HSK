@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
 // Shared view model for live syllabus/class-session data. Unknown progress stays null.
-export interface TimetableModule { attemptId?: string; id: string; title: string; icon: string; kind: "material" | "practice"; progress: number | null; description: string; url?: string; content?: unknown; resourceType?: string; resourceId?: string; assessmentType?: string; skill?: string; packageVersionId?: string; group?: string; publication?: "DRAFT" | "PUBLISHED"; topicTitle?: string; topicOrder?: number; }
+export interface TimetableModule { attemptId?: string; id: string; title: string; icon: string; kind: "material" | "practice"; progress: number | null; description: string; url?: string; content?: unknown; resourceType?: string; resourceId?: string; subType?: string; skill?: string; packageVersionId?: string; group?: string; publication?: "DRAFT" | "PUBLISHED"; topicTitle?: string; topicOrder?: number; }
 export interface TimetableSession {
  id: string; classId: string; classCode: string; courseName: string; teacher: string;
  homeworkProgress?: number | null; personalProgress?: number | null; classPersonalProgress?: number | null; classHomeworkDiligence?: number | null; classAverageScore?: number | null;

@@ -25,7 +25,7 @@ describe("student backend integration", () => {
   vi.mocked(lmsClient.get).mockResolvedValue([]);
   await studentApi.classes(); await studentApi.history("READING");
   expect(lmsClient.get).toHaveBeenNthCalledWith(1, "/me/classes");
-  expect(lmsClient.get).toHaveBeenNthCalledWith(2, "/assessment-practice/history?type=READING");
+  expect(lmsClient.get).toHaveBeenNthCalledWith(2, "/assessment-practice/history?type=PRACTICE_READING");
  });
  it("does not turn an invalid list response into an empty success", async () => {
   vi.mocked(lmsClient.get).mockResolvedValue({ items: [] });

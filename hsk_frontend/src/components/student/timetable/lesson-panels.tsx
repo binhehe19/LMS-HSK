@@ -13,7 +13,13 @@ const str=(value:unknown)=>typeof value === "string"?plainText(value):"";
 export function vocabularyWords(resources:TimetableModule[]):Word[]{
  return resources.filter(item=>item.resourceType === "VOCABULARY").flatMap(resource=>{
   const root=object(resource.content);const values=Array.isArray(root.words)?root.words:Array.isArray(root.items)?root.items:[root];
-  return values.flatMap((value,index)=>{const item=object(value);const word=str(item.word);if(!word)return [];return [{topic:resource.topicTitle,progressKnown:resource.progress !== null,learned:resource.progress !== null && resource.progress>=100,id:resource.id+":"+index,resourceId:resource.resourceId,word,pinyin:str(item.pinyin),meaning:str(item.commonMeaning),pos:str(item.partOfSpeech),image:safeResourceUrl(str(item.imageUrl)),audio:safeResourceUrl(str(item.ukAudioUrl)),examples:(Array.isArray(item.examples)?item.examples:[]).map(value=>{const e=object(value);return {cn:str(e.en),pinyin:str(e.pinyin),vi:str(e.vi)};})}];});
+  // Nội dung từ vựng ZH: chữ Hán ở `word`, phiên âm/nghĩa/ví dụ nằm trong pinyins[].meanings[]; lấy phiên âm chính (hoặc đầu tiên).
+  return values.flatMap((value,index)=>{const item=object(value);const word=str(item.word);if(!word)return [];
+   const pinyins=(Array.isArray(item.pinyins)?item.pinyins:[]).map(object);const primary=pinyins.find(p=>p.isPrimary === true)??pinyins[0]??{};
+   const meanings=(Array.isArray(primary.meanings)?primary.meanings:[]).map(object);
+   const meaning=meanings.map(m=>str(m.meaningVi)||str(m.meaningEn)).find(Boolean)??"";
+   const examples=meanings.map(m=>({cn:str(m.exampleSentenceZh),pinyin:str(m.exampleSentencePinyin),vi:str(m.exampleSentenceVi)})).filter(e=>e.cn);
+   return [{topic:resource.topicTitle,progressKnown:resource.progress !== null,learned:resource.progress !== null && resource.progress>=100,id:resource.id+":"+index,resourceId:resource.resourceId,word,pinyin:str(primary.pinyin),meaning,pos:str(primary.wordTypes),image:safeResourceUrl(str(item.imageUrl)),audio:safeResourceUrl(str(item.audioUrl)),examples}];});
  });
 }
 export function VocabularyPanel({resources,view}:{resources:TimetableModule[];view:VocabularyView}){

@@ -47,7 +47,9 @@ export function ContentSetEditor<TItem extends ContentItemBase>({ config, mode, 
       return;
     }
     editor.addItems(inputs);
-    toast.success(`Đã thêm ${inputs.length} ${noun}`);
+    // Dòng thiếu cột bắt buộc (vd thiếu nghĩa hoặc pinyin) bị bỏ qua: báo số dòng đã bỏ để người dùng biết cần nhập lại.
+    const skipped = bulkText.split(/\r?\n/).filter((line) => line.trim()).length - inputs.length;
+    toast.success(`Đã thêm ${inputs.length} ${noun}${skipped > 0 ? `; bỏ ${skipped} dòng thiếu dữ liệu` : ""}`);
     setBulkText("");
     setBulkOpen(false);
   };
@@ -188,7 +190,7 @@ export function ContentSetEditor<TItem extends ContentItemBase>({ config, mode, 
                 <div className="card border-0 shadow-sm mb-3" style={{ borderRadius: "12px" }} data-testid="set-editor-bulk">
                   <div className="card-body p-3 px-4">
                     <label className={LABEL} style={LABEL_STYLE} htmlFor="set-editor-bulk-text">
-                      Mỗi dòng một {noun}: chữ Hán, nghĩa, pinyin (phân cách bằng tab, phẩy, chấm phẩy, hai chấm hoặc |)
+                      Mỗi dòng một {noun}: chữ Hán, nghĩa, pinyin, đủ cả ba cột (phân cách bằng tab, phẩy, chấm phẩy, hai chấm hoặc |); dòng thiếu cột bị bỏ qua
                     </label>
                     <textarea id="set-editor-bulk-text" className="form-control" rows={5} placeholder={"你好\tXin chào\tnǐ hǎo\n谢谢\tCảm ơn\txièxie"} value={bulkText} onChange={(e) => setBulkText(e.target.value)} />
                     <button type="button" className="btn btn-primary mt-3" onClick={importBulk}>

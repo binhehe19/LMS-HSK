@@ -25,7 +25,7 @@ export interface LearningOrbit {
 }
 export interface PracticeHistory {
  attemptId: string; resourceId: string; status: string; gradingStatus?: string; startedAt?: string; updatedAt?: string; submittedAt?: string;
- earnedPoints?: number; totalPoints?: number; test: { title?: string; assessmentType?: string };
+ earnedPoints?: number; totalPoints?: number; test: { title?: string; subType?: string };
 }
 export interface DictionarySession {
  lessonId: string; review: boolean; session: { completed: boolean; startedAt?: string; completedAt?: string; stage: number; ids: string[]; known: string[] };
@@ -50,7 +50,8 @@ export const studentApi = {
  classes: async () => arrayResponse<StudentClass>(await lmsClient.get("/me/classes")),
  classDetail: (id: string) => lmsClient.get<StudentClass>(`/me/classes/${encodeURIComponent(id)}`),
  orbit: () => lmsClient.get<LearningOrbit>("/me/learning-orbit?timezone=Asia%2FHo_Chi_Minh"),
- history: async (type: string) => arrayResponse<PracticeHistory>(await lmsClient.get(`/assessment-practice/history?type=${encodeURIComponent(type)}`)),
+ // Bốn kỹ năng là loại phụ PRACTICE_*; QUIZ giữ nguyên.
+ history: async (type: string) => arrayResponse<PracticeHistory>(await lmsClient.get(`/assessment-practice/history?type=${encodeURIComponent(type === "QUIZ" ? type : `PRACTICE_${type}`)}`)),
  dictionarySessions: async (completed: boolean) => arrayResponse<DictionarySession>(await lmsClient.get(`/dictionary/sessions?completed=${completed}`)),
  progress: (id: string) => lmsClient.get<HomeworkProgress>(`/me/classes/${encodeURIComponent(id)}/homework-progress`),
  sessionProgress: (classId: string, sessionId: string) => lmsClient.get<SessionHomeworkProgress>(`/me/classes/${encodeURIComponent(classId)}/sessions/${encodeURIComponent(sessionId)}/homework-progress`),

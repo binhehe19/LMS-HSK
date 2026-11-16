@@ -429,7 +429,7 @@ describe("/hanzi/create và /hanzi/edit/:id — tạo/sửa bộ học kèm ch�
     await userEvent.click(screen.getByRole("button", { name: /Nhập nhanh/ }));
     await userEvent.type(screen.getByLabelText(/Mỗi dòng một chữ/), "我,tôi,wǒ,7,戈,ngã{enter}dòng lỗi");
     await userEvent.click(screen.getByRole("button", { name: "Thêm từ văn bản" }));
-    expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 chữ");
+    expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 chữ; bỏ 1 dòng thiếu dữ liệu");
     expect(editorItems()).toHaveLength(1);
     expect(within(editorItems()[0]).getByLabelText(/Chữ Hán/)).toHaveValue("我");
     expect(within(editorItems()[0]).getByLabelText("Số nét")).toHaveValue(7);

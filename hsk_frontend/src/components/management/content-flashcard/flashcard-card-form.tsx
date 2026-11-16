@@ -29,7 +29,7 @@ export function FlashcardCardForm({ value, onChange, disabled, idPrefix }: Conte
       </div>
       <div className="col-md-4">
         <label className={LABEL} htmlFor={id("pinyin")}>
-          Pinyin
+          Pinyin <span className="text-danger">*</span>
         </label>
         <input id={id("pinyin")} type="text" className="form-control" placeholder="Ví dụ: nǐ hǎo" value={value.pinyin ?? ""} onChange={set("pinyin")} disabled={disabled} />
       </div>

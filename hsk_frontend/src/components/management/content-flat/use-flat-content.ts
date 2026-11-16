@@ -14,6 +14,9 @@ import { ApiError } from "@/lib/api/api-client";
 import { isPublished, sortByIndex } from "@/lib/content/content-tree-model";
 import { FLAT_ROOT_LOCATION, flatHref, flatLevel, readFlatLocation, type FlatContentLocation } from "@/lib/content/flat-content-params";
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
+import { usePackageTopics } from "@/components/management/content-flat/use-package-topics";
+import type { PackageTopicsClient } from "@/lib/api/package-topics-client";
+import { sortByTopic } from "@/lib/content/topic-grouping";
 import type { ContentItemBase, ContentItemInput, ContentModuleConfig, ContentPackage, ContentPackageInput } from "@/types/content";
 
 /** Bộ hàm CRUD một module phẳng cần cung cấp (xem lms-content-client.ts/lms-grammar-client.ts làm mẫu). */
@@ -28,6 +31,8 @@ export interface FlatContentClient<TItem extends ContentItemBase> {
   createItem(packageId: string, input: ContentItemInput<TItem>, demo: boolean): Promise<TItem>;
   updateItem(packageId: string, itemId: string, input: ContentItemInput<TItem>, demo: boolean): Promise<TItem>;
   deleteItem(packageId: string, itemId: string, demo: boolean): Promise<void>;
+  /** Chủ đề trong gói (gom và sắp thứ tự mục); không có = module không dùng chủ đề. Mọi module Kho dùng chung `packageTopicsClient`. */
+  topics?: PackageTopicsClient;
 }
 
 async function expectList<T>(promise: Promise<T[]>, what: string): Promise<T[]> {
@@ -52,8 +57,12 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
   const packages = useKeyedFetch<ContentPackage[]>(`${config.key}:packages`, () => expectList(client.listPackages(), labels.package.toLowerCase()));
   const items = useKeyedFetch<TItem[]>(packageId ? `${config.key}:items:${packageId}` : null, () => expectList(client.listItems(packageId ?? ""), labels.item.toLowerCase()));
 
+  // Chủ đề trong gói (nếu module khai báo): tải lỗi thì màn vẫn hiện mục như trước, chỉ không hiện chủ đề.
+  const topics = usePackageTopics(client.topics, packageId, config.key, demo, items.reload);
+
   const packageList = packages.state.kind === "ok" ? packages.state.data : (packages.lastData ?? []);
-  const itemList = useMemo(() => (items.state.kind === "ok" ? sortByIndex(items.state.data) : []), [items.state]);
+  // Mục theo thứ tự chủ đề rồi theo thứ tự trong gói; mục chưa phân chủ đề đứng cuối.
+  const itemList = useMemo(() => (items.state.kind === "ok" ? sortByTopic(sortByIndex(items.state.data), topics.data) : []), [items.state, topics.data]);
 
   const selectedPackage = packageId ? (packageList.find((p) => p.id === packageId) ?? null) : null;
   const missing: "package" | null = packageId && packages.state.kind === "ok" && !selectedPackage ? "package" : null;
@@ -149,10 +158,11 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     demo,
     canWrite,
     canPublish,
-    busy,
+    busy: busy || topics.busy,
     packages: { state: packages.state, list: packageList, reload: packages.reload },
     items: { state: items.state, list: itemList, reload: items.reload },
     selectedPackage,
+    topicUi: topics.topicUi,
     missing,
     savePackage,
     removePackage,

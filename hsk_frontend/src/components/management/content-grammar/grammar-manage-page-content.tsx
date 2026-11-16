@@ -15,6 +15,7 @@ import {
   updateGrammarItem,
   updateGrammarPackage,
 } from "@/lib/api/lms-grammar-client";
+import { packageTopicsClient } from "@/lib/api/package-topics-client";
 import type { ContentPackageTypeMeta } from "@/types/content";
 import type { GrammarPoint } from "@/types/content-grammar";
 
@@ -43,6 +44,7 @@ const GRAMMAR_CLIENT: FlatContentClient<GrammarPoint> = {
   createItem: createGrammarItem,
   updateItem: updateGrammarItem,
   deleteItem: deleteGrammarItem,
+  topics: packageTopicsClient,
 };
 
 /** Màn "Quản lý Ngữ pháp" (/grammar/manage, ManageGrammar của HSK cũ) trên nền phẳng (Package → Điểm ngữ pháp), nối repo-lms thật. */

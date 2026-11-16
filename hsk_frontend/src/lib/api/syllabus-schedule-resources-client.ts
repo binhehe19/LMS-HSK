@@ -5,6 +5,7 @@
 // lms-grammar-client.ts) vào ContentPackage CỦA CHÍNH giáo trình đó (1 package/loại, tạo khi cần), tại sessionNo = vị trí buổi trong `schedule[]` + 1.
 // Dùng lmsClient (repo-lms thật), không có backend mới. Xem docs/api-requirements/syllabus-modules.md.
 import { lmsClient } from "@/lib/api/lms-client";
+import { listSyllabusVersions } from "@/lib/api/lms-syllabus-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import type { PageResponse } from "@/types/lms";
@@ -28,6 +29,8 @@ interface BackendLearningResource {
   draftVersionId: string | null;
   publishedVersionId: string | null;
   content: unknown;
+  /** Học liệu nguồn của mục này (nếu nó là bản sao). */
+  sourceResourceId?: string | null;
 }
 export interface ScheduleResourceLink {
   id: string;
@@ -38,7 +41,7 @@ export interface ScheduleResourceLink {
   resourceType: string;
   publication?: "DRAFT" | "PUBLISHED";
   resourceTitle?: string;
-  assessmentType?: string;
+  subType?: string;
   skill?: string;
   contentPackageVersionId?: string;
   /** Chủ đề (nhóm) trong buổi; cả ba null/thiếu = không chủ đề. */
@@ -56,8 +59,12 @@ export interface ScheduleTopic {
   topicOrder: number;
 }
 
-function syllabusVersionIdOf(syllabusId: string): string {
-  return `${syllabusId}-v1`;
+/** Phiên bản hiện tại của giáo trình: bản PUBLISHED, không có thì bản đầu tiên (cùng cách `currentSyllabusVersionId` của IELTS). */
+async function currentSyllabusVersionId(syllabusId: string): Promise<string> {
+  const versions = await listSyllabusVersions(syllabusId);
+  const version = versions.find((v) => v.status === "PUBLISHED") ?? versions[0];
+  if (!version) throw new Error("Giáo trình chưa có phiên bản nào");
+  return version.id;
 }
 
 /** Package của CHÍNH giáo trình theo loại — tạo mới nếu chưa có (1 package/loại/giáo trình). */
@@ -67,7 +74,7 @@ async function ensureSyllabusPackage(syllabusId: string, type: ScheduleResourceT
   return lmsClient.post<BackendPackage>("/content-packages", {
     type,
     syllabusId,
-    syllabusVersionId: syllabusVersionIdOf(syllabusId),
+    syllabusVersionId: await currentSyllabusVersionId(syllabusId),
     title: `Module ôn luyện — ${type}`,
   });
 }
@@ -200,7 +207,9 @@ export async function attachLibraryItemsToSchedule(
         content: source.content,
         publishImmediately: true,
         inLibrary: false,
-        sourceResourceId: src.id,
+        // Nguồn là BẢN GỐC: mục chọn từ bộ trong Kho có thể đã là bản sao (vd từ vựng sao chép từ từ điển), khi đó trỏ tiếp về từ điển để đồng bộ
+        // và sao chép tiến độ đi tới bản ở buổi học. Mục không có nguồn (ngữ pháp, bài tập, tài liệu soạn trong gói) thì nguồn là chính nó.
+        sourceResourceId: source.sourceResourceId ?? src.id,
       });
       const resourceVersionId = created.publishedVersionId ?? created.draftVersionId;
       if (!resourceVersionId) throw new Error("Không lấy được phiên bản của tài nguyên vừa tạo.");

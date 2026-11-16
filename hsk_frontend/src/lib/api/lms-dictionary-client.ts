@@ -3,49 +3,16 @@
 import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { PageResponse as BackendPageResponse } from "@/types/lms";
+import type { VocabularyZhContent, VocabularyZhMeaning, VocabularyZhPinyin } from "@/types/vocabulary-zh-content";
 import type { StudentVocabularySearchParams, Vocabulary, VocabularyDetail, VocabularyInput, VocabularyPage, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
 
 const enc = encodeURIComponent;
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
-interface DictionaryMeaningContent {
-  meaningVi?: string;
-  meaningEn?: string;
-  meaningZh?: string;
-  exampleSentenceZh?: string;
-  exampleSentencePinyin?: string;
-  exampleSentenceVi?: string;
-  exampleSentenceEn?: string;
-  exampleWordType?: string;
-}
-interface DictionaryPinyinContent {
-  pinyin: string;
-  sinoVietnamese?: string;
-  wordTypes?: string;
-  isPrimary?: boolean;
-  measureWord?: string;
-  compounds?: string;
-  synonyms?: string;
-  antonyms?: string;
-  notes?: string;
-  meanings: DictionaryMeaningContent[];
-}
-interface DictionaryContent {
-  word: string;
-  language: "zh";
-  hskLevel?: number;
-  audioUrl?: string;
-  imageUrl?: string;
-  strokeAnimationUrl?: string;
-  etymologyStory?: string;
-  etymologyImage?: string;
-  radical?: string;
-  strokeCount?: number;
-  strokes?: string;
-  isSingleVocab?: boolean;
-  notes?: string;
-  pinyins: DictionaryPinyinContent[];
-}
+type DictionaryMeaningContent = VocabularyZhMeaning;
+// Dạng ghi/đọc của màn Từ điển: phiên âm và nghĩa luôn có (kiểu chung của nội dung ZH để tuỳ chọn vì thẻ nhập tay dùng chung).
+type DictionaryPinyinContent = Omit<VocabularyZhPinyin, "pinyin" | "meanings"> & { pinyin: string; meanings: VocabularyZhMeaning[] };
+type DictionaryContent = Omit<VocabularyZhContent, "pinyins"> & { pinyins: DictionaryPinyinContent[] };
 interface BackendLearningResource {
   id: string;
   draftVersionId: string | null;
@@ -82,7 +49,6 @@ function fromDictionaryResponse(response: DictionaryWordResponse): VocabularyDet
 function toDictionaryContent(input: VocabularyInput): DictionaryContent {
   return {
     word: input.hanzi,
-    language: "zh",
     hskLevel: input.hskLevel,
     audioUrl: input.audioUrl,
     imageUrl: input.imageUrl,
@@ -180,6 +146,7 @@ export async function createVocabulary(input: VocabularyInput, demoActive: boole
   assertWriteEnabled("content", demoActive);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
     type: "VOCABULARY",
+    subType: "ZH",
     content: toDictionaryContent(input),
     inLibrary: true,
   });

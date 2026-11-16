@@ -56,12 +56,6 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       activePrefix: "/pronunciation",
     },
     {
-      title: "Quản lý Thẻ ghi nhớ",
-      icon: "isax isax-folder-2",
-      href: "/flashcard/package",
-      activePrefix: "/flashcard",
-    },
-    {
       title: "Quản lý Ngữ pháp",
       icon: "isax isax-book",
       href: "/grammar/manage",

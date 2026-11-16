@@ -3,7 +3,7 @@ import { attemptResource,readLessonAssessments,startLessonAssessment } from "@/c
 import type { TimetableModule,TimetableSession } from "@/components/student/timetable/timetable-data";
 const api=vi.hoisted(()=>({attempt:vi.fn(),result:vi.fn(),start:vi.fn()}));
 vi.mock("@/lib/api/student-client",()=>({studentApi:{attempt:api.attempt,result:api.result,startAttempt:api.start}}));
-const resource:TimetableModule={id:"link",resourceId:"resource",packageVersionId:"package-version",title:"Nghe",kind:"practice",progress:null,description:"",icon:"nghe",resourceType:"ASSESSMENT",assessmentType:"LISTENING"};
+const resource:TimetableModule={id:"link",resourceId:"resource",packageVersionId:"package-version",title:"Nghe",kind:"practice",progress:null,description:"",icon:"nghe",resourceType:"ASSESSMENT",subType:"PRACTICE_LISTENING"};
 const session={id:"session",classId:"class",sessionNo:3} as TimetableSession;
 beforeEach(()=>vi.resetAllMocks());
 describe("lesson assessment delivery",()=>{

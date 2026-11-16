@@ -6,7 +6,7 @@ vi.mock("@/lib/api/lms-syllabus-client",()=>({getSyllabus:api.get,listSyllabuses
 vi.mock("@/lib/api/student-client",()=>({studentApi:{classDetail:api.classDetail}}));
 vi.mock("@/components/student/timetable/timetable-source",()=>({loadAdminTimetableClass:api.adminClass,classSession:api.classSession,syllabusSessions:api.syllabusSessions,loadSessionStudy:api.study,mapLimited:async(items:unknown[],fn:(value:unknown)=>Promise<unknown>)=>Promise.all(items.map(async item=>({status:"fulfilled",value:await fn(item)})))}));
 const context={scheduleId:"row1",syllabusId:"s1",sessionNo:1,classId:"c1",sessionId:"session1"};
-const item=(id:string,type:string,assessmentType?:string):TimetableModule=>({id,title:id,resourceType:type,assessmentType,kind:type === "SLIDE"?"material":"practice",icon:"doc",description:"",progress:null});
+const item=(id:string,type:string,subType?:string):TimetableModule=>({id,title:id,resourceType:type,subType,kind:type === "SLIDE"?"material":"practice",icon:"doc",description:"",progress:null});
 beforeEach(()=>vi.resetAllMocks());
 describe("live lesson source",()=>{
  it("shows vocabulary and grammar as additional content instead of inventing skills",()=>{const resources=[item("word","VOCABULARY"),item("grammar","GRAMMAR"),item("listen","ASSESSMENT","LISTENING")];expect(activityResources(resources,"listening").map(r=>r.id)).toEqual(["listen"]);expect(activityResources(resources,"reading")).toEqual([]);expect(additionalResources(resources).map(r=>r.id)).toEqual(["word","grammar"]);});

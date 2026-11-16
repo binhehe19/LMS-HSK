@@ -28,7 +28,7 @@ export interface GradingListItem {
   submittedAt: string | null;
   /** Còn câu điểm AI chưa được duyệt. */
   hasProvisionalScore: boolean;
-  assessmentType: AssessmentType;
+  subType: AssessmentSubType;
   contextType: GradingContextType;
   title: string | null;
   /** Tra ở dịch vụ Auth lúc xem danh sách; null khi tra không được (khi đó chỉ có studentId). */
@@ -41,7 +41,7 @@ export interface GradingListItem {
 export type GradingContextType = "CLASS_SESSION" | "SELF_STUDY";
 
 /** Nhãn phân loại của bài (chỉ để lọc/hiển thị). */
-export type AssessmentType = "QUIZ" | "READING" | "LISTENING" | "WRITING" | "SPEAKING"
+export type AssessmentSubType = "QUIZ" | "PRACTICE_READING" | "PRACTICE_LISTENING" | "PRACTICE_WRITING" | "PRACTICE_SPEAKING"
   | "PLACEMENT_IELTS" | "PLACEMENT_PACE" | "FOUNDATION_PRON" | "FOUNDATION_VOCAB" | "FOUNDATION_GRAMMAR";
 
 /** Một tiêu chí chấm (VD 4 tiêu chí IELTS Writing/Speaking). */
@@ -102,7 +102,7 @@ export interface GradingDetail {
   totalPoints: number | null;
   submittedAt: string | null;
   answers: GradingAnswerItem[];
-  assessmentType: AssessmentType;
+  subType: AssessmentSubType;
   contextType: GradingContextType;
   title: string | null;
   /** Bố cục đầy đủ (kể cả khoá grading và explanation). */
@@ -125,7 +125,7 @@ export function listGradingAttempts(params: {
   gradingStatus?: AssessmentGradingStatus;
   /** Mọi bài đã nộp, mọi trạng thái chấm (bỏ qua gradingStatus). */
   allStatuses?: boolean;
-  assessmentType?: AssessmentType;
+  subType?: AssessmentSubType;
   /** Tách bài trong lớp (CLASS_SESSION) khỏi bài tự luyện (SELF_STUDY); bỏ trống = cả hai. */
   contextType?: GradingContextType;
   /** Một từ khoá tìm chung: khớp tên / email / mã học sinh hoặc tên bài. */
@@ -144,7 +144,7 @@ export function listGradingAttempts(params: {
   const query = new URLSearchParams();
   if (params.allStatuses) query.set("allStatuses", "true");
   else if (params.gradingStatus) query.set("gradingStatus", params.gradingStatus);
-  if (params.assessmentType) query.set("assessmentType", params.assessmentType);
+  if (params.subType) query.set("subType", params.subType);
   if (params.contextType) query.set("contextType", params.contextType);
   if (params.keyword?.trim()) query.set("keyword", params.keyword.trim());
   if (params.classId) query.set("classId", params.classId);

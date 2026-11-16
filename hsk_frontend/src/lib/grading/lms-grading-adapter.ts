@@ -35,7 +35,8 @@ export function attemptToModule(item: GradingListItem): GradingStudentModuleResp
     moduleId: item.attemptId,
     attemptId: item.attemptId,
     label: item.title || "Bài tập",
-    skillType: item.assessmentType,
+    // skillType là tên kỹ năng (READING...), còn subType luyện kỹ năng mang tiền tố PRACTICE_.
+    skillType: item.subType.replace(/^PRACTICE_/, ""),
     submitted: item.status === "SUBMITTED",
     status: moduleStatus(item),
     score: item.earnedPoints ?? undefined,

@@ -1,11 +1,7 @@
-import { Suspense } from "react";
-import { FlashcardManagePageContent } from "@/components/management/content-flashcard/flashcard-manage-page-content";
+import { redirect } from "next/navigation";
 
-// Mục menu "Thẻ ghi nhớ" (HSK cũ: ManageFlashcard). useSearchParams (packageId/folderId/studySetId/view) cần ranh giới Suspense trong App Router.
+// Màn "Thẻ ghi nhớ" đã bỏ: flashcard là chế độ xem của từ vựng, còn soạn bộ từ vựng ở /vocab-set/manage (chọn từ từ Từ điển). Giữ route để liên kết cũ
+// không gãy.
 export default function FlashcardPackagePage() {
-  return (
-    <Suspense fallback={null}>
-      <FlashcardManagePageContent />
-    </Suspense>
-  );
+  redirect("/vocab-set/manage");
 }

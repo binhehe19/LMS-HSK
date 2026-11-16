@@ -294,21 +294,20 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 15 mục = 13 MIGRATED (có Chấm bài) + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 14 mục = 12 MIGRATED (có Chấm bài) + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 12, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
   });
 
-  it("Giảng viên: 12 mục = 11 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
-    expect(count(teacher)).toEqual({ MIGRATED: 11, UNKNOWN: 1 });
+  it("Giảng viên: 11 mục = 10 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
+    expect(count(teacher)).toEqual({ MIGRATED: 10, UNKNOWN: 1 });
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "MIGRATED").map((m) => m.title)).toEqual([
       "Tổng quan",
       "Thông báo của tôi",
       "Quản lý Luyện viết (Hán tự)",
       "Quản lý Luyện Phát âm",
-      "Quản lý Thẻ ghi nhớ",
       "Quản lý Ngữ pháp",
       "Quản lý Từ vựng",
       "Quản lý Bài tập",

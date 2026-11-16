@@ -1,4 +1,4 @@
-// Test FlashcardManagePageContent (đổi sang FlatContentManager + lms-content-client.ts, API thật repo-lms) — thay thế phần
+// Test FlatContentManager với cấu hình thẻ (trước là FlashcardManagePageContent; đổi sang FlatContentManager + lms-content-client.ts, API thật repo-lms) — thay thế phần
 // test Flashcard cũ từng nằm ở tests/content-tree-manager.test.tsx (test ContentTreeManager + content-tree-client mock, module
 // Flashcard không còn dùng kiến trúc đó nữa). Mirror cấu trúc/đặt tên của file cũ cho phần còn tương đương (cấp gói, cấp mục,
 // quyền theo ticket + công tắc ghi, trạng thái dữ liệu) nhưng rút gọn: không còn Folder/StudySet, mock ở lớp lms-content-client.
@@ -8,7 +8,9 @@ import { useSyncExternalStore } from "react";
 import { Provider } from "react-redux";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FlashcardManagePageContent } from "@/components/management/content-flashcard/flashcard-manage-page-content";
+import { FLASHCARD_CONFIG } from "@/components/management/content-flashcard/flashcard-config";
+import { FlatContentManager } from "@/components/management/content-flat/flat-content-manager";
+import type { FlatContentClient } from "@/components/management/content-flat/use-flat-content";
 import { ManagementShell } from "@/components/management/management-shell";
 import { confirmAction } from "@/components/shared/confirm-action";
 import { resetContentAccessCache } from "@/hooks/use-content-access";
@@ -22,6 +24,26 @@ import type { ContentPackage } from "@/types/content";
 import type { FlashcardCard } from "@/types/content-flashcard";
 import { adminUser } from "./fixtures/classes";
 
+// Màn quản lý thẻ (/flashcard/manage cũ đã chuyển hướng về /vocab-set/manage): ghép FlatContentManager với cấu hình thẻ và client lms-content-client (đã mock).
+const FLASHCARD_CLIENT: FlatContentClient<FlashcardCard> = {
+  listPackages: (...args) => client.listFlashcardPackages(...args),
+  createPackage: (...args) => client.createFlashcardPackage(...args),
+  updatePackage: (...args) => client.updateFlashcardPackage(...args),
+  deletePackage: (...args) => client.deleteFlashcardPackage(...args),
+  publishPackage: (...args) => client.publishFlashcardPackage(...args),
+  unpublishPackage: (...args) => client.unpublishFlashcardPackage(...args),
+  listItems: (...args) => client.listPackageItems(...args),
+  createItem: (...args) => client.createFlashcardItem(...args),
+  updateItem: (...args) => client.updateFlashcardItem(...args),
+  deleteItem: (...args) => client.deleteFlashcardItem(...args),
+};
+const FLASHCARD_FLAT_CONFIG = {
+  ...FLASHCARD_CONFIG,
+  packageTypes: [{ value: "VOCABULARY", label: "Flashcard", description: "Gói thẻ ghi nhớ từ vựng HSK", icon: "isax isax-cards", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" }],
+};
+function FlashcardManagePageContent() {
+  return <FlatContentManager config={FLASHCARD_FLAT_CONFIG} client={FLASHCARD_CLIENT} />;
+}
 // Router giả CÓ trạng thái: push/replace đổi URL và báo cho useSearchParams (vị trí trong URL: chỉ còn ?packageId=, không Folder/StudySet).
 const nav = vi.hoisted(() => {
   let url = "/flashcard/manage";
@@ -77,7 +99,7 @@ vi.setConfig({ testTimeout: 30_000 });
 
 const teacher = { ...adminUser, id: "u-teacher-1", fullName: "Giáo Viên Một", email: "gv1@example.test", roles: ["ROLE_TEACHER"] };
 const pkg = (i: number, over: Partial<ContentPackage> = {}): ContentPackage => ({ id: `p${i}`, name: `Gói ${i}`, type: "VOCABULARY", publishStatus: "DRAFT", description: `Mô tả ${i}`, createdAt: "2026-03-05T08:30:00Z", ...over });
-const card = (i: number, over: Partial<FlashcardCard> = {}): FlashcardCard => ({ id: `c${i}`, studySetId: "", index: i - 1, term: `词${i}`, meaning: `nghĩa ${i}`, ...over });
+const card = (i: number, over: Partial<FlashcardCard> = {}): FlashcardCard => ({ id: `c${i}`, studySetId: "", index: i - 1, term: `词${i}`, pinyin: `cí ${i}`, meaning: `nghĩa ${i}`, ...over });
 
 beforeEach(() => {
   resetContentAccessCache();
@@ -213,7 +235,9 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     await userEvent.click(modalOk(modal, "Thêm thẻ"));
     expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập nghĩa tiếng Việt");
     await userEvent.type(within(modal).getByLabelText(/Nghĩa tiếng Việt/), " xin chào ");
-    await userEvent.type(within(modal).getByLabelText("Pinyin"), "nǐ hǎo");
+    await userEvent.click(modalOk(modal, "Thêm thẻ"));
+    expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập pinyin"); // nội dung ZH cần phiên âm
+    await userEvent.type(within(modal).getByLabelText(/^Pinyin\s*\*/), "nǐ hǎo");
     await userEvent.type(within(modal).getByLabelText("Pinyin câu ví dụ"), "nǐ hǎo ma");
     await userEvent.click(within(modal).getByRole("button", { name: "Thêm trường" }));
     await userEvent.type(within(modal).getByLabelText("Nhãn trường bổ sung 1"), "Từ đồng nghĩa");

@@ -19,6 +19,7 @@ import {
   updateQuizItem,
   updateQuizPackage,
 } from "@/lib/api/lms-quiz-client";
+import { packageTopicsClient } from "@/lib/api/package-topics-client";
 import type { ContentPackageTypeMeta } from "@/types/content";
 import type { QuizItem } from "@/types/content-quiz";
 
@@ -46,6 +47,7 @@ const QUIZ_CLIENT: FlatContentClient<QuizItem> = {
   createItem: createQuizItem,
   updateItem: updateQuizItem,
   deleteItem: deleteQuizItem,
+  topics: packageTopicsClient,
 };
 
 /**

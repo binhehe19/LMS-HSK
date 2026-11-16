@@ -4,6 +4,7 @@
 // tiêu đề, không có thẻ lật — manage-vocabulary-set.tsx là bản sao của manage-flashcard.tsx chỉ đổi chữ). Đây là mẫu để các gói sau thêm module mới
 // (quiz, hán tự, ngữ pháp, phát âm): một file config như thế này + một form mục + (tuỳ chọn) cột/xem nhanh.
 import { useRef } from "react";
+import { DictionaryWordPickerModal } from "@/components/management/content-flashcard/dictionary-word-picker-modal";
 import { FlashcardCardForm } from "@/components/management/content-flashcard/flashcard-card-form";
 import { FlashcardPreview } from "@/components/management/content-flashcard/flashcard-preview";
 import { AssetImage } from "@/components/shared/asset-image";
@@ -135,4 +136,6 @@ export const VOCAB_SET_CONFIG: ContentModuleConfig<FlashcardCard> = {
   packagesHeader: { title: "Quản lý Bộ Từ vựng", subtitle: "Tổ chức và quản lý các bộ từ vựng của bạn" },
   // Bản từ vựng cũ: không có thẻ lật, chỉ liệt kê danh sách.
   ItemPreview: undefined,
+  // Thêm từ bằng cách chọn từ Từ điển (bản sao có nguồn), không nhập tay từng thẻ.
+  ItemPicker: DictionaryWordPickerModal,
 };

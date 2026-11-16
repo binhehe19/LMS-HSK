@@ -42,18 +42,6 @@ export function filterPackages(packages: readonly ContentPackage[], type: string
   return filterByKeyword(byType, keyword, (p) => [p.name, p.description]);
 }
 
-/** Các nguồn giáo trình có trong danh sách gói (theo thứ tự gặp), kèm số gói; rỗng khi gói không mang thông tin giáo trình. */
-export function packageSyllabusOptions(packages: readonly ContentPackage[]): { id: string; name: string; count: number }[] {
-  const options = new Map<string, { id: string; name: string; count: number }>();
-  for (const p of packages) {
-    if (!p.syllabusId) continue;
-    const found = options.get(p.syllabusId);
-    if (found) found.count += 1;
-    else options.set(p.syllabusId, { id: p.syllabusId, name: p.syllabusName ?? p.syllabusId, count: 1 });
-  }
-  return [...options.values()];
-}
-
 export function countPackagesByType(packages: readonly ContentPackage[], type: string): number {
   return packages.filter((p) => String(p.type).toUpperCase() === type.toUpperCase()).length;
 }

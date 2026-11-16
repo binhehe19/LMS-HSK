@@ -8,10 +8,11 @@ import { useState } from "react";
 import type { TableProps } from "antd";
 import { DataTable } from "@/components/shared/data-table";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import { FlatTopicPanel, topicColumn } from "@/components/management/content-flat/flat-topic-panel";
 import type { FlatItemsViewProps } from "@/types/content";
 import type { ContentItemBase } from "@/types/content";
 
-export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config, pkg, state, items, canWrite, busy, onCreate, onEdit, onDelete, onBack, onRetry }: FlatItemsViewProps<TItem>) {
+export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config, pkg, state, items, canWrite, busy, onCreate, onEdit, onDelete, onBack, onRetry, topicUi }: FlatItemsViewProps<TItem>) {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const { labels, ItemPreview } = config;
   const noun = labels.item.toLowerCase();
@@ -20,6 +21,7 @@ export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config,
 
   const columns: TableProps<TItem>["columns"] = [
     ...config.itemColumns.map((col) => ({ title: col.title, key: col.key, width: col.width, render: (_: unknown, item: TItem) => col.render(item) })),
+    ...topicColumn<TItem>(topicUi, canWrite, busy),
     {
       title: "Thao tác",
       key: "actions",
@@ -71,6 +73,7 @@ export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config,
         )}
       </div>
 
+      {topicUi && <FlatTopicPanel ui={topicUi} canWrite={canWrite} busy={busy} />}
       {state.kind === "loading" ? (
         <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
           <div className="spinner-border text-primary" role="status" />

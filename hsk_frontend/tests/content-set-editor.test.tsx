@@ -62,7 +62,7 @@ vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof i
 vi.setConfig({ testTimeout: 30_000 });
 
 const TARGET = { apiPrefix: "/flashcard", itemsPath: "cards" };
-const card = (i: number, over: Partial<FlashcardCard> = {}): FlashcardCard => ({ id: `c${i}`, studySetId: "s1", index: i - 1, term: `词${i}`, meaning: `nghĩa ${i}`, pinyin: "", ...over });
+const card = (i: number, over: Partial<FlashcardCard> = {}): FlashcardCard => ({ id: `c${i}`, studySetId: "s1", index: i - 1, term: `词${i}`, meaning: `nghĩa ${i}`, pinyin: `cí ${i}`, ...over });
 
 beforeEach(() => {
   resetContentAccessCache();
@@ -114,10 +114,12 @@ describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
     expect(toast.error).toHaveBeenCalledWith("Thẻ 1: Vui lòng nhập chữ Hán");
     await userEvent.type(within(items()[0]).getByLabelText(/Chữ Hán/), "你好");
     await userEvent.type(within(items()[0]).getByLabelText(/Nghĩa tiếng Việt/), "xin chào");
+    await userEvent.type(within(items()[0]).getByLabelText(/^Pinyin\s*\*/), "nǐ hǎo");
     await userEvent.click(screen.getByTestId("set-editor-add"));
     expect(items()).toHaveLength(2);
     await userEvent.type(within(items()[1]).getByLabelText(/Chữ Hán/), "谢谢");
     await userEvent.type(within(items()[1]).getByLabelText(/Nghĩa tiếng Việt/), "cảm ơn");
+    await userEvent.type(within(items()[1]).getByLabelText(/^Pinyin\s*\*/), "xièxie");
     await userEvent.click(screen.getByTestId("set-editor-save"));
     await waitFor(() => expect(client.createStudySet).toHaveBeenCalledWith(TARGET, { folderId: "f1", title: "Bài 1", description: undefined, isPrivate: true, skill: undefined }, false));
     await waitFor(() => expect(client.createItemsBulk).toHaveBeenCalledTimes(1));
@@ -137,12 +139,12 @@ describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
     await userEvent.click(screen.getByRole("button", { name: /Nhập nhanh/ }));
     await userEvent.type(screen.getByLabelText(/Mỗi dòng một thẻ/), "你好,xin chào,nǐ hǎo{enter}dòng lỗi");
     await userEvent.click(screen.getByRole("button", { name: "Thêm từ văn bản" }));
-    expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 thẻ");
+    expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 thẻ; bỏ 1 dòng thiếu dữ liệu");
     expect(items()).toHaveLength(2);
     expect(within(items()[1]).getByLabelText(/Chữ Hán/)).toHaveValue("你好");
     await userEvent.click(within(items()[0]).getByRole("button", { name: "Xóa thẻ 1" }));
     expect(items()).toHaveLength(1);
-    expect(within(items()[0]).getByLabelText("Pinyin")).toHaveValue("nǐ hǎo");
+    expect(within(items()[0]).getByLabelText(/^Pinyin\s*\*/)).toHaveValue("nǐ hǎo");
   });
 
   it("returnUrl ngoài (https) bị bỏ, quay về màn cây mặc định; không returnUrl => sau khi lưu mở bộ vừa tạo trong cây", async () => {
@@ -153,6 +155,7 @@ describe("/sets/create — tạo bộ thẻ kèm thẻ", () => {
     await userEvent.type(screen.getByLabelText("Tên Bộ học"), "B");
     await userEvent.type(within(items()[0]).getByLabelText(/Chữ Hán/), "一");
     await userEvent.type(within(items()[0]).getByLabelText(/Nghĩa tiếng Việt/), "một");
+    await userEvent.type(within(items()[0]).getByLabelText(/^Pinyin\s*\*/), "yī");
     await userEvent.click(screen.getByTestId("set-editor-save"));
     await waitFor(() => expect(nav.push.at(-1)).toBe("/flashcard/package?packageId=p1&folderId=f1&studySetId=s-new"));
   });
@@ -173,6 +176,7 @@ describe("/sets/:id/edit — sửa bộ thẻ", () => {
     await userEvent.click(screen.getByTestId("set-editor-add"));
     await userEvent.type(within(items()[1]).getByLabelText(/Chữ Hán/), "新");
     await userEvent.type(within(items()[1]).getByLabelText(/Nghĩa tiếng Việt/), "mới");
+    await userEvent.type(within(items()[1]).getByLabelText(/^Pinyin\s*\*/), "xīn");
     await userEvent.click(screen.getByTestId("set-editor-save"));
     await waitFor(() => expect(client.updateStudySet).toHaveBeenCalledWith(TARGET, "s1", { folderId: "f1", title: "Bộ 1", description: "Mô tả bộ", isPrivate: true, skill: undefined }, false));
     await waitFor(() => expect(client.updateItem).toHaveBeenCalledTimes(1));

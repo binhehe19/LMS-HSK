@@ -4,24 +4,23 @@
 // (trỏ NEXT_PUBLIC_HSK_API_BASE_PATH chưa có backend). Dùng lmsClient (lms-client.ts) nên cùng base URL/envelope/auth với các màn LMS khác đã chạy.
 //
 // Mapping (đã chốt với người phụ trách, xem plans/compressed-dancing-shore.md):
-//  - Flashcard HSK gộp vào LearningResourceType.VOCABULARY có sẵn, dùng VocabularyContent: term→word, pinyin→pinyin, wordType→partOfSpeech,
-//    meaning→commonMeaning, example/examplePinyin/exampleMeaning→examples[0]{en,pinyin,vi}, imageFileId→imageUrl (URL đã resolve qua
-//    storage-client), audioFileId→ukAudioUrl, customFields→extraFields[]{label,value}, language="zh".
+//  - Flashcard HSK là LearningResourceType.VOCABULARY loại phụ ZH, nội dung VocabularyZhContent (chữ Hán → phiên âm → nghĩa) như Từ điển:
+//    term→word, pinyin→pinyins[0].pinyin (phiên âm chính), wordType→pinyins[0].wordTypes, meaning→meanings[0].meaningVi,
+//    example/examplePinyin/exampleMeaning→meanings[0].exampleSentenceZh/Pinyin/Vi, imageFileId→imageUrl, audioFileId→audioUrl (URL đã
+//    resolve qua storage-client), customFields→notes (mỗi dòng "nhãn: giá trị").
 //  - Package→Folder→StudySet→Item của HSK cũ rút gọn còn Package→resource (phẳng, không Folder/StudySet); sessionNo cố định = 1.
-//  - ContentPackage bắt buộc syllabusId/syllabusVersionId (validate ở backend) → dùng cặp đại diện cố định cho mọi gói flashcard HSK.
+//  - Gói của Kho là học phần tự do (không có syllabusId/syllabusVersionId).
 //  - Mọi thao tác ghi (attach/sửa nội dung/xoá resource) chỉ áp dụng được lên phiên bản DRAFT của package (backend từ chối nếu không phải draft) → luôn
 //    ensureDraft trước khi ghi. Publish cần khoá chỉnh sửa (POST .../lock lấy sessionToken) trước khi gọi publish.
 import { lmsClient } from "@/lib/api/lms-client";
-import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
+import { listFreeContentPackages } from "@/lib/api/lms-package-list";
 import { fileUrl } from "@/lib/api/storage-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { FlashcardCard, FlashcardCardInput } from "@/types/content-flashcard";
+import type { VocabularyZhContent, VocabularyZhMeaning, VocabularyZhPinyin } from "@/types/vocabulary-zh-content";
 
 const PACKAGE_TYPE = "VOCABULARY";
-/** Syllabus đại diện cố định cho mọi gói flashcard HSK (ContentPackage bắt buộc syllabusId/syllabusVersionId nhưng flashcard không thuộc giáo trình nào). */
-const HSK_SYLLABUS_ID = "HSK-LIBRARY";
-const HSK_SYLLABUS_VERSION_ID = "HSK-LIBRARY-V1";
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface BackendPackageVersion {
@@ -40,26 +39,10 @@ interface BackendPackage {
   createdAt?: string;
   updatedAt?: string;
 }
-interface VocabularyExample {
-  en?: string;
-  vi?: string;
-  pinyin?: string;
-}
-interface VocabularyExtraField {
-  label?: string;
-  value?: string;
-}
-interface VocabularyContent {
-  word: string;
-  language?: string;
-  partOfSpeech?: string;
-  pinyin?: string;
-  commonMeaning?: string;
-  imageUrl?: string;
-  ukAudioUrl?: string;
-  examples?: VocabularyExample[];
-  extraFields?: VocabularyExtraField[];
-}
+/** Nội dung từ vựng ZH (xem types/vocabulary-zh-content.ts). Từ sao chép từ từ điển còn nhiều trường khác (HSK, bộ thủ, nhiều phiên âm...) mà thẻ không sửa: chúng được giữ nguyên khi sửa thẻ. */
+type DictionaryMeaning = VocabularyZhMeaning;
+type DictionaryPinyin = VocabularyZhPinyin;
+type VocabularyContent = VocabularyZhContent;
 interface BackendLearningResource {
   id: string;
   draftVersionId: string | null;
@@ -84,39 +67,78 @@ function fileIdFromUrl(url: string | undefined | null): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
+/** Trường tùy chỉnh của thẻ lưu trong `notes` của từ, mỗi dòng "nhãn: giá trị". */
+function customFieldsToNotes(fields: FlashcardCardInput["customFields"]): string | undefined {
+  const lines = (fields ?? []).filter((f) => f.label.trim() || f.value.trim()).map((f) => `${f.label.trim()}: ${f.value.trim()}`);
+  return lines.length > 0 ? lines.join("\n") : undefined;
+}
+
+function notesToCustomFields(notes: string | undefined): FlashcardCard["customFields"] {
+  const fields = (notes ?? "").split(/\r?\n/).flatMap((line) => {
+    const match = line.match(/^(.+?):\s*(.*)$/);
+    return match ? [{ label: match[1], value: match[2] }] : [];
+  });
+  return fields.length > 0 ? fields : undefined;
+}
+
 function toVocabularyContent(input: FlashcardCardInput): VocabularyContent {
-  const example: VocabularyExample | null =
-    input.example || input.exampleMeaning || input.examplePinyin ? { en: input.example || undefined, vi: input.exampleMeaning || undefined, pinyin: input.examplePinyin || undefined } : null;
-  const extraFields = (input.customFields ?? []).filter((f) => f.label.trim() || f.value.trim()).map((f) => ({ label: f.label.trim() || undefined, value: f.value.trim() || undefined }));
   return {
     word: input.term,
-    language: "zh",
-    partOfSpeech: input.wordType || undefined,
-    pinyin: input.pinyin || undefined,
-    commonMeaning: input.meaning || undefined,
     imageUrl: fileUrl(input.imageFileId) ?? undefined,
-    ukAudioUrl: fileUrl(input.audioFileId) ?? undefined,
-    examples: example ? [example] : undefined,
-    extraFields: extraFields.length > 0 ? extraFields : undefined,
+    audioUrl: fileUrl(input.audioFileId) ?? undefined,
+    notes: customFieldsToNotes(input.customFields),
+    pinyins: [
+      {
+        pinyin: input.pinyin ?? "",
+        wordTypes: input.wordType || undefined,
+        isPrimary: true,
+        meanings: [
+          {
+            meaningVi: input.meaning || undefined,
+            exampleSentenceZh: input.example || undefined,
+            exampleSentencePinyin: input.examplePinyin || undefined,
+            exampleSentenceVi: input.exampleMeaning || undefined,
+          },
+        ],
+      },
+    ],
   };
 }
 
+/** Ghi thẻ lên nội dung hiện có: chỉ phiên âm chính và nghĩa đầu bị thay; các phiên âm, nghĩa và trường khác của từ được giữ. */
+function mergeCardIntoContent(current: VocabularyContent | null, input: FlashcardCardInput): VocabularyContent {
+  const next = toVocabularyContent(input);
+  if (!current?.pinyins?.length) return { ...(current ?? {}), ...next };
+  const at = Math.max(0, current.pinyins.findIndex((p) => p.isPrimary));
+  const target = current.pinyins[at];
+  const [nextPinyin] = next.pinyins as DictionaryPinyin[];
+  const [firstMeaning, ...restMeanings] = target.meanings ?? [];
+  const merged: DictionaryPinyin = {
+    ...target,
+    pinyin: nextPinyin.pinyin,
+    wordTypes: nextPinyin.wordTypes,
+    meanings: [{ ...(firstMeaning ?? {}), ...(nextPinyin.meanings as DictionaryMeaning[])[0] }, ...restMeanings],
+  };
+  return { ...current, ...next, pinyins: current.pinyins.map((p, i) => (i === at ? merged : p)) };
+}
+
 function fromVocabularyContent(id: string, index: number, content: VocabularyContent | null): FlashcardCard {
-  const example = content?.examples?.[0];
+  const primary = content?.pinyins?.find((p) => p.isPrimary) ?? content?.pinyins?.[0];
+  const firstMeaning = primary?.meanings?.[0];
   return {
     id,
     studySetId: "",
     index,
     term: content?.word ?? "",
-    pinyin: content?.pinyin || undefined,
-    wordType: content?.partOfSpeech || undefined,
-    meaning: content?.commonMeaning ?? "",
-    example: example?.en || undefined,
-    examplePinyin: example?.pinyin || undefined,
-    exampleMeaning: example?.vi || undefined,
+    pinyin: primary?.pinyin || undefined,
+    wordType: primary?.wordTypes || undefined,
+    meaning: firstMeaning?.meaningVi ?? "",
+    example: firstMeaning?.exampleSentenceZh || undefined,
+    examplePinyin: firstMeaning?.exampleSentencePinyin || undefined,
+    exampleMeaning: firstMeaning?.exampleSentenceVi || undefined,
     imageFileId: fileIdFromUrl(content?.imageUrl),
-    audioFileId: fileIdFromUrl(content?.ukAudioUrl),
-    customFields: content?.extraFields && content.extraFields.length > 0 ? content.extraFields.map((f) => ({ label: f.label ?? "", value: f.value ?? "" })) : undefined,
+    audioFileId: fileIdFromUrl(content?.audioUrl),
+    customFields: notesToCustomFields(content?.notes),
   };
 }
 
@@ -134,19 +156,15 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 }
 
 // ---- gói ----
-/** Mọi gói cùng loại, kể cả gói gắn giáo trình thật; mỗi gói kèm nguồn giáo trình để giao diện hiển thị/lọc (gói tạo ở đây vẫn dùng mã Kho HSK). */
+/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listFlashcardPackages(): Promise<ContentPackage[]> {
-  const packages = await listAllContentPackages<BackendPackage>(PACKAGE_TYPE);
-  const source = await syllabusSourceResolver(packages.map((p) => p.syllabusId));
-  return packages.map((p) => ({ ...toUiPackage(p), ...source(p.syllabusId) }));
+  return (await listFreeContentPackages<BackendPackage>(PACKAGE_TYPE)).map(toUiPackage);
 }
 
 export async function createFlashcardPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
   assertWriteEnabled("content", demo);
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: PACKAGE_TYPE,
-    syllabusId: HSK_SYLLABUS_ID,
-    syllabusVersionId: HSK_SYLLABUS_VERSION_ID,
     title: input.name,
     description: input.description || undefined,
   });
@@ -210,6 +228,7 @@ export async function createFlashcardItem(packageId: string, input: ContentItemI
   const versionId = await ensureDraftVersionId(packageId);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
     type: PACKAGE_TYPE,
+    subType: "ZH", // thẻ nhập tay ở HSK là từ tiếng Trung
     content: toVocabularyContent(input),
     publishImmediately: true,
     inLibrary: false,
@@ -227,10 +246,45 @@ export async function createFlashcardItem(packageId: string, input: ContentItemI
 export async function updateFlashcardItem(packageId: string, resourceId: string, input: ContentItemInput<FlashcardCard>, demo: boolean): Promise<FlashcardCard> {
   assertWriteEnabled("content", demo);
   const versionId = await ensureDraftVersionId(packageId);
-  await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, {
-    content: toVocabularyContent(input),
-  });
-  return fromVocabularyContent(resourceId, input.index ?? 0, toVocabularyContent(input));
+  // Ghi đè lên nội dung hiện có (không thay hẳn): từ sao chép từ từ điển còn nhiều phiên âm/nghĩa mà form thẻ không sửa, giữ nguyên chúng.
+  const current = await lmsClient.get<BackendLearningResource>(`/learning-resources/${encodeURIComponent(resourceId)}`);
+  const content = mergeCardIntoContent(current.content, input);
+  await lmsClient.put(`/content-packages/versions/${encodeURIComponent(versionId)}/resources/${encodeURIComponent(resourceId)}/content`, { content });
+  return fromVocabularyContent(resourceId, input.index ?? 0, content);
+}
+
+export interface AddWordsResult {
+  added: number;
+  failed: { label: string; message: string }[];
+}
+
+/**
+ * Thêm các từ chọn từ TỪ ĐIỂN (`/vocabulary/manage`, inLibrary = true) vào bộ: mỗi từ là một BẢN SAO riêng với nội dung nguyên văn và
+ * `sourceResourceId` trỏ về từ ở từ điển (đồng bộ và sao chép tiến độ đi theo nguồn đó). Từ lỗi không làm dừng các từ còn lại; tạo bản sao xong mà
+ * gắn lỗi thì xóa bản sao vừa tạo (không để bản mồ côi).
+ */
+export async function addDictionaryWordsToPackage(packageId: string, words: { id: string; label: string }[], demo: boolean): Promise<AddWordsResult> {
+  assertWriteEnabled("content", demo);
+  const versionId = await ensureDraftVersionId(packageId);
+  const existing = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`);
+  let nextOrder = existing.length ? Math.max(...existing.map((r) => r.displayOrder)) + 1 : 0;
+  const result: AddWordsResult = { added: 0, failed: [] };
+  for (const word of words) {
+    let created: BackendLearningResource | null = null;
+    try {
+      const source = await lmsClient.get<BackendLearningResource>(`/learning-resources/${encodeURIComponent(word.id)}`);
+      if (!source.content) throw new Error("Từ chưa có nội dung");
+      created = await lmsClient.post<BackendLearningResource>("/learning-resources", { type: PACKAGE_TYPE, content: source.content, publishImmediately: true, inLibrary: false, sourceResourceId: word.id });
+      const resourceVersionId = created.publishedVersionId ?? created.draftVersionId;
+      if (!resourceVersionId) throw new Error("Không lấy được phiên bản của từ vừa tạo.");
+      await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: created.id, learningResourceVersionId: resourceVersionId, sessionNo: 1, displayOrder: nextOrder++ });
+      result.added++;
+    } catch (error) {
+      if (created) await lmsClient.delete(`/learning-resources/${encodeURIComponent(created.id)}`).catch(() => undefined);
+      result.failed.push({ label: word.label, message: (error instanceof Error && error.message) || "Không thể kết nối máy chủ" });
+    }
+  }
+  return result;
 }
 
 export async function deleteFlashcardItem(packageId: string, resourceId: string, demo: boolean): Promise<void> {

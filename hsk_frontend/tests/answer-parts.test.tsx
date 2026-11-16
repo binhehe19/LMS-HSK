@@ -66,7 +66,7 @@ describe("màn chấm bài", () => {
   it("hiện ✓/✗ từng dòng theo parts của chi tiết chấm", async () => {
     grading.getGradingDetail.mockResolvedValue({
       attemptId: "a1", studentId: "s", sessionId: null, sessionNo: null, status: "SUBMITTED", gradingStatus: "GRADED", earnedPoints: 1, totalPoints: 2, submittedAt: null,
-      assessmentType: "QUIZ", contextType: "CLASS_SESSION", title: "Bài", layout: null, studentName: null, studentEmail: null, studentCode: null,
+      subType: "QUIZ", contextType: "CLASS_SESSION", title: "Bài", layout: null, studentName: null, studentEmail: null, studentCode: null,
       answers: [{ answerId: "x", questionId: "q1", displayOrder: 1, question: matching, answerJson: matchingAnswer, gradingStatus: "AUTO_GRADED", earnedPoints: 1, maxPoints: 2, graderComment: null, graderId: null, scoreSource: "AUTO", provisional: false, rubricScores: null, parts }],
     });
     render(<AttemptGradingPanel attemptId="a1" title="Bài" />);

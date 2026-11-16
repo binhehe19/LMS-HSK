@@ -10,7 +10,7 @@ import { Pagination } from "antd";
 import { useState } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
-import { filterPackages, formatContentDate, isPublished, packageSyllabusOptions, packageTypeMeta, paginate, publishStatusInfo } from "@/lib/content/content-tree-model";
+import { filterPackages, formatContentDate, isPublished, packageTypeMeta, paginate, publishStatusInfo } from "@/lib/content/content-tree-model";
 import type { ContentItemBase, ContentModuleConfig, ContentPackage } from "@/types/content";
 
 const PACKAGES_PAGE_SIZE = 12;
@@ -34,24 +34,16 @@ export interface ContentPackagesViewProps<TItem extends ContentItemBase> {
 export function ContentPackagesView<TItem extends ContentItemBase>({ config, state, packages, canWrite, canPublish, busy, onOpen, onCreate, onEdit, onDelete, onTogglePublish, onImport, onRetry }: ContentPackagesViewProps<TItem>) {
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(1);
-  const [syllabusId, setSyllabusId] = useState("");
   const { labels, packageTypes } = config;
   const noun = labels.package.toLowerCase();
 
-  // Bộ lọc giáo trình chỉ hiện khi danh sách có từ 2 nguồn trở lên; nguồn đang chọn biến mất (tải lại) thì coi như không lọc.
-  const syllabusOptions = packageSyllabusOptions(packages);
-  const activeSyllabusId = syllabusOptions.some((o) => o.id === syllabusId) ? syllabusId : "";
-  const filtered = filterPackages(activeSyllabusId ? packages.filter((p) => p.syllabusId === activeSyllabusId) : packages, "ALL", keyword);
+  const filtered = filterPackages(packages, "ALL", keyword);
   const visible = paginate(filtered, page, PACKAGES_PAGE_SIZE);
   const loading = state.kind === "loading" && packages.length === 0;
   const notice = state.kind === "waiting" || state.kind === "error";
 
   const changeKeyword = (value: string) => {
     setKeyword(value);
-    setPage(1);
-  };
-  const changeSyllabus = (value: string) => {
-    setSyllabusId(value);
     setPage(1);
   };
 
@@ -90,18 +82,6 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
             <input type="text" className="form-control bg-white border-0 py-2" placeholder="Tìm kiếm gói..." value={keyword} onChange={(e) => changeKeyword(e.target.value)} aria-label="Tìm kiếm gói" />
           </div>
         </div>
-        {syllabusOptions.length > 1 && (
-          <div className="mb-4" style={{ maxWidth: 420 }}>
-            <select className="form-select rounded-3" value={activeSyllabusId} onChange={(e) => changeSyllabus(e.target.value)} aria-label="Lọc theo giáo trình" data-testid="content-packages-syllabus-filter">
-              <option value="">Tất cả giáo trình ({packages.length})</option>
-              {syllabusOptions.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name} ({o.count})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       <div className="row g-4">
@@ -133,8 +113,8 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
                     <i className="isax isax-search-status" style={{ fontSize: "48px", color: "#B10019" }} />
                   </div>
                   <h6 className="text-muted fw-600 mb-2">Không tìm thấy gói</h6>
-                  <p className="text-muted small mb-3">{keyword || activeSyllabusId ? "Thử tìm kiếm với từ khóa hoặc giáo trình khác" : "Hãy tạo gói mới để bắt đầu"}</p>
-                  {!keyword && !activeSyllabusId && canWrite && (
+                  <p className="text-muted small mb-3">{keyword ? "Thử tìm kiếm với từ khóa khác" : "Hãy tạo gói mới để bắt đầu"}</p>
+                  {!keyword && canWrite && (
                     <div className="d-flex flex-wrap gap-2 justify-content-center">
                       {packageTypes.map((type) => (
                         <button key={type.value} type="button" className="btn btn-sm rounded-pill" onClick={() => onCreate(type.value)} style={{ background: `${type.color}20`, color: type.color, border: `1px solid ${type.color}` }}>
@@ -174,13 +154,6 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
                                 {pkg.description || "Không có mô tả"}
                               </p>
                               <small className="text-muted">
-                                {pkg.syllabusName && (
-                                  <span data-testid="content-package-syllabus">
-                                    <i className="isax isax-book-saved me-1" />
-                                    {pkg.syllabusName}
-                                    <span className="mx-2">·</span>
-                                  </span>
-                                )}
                                 <i className="isax isax-calendar-1 me-1" />
                                 {formatContentDate(pkg.createdAt)}
                                 {typeof pkg.folderCount === "number" && (

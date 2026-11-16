@@ -4,12 +4,14 @@
 // trong Kho HSK (Flashcard/Quiz/Ngữ pháp, đã AVAILABLE qua lms-content-client.ts/lms-quiz-client.ts/lms-grammar-client.ts), rồi tick NHIỀU mục lẻ
 // trong bộ đó để copy vào buổi (mỗi mục = 1 bản sao riêng, copy-on-attach) — không còn khái niệm "1 module = 1 bộ".
 import { Modal } from "antd";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { listFlashcardPackages, listPackageItems } from "@/lib/api/lms-content-client";
 import { listGrammarPackages, listPackageGrammarPoints } from "@/lib/api/lms-grammar-client";
 import { listPackageQuizItems, listQuizPackages } from "@/lib/api/lms-quiz-client";
+import { packageTopicsClient, type PackageTopicState } from "@/lib/api/package-topics-client";
+import { groupItemsByTopic } from "@/lib/content/topic-grouping";
 import { QUIZ_SKILLS, quizSkillLabel } from "@/lib/content/quiz-item";
 import { SCHEDULE_RESOURCE_TYPE_LABELS, SCHEDULE_RESOURCE_TYPES, type ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
 import { displayText } from "@/lib/syllabus/syllabus-model";
@@ -67,6 +69,8 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
   const open = schedule !== null;
   const packages = useKeyedFetch<ContentPackage[]>(open ? `schedule-add-packages:${type}` : null, () => listPackagesOf(type));
   const items = useKeyedFetch<PickItem[]>(open && packageId ? `schedule-add-items:${type}:${packageId}` : null, () => listItemsOf(type, packageId as string));
+  // Chủ đề của bộ trong Kho để nhóm mục khi chọn; tải lỗi thì danh sách vẫn hiện phẳng như trước.
+  const kho = useKeyedFetch<PackageTopicState>(open && packageId ? `schedule-add-kho-topics:${packageId}` : null, () => packageTopicsClient.list(packageId as string));
 
   const changeType = (next: string) => {
     const t = SCHEDULE_RESOURCE_TYPES.find((v) => v === next) ?? "VOCABULARY";
@@ -93,6 +97,7 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
       return next;
     });
   const visible = items.state.kind === "ok" ? items.state.data.filter((i) => !skill || i.skill === skill) : [];
+  const groups = groupItemsByTopic(visible, kho.state.kind === "ok" ? kho.state.data : null);
   const selectAll = () => setSelected(new Map(visible.map((i) => [i.id, i.title])));
 
   const canSubmit = schedule !== null && selected.size > 0 && !busy;
@@ -145,7 +150,6 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
                 {packages.state.data.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
-                    {p.syllabusName ? ` — ${p.syllabusName}` : ""}
                   </option>
                 ))}
               </select>
@@ -202,21 +206,30 @@ export function AddScheduleModuleModal({ schedule, sessionNo, busy, onCancel, on
                 <div className="text-muted small py-2">Bộ này không có bài tập nào thuộc kỹ năng đã chọn.</div>
               ) : (
                 <div className="list-group syllabus-available-list" data-testid="available-list" style={{ maxHeight: 320, overflowY: "auto" }}>
-                  {visible.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2${selected.has(item.id) ? " active" : ""}`}
-                      aria-pressed={selected.has(item.id)}
-                      onClick={() => toggle(item)}
-                      disabled={busy}
-                    >
-                      <span>
-                        <span className="fw-semibold">{item.title || item.id}</span>
-                        {item.subtitle && <span className={`d-block small${selected.has(item.id) ? "" : " text-muted"}`}>{item.subtitle}</span>}
-                      </span>
-                      {type === "ASSESSMENT" && <span className="badge bg-info-subtle text-info border flex-shrink-0">{item.skill ? quizSkillLabel(item.skill) : "Chưa chọn kỹ năng"}</span>}
-                    </button>
+                  {groups.map((group) => (
+                    <Fragment key={group.title ?? "no-topic"}>
+                      {group.title && (
+                        <div className="list-group-item bg-light fw-semibold small" data-testid="available-topic">
+                          {group.title}
+                        </div>
+                      )}
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2${selected.has(item.id) ? " active" : ""}`}
+                          aria-pressed={selected.has(item.id)}
+                          onClick={() => toggle(item)}
+                          disabled={busy}
+                        >
+                          <span>
+                            <span className="fw-semibold">{item.title || item.id}</span>
+                            {item.subtitle && <span className={`d-block small${selected.has(item.id) ? "" : " text-muted"}`}>{item.subtitle}</span>}
+                          </span>
+                          {type === "ASSESSMENT" && <span className="badge bg-info-subtle text-info border flex-shrink-0">{item.skill ? quizSkillLabel(item.skill) : "Chưa chọn kỹ năng"}</span>}
+                        </button>
+                      ))}
+                    </Fragment>
                   ))}
                 </div>
               )}

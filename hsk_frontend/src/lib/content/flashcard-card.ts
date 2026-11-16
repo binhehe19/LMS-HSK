@@ -22,10 +22,11 @@ export function flashcardToInput(card: FlashcardCard): FlashcardCardInput {
   };
 }
 
-/** Thông điệp của bản cũ: cả chữ Hán và nghĩa đều bắt buộc. */
+/** Chữ Hán, phiên âm và nghĩa đều bắt buộc (nội dung ZH ở backend cần ít nhất một phiên âm có nghĩa). */
 export function validateFlashcardInput(input: FlashcardCardInput): string | null {
   if (!input.term.trim()) return "Vui lòng nhập chữ Hán";
   if (!input.meaning.trim()) return "Vui lòng nhập nghĩa tiếng Việt";
+  if (!input.pinyin?.trim()) return "Vui lòng nhập pinyin";
   return null;
 }
 
@@ -58,8 +59,8 @@ export function flashcardSummary(card: FlashcardCard): string {
 const SEPARATORS = ["\t", ",", ";", ":", "|"];
 
 /**
- * Mỗi dòng một thẻ: `chữ Hán <sep> nghĩa [<sep> pinyin]`, sep là dấu đầu tiên có trong dòng (tab, phẩy, chấm phẩy, hai chấm, gạch dọc) như bulk
- * import cũ; dòng thiếu nghĩa bị bỏ qua.
+ * Mỗi dòng một thẻ: `chữ Hán <sep> nghĩa <sep> pinyin`, sep là dấu đầu tiên có trong dòng (tab, phẩy, chấm phẩy, hai chấm, gạch dọc) như bulk
+ * import cũ; dòng thiếu nghĩa hoặc pinyin bị bỏ qua.
  */
 export function parseBulkCards(text: string): FlashcardCardInput[] {
   return text
@@ -70,8 +71,8 @@ export function parseBulkCards(text: string): FlashcardCardInput[] {
       const sep = SEPARATORS.find((s) => line.includes(s));
       if (!sep) return null;
       const [term, meaning, pinyin] = line.split(sep).map((p) => p.trim());
-      if (!term || !meaning) return null;
-      return { ...emptyFlashcardInput(), term, meaning, pinyin: pinyin ?? "" };
+      if (!term || !meaning || !pinyin) return null;
+      return { ...emptyFlashcardInput(), term, meaning, pinyin };
     })
     .filter((card): card is FlashcardCardInput => card !== null);
 }

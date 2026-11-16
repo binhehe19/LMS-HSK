@@ -50,6 +50,7 @@ export function LessonMaterialsManagementPageContent() {
         selection={lm.selection}
         selectedGroup={lm.selectedGroup}
         detailState={lm.detailState}
+        topicUi={lm.topicUi}
         onSelect={(next: MaterialSelection) => lm.select(next)}
         onOpenCreateGroup={() => setModal((prev) => ({ kind: "group", values: { id: null, type: "SLIDE", name: "", description: "" }, key: nextKey(prev) }))}
         onEditGroup={openEditGroup}

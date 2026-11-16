@@ -31,6 +31,8 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
 
   const [packageModal, setPackageModal] = useState<PackageModalState | null>(null);
   const [itemModal, setItemModal] = useState<ItemModalState<TItem> | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const ItemPicker = config.ItemPicker;
 
   const deletePackage = async (pkg: ContentPackage) => {
     const ok = await confirmAction({
@@ -105,11 +107,12 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
         items={tree.items.list}
         canWrite={tree.canWrite}
         busy={tree.busy}
-        onCreate={() => setItemModal((prev) => ({ mode: "create", editing: null, key: bump(prev) }))}
+        onCreate={() => (ItemPicker ? setPickerOpen(true) : setItemModal((prev) => ({ mode: "create", editing: null, key: bump(prev) })))}
         onEdit={(item) => setItemModal((prev) => ({ mode: "edit", editing: item, key: bump(prev) }))}
         onDelete={(item) => void deleteItem(item)}
         onBack={() => tree.go(FLAT_ROOT_LOCATION)}
         onRetry={tree.items.reload}
+        topicUi={tree.topicUi}
       />
     );
 
@@ -158,6 +161,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           onSubmit={(values) => void submitPackage(packageModal.editing, values)}
         />
       )}
+      {ItemPicker && <ItemPicker open={pickerOpen} pkg={tree.selectedPackage} items={tree.items.list} demo={tree.demo} onClose={() => setPickerOpen(false)} onAdded={() => tree.items.reload()} />}
       {itemModal && (
         <ContentItemModal
           config={config}

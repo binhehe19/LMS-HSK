@@ -14,9 +14,6 @@ export interface ContentPackage {
   /** Khoá loại gói (FREE, LEARNING_PATH, LEARNING, VIDEO_COURSE...); nhãn/màu do ContentModuleConfig.packageTypes quyết định. */
   type: string;
   publishStatus?: ContentPublishStatus;
-  /** Giáo trình mà gói thuộc về (repo-lms). Gói của Kho HSK mang mã giả `HSK-LIBRARY*` và `syllabusName` = "Kho HSK". */
-  syllabusId?: string;
-  syllabusName?: string;
   folderCount?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -189,6 +186,41 @@ export interface ContentModuleConfig<TItem extends ContentItemBase = ContentItem
   subtitle?: string;
   /** Giao diện cấp mục tuỳ biến (vd Grammar: breadcrumb + thanh tiêu đề riêng thay khung gói bên trái mặc định); không set thì dùng FlatItemsView. */
   ItemsView?: ComponentType<FlatItemsViewProps<TItem>>;
+  /** Hộp chọn mục có sẵn (vd từ trong từ điển) thay cho form nhập tay khi bấm "Thêm"; sửa mục vẫn dùng ItemForm. Chỉ nền phẳng. */
+  ItemPicker?: ComponentType<ItemPickerProps<TItem>>;
+}
+
+/** Props của hộp chọn mục có sẵn (FlatContentManager truyền xuống). */
+export interface ItemPickerProps<TItem extends ContentItemBase> {
+  open: boolean;
+  pkg: ContentPackage | null;
+  /** Mục đang có trong gói (để đánh dấu mục đã có). */
+  items: TItem[];
+  demo: boolean;
+  onClose: () => void;
+  /** Gọi sau khi đã thêm xong (kể cả một phần) để tải lại danh sách mục. */
+  onAdded: () => void;
+}
+
+/** Chủ đề trong một gói (Kho): nhóm mục để gom và sắp thứ tự, không phải một cấp chứa riêng. */
+export interface FlatTopic {
+  id: string;
+  title: string;
+  /** Số mục đang thuộc chủ đề. */
+  itemCount: number;
+}
+
+/** Dữ liệu và thao tác chủ đề truyền từ hook xuống giao diện cấp mục; không có = module không dùng chủ đề. */
+export interface FlatTopicUi {
+  /** Theo thứ tự hiển thị. */
+  topics: FlatTopic[];
+  /** id chủ đề của mục; null = chưa phân chủ đề. */
+  topicOf: (itemId: string) => string | null;
+  onCreate: (title: string) => Promise<boolean>;
+  onRename: (topic: FlatTopic, title: string) => Promise<boolean>;
+  onDelete: (topic: FlatTopic) => void;
+  onMove: (topic: FlatTopic, direction: -1 | 1) => void;
+  onAssign: (itemId: string, topicId: string | null) => void;
 }
 
 /** Props của giao diện cấp mục trên nền phẳng (FlatContentManager) — dùng chung cho FlatItemsView và các biến thể riêng từng module. */
@@ -204,4 +236,6 @@ export interface FlatItemsViewProps<TItem extends ContentItemBase> {
   onDelete: (item: TItem) => void;
   onBack: () => void;
   onRetry: () => void;
+  /** Chủ đề của gói đang xem; không có thì không hiện khối chủ đề và cột chủ đề. */
+  topicUi?: FlatTopicUi;
 }

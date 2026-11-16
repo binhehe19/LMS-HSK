@@ -18,7 +18,7 @@ vi.mock("@/lib/api/storage-client", () => ({ fileUrl: (id?: string) => (id ? `/a
 
 const item = (over: Partial<GradingListItem>): GradingListItem => ({
   attemptId: "a1", studentId: "s1", sessionId: "ses1", sessionNo: 1, contentPackageVersionId: "v", status: "SUBMITTED", gradingStatus: "GRADED",
-  earnedPoints: 8, totalPoints: 10, submittedAt: null, hasProvisionalScore: false, assessmentType: "QUIZ", contextType: "CLASS_SESSION",
+  earnedPoints: 8, totalPoints: 10, submittedAt: null, hasProvisionalScore: false, subType: "QUIZ", contextType: "CLASS_SESSION",
   title: "Bài 1", studentName: "An", studentEmail: "an@x.vn", studentCode: "HS1", ...over,
 });
 
@@ -70,7 +70,7 @@ describe("lms-grading-source", () => {
 
 const detail = (over: Partial<GradingDetail> = {}): GradingDetail => ({
   attemptId: "a1", studentId: "s1", sessionId: "ses1", sessionNo: 1, status: "SUBMITTED", gradingStatus: "MANUAL_GRADING", earnedPoints: 1, totalPoints: 11,
-  submittedAt: null, assessmentType: "QUIZ", contextType: "CLASS_SESSION", title: "Bài 1", layout: null, studentName: "An", studentEmail: null, studentCode: null,
+  submittedAt: null, subType: "QUIZ", contextType: "CLASS_SESSION", title: "Bài 1", layout: null, studentName: "An", studentEmail: null, studentCode: null,
   answers: [
     { answerId: "x1", questionId: "q1", displayOrder: 1, question: { questionType: "MULTIPLE_CHOICE", questionText: "<p>Chọn</p>", options: [{ optionIndex: 0, content: "A1", correct: true }] }, answerJson: '{"selectedOptionIndex":0}', gradingStatus: "AUTO_GRADED", earnedPoints: 1, maxPoints: 1, graderComment: null, graderId: null, scoreSource: "AUTO", provisional: false, rubricScores: null },
     { answerId: "x2", questionId: "q2", displayOrder: 2, question: { questionType: "ESSAY", questionText: "Viết" }, answerJson: '{"text":"bài của em"}', gradingStatus: "MANUAL_PENDING", earnedPoints: null, maxPoints: 10, graderComment: null, graderId: null, scoreSource: null, provisional: false, rubricScores: null },

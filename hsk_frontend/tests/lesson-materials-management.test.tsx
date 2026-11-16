@@ -8,6 +8,7 @@ import { ManagementShell } from "@/components/management/management-shell";
 import { ApiNotConfiguredError } from "@/lib/api/api-client";
 import { createMaterial, createMaterialGroup, deleteMaterial, deleteMaterialGroup, listGroupMaterials, listMaterialGroups, publishMaterialGroup, unpublishMaterialGroup, updateMaterialGroup } from "@/lib/api/lesson-materials-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
+import { packageTopicsClient as topicsApi } from "@/lib/api/package-topics-client";
 import { fileUrl, isStorageApiConfigured, uploadFile } from "@/lib/api/storage-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { makeStore } from "@/redux/store";
@@ -19,6 +20,7 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/lib/api/storage-client", () => ({ uploadFile: vi.fn(), fileUrl: vi.fn(), isStorageApiConfigured: vi.fn() }));
+vi.mock("@/lib/api/package-topics-client", () => ({ packageTopicsClient: { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() } }));
 vi.mock("@/lib/api/lesson-materials-client", () => ({
   listMaterialGroups: vi.fn(),
   listGroupMaterials: vi.fn(),
@@ -48,6 +50,8 @@ beforeEach(() => {
   vi.mocked(listMaterialGroups).mockReset().mockResolvedValue(groups);
   vi.mocked(listGroupMaterials).mockReset().mockImplementation(async (id) => [material("s1", { groupId: id }), material("s2", { groupId: id, displayOrder: 1 })]);
   for (const fn of [createMaterialGroup, updateMaterialGroup, publishMaterialGroup, unpublishMaterialGroup, deleteMaterialGroup, createMaterial, deleteMaterial]) vi.mocked(fn).mockReset();
+  vi.mocked(topicsApi.list).mockReset().mockResolvedValue({ topics: [], membership: {} });
+  for (const fn of [topicsApi.create, topicsApi.rename, topicsApi.remove, topicsApi.reorder, topicsApi.assign]) vi.mocked(fn).mockReset().mockResolvedValue(undefined);
   for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
 });
 
@@ -94,6 +98,39 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
     await waitFor(() => expect(deleteMaterial).toHaveBeenCalledWith("g1", "s1", false));
     await userEvent.type(screen.getByLabelText("Tìm bộ tài liệu"), "hsk 4");
     expect(screen.getAllByTestId("lm-group-card")).toHaveLength(1);
+  });
+
+  it("bộ có chủ đề: khối chủ đề hiện, tài liệu xếp theo thứ tự chủ đề và có cột Chủ đề; chuyển tài liệu sang chủ đề => assign theo id tài liệu", async () => {
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
+    vi.mocked(topicsApi.list).mockResolvedValue({
+      topics: [
+        { id: "t1", title: "Bài 1", topicOrder: 1 },
+        { id: "t2", title: "Bài 2", topicOrder: 2 },
+      ],
+      membership: { s1: "t2", s2: "t1" },
+    });
+    renderPage();
+    await screen.findByText("HSK 3", { selector: "h6" });
+    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    const table = await screen.findByTestId("lm-table");
+    expect(topicsApi.list).toHaveBeenCalledWith("g1");
+    expect(await screen.findAllByTestId("flat-topic-row")).toHaveLength(2);
+    await waitFor(() => expect([...table.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["Tên tài liệu", "Tệp", "Dung lượng", "Chủ đề", "Thao tác"]));
+    // s2 thuộc "Bài 1" (đứng trước) nên hiện trước s1
+    expect(screen.getAllByTestId("lm-material-row").map((r) => r.querySelector(".lesson-material-management__material-title")?.textContent)).toEqual(["Tài liệu s2", "Tài liệu s1"]);
+    await userEvent.selectOptions(screen.getAllByTestId("flat-topic-select")[0], "t2");
+    await waitFor(() => expect(topicsApi.assign).toHaveBeenCalledWith("g1", "s2", { id: "t2", title: "Bài 2" }, false));
+  });
+
+  it("bộ chưa có chủ đề: bảng giữ nguyên cột như cũ, khối chủ đề có nút thêm", async () => {
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
+    renderPage();
+    await screen.findByText("HSK 3", { selector: "h6" });
+    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByTestId("lm-table");
+    expect(await screen.findByTestId("flat-topic-panel")).toHaveTextContent("Chưa có chủ đề");
+    expect(screen.getByTestId("flat-topic-add")).toBeEnabled();
+    expect(screen.queryAllByTestId("flat-topic-select")).toHaveLength(0);
   });
 
   it("thêm bộ (công tắc mở): trùng tên cùng loại phía client => toast lỗi không gọi API; tên mới => tạo bộ, toast, tải lại", async () => {

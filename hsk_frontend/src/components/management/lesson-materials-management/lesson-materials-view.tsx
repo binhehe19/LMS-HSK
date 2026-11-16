@@ -4,6 +4,7 @@
 // đang chọn. Gắn trực tiếp vào ContentPackage/LearningResource có sẵn (xem use-lesson-materials.ts): mỗi bộ có đúng 1 loại (Slides/Tài liệu) cố định,
 // trạng thái bộ = publish của package (Bản nháp/Đã xuất bản, không còn ACTIVE/ARCHIVED riêng), không còn "Chưa phân loại" hay trạng thái riêng từng
 // tài liệu — mỗi tài liệu dùng nút "Xoá" (xoá thật) thay các nút vòng đời cũ.
+import { FlatTopicPanel, FlatTopicSelect } from "@/components/management/content-flat/flat-topic-panel";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { MaterialSelection } from "@/components/management/lesson-materials-management/use-lesson-materials";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
@@ -11,6 +12,7 @@ import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-s
 import { PageHeader } from "@/components/shared/page-header";
 import { fileUrl } from "@/lib/api/storage-client";
 import { filterGroups, formatBytes, groupStatusLabel, LESSON_MATERIAL_TYPE_LABELS } from "@/lib/lesson-materials/lesson-material-model";
+import type { FlatTopicUi } from "@/types/content";
 import type { LessonMaterial, LessonMaterialGroup } from "@/types/lesson-materials";
 
 export const LESSON_MATERIALS_WAITING_TEXT = "Danh sách bộ tài liệu chưa được kết nối API (WAITING FOR BACKEND).";
@@ -26,6 +28,8 @@ export interface LessonMaterialsViewProps {
   selection: MaterialSelection;
   selectedGroup: LessonMaterialGroup | null;
   detailState: FetchState<LessonMaterial[]>;
+  /** Chủ đề của bộ đang chọn; không có thì không hiện khối và cột chủ đề. */
+  topicUi?: FlatTopicUi;
   onSelect: (selection: MaterialSelection) => void;
   onOpenCreateGroup: () => void;
   onEditGroup: (group: LessonMaterialGroup) => void;
@@ -117,11 +121,6 @@ export function LessonMaterialsView(props: LessonMaterialsViewProps) {
                         {group.description ? <p className="lesson-material-management__group-desc">{group.description}</p> : null}
                         <div className="lesson-material-management__group-counts">
                           <span className="badge text-bg-light border">{LESSON_MATERIAL_TYPE_LABELS[group.type]}</span>
-                          {group.syllabusName && (
-                            <span className="badge text-bg-light border" title="Giáo trình" data-testid="lm-group-syllabus">
-                              {group.syllabusName}
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="lesson-material-management__group-actions">
@@ -177,6 +176,8 @@ export function LessonMaterialsView(props: LessonMaterialsViewProps) {
                   </div>
                 </div>
 
+                {props.topicUi && <FlatTopicPanel ui={props.topicUi} canWrite={writeEnabled} busy={busy} />}
+
                 {detailState.kind === "loading" ? (
                   <div className="lesson-material-management__loading" data-testid="lm-detail-loading">
                     <span className="spinner-border text-danger" role="status" />
@@ -198,6 +199,7 @@ export function LessonMaterialsView(props: LessonMaterialsViewProps) {
                           <th>Tên tài liệu</th>
                           <th>Tệp</th>
                           <th>Dung lượng</th>
+                          {props.topicUi && props.topicUi.topics.length > 0 && <th>Chủ đề</th>}
                           <th className="text-end">Thao tác</th>
                         </tr>
                       </thead>
@@ -222,6 +224,11 @@ export function LessonMaterialsView(props: LessonMaterialsViewProps) {
                                 <div className="lesson-material-management__file-meta">{material.mimeType || "Chờ metadata"}</div>
                               </td>
                               <td>{formatBytes(material.sizeBytes)}</td>
+                              {props.topicUi && props.topicUi.topics.length > 0 && (
+                                <td style={{ minWidth: 180 }}>
+                                  <FlatTopicSelect ui={props.topicUi} itemId={material.id} canWrite={writeEnabled} busy={busy} />
+                                </td>
+                              )}
                               <td className="text-end">
                                 <div className="lesson-material-management__actions">
                                   <button type="button" className="btn btn-sm rounded-pill px-3 btn-outline-danger" disabled={!canWrite} onClick={() => props.onRemoveMaterial(material)}>

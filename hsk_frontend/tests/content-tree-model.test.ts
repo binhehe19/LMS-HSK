@@ -158,20 +158,19 @@ describe("thẻ ghi nhớ (flashcard-card) và so khớp mục (content-item-dif
   const card = (i: number, over: Partial<FlashcardCard> = {}): FlashcardCard => ({ id: `c${i}`, studySetId: "s1", index: i, term: `词${i}`, meaning: `nghĩa ${i}`, pinyin: `ci${i}`, ...over });
   const adapters = { itemToInput: flashcardToInput, normalizeItemInput: normalizeFlashcardInput };
 
-  it("validate: chữ Hán và nghĩa bắt buộc; normalize cắt khoảng trắng, bỏ trường rỗng", () => {
-    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: " ", meaning: "x" })).toBe("Vui lòng nhập chữ Hán");
-    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: "你", meaning: "" })).toBe("Vui lòng nhập nghĩa tiếng Việt");
-    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: "你", meaning: "bạn" })).toBeNull();
+  it("validate: chữ Hán, nghĩa và pinyin bắt buộc; normalize cắt khoảng trắng, bỏ trường rỗng", () => {
+    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: " ", meaning: "x", pinyin: "p" })).toBe("Vui lòng nhập chữ Hán");
+    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: "你", meaning: "", pinyin: "nǐ" })).toBe("Vui lòng nhập nghĩa tiếng Việt");
+    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: "你", meaning: "bạn", pinyin: " " })).toBe("Vui lòng nhập pinyin");
+    expect(validateFlashcardInput({ ...emptyFlashcardInput(), term: "你", meaning: "bạn", pinyin: "nǐ" })).toBeNull();
     expect(normalizeFlashcardInput({ term: " 你 ", meaning: " bạn ", pinyin: "", wordType: "  ", example: "x", imageFileId: "", audioFileId: "a1" })).toEqual({ term: "你", meaning: "bạn", pinyin: undefined, wordType: undefined, example: "x", exampleMeaning: undefined, imageFileId: undefined, audioFileId: "a1", index: undefined });
   });
 
-  it("parseBulkCards: tab/phẩy/chấm phẩy/hai chấm/|, cột 3 là pinyin, bỏ dòng thiếu nghĩa và dòng trống", () => {
-    const cards = parseBulkCards("你好\tXin chào\tnǐ hǎo\n谢谢, Cảm ơn\n再见;Tạm biệt\n\nchỉ một cột\n老师 : giáo viên\n学生|học sinh|xuésheng");
+  it("parseBulkCards: tab/phẩy/chấm phẩy/hai chấm/|, cột 3 là pinyin; bỏ dòng thiếu nghĩa hoặc pinyin và dòng trống", () => {
+    const cards = parseBulkCards("你好\tXin chào\tnǐ hǎo\n谢谢, Cảm ơn\n再见;Tạm biệt;zàijiàn\n\nchỉ một cột\n老师 : giáo viên\n学生|học sinh|xuésheng");
     expect(cards.map((c) => [c.term, c.meaning, c.pinyin])).toEqual([
       ["你好", "Xin chào", "nǐ hǎo"],
-      ["谢谢", "Cảm ơn", ""],
-      ["再见", "Tạm biệt", ""],
-      ["老师", "giáo viên", ""],
+      ["再见", "Tạm biệt", "zàijiàn"],
       ["学生", "học sinh", "xuésheng"],
     ]);
     expect(parseBulkCards("")).toEqual([]);

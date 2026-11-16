@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { usePackageTopics } from "@/components/management/content-flat/use-package-topics";
 import { useKeyedFetch, type FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { useWriteGate } from "@/hooks/use-write-gate";
+import { packageTopicsClient } from "@/lib/api/package-topics-client";
+import { sortByTopic } from "@/lib/content/topic-grouping";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import { createMaterial, createMaterialGroup, deleteMaterial, deleteMaterialGroup, listGroupMaterials, listMaterialGroups, publishMaterialGroup, unpublishMaterialGroup, updateMaterialGroup } from "@/lib/api/lesson-materials-client";
 import { isStorageApiConfigured, uploadFile } from "@/lib/api/storage-client";
@@ -62,7 +65,10 @@ export function useLessonMaterials() {
   const [selection, setSelection] = useState<MaterialSelection>(null);
   const selectedGroup = selection === null ? null : (groups.find((g) => g.id === selection.id) ?? null);
   const detailFetch = useKeyedFetch<LessonMaterial[]>(selection === null ? null : `group-materials:${selection.id}`, () => listGroupMaterials(selection!.id));
-  const detailState: FetchState<LessonMaterial[]> = selection === null ? { kind: "ok", data: [] } : detailFetch.state;
+  // Chủ đề của bộ đang chọn (gom tài liệu); tài liệu xếp theo thứ tự chủ đề, chưa phân chủ đề đứng cuối.
+  const topics = usePackageTopics(packageTopicsClient, selection?.id ?? null, "lesson-materials", demo, detailFetch.reload);
+  const detailState: FetchState<LessonMaterial[]> =
+    selection === null ? { kind: "ok", data: [] } : detailFetch.state.kind === "ok" ? { kind: "ok", data: sortByTopic(detailFetch.state.data, topics.data) } : detailFetch.state;
 
   const [busy, setBusy] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -257,7 +263,8 @@ export function useLessonMaterials() {
     reload: groupsFetch.reload,
     writeEnabled,
     storageConfigured,
-    busy,
+    busy: busy || topics.busy,
+    topicUi: topics.topicUi,
     uploadProgress,
     selection,
     selectedGroup,

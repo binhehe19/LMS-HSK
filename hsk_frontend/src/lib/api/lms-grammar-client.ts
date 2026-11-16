@@ -7,17 +7,14 @@
 // title/category/generalDefinition/structure/explanation giữ tên; note→usageNote (đổi tên, cùng nghĩa); exampleSentenceZh/Pinyin/Vi→1 phần tử
 // examples[]{sentenceZh, pronunciation: Pinyin, translationVi, exampleType: EXAMPLE}. hskLevel và linkedQuizStudySetId KHÔNG có chỗ lưu ở
 // GrammarContent (không có field tương ứng) → TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend.
-// Package→Folder→StudySet→Item rút gọn còn Package→resource (phẳng); sessionNo cố định = 1. syllabusId/syllabusVersionId dùng cặp đại diện cố định
-// riêng cho ngữ pháp (khác cặp của flashcard, để không trộn 2 module khi liệt kê theo syllabusId).
+// Package→Folder→StudySet→Item rút gọn còn Package→resource (phẳng); sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listAllContentPackages, syllabusSourceResolver } from "@/lib/api/lms-package-list";
+import { listFreeContentPackages } from "@/lib/api/lms-package-list";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { GrammarPoint, GrammarPointInput } from "@/types/content-grammar";
 
 const PACKAGE_TYPE = "GRAMMAR";
-const HSK_SYLLABUS_ID = "HSK-LIBRARY-GRAMMAR";
-const HSK_SYLLABUS_VERSION_ID = "HSK-LIBRARY-GRAMMAR-V1";
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface BackendPackageVersion {
@@ -119,19 +116,15 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 }
 
 // ---- gói ----
-/** Mọi gói cùng loại, kể cả gói gắn giáo trình thật; mỗi gói kèm nguồn giáo trình để giao diện hiển thị/lọc (gói tạo ở đây vẫn dùng mã Kho HSK). */
+/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listGrammarPackages(): Promise<ContentPackage[]> {
-  const packages = await listAllContentPackages<BackendPackage>(PACKAGE_TYPE);
-  const source = await syllabusSourceResolver(packages.map((p) => p.syllabusId));
-  return packages.map((p) => ({ ...toUiPackage(p), ...source(p.syllabusId) }));
+  return (await listFreeContentPackages<BackendPackage>(PACKAGE_TYPE)).map(toUiPackage);
 }
 
 export async function createGrammarPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
   assertWriteEnabled("content", demo);
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: PACKAGE_TYPE,
-    syllabusId: HSK_SYLLABUS_ID,
-    syllabusVersionId: HSK_SYLLABUS_VERSION_ID,
     title: input.name,
     description: input.description || undefined,
   });

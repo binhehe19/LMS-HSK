@@ -6,9 +6,10 @@ import { useState } from "react";
 import type { TableProps } from "antd";
 import { DataTable } from "@/components/shared/data-table";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import { FlatTopicPanel, topicColumn } from "@/components/management/content-flat/flat-topic-panel";
 import type { ContentItemBase, FlatItemsViewProps } from "@/types/content";
 
-export function FlatItemsView<TItem extends ContentItemBase>({ config, pkg, state, items, canWrite, busy, onCreate, onEdit, onDelete, onBack, onRetry }: FlatItemsViewProps<TItem>) {
+export function FlatItemsView<TItem extends ContentItemBase>({ config, pkg, state, items, canWrite, busy, onCreate, onEdit, onDelete, onBack, onRetry, topicUi }: FlatItemsViewProps<TItem>) {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const { labels, ItemPreview } = config;
   const noun = labels.item.toLowerCase();
@@ -18,6 +19,7 @@ export function FlatItemsView<TItem extends ContentItemBase>({ config, pkg, stat
   const columns: TableProps<TItem>["columns"] = [
     { title: "STT", key: "stt", width: 64, render: (_: unknown, item: TItem) => <span className="fw-700 text-muted">{String((item.index ?? items.indexOf(item)) + 1).padStart(2, "0")}</span> },
     ...config.itemColumns.map((col) => ({ title: col.title, key: col.key, width: col.width, render: (_: unknown, item: TItem) => col.render(item) })),
+    ...topicColumn<TItem>(topicUi, canWrite, busy),
     {
       title: "Thao tác",
       key: "actions",
@@ -77,6 +79,7 @@ export function FlatItemsView<TItem extends ContentItemBase>({ config, pkg, stat
         </div>
 
         <div className="col-lg-9">
+          {topicUi && <FlatTopicPanel ui={topicUi} canWrite={canWrite} busy={busy} />}
           {state.kind === "loading" ? (
             <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
               <div className="spinner-border text-primary" role="status" />
