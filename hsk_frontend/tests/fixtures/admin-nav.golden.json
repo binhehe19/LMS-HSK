@@ -1,0 +1,119 @@
+{
+  "authAdminUsersUrl": "https://auth.test.invalid/admin/users",
+  "items": [
+    {
+      "header": "TỔNG QUAN",
+      "title": "Overview",
+      "icon": "isax isax-grid-3",
+      "route": "/admin/dashboard",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "CHƯƠNG TRÌNH HỌC",
+      "title": "Lớp học",
+      "icon": "isax isax-teacher",
+      "route": "/admin/class-management",
+      "subRoute": null,
+      "activePrefix": "/admin/class-management"
+    },
+    {
+      "header": null,
+      "title": "Giáo trình",
+      "icon": "isax isax-book-saved",
+      "route": "/learning-path/syllabus/manage",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": "HỆ THỐNG HỌC LIỆU",
+      "title": "Ngữ pháp",
+      "icon": "isax isax-book",
+      "route": "/grammar/manage",
+      "subRoute": null,
+      "activePrefix": "/grammar"
+    },
+    {
+      "header": null,
+      "title": "Từ vựng",
+      "icon": "isax isax-book-1",
+      "route": "/vocab-set/manage",
+      "subRoute": null,
+      "activePrefix": "/vocab-set"
+    },
+    {
+      "header": null,
+      "title": "Bài tập",
+      "icon": "isax isax-document-text",
+      "route": "/quiz/manage",
+      "subRoute": null,
+      "activePrefix": "/quiz"
+    },
+    {
+      "header": null,
+      "title": "Tài liệu học tập",
+      "icon": "isax isax-document-text",
+      "route": "/learning-path/lesson-materials/manage",
+      "subRoute": null,
+      "activePrefix": "/learning-path/lesson-materials/manage"
+    },
+    {
+      "header": "QUẢN TRỊ HỆ THỐNG",
+      "title": "Thông báo",
+      "icon": "isax isax-notification-bing",
+      "route": "/admin/settings/notifications",
+      "subRoute": null,
+      "activePrefix": "/admin/settings/notifications"
+    },
+    {
+      "header": null,
+      "title": "Yêu cầu hỗ trợ",
+      "icon": "isax isax-ticket",
+      "route": "/instructor/instructor-support-tickets",
+      "subRoute": null,
+      "activePrefix": null
+    },
+    {
+      "header": null,
+      "title": "Người dùng",
+      "icon": "isax isax-profile-2user",
+      "route": "https://auth.test.invalid/admin/users",
+      "subRoute": null,
+      "activePrefix": "/admin/users"
+    }
+  ],
+  "active": {
+    "/admin/dashboard": [
+      0
+    ],
+    "/admin/class-management": [
+      1
+    ],
+    "/admin/class-management/students": [
+      1
+    ],
+    "/admin/settings/notifications": [
+      7
+    ],
+    "/grammar/manage": [
+      3
+    ],
+    "/vocab-set/manage": [
+      4
+    ],
+    "/quiz/manage": [
+      5
+    ],
+    "/learning-path/syllabus/manage": [
+      2
+    ],
+    "/instructor/instructor-support-tickets": [
+      8
+    ],
+    "/admin/users": [
+      9
+    ],
+    "/": [],
+    "/admin": []
+  }
+}

@@ -1,0 +1,355 @@
+// Test GrammarManagePageContent (FlatContentManager + lms-grammar-client.ts, API thật repo-lms) — mirror tests/flat-content-manager.test.tsx
+// (Flashcard) nhưng cho module Ngữ pháp: cấp gói (loại GRAMMAR duy nhất), cấp mục (Điểm ngữ pháp), quyền + công tắc ghi, trạng thái dữ liệu.
+import { act, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useSyncExternalStore } from "react";
+import { Provider } from "react-redux";
+import { toast } from "sonner";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GrammarManagePageContent } from "@/components/management/content-grammar/grammar-manage-page-content";
+import { GrammarLibraryPageContent } from "@/components/management/content-grammar/grammar-library-page-content";
+import { ManagementShell } from "@/components/management/management-shell";
+import { confirmAction } from "@/components/shared/confirm-action";
+import { resetContentAccessCache } from "@/hooks/use-content-access";
+import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
+import * as client from "@/lib/api/lms-grammar-client";
+import * as packageClient from "@/lib/api/package-management-client";
+import { getUnreadCount } from "@/lib/api/notification-client";
+import { getTickets } from "@/lib/api/ticket-client";
+import { makeStore } from "@/redux/store";
+import type { ManagementArea } from "@/lib/management/area";
+import type { ContentPackage } from "@/types/content";
+import type { GrammarPoint } from "@/types/content-grammar";
+import { adminUser } from "./fixtures/classes";
+
+const nav = vi.hoisted(() => {
+  let url = "/grammar/manage";
+  const listeners = new Set<() => void>();
+  return {
+    push: [] as string[],
+    set(next: string) {
+      url = next;
+      listeners.forEach((l) => l());
+    },
+    get: () => url,
+    subscribe(l: () => void) {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+  };
+});
+vi.mock("next/navigation", () => ({
+  usePathname: () => nav.get().split("?")[0],
+  useSearchParams: () => {
+    const search = useSyncExternalStore(nav.subscribe, nav.get, nav.get);
+    return new URLSearchParams(search.split("?")[1] ?? "");
+  },
+  useRouter: () => ({
+    push: (to: string) => {
+      nav.push.push(to);
+      nav.set(to);
+    },
+    replace: (to: string) => nav.set(to),
+    back: vi.fn(),
+  }),
+}));
+vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn() }));
+vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
+vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
+vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+vi.mock("@/components/shared/rich-text-editor", () => ({
+  RichTextEditor: ({ label, text, onChange }: { label: string; text: string; onChange: (text: string, html?: string) => void }) => (
+    <textarea aria-label={label} value={text} onChange={event => {
+      const value = event.target.value;
+      onChange(value, value ? `<p><strong>${value}</strong></p>` : undefined);
+    }} />
+  ),
+}));
+vi.mock("@/lib/api/package-edit-session-client", () => ({
+  packageEditSessionClient: (id: string) => ({
+    acquire: async () => ({ acquired: true }),
+    draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
+    heartbeat: async () => ({ acquired: true, saved: true }),
+    publish: async () => undefined,
+    release: async () => undefined,
+  }),
+}));
+vi.mock("@/lib/api/lms-grammar-client", () => ({
+  listGrammarPackages: vi.fn(),
+  createGrammarPackage: vi.fn(),
+  updateGrammarPackage: vi.fn(),
+  deleteGrammarPackage: vi.fn(),
+  publishGrammarPackage: vi.fn(),
+  unpublishGrammarPackage: vi.fn(),
+  listPackageGrammarPoints: vi.fn(),
+  listGrammarLibrary: vi.fn(),
+  createGrammarItem: vi.fn(),
+  updateGrammarItem: vi.fn(),
+  deleteGrammarItem: vi.fn(),
+}));
+vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof import("sonner")>()), toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }));
+
+vi.setConfig({ testTimeout: 30_000 });
+
+const teacher = { ...adminUser, id: "u-teacher-1", fullName: "Giáo Viên Một", email: "gv1@example.test", roles: ["ROLE_TEACHER"] };
+const pkg = (i: number, over: Partial<ContentPackage> = {}): ContentPackage => ({ id: `p${i}`, name: `Gói ${i}`, type: "GRAMMAR", publishStatus: "DRAFT", description: `Mô tả ${i}`, createdAt: "2026-03-05T08:30:00Z", ...over });
+const point = (i: number, over: Partial<GrammarPoint> = {}): GrammarPoint => ({ id: `g${i}`, studySetId: "", index: i - 1, title: `Điểm ${i}`, category: "Câu trần thuật", structure: `A${i} + 是 + B`, explanation: `Giải thích ${i}`, ...over });
+
+beforeEach(() => {
+  resetContentAccessCache();
+  window.sessionStorage.clear();
+  vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
+  vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
+  vi.mocked(getUnreadCount).mockReset().mockResolvedValue(0);
+  vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
+  vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
+  for (const fn of Object.values(client)) if (typeof fn === "function" && "mockReset" in fn) vi.mocked(fn as unknown as ReturnType<typeof vi.fn>).mockReset();
+  vi.mocked(client.listGrammarPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED", publishedVersion: 2 })]);
+  vi.mocked(client.listPackageGrammarPoints).mockResolvedValue([point(2), point(1)]);
+  vi.mocked(client.createGrammarPackage).mockResolvedValue(pkg(9));
+  vi.mocked(client.deleteGrammarPackage).mockResolvedValue(undefined);
+  vi.mocked(client.publishGrammarPackage).mockResolvedValue(undefined);
+  vi.mocked(client.unpublishGrammarPackage).mockResolvedValue(undefined);
+  vi.mocked(client.createGrammarItem).mockResolvedValue(point(3));
+  vi.mocked(client.updateGrammarItem).mockResolvedValue(point(1));
+  vi.mocked(client.deleteGrammarItem).mockResolvedValue(undefined);
+  for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
+  nav.push.length = 0;
+  nav.set("/grammar/manage");
+});
+
+function renderPage(user = adminUser, area: ManagementArea = "admin") {
+  render(
+    <Provider store={makeStore({ status: "authenticated", user })}>
+      <ManagementShell area={area}>
+        <GrammarManagePageContent />
+      </ManagementShell>
+    </Provider>,
+  );
+}
+
+const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+
+it("Kho ngữ pháp giữ tiêu đề bảng khi tải lỗi và chuyển về trạng thái rỗng khi thử lại thành công", async () => {
+  nav.set("/grammar/library");
+  vi.mocked(client.listGrammarLibrary)
+    .mockRejectedValueOnce(new ApiError("Internal Server Error", 500))
+    .mockResolvedValue({ items: [], total_elements: 0, total_pages: 0, page: 0, size: 20 });
+  render(
+    <Provider store={makeStore({ status: "authenticated", user: adminUser })}>
+      <ManagementShell area="admin">
+        <GrammarLibraryPageContent />
+      </ManagementShell>
+    </Provider>,
+  );
+  const table = within(screen.getByRole("table"));
+  expect(await table.findByText("Không thể tải danh sách điểm ngữ pháp")).toBeInTheDocument();
+  expect(table.getByText(/^Điểm ngữ pháp$/i)).toBeInTheDocument();
+  expect(table.queryByText("Internal Server Error")).not.toBeInTheDocument();
+
+  await userEvent.click(table.getByRole("button", { name: "Thử lại" }));
+  expect(await table.findByText("Không tìm thấy điểm ngữ pháp")).toBeInTheDocument();
+  expect(client.listGrammarLibrary).toHaveBeenCalledTimes(2);
+});
+
+it("sao chép điểm đã xuất bản từ kho vào buổi đang soạn", async () => {
+  nav.set("/grammar/manage?packageId=p1");
+  const content = { title: "Câu với 是", hskLevel: "1" };
+  vi.mocked(client.listGrammarLibrary).mockResolvedValue({
+    items: [{ id: "lib1", content, point: point(7, { title: content.title }), publishedVersionId: "v1", draftVersionId: null }],
+    page: 0, size: 20, total_elements: 1, total_pages: 1,
+  });
+  const copy = vi.spyOn(packageClient, "importPackageResources").mockResolvedValue({ added: 1, failed: [] });
+  try {
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Chọn học liệu có sẵn" }));
+    expect(screen.getByRole("tab", { name: "Từ kho ngữ pháp" })).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(await screen.findByRole("checkbox", { name: content.title }));
+    await userEvent.click(screen.getByRole("button", { name: "Sao chép 1 mục" }));
+    await waitFor(() => expect(copy).toHaveBeenCalledWith("p1", [
+      expect.objectContaining({ learningResourceId: "lib1", resourceType: "GRAMMAR", subType: "ZH", resourceContent: content }),
+    ], 1, false));
+    expect(client.listGrammarLibrary).toHaveBeenCalledWith(expect.objectContaining({ publishedOnly: true }));
+  } finally {
+    copy.mockRestore();
+  }
+});
+async function choosePackageAction(name: string, action: string) {
+  await waitFor(() => expect(screen.getByRole("button", { name: "Tải lại" })).toBeEnabled());
+  await userEvent.click(screen.getByRole("button", { name: `Thao tác ${name}` }));
+  await userEvent.click(await screen.findByRole("menuitem", { name: text => text === action }));
+}
+const modalOk = (modal: HTMLElement, name: RegExp | string) => within(modal).getByRole("button", { name });
+const antModal = () => document.querySelector(".ant-modal") as HTMLElement;
+
+describe("cấp gói (Admin)", () => {
+  it("tải gói qua listGrammarPackages; huy hiệu Published/Draft; chỉ 1 loại Ngữ pháp", async () => {
+    vi.mocked(client.listGrammarPackages).mockResolvedValueOnce([
+      packageClient.toContentPackage({ id: "p1", type: "GRAMMAR", draftVersionId: "d1", draftVersion: { title: "Gói 1" } }),
+      packageClient.toContentPackage({ id: "p2", type: "GRAMMAR", publishedVersionId: "v2", publishedVersion: { title: "Gói 2", version: 2 }, draftVersionId: "d2" }),
+      packageClient.toContentPackage({ id: "p3", type: "GRAMMAR", publishedVersionId: "v3", publishedVersion: { title: "Gói 3", version: 1 } }),
+    ]);
+    renderPage();
+    await screen.findByText("Gói 1");
+    expect(client.listGrammarPackages).toHaveBeenCalledWith();
+    expect(packageRows()).toHaveLength(3);
+    expect(within(packageRows()[0]).getByText("Chưa xuất bản")).toBeInTheDocument();
+    expect(within(packageRows()[0]).getByRole("img", { name: "Có bản nháp" })).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByText("v2")).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByRole("img", { name: "Có bản nháp" })).toBeInTheDocument();
+    expect(within(packageRows()[2]).queryByRole("img", { name: "Có bản nháp" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tạo học phần" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Ngữ pháp" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Học phần ngữ pháp" })).toBeInTheDocument();
+    expect(screen.queryByTestId("flat-content-missing")).toBeNull();
+  });
+
+  it("Admin có nút Publish/Unpublish: xác nhận rồi gọi đúng hàm (packageId, demo), toast, tải lại danh sách", async () => {
+    renderPage();
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Xuất bản");
+    await waitFor(() => expect(client.publishGrammarPackage).toHaveBeenCalledWith("p1", false));
+    expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã được publish');
+  });
+
+  it("xoá gói: huỷ => không gọi API; đồng ý => deleteGrammarPackage + toast", async () => {
+    vi.mocked(confirmAction).mockResolvedValueOnce(false);
+    renderPage();
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Xóa");
+    expect(client.deleteGrammarPackage).not.toHaveBeenCalled();
+    await choosePackageAction("Gói 1", "Xóa");
+    await waitFor(() => expect(client.deleteGrammarPackage).toHaveBeenCalledWith("p1", false));
+    expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã xóa thành công!');
+  });
+
+  it("tạo gói qua modal: thiếu tên => toast lỗi; đủ => createGrammarPackage, đóng modal, tải lại", async () => {
+    renderPage();
+    await screen.findByText("Gói 1");
+    await userEvent.click(screen.getByRole("button", { name: "Tạo học phần" }));
+    const modal = antModal();
+    // Không còn ô "Loại Package" trong modal — type gán mặc định (GRAMMAR), xác nhận qua createGrammarPackage bên dưới.
+    expect(modalOk(modal, "Tạo Package")).toBeDisabled();
+    expect(client.createGrammarPackage).not.toHaveBeenCalled();
+    await userEvent.type(within(modal).getByLabelText("Tên Package"), "  Ngữ pháp HSK 4  ");
+    await userEvent.click(modalOk(modal, "Tạo Package"));
+    await waitFor(() => expect(client.createGrammarPackage).toHaveBeenCalledWith({ name: "Ngữ pháp HSK 4", type: "GRAMMAR", description: undefined }, false));
+    await waitFor(() => expect(document.querySelector(".ant-modal")).toBeNull());
+  });
+});
+
+describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
+  it("chọn Chỉnh sửa từ bảng và quay lại danh sách sau khi xuất bản", async () => {
+    renderPage();
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Chỉnh sửa");
+    expect(nav.push.at(-1)).toBe("/grammar/manage?packageId=p1");
+    await screen.findAllByText("Điểm 1");
+    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1", 1);
+    expect(screen.getByDisplayValue("Gói 1")).toBeInTheDocument();
+    await userEvent.type(screen.getByRole("textbox", { name: "Mô tả" }), "Nội dung mới");
+    await userEvent.click(screen.getByRole("button", { name: "Quay lại" }));
+    const leave = await screen.findByRole("dialog", { name: "Rời màn soạn học phần?" });
+    await userEvent.click(within(leave).getByRole("button", { name: "Lưu & Xuất bản" }));
+    await waitFor(() => expect(nav.push.at(-1)).toBe("/grammar/manage"));
+  });
+
+  it("vào thẳng URL có packageId (reload) => hiện cấp mục; packageId không tồn tại => khối 'Không tìm thấy'", async () => {
+    nav.set("/grammar/manage?packageId=p1");
+    renderPage();
+    await screen.findAllByText("Điểm 1");
+    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1", 1);
+    act(() => nav.set("/grammar/manage?packageId=khong-co"));
+    const missing = await screen.findByTestId("flat-content-missing");
+    await userEvent.click(within(missing).getByRole("button", { name: "Quay lại" }));
+    expect(nav.push.at(-1)).toBe("/grammar/manage");
+  });
+
+  it("'Thêm điểm ngữ pháp' => modal form; thiếu trường bắt buộc => toast lỗi; đủ => createGrammarItem(packageId, input chuẩn hoá + index cuối, demo)", async () => {
+    nav.set("/grammar/manage?packageId=p1");
+    renderPage();
+    await screen.findAllByText("Điểm 1");
+    await userEvent.click(screen.getByRole("button", { name: "Thêm học liệu" }));
+    const modal = antModal();
+    expect(within(modal).getByTestId("grammar-point-form")).toBeInTheDocument();
+    await userEvent.click(modalOk(modal, "Thêm điểm ngữ pháp"));
+    expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên điểm ngữ pháp");
+    await userEvent.type(within(modal).getByLabelText(/Điểm ngữ pháp/), "Câu với 把");
+    await userEvent.type(within(modal).getByLabelText(/Phân loại/), "Câu xử trí");
+    await userEvent.type(within(modal).getByLabelText(/Cấu trúc/), "A + 把 + B + V");
+    await userEvent.type(within(modal).getByLabelText(/Giải thích/), "Dùng để nhấn mạnh...");
+    await userEvent.click(modalOk(modal, "Thêm điểm ngữ pháp"));
+    await waitFor(() =>
+      expect(client.createGrammarItem).toHaveBeenCalledWith(
+        "p1",
+        expect.objectContaining({
+          title: "Câu với 把", category: "Câu xử trí", structure: "A + 把 + B + V", explanation: "Dùng để nhấn mạnh...", index: 2,
+          richText: { structure: "<p><strong>A + 把 + B + V</strong></p>", explanation: "<p><strong>Dùng để nhấn mạnh...</strong></p>" },
+        }),
+        false,
+        1,
+      ),
+    );
+    expect(toast.success).toHaveBeenCalledWith("Đã thêm điểm ngữ pháp mới");
+  });
+
+  it("'Chỉnh sửa' một điểm => updateGrammarItem(packageId, id, input, demo); 'Xóa' => deleteGrammarItem + toast", async () => {
+    nav.set("/grammar/manage?packageId=p1");
+    renderPage();
+    await screen.findAllByText("Điểm 1");
+    await userEvent.click(screen.getByRole("button", { name: "Chỉnh sửa Điểm 1" }));
+    const modal = antModal();
+    await userEvent.clear(within(modal).getByLabelText(/Giải thích/));
+    await userEvent.type(within(modal).getByLabelText(/Giải thích/), "Giải thích mới");
+    await userEvent.click(modalOk(modal, "Lưu thay đổi"));
+    await waitFor(() => expect(client.updateGrammarItem).toHaveBeenCalledWith("p1", "g1", expect.objectContaining({ title: "Điểm 1", explanation: "Giải thích mới" }), false));
+    expect(toast.success).toHaveBeenCalledWith("Cập nhật điểm ngữ pháp thành công!");
+    await userEvent.click(screen.getByRole("button", { name: "Xóa Điểm 2" }));
+    await waitFor(() => expect(client.deleteGrammarItem).toHaveBeenCalledWith("p1", "g2", false));
+    expect(toast.success).toHaveBeenCalledWith('Đã xóa điểm ngữ pháp "Điểm 2"');
+  });
+});
+
+describe("quyền theo ticket + công tắc ghi", () => {
+  it("giảng viên KHÔNG có ticket GRAMMAR: Alert 'Chế độ Xem duy nhất', vẫn thấy gói, không nút ghi/publish", async () => {
+    vi.mocked(getTickets).mockResolvedValue([{ id: "t1", status: "OPEN", assignedId: "u-teacher-1", module: "QUIZ" }] as never);
+    renderPage(teacher, "instructor");
+    await screen.findByText("Gói 1");
+    expect(await screen.findByTestId("flat-content-readonly-alert")).toHaveTextContent("Chế độ Xem duy nhất");
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
+  });
+
+  it("công tắc ghi ĐÓNG (Admin): WriteLockedNotice, không nút ghi", async () => {
+    vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "disabled");
+    renderPage();
+    await screen.findByText("Gói 1");
+    expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
+  });
+});
+
+describe("trạng thái dữ liệu", () => {
+  it("dịch vụ chưa cấu hình => WAITING FOR BACKEND trong vùng danh sách, không toast", async () => {
+    vi.mocked(client.listGrammarPackages).mockRejectedValue(new ApiNotConfiguredError());
+    renderPage();
+    const notice = await screen.findByTestId("content-packages-notice");
+    expect(notice).toHaveAttribute("data-kind", "waiting");
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("lỗi API => khối lỗi + 'Thử lại' tải lại", async () => {
+    vi.mocked(client.listGrammarPackages).mockRejectedValueOnce(new ApiError("Máy chủ lỗi", 500)).mockResolvedValue([pkg(1)]);
+    renderPage();
+    const notice = await screen.findByTestId("content-packages-notice");
+    expect(notice).toHaveAttribute("data-kind", "error");
+    await userEvent.click(within(notice).getByRole("button", { name: "Thử lại" }));
+    expect(await screen.findByText("Gói 1")).toBeInTheDocument();
+  });
+
+  it("cấp mục rỗng thật => 'Chưa có điểm ngữ pháp nào'", async () => {
+    vi.mocked(client.listPackageGrammarPoints).mockResolvedValueOnce([]);
+    nav.set("/grammar/manage?packageId=p1");
+    renderPage();
+    expect(await screen.findByTestId("flat-content-items-empty")).toHaveTextContent("Chưa có điểm ngữ pháp nào");
+  });
+});
