@@ -1,10 +1,9 @@
 ## Current behavior (2026-11-14)
 
-The notes below include historical read-only milestones. Current lesson pages support explicit attempt submission and admin practice:
+The notes below include historical read-only milestones. Current lesson pages support explicit attempt submission for students; admins only preview:
 
-- Admin may answer attached assessments and submit via `POST /assessment-attempts/admin-practice`, followed by the existing lock/submit endpoints. The start/history endpoints require ROLE_ADMIN at controller and service layers, validate the package version/resource/session link, and use the linked resource version (including drafts).
-- Admin attempts are SELF_STUDY, owned by the authenticated admin, keyed by package version and session number. They do not populate classroom session progress. `GET /assessment-attempts/admin-practice` returns only the caller's history for that exact context.
-- The lesson modal reads admin practice history for the admin, and classroom history for students. Only a confirmed SUBMITTED attempt marks completion; a browser draft does not. Opening pages/tabs does not create or submit attempts.
+- Admin only previews attached assessments (read from the draft, or published fallback). There is no admin attempt endpoint: admins cannot start, answer or submit, and no attempt history is shown for them.
+- Students read their classroom history for a lesson. Only a confirmed SUBMITTED attempt marks completion; a browser draft does not. Opening pages/tabs does not create or submit attempts.
 - Browser drafts persist by user, lesson, skill, resource/package version and attempt. A question is checked only after leaving it. Submit is available only on the last question after every required response is filled.
 - Submission uses the same flow for all four skill tabs and all sessions. Payloads cover all eight question types. Audio/file responses require configured and enabled storage and are complete only after upload confirmation. Sentence-builder answers preserve chunk indices; multiple-select preserves the selected option indices. Submitted question ticks come from the API, independent of browser drafts. Result polling follows nextPollMs and stops on completion/error/unmount.
 - Package reads paginate all matches; an empty new package cannot hide older attached data. Admin reads draft (or published fallback) separately from student published snapshots.

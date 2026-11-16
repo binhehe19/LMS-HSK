@@ -1,6 +1,6 @@
 import {beforeEach,expect,it,vi} from "vitest";
 import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
-const api=vi.hoisted(()=>({startAdminPractice:vi.fn(),lockAttempt:vi.fn(),submitAttempt:vi.fn(),releaseAttemptLock:vi.fn()}));
+const api=vi.hoisted(()=>({lockAttempt:vi.fn(),submitAttempt:vi.fn(),releaseAttemptLock:vi.fn()}));
 vi.mock("@/lib/api/student-client",()=>({studentApi:api}));
 import LessonSubmitAction,{serializeLessonAnswer} from "@/components/student/timetable/lesson-submit";
 import type {TimetableModule} from "@/components/student/timetable/timetable-data";
@@ -23,14 +23,12 @@ it("preserves blank indices and rejects unsupported response types before submit
  expect(serializeLessonAnswer({id:"q",resource:r,question:{questionId:"q",questionType:"FILE_UPLOAD"}},{q:'{"files":[{"fileId":"uploaded-file"}]}'},{}).answerJson).toBe('{"files":[{"fileId":"uploaded-file"}]}');
 });
 
-it("admin creates and submits a real own attempt after confirmation",async()=>{
- const resource={...r,attemptId:undefined,resourceId:"quiz",packageVersionId:"draft-version"};const onSubmitted=vi.fn();
- api.startAdminPractice.mockResolvedValue({attemptId:"admin-attempt",learningResourceId:"quiz",questions:[]});
- render(<LessonSubmitAction resources={[resource]} questions={[{...questions[0],resource}]} answers={{}} selected={{"r:q":"0"}} sessionNo={1} isAdmin onSubmitted={onSubmitted} onClose={()=>{}}/>);
- expect(api.startAdminPractice).not.toHaveBeenCalled();fireEvent.click(screen.getByRole("button",{name:"Nộp bài"}));
- await waitFor(()=>expect(api.submitAttempt).toHaveBeenCalledWith("admin-attempt",expect.any(String),expect.any(Array)));
- expect(api.startAdminPractice).toHaveBeenCalledWith({learningResourceId:"quiz",contentPackageVersionId:"draft-version",sessionNo:1});
- await waitFor(()=>expect(onSubmitted).toHaveBeenCalledWith([expect.objectContaining({attemptId:"admin-attempt"})]));
+it("admin has no attempt to submit: shows a clear message and sends nothing",async()=>{
+ const resource={...r,attemptId:undefined,resourceId:"quiz",packageVersionId:"draft-version"};
+ render(<LessonSubmitAction resources={[resource]} questions={[{...questions[0],resource}]} answers={{}} selected={{"r:q":"0"}} isAdmin onClose={()=>{}}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Nộp bài"}));
+ expect(await screen.findByRole("alert")).toHaveTextContent("admin chỉ xem trước");
+ expect(api.lockAttempt).not.toHaveBeenCalled();expect(api.submitAttempt).not.toHaveBeenCalled();
 });
 
 it("serializes all skill question payloads without substituting scores or correct answers",()=>{

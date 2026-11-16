@@ -3,13 +3,13 @@ import { loadTimetable, syllabusSessions, classSession, loadSessionModules, mapL
 import { sessionProgress, getSessionState } from "@/components/student/timetable/timetable-data";
 import { activityResources } from "@/components/student/timetable/lesson-source";
 import type { SyllabusDetailResponse } from "@/types/lms";
-const api=vi.hoisted(()=>({vocabularyStates:vi.fn(),adminList:vi.fn(),adminClass:vi.fn(),adminSessions:vi.fn(),list:vi.fn(),detail:vi.fn(),classes:vi.fn(),classDetail:vi.fn(),resources:vi.fn(),draft:vi.fn(),progress:vi.fn(),sessionProgress:vi.fn(),attempts:vi.fn(),adminAttempts:vi.fn()}));
+const api=vi.hoisted(()=>({vocabularyStates:vi.fn(),adminList:vi.fn(),adminClass:vi.fn(),adminSessions:vi.fn(),list:vi.fn(),detail:vi.fn(),classes:vi.fn(),classDetail:vi.fn(),resources:vi.fn(),draft:vi.fn(),progress:vi.fn(),sessionProgress:vi.fn(),attempts:vi.fn()}));
 vi.mock("@/lib/api/lms-class-client",()=>({listAllClasses:api.adminList,getClass:api.adminClass,listClassSessions:api.adminSessions}));
 vi.mock("@/lib/api/lms-syllabus-client",()=>({listSyllabuses:api.list,getSyllabus:api.detail}));
-vi.mock("@/lib/api/student-client",()=>({studentApi:{vocabularyStates:api.vocabularyStates,classes:api.classes,classDetail:api.classDetail,resources:api.resources,progress:api.progress,sessionProgress:api.sessionProgress,attempts:api.attempts,adminAttempts:api.adminAttempts}}));
+vi.mock("@/lib/api/student-client",()=>({studentApi:{vocabularyStates:api.vocabularyStates,classes:api.classes,classDetail:api.classDetail,resources:api.resources,progress:api.progress,sessionProgress:api.sessionProgress,attempts:api.attempts}}));
 vi.mock("@/lib/api/syllabus-schedule-resources-client",()=>({listScheduleResources:api.draft}));
 const syllabus:SyllabusDetailResponse={id:"s1",name:"HSK 3",schedule:[{id:"schedule-1",topic:"Bài trong giáo trình",content:"Nội dung thật",studentMaterials:[{materialTitle:"Slide học viên",materialLink:"https://example.com/slide"}],teacherMaterials:[{materialTitle:"Tài liệu giáo viên"}],studentTasks:"Làm bài",teacherTasks:"Chuẩn bị bài"}]};
-beforeEach(()=>{vi.resetAllMocks();api.vocabularyStates.mockResolvedValue([]);api.adminAttempts.mockResolvedValue({attempts:[]});api.resources.mockResolvedValue({});api.draft.mockResolvedValue([]);api.progress.mockResolvedValue({personalProgress:null,homeworkDiligence:null,averageScore:null,sessions:[]});api.sessionProgress.mockResolvedValue({homeworkProgress:null});});
+beforeEach(()=>{vi.resetAllMocks();api.vocabularyStates.mockResolvedValue([]);api.resources.mockResolvedValue({});api.draft.mockResolvedValue([]);api.progress.mockResolvedValue({personalProgress:null,homeworkDiligence:null,averageScore:null,sessions:[]});api.sessionProgress.mockResolvedValue({homeworkProgress:null});});
 describe("live timetable source",()=>{
  it("admin loads all classes and their dated sessions, not every syllabus row",async()=>{api.adminList.mockResolvedValue({items:[{id:"a"},{id:"b"}],truncated:false});api.adminClass.mockImplementation(async(id:string)=>({id,code:id,syllabusId:"s1"}));api.adminSessions.mockImplementation(async(id:string)=>[{id:id+"-session",sessionNo:1,startAt:"2026-11-14T08:00:00",endAt:"2026-11-14T10:00:00"}]);api.detail.mockResolvedValue(syllabus);const result=await loadTimetable(true);expect(result.classes?.map(c=>c.id)).toEqual(["a","b"]);expect(result.sessions.map(s=>[s.classId,s.date])).toEqual([["a","2026-11-14"],["b","2026-11-14"]]);expect(api.list).not.toHaveBeenCalled();expect(api.classes).not.toHaveBeenCalled();expect(api.progress).not.toHaveBeenCalled();expect(result.sessions[0].teacherTasks).toBe("Chuẩn bị bài");});
  it("reports class failure without falling back to syllabus previews",async()=>{api.adminList.mockResolvedValue({items:[{id:"bad"}],truncated:false});api.adminClass.mockRejectedValue(Error("ERP unavailable"));api.adminSessions.mockResolvedValue([]);const result=await loadTimetable(true);expect(result.sessions).toEqual([]);expect(result.warnings[0]).toContain("ERP unavailable");expect(api.list).not.toHaveBeenCalled();});
@@ -84,15 +84,12 @@ it("does not mark unsubmitted answers complete",async()=>{
  expect(result.modules.find(m=>m.id==="reading")?.progress).toBe(0);
 });
 
-it("admin completion is read from own practice history without student class requests",async()=>{
+it("admin preview makes no attempt-history or student class requests",async()=>{
  api.draft.mockImplementation(async(_id:string,type:string)=>type === "ASSESSMENT"?[{id:"link",learningResourceId:"quiz",contentPackageVersionId:"draft",resourceType:"ASSESSMENT",subType:"QUIZ",resourceContent:{layout:{meta:{skill:"READING"}}}}]:[]);
- api.adminAttempts.mockResolvedValue({attempts:[{attemptId:"admin-attempt",status:"SUBMITTED",gradingStatus:"GRADED"}]});
  const result=await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);
- expect(result.modules.find(m=>m.id==="link")).toMatchObject({progress:100,attemptId:"admin-attempt"});
- expect(result.progress).toBe(100);
- expect(api.adminAttempts).toHaveBeenCalledWith("quiz","draft",1);expect(api.attempts).not.toHaveBeenCalled();expect(api.sessionProgress).not.toHaveBeenCalled();
+ expect(result.attempts).toEqual([]);expect(result.modules.find(m=>m.id==="link")).toMatchObject({progress:0});
+ expect(api.attempts).not.toHaveBeenCalled();expect(api.sessionProgress).not.toHaveBeenCalled();
 });
-
 it("keeps learner class summaries and progress separate across classes and account reloads",async()=>{
  api.classes.mockResolvedValueOnce([{id:"a"},{id:"b"}]).mockResolvedValueOnce([{id:"c"}]);
  api.classDetail.mockImplementation(async(id:string)=>({id,code:id,syllabusId:"s1",teacher:{fullName:"Teacher "+id},schedulePatterns:[{dayOfWeek:"MONDAY",startTime:"08:00",endTime:"10:00"}],myAttendanceSummary:{totalRecorded:1,attendanceRate:id==="a"?50:100},sessions:[{id:id+"-session",classId:id,sessionNo:1}]}));
@@ -104,21 +101,6 @@ it("keeps learner class summaries and progress separate across classes and accou
  const second=await loadTimetable(false);
  expect(second.classes?.map(c=>c.id)).toEqual(["c"]);expect(second.sessions.map(s=>s.classId)).toEqual(["c"]);
  expect(api.list).not.toHaveBeenCalled();expect(api.draft).not.toHaveBeenCalled();
-});
-
-it("loads admin practice progress independently for each session",async()=>{
- api.draft.mockImplementation(async(_id:string,type:string,no:number)=>type==="ASSESSMENT"?[{id:"link"+no,learningResourceId:"quiz"+no,contentPackageVersionId:"version",resourceType:"ASSESSMENT",subType:"QUIZ",skill:"READING"}]:[]);
- api.adminAttempts.mockImplementation(async(_id:string,_version:string,no:number)=>({attempts:no===1?[{attemptId:"submitted",status:"SUBMITTED",gradingStatus:"GRADED",earnedPoints:0,totalPoints:20}]:[]}));
- const first=await loadSessionStudy({...syllabusSessions(syllabus,true)[0],sessionNo:1},true);
- const second=await loadSessionStudy({...syllabusSessions(syllabus,true)[0],sessionNo:2},true);
- expect(first.progress).toBe(100);expect(second.progress).toBe(0);expect(second.attempts).toEqual([]);
- expect(api.adminAttempts).toHaveBeenCalledWith("quiz1","version",1);expect(api.adminAttempts).toHaveBeenCalledWith("quiz2","version",2);
-});
-it("does not report zero progress when the actual attempt history request fails",async()=>{
- api.draft.mockImplementation(async(_id:string,type:string)=>type==="ASSESSMENT"?[{id:"link",learningResourceId:"quiz",contentPackageVersionId:"version",resourceType:"ASSESSMENT"}]:[]);
- api.adminAttempts.mockRejectedValue(Error("History offline"));
- const result=await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);
- expect(result.progress).toBeNull();expect(result.modules.find(m=>m.id==="link")?.progress).toBeNull();expect(result.warnings.some(w=>w.includes("History offline"))).toBe(true);
 });
 
 it("reads real vocabulary mastery for the current user into lesson activity completion",async()=>{api.draft.mockImplementation(async(_id:string,type:string)=>type==="VOCABULARY"?[{id:"vocab-link",learningResourceId:"word",resourceType:"VOCABULARY",resourceContent:{word:"你好"}}]:[]);api.vocabularyStates.mockResolvedValue([{learningResourceId:"word",comprehensionLevel:"KNOWN"}]);const result=await loadSessionStudy(syllabusSessions(syllabus,true)[0],true);expect(api.vocabularyStates).toHaveBeenCalledWith(["word"]);expect(result.modules.find(m=>m.id==="vocab-link")?.progress).toBe(100);});

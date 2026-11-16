@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { fileUrl } from "@/lib/api/storage-client";
 import { getClass, listAllClasses, listClassSessions } from "@/lib/api/lms-class-client";
 import { getSyllabus } from "@/lib/api/lms-syllabus-client";
-import { studentApi, type StudentClass, type StudentSession } from "@/lib/api/student-client";
+import { studentApi, type StudentClass, type StudentSession, type TimetableAttemptHistory } from "@/lib/api/student-client";
 import { listScheduleResources } from "@/lib/api/syllabus-schedule-resources-client";
 import type { SyllabusDetailResponse, SyllabusScheduleItem } from "@/types/lms";
 import type { TimetableModule, TimetableSession, TimetableAttempt } from "./timetable-data";
@@ -111,7 +111,8 @@ export async function loadSessionStudy(session:TimetableSession,isAdmin:boolean)
  const assessments=resources.modules.filter(module=>module.resourceType === "ASSESSMENT" && module.resourceId);
  const unique=[...new Map(assessments.map(module=>[module.resourceId!,module])).values()];
  const results=await mapLimited(unique,module=>{
-  if(isAdmin){if(!module.packageVersionId)return Promise.reject(Error("Tài nguyên chưa có mã phiên bản để đọc lịch sử bài làm."));return studentApi.adminAttempts(module.resourceId!,module.packageVersionId,session.sessionNo);}
+  // Admin chỉ xem trước nội dung buổi học, không có lượt làm bài.
+  if(isAdmin)return Promise.resolve<TimetableAttemptHistory>({attempts:[]});
   return studentApi.attempts(module.resourceId!,session.id);
  });
  const moduleProgress=new Map<string,number|null>();const attemptIds=new Map<string,string>();

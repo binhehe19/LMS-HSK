@@ -59,8 +59,6 @@ export const studentApi = {
  resources: (syllabusId: string, sessionNo: number) => lmsClient.get<Record<string, unknown>>(`/content-packages/syllabus/${encodeURIComponent(syllabusId)}/session-resources?sessionNo=${sessionNo}`),
  attempt: (id:string) => lmsClient.get<Record<string,unknown>>(`/assessment-attempts/${encodeURIComponent(id)}`),
  startAttempt: (input:{sessionId:string;classId:string;sessionNo:number;contentPackageVersionId:string;learningResourceId:string}) => lmsClient.post<Record<string,unknown>>("/assessment-attempts",input),
- startAdminPractice: (input:{learningResourceId:string;contentPackageVersionId:string;sessionNo:number}) => lmsClient.post<Record<string,unknown>>("/assessment-attempts/admin-practice",input),
- adminAttempts: (resourceId:string,versionId:string,sessionNo:number) => lmsClient.get<TimetableAttemptHistory>(`/assessment-attempts/admin-practice?learningResourceId=${encodeURIComponent(resourceId)}&contentPackageVersionId=${encodeURIComponent(versionId)}&sessionNo=${sessionNo}`),
  lockAttempt: (id:string,sessionToken:string) => lmsClient.post<{acquired:boolean}>(`/assessment-attempts/${encodeURIComponent(id)}/lock`,{sessionToken,force:false}),
  releaseAttemptLock: (id:string,sessionToken:string) => lmsClient.delete(`/assessment-attempts/${encodeURIComponent(id)}/lock?sessionToken=${encodeURIComponent(sessionToken)}`),
  submitAttempt: (id:string,sessionToken:string,answers:{questionId:string;answerJson:string}[]) => lmsClient.post<{attemptId:string;answersIgnored:boolean}>(`/assessment-attempts/${encodeURIComponent(id)}/submit`,{sessionToken,answers}),

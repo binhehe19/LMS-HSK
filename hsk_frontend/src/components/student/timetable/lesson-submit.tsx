@@ -3,7 +3,7 @@ import {useRef,useState} from "react";
 import {studentApi} from "@/lib/api/student-client";
 import type {TimetableModule} from "./timetable-data";
 import {hasQuestionAnswer,selectedChoices} from "./lesson-answer-draft";
-import {record,attemptResource} from "./lesson-assessment-source";
+import {record} from "./lesson-assessment-source";
 export type DraftQuestion={id:string;question:Record<string,unknown>;resource:TimetableModule};
 export function serializeLessonAnswer(item:DraftQuestion,answers:Record<string,string>,selected:Record<string,string>):{questionId:string;answerJson:string}{
  const q=item.question;let value:unknown;const choice=selected[item.id];
@@ -24,19 +24,16 @@ export function serializeLessonAnswer(item:DraftQuestion,answers:Record<string,s
  else throw Error("Loại câu này chưa hỗ trợ nộp từ trang này. Bản nháp vẫn được giữ.");
  return {questionId:q.questionId,answerJson:JSON.stringify(value)};
 }
-export default function LessonSubmitAction({resources,questions,answers,selected,onSubmitted,onBeforeSubmit,onBusyChange,isAdmin=false,sessionNo}:{resources:TimetableModule[];questions:DraftQuestion[];answers:Record<string,string>;selected:Record<string,string>;onClose?:()=>void;onBeforeSubmit?:()=>void;onBusyChange?:(busy:boolean)=>void;onSubmitted?:(resources:TimetableModule[])=>void;isAdmin?:boolean;sessionNo?:number}){
+export default function LessonSubmitAction({resources,questions,answers,selected,onSubmitted,onBeforeSubmit,onBusyChange,isAdmin=false}:{resources:TimetableModule[];questions:DraftQuestion[];answers:Record<string,string>;selected:Record<string,string>;onClose?:()=>void;onBeforeSubmit?:()=>void;onBusyChange?:(busy:boolean)=>void;onSubmitted?:(resources:TimetableModule[])=>void;isAdmin?:boolean}){
  const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [done,setDone]=useState(false);const submitted=useRef(new Set<string>());
  const incomplete=questions.length===0 || questions.some(q=>!hasQuestionAnswer(q.id,q.question,answers,selected));
  const submit=async()=>{if(busy||done||incomplete)return;onBeforeSubmit?.();setBusy(true);onBusyChange?.(true);setError("");try{
   // Validate every answer before creating any attempts or submitting anything.
   const encoded=resources.map(resource=>({resource,answers:questions.filter(q=>q.resource.id===resource.id).map(q=>serializeLessonAnswer(q,answers,selected))}));
   const prepared:TimetableModule[]=[];const groups:{id:string;answers:{questionId:string;answerJson:string}[]}[]=[];
-  for(const entry of encoded){let resource=entry.resource;
+  for(const entry of encoded){const resource=entry.resource;
    if(resource.progress===100)throw Error("Bài đã nộp. Hãy chọn Làm lại để tạo lượt mới.");
-   if(!resource.attemptId && isAdmin){
-    if(!resource.resourceId || !resource.packageVersionId || !sessionNo)throw Error("Thiếu mã bài tập hoặc buổi học.");
-    resource=attemptResource(resource,await studentApi.startAdminPractice({learningResourceId:resource.resourceId,contentPackageVersionId:resource.packageVersionId,sessionNo}));
-   }
+   if(!resource.attemptId && isAdmin)throw Error("Tài khoản admin chỉ xem trước bài tập, không nộp bài được.");
    if(!resource.attemptId)throw Error("Cần bắt đầu một lượt làm bài trước khi nộp.");
    prepared.push(resource);groups.push({id:resource.attemptId,answers:entry.answers});
   }

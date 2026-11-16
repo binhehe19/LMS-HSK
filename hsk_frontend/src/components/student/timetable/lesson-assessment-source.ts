@@ -17,10 +17,7 @@ export async function readLessonAssessments(resources:TimetableModule[]):Promise
  });return {resources:result.flatMap(item=>item.status === "fulfilled"?[item.value]:[]),warnings};
 }
 export async function startLessonAssessment(resource:TimetableModule,session:TimetableSession,isAdmin=false):Promise<TimetableModule>{
- if(isAdmin){
-  if(!resource.resourceId || !resource.packageVersionId)throw Error("Thiếu mã học liệu hoặc phiên bản học phần.");
-  return attemptResource(resource,await studentApi.startAdminPractice({learningResourceId:resource.resourceId,contentPackageVersionId:resource.packageVersionId,sessionNo:session.sessionNo}));
- }
+ if(isAdmin)throw Error("Tài khoản admin chỉ xem trước bài tập, không làm bài được.");
  if(!resource.resourceId || !resource.packageVersionId || !session.id || !session.classId)throw Error("Thiếu thông tin bài tập hoặc lớp học. Hãy mở lại buổi học từ thời khóa biểu.");
  return attemptResource(resource,await studentApi.startAttempt({sessionId:session.id,classId:session.classId,sessionNo:session.sessionNo,contentPackageVersionId:resource.packageVersionId,learningResourceId:resource.resourceId}));
 }
