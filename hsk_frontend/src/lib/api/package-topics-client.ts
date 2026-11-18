@@ -11,7 +11,7 @@ import { lmsClient } from "@/lib/api/lms-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 
 const FEATURE = "content";
-const SESSION_NO = 1;
+
 
 export interface PackageTopic {
   id: string;
@@ -56,20 +56,21 @@ interface BackendLink {
 const enc = encodeURIComponent;
 const key = (title: string) => title.trim().toLowerCase();
 
-function getPackage(packageId: string) {
+export function getPackage(packageId: string) {
   return lmsClient.get<BackendPackage>(`/content-packages/${enc(packageId)}`);
 }
 
-function listVersionTopics(versionId: string) {
-  return lmsClient.get<BackendTopic[]>(`/content-packages/versions/${enc(versionId)}/topics?sessionNo=${SESSION_NO}`);
-}
-
-/** Phiên bản nháp để ghi; `created` = nháp vừa được tạo (id chủ đề đã đổi so với bản đang xem). */
-async function writableVersion(packageId: string): Promise<{ versionId: string; created: boolean }> {
+/** Phiên bản nháp để ghi; `created` = nháp vừa được tạo (id chủ đề đã đổi so với bản đang xem). Dùng chung với tên buổi (package-sessions-client.ts). */
+export async function writableVersion(packageId: string): Promise<{ versionId: string; created: boolean }> {
   const pkg = await getPackage(packageId);
   if (pkg.draftVersionId) return { versionId: pkg.draftVersionId, created: false };
   const draft = await lmsClient.post<{ id: string }>(`/content-packages/${enc(packageId)}/draft`);
   return { versionId: draft.id, created: true };
+}
+
+export function packageTopicsForSession(sessionNo: number): PackageTopicsClient {
+function listVersionTopics(versionId: string) {
+  return lmsClient.get<BackendTopic[]>(`/content-packages/versions/${enc(versionId)}/topics?sessionNo=${sessionNo}`);
 }
 
 /** Hàm đổi chủ đề đã biết sang id trong phiên bản ghi được: giữ nguyên id nếu nháp có sẵn, tra theo tên nếu nháp vừa tạo. */
@@ -83,12 +84,12 @@ async function resolver(versionId: string, created: boolean): Promise<(topic: Pa
   };
 }
 
-export const packageTopicsClient: PackageTopicsClient = {
+return {
   async list(packageId) {
     const pkg = await getPackage(packageId);
     const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
     if (!versionId) return { topics: [], membership: {} };
-    const [topics, links] = await Promise.all([listVersionTopics(versionId), lmsClient.get<BackendLink[]>(`/content-packages/versions/${enc(versionId)}/resources`)]);
+    const [topics, links] = await Promise.all([listVersionTopics(versionId), lmsClient.get<BackendLink[]>(`/content-packages/versions/${enc(versionId)}/resources?sessionNo=${sessionNo}`)]);
     const membership: Record<string, string> = {};
     for (const link of links) if (link.topicId) membership[link.learningResourceId] = link.topicId;
     return { topics: [...topics].sort((a, b) => a.topicOrder - b.topicOrder).map((t) => ({ id: t.id, title: t.title, topicOrder: t.topicOrder })), membership };
@@ -97,7 +98,7 @@ export const packageTopicsClient: PackageTopicsClient = {
   async create(packageId, title, demo) {
     assertWriteEnabled(FEATURE, demo);
     const { versionId } = await writableVersion(packageId);
-    await lmsClient.post(`/content-packages/versions/${enc(versionId)}/topics`, { sessionNo: SESSION_NO, title });
+    await lmsClient.post(`/content-packages/versions/${enc(versionId)}/topics`, { sessionNo, title });
   },
 
   async rename(packageId, topic, title, demo) {
@@ -118,7 +119,7 @@ export const packageTopicsClient: PackageTopicsClient = {
     assertWriteEnabled(FEATURE, demo);
     const { versionId, created } = await writableVersion(packageId);
     const idOf = await resolver(versionId, created);
-    await lmsClient.put(`/content-packages/versions/${enc(versionId)}/topics/reorder`, { sessionNo: SESSION_NO, topicIdsInOrder: topics.map(idOf) });
+    await lmsClient.put(`/content-packages/versions/${enc(versionId)}/topics/reorder`, { sessionNo, topicIdsInOrder: topics.map(idOf) });
   },
 
   async assign(packageId, itemId, topic, demo) {
@@ -128,3 +129,6 @@ export const packageTopicsClient: PackageTopicsClient = {
     await lmsClient.put(`/content-packages/versions/${enc(versionId)}/resources/${enc(itemId)}/topic`, { topicId });
   },
 };
+
+}
+export const packageTopicsClient = packageTopicsForSession(1);

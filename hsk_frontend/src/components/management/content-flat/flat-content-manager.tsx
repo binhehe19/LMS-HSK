@@ -3,12 +3,14 @@
 // Container màn quản lý nội dung PHẲNG (Package → mục) — mirror content-tree-manager.tsx nhưng bớt 2 cấp Folder/StudySet (nối lms-content-client.ts/
 // lms-grammar-client.ts, backend thật thay vì content-tree-client.ts/mock). Generic theo TItem, nhận `client` (bộ hàm CRUD của module đó) làm prop —
 // mỗi module mới chỉ cần khai báo config + client riêng theo FlatContentClient<TItem>, không cần sửa manager này.
+import { PackageImportModal } from "./package-import-modal";
 import { Alert } from "antd";
 import { useState } from "react";
 import { ContentItemModal } from "@/components/management/content-tree/content-item-modal";
 import { PackageFormModal } from "@/components/management/content-tree/content-entity-modals";
 import { useFlatContent, type FlatContentClient } from "@/components/management/content-flat/use-flat-content";
-import { FlatItemsView } from "@/components/management/content-flat/flat-items-view";
+import { FlatItemsBreadcrumbView } from "./flat-items-breadcrumb-view";
+import { PackageWorkspace } from "./package-workspace";
 import { ContentPackagesView } from "@/components/management/content-tree/content-packages-view";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import { confirmAction } from "@/components/shared/confirm-action";
@@ -27,11 +29,12 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
   const tree = useFlatContent(config, client);
   const { labels } = config;
   const { location, level } = tree;
-  const ItemsViewComp = config.ItemsView ?? FlatItemsView;
+  const ItemsViewComp = FlatItemsBreadcrumbView;
 
   const [packageModal, setPackageModal] = useState<PackageModalState | null>(null);
   const [itemModal, setItemModal] = useState<ItemModalState<TItem> | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const ItemPicker = config.ItemPicker;
 
   const deletePackage = async (pkg: ContentPackage) => {
@@ -91,7 +94,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           busy={tree.busy}
           onOpen={(pkg) => tree.go(flatPackageLocation(pkg.id))}
           onCreate={(type) => setPackageModal((prev) => ({ mode: "create", editing: null, type: type ?? null, key: bump(prev) }))}
-          onEdit={(pkg) => setPackageModal((prev) => ({ mode: "edit", editing: pkg, type: null, key: bump(prev) }))}
+          onEdit={(pkg) => tree.go(flatPackageLocation(pkg.id))}
           onDelete={(pkg) => void deletePackage(pkg)}
           onTogglePublish={(pkg) => void togglePublish(pkg)}
           onImport={() => {}}
@@ -100,6 +103,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
       </div>
     ) : (
       <ItemsViewComp
+        embedded
         key={`items:${location.packageId}`}
         config={config}
         pkg={tree.selectedPackage}
@@ -116,13 +120,13 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
       />
     );
 
-  const showHeaderTitle = level !== "packages";
+  const showHeaderTitle = level !== "packages" && !tree.selectedPackage;
   const showReadonlyAlert = tree.access.status !== "loading" && !tree.access.canManage;
   const showWriteLockedNotice = tree.access.canManage && !tree.writeEnabled;
   const hasHeader = showHeaderTitle || showReadonlyAlert || showWriteLockedNotice;
 
   return (
-    <ManagementPageFrame contentClassName={`${config.pageClassName} content-tree-page`}>
+    <ManagementPageFrame contentClassName={`${config.pageClassName} content-tree-page${tree.selectedPackage ? " package-editor-page" : ""}`}>
       <div className="card manage-lp-container border-0 shadow-sm" data-testid="flat-content" data-module={config.key} data-level={level}>
         {hasHeader && (
           <div className="manage-lp-header px-4 pt-4 border-0">
@@ -147,12 +151,35 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           </div>
         )}
 
-        <div className="card-body p-4">{body}</div>
+        <div className={tree.selectedPackage ? "card-body p-0" : "card-body p-3"}>
+          {level === "items" && tree.selectedPackage ? (
+            <PackageWorkspace
+              key={tree.selectedPackage.id}
+              pkg={tree.selectedPackage}
+              sessionNo={tree.sessionNo}
+              onSession={tree.setSessionNo}
+              busy={tree.busy || importOpen || pickerOpen || !!itemModal}
+              canWrite={tree.canWrite}
+              canPublish={tree.canPublish}
+              demo={tree.demo}
+              itemCount={tree.items.list.length}
+              topicUi={tree.topicUi}
+              onSave={(input, publish) => tree.savePackage(input, tree.selectedPackage, publish)}
+              onCopy={syllabusId => tree.selectedPackage ? tree.copyPackage(tree.selectedPackage, syllabusId) : Promise.resolve(false)}
+              onBack={() => tree.go(FLAT_ROOT_LOCATION)}
+              onImport={() => setImportOpen(true)}
+              onCreate={() => ItemPicker ? setPickerOpen(true) : setItemModal(prev => ({ mode: "create", editing: null, key: bump(prev) }))}
+            >
+              {body}
+            </PackageWorkspace>
+          ) : body}
+        </div>
       </div>
 
       {packageModal && (
         <PackageFormModal
           key={packageModal.key}
+          allowSyllabus
           labels={labels}
           mode={packageModal.mode}
           initialValues={packageModal.editing ? { name: packageModal.editing.name, type: packageModal.editing.type, description: packageModal.editing.description ?? "" } : { name: "", type: packageModal.type ?? config.packageTypes[0]?.value ?? "", description: "" }}
@@ -161,7 +188,8 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           onSubmit={(values) => void submitPackage(packageModal.editing, values)}
         />
       )}
-      {ItemPicker && <ItemPicker open={pickerOpen} pkg={tree.selectedPackage} items={tree.items.list} demo={tree.demo} onClose={() => setPickerOpen(false)} onAdded={() => tree.items.reload()} />}
+      {importOpen && tree.selectedPackage && <PackageImportModal packageId={tree.selectedPackage.id} type={tree.selectedPackage.type} sessionNo={tree.sessionNo} demo={tree.demo} onClose={() => setImportOpen(false)} onAdded={tree.items.reload} />}
+      {ItemPicker && <ItemPicker sessionNo={tree.sessionNo} open={pickerOpen} pkg={tree.selectedPackage} items={tree.items.list} demo={tree.demo} onClose={() => setPickerOpen(false)} onAdded={() => tree.items.reload()} />}
       {itemModal && (
         <ContentItemModal
           config={config}
