@@ -109,7 +109,8 @@ describe("màn Chi tiết bài học — công tắc ghi ĐÓNG (bố cục 'Ch�
     expect(screen.getByText("1 điểm")).toBeInTheDocument();
     expect(screen.getByText("对").closest("div")).toHaveClass("bg-success-subtle", "text-success");
     expect(screen.getByText("错").closest("div")).toHaveClass("bg-light");
-    expect(document.querySelectorAll("input, select, textarea")).toHaveLength(0);
+    // Không có trường nhập nào trong màn (ô tìm kiếm của thanh đầu trang không tính).
+    expect(document.querySelectorAll(".management-main-column input, .management-main-column select, .management-main-column textarea")).toHaveLength(0);
   });
 
   it("bấm tiêu đề chủ đề đóng/mở; chủ đề không có bài tập hiện 'Buổi này chưa có bài tập'", async () => {

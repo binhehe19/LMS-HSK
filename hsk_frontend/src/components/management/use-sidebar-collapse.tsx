@@ -39,20 +39,3 @@ export function useSidebarCollapse() {
 
   return { collapsed, toggle };
 }
-
-export function SidebarCollapseButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
-  const label = collapsed ? "Mở rộng menu" : "Thu gọn menu";
-
-  return (
-    <button
-      type="button"
-      className="sidebar-collapse-button"
-      onClick={onClick}
-      aria-label={label}
-      aria-expanded={!collapsed}
-      title={label}
-    >
-      <i className={`ti ti-layout-sidebar-left-${collapsed ? "expand" : "collapse"}`} aria-hidden="true" />
-    </button>
-  );
-}

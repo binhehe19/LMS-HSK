@@ -1,4 +1,4 @@
-﻿
+
 .education-flow {
 }
 
@@ -1272,7 +1272,7 @@
         }
 
         .sidebar-brand-text {
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--hsk-font-ui);
             display: flex;
             flex-direction: column;
             line-height: 1.2;
@@ -1334,13 +1334,14 @@
                 color: $gray-700;
 
                 &:hover {
-                    background: $primary-transparent;
+                    background: $brand-gray-100;
                     color: $primary;
-                    border-left-color: $primary-200;
+                    border-left-color: $brand-gray-200;
                 }
 
+                // Mục đang chọn: nền đỏ nhạt đậm hơn nền trắng (tương phản rõ) + vạch đỏ bên trái.
                 &.active {
-                    background: $primary-transparent;
+                    background: $brand-soft;
                     color: $primary;
                     font-weight: $font-weight-semibold;
                     border-left-color: $primary;
@@ -1365,28 +1366,225 @@
     }
 }
 
-.settings-sidebar.instructor-sidebar-shell .sidebar-collapse-button {
-    align-self: flex-end;
+@keyframes management-header-menu-in {
+    from { opacity: 0; transform: translateY(-6px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ─── Thanh đầu trang chung của khu vực quản lý (ManagementHeader) ─────────────
+// Phần tử riêng của .row, ở hàng trên của cột phải (xem lưới bên dưới và management-page-frame.tsx): không nằm trong vùng nội dung nên không cuộn theo nó.
+.management-header {
+    // Lớp xếp chồng riêng, thấp hơn modal/popup của antd (z-index 1000+): z-index của chuông, menu và danh sách tìm kiếm bên trong chỉ có nghĩa trong thanh này.
+    position: relative;
+    z-index: 10;
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 30px;
-    margin: -4px 4px 2px 0;
-    padding: 0;
-    border: 1px solid rgba(57, 44, 125, 0.16);
-    border-radius: 8px;
-    background: $primary-transparent;
-    color: $primary;
-    cursor: pointer;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 18px 10px;
+    box-sizing: border-box;
+    min-width: 0;
 
-    &:hover, &:focus-visible {
-        background: $primary-100;
-        outline: 2px solid $primary-200;
-        outline-offset: 1px;
+    // Trái: nút thu gọn + tìm kiếm; phải: chuông + tài khoản.
+    .management-header-start,
+    .management-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+    .management-header-start { flex: 1 1 auto; }
+    .management-header-actions { flex: 0 0 auto; }
+
+    // Chuông dùng lại nguyên bản của sidebar (nền trắng mờ cho khối đỏ): đổi sang nền nhạt chữ đỏ trên nền trắng của thanh, bỏ vị trí tuyệt đối.
+    .sidebar-notification-wrapper { position: relative; top: auto; right: auto; z-index: 1; }
+    // Chuông và nút thu gọn là nút tròn cao bằng thẻ tài khoản (40px).
+    .notification-bell-btn,
+    .management-header-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: $brand-gray-100;
+        color: $brand-gray-600;
+        border: 1px solid $brand-gray-200;
+        &:hover { background: $brand-gray-200; color: $brand-primary; transform: none; }
     }
 
-    i { font-size: 18px; }
+    .management-header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 0;
+        cursor: pointer;
+        transition: background .2s ease;
+        &:focus-visible { outline: 2px solid $brand-primary; outline-offset: 2px; }
+        i { font-size: 20px; }
+    }
+
+    .management-header-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 260px;
+        min-width: 0;
+        flex: 0 1 260px;
+
+        > i {
+            position: absolute;
+            left: 14px;
+            color: $brand-gray-600;
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            height: 40px;
+            padding: 0 14px 0 38px;
+            border: 1px solid $brand-gray-200;
+            border-radius: 999px;
+            background: $brand-gray-100;
+            color: $brand-secondary;
+            font-size: $font-size-13;
+            outline: none;
+            &::placeholder { color: $brand-gray-600; opacity: .8; }
+            &:focus { border-color: $brand-primary; background: $white; }
+            &::-webkit-search-cancel-button { cursor: pointer; }
+        }
+
+        .management-header-search-results {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 20;
+            margin: 0;
+            padding: 6px;
+            list-style: none;
+            background: $white;
+            border: 1px solid $brand-neutral;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+            button {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                padding: 8px 10px;
+                border: 0;
+                border-radius: 8px;
+                background: transparent;
+                color: $brand-secondary;
+                font-size: $font-size-13;
+                font-weight: $font-weight-medium;
+                text-align: left;
+
+                i { flex-shrink: 0; color: $brand-primary; font-size: 16px; }
+                span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                small { flex-shrink: 0; color: $brand-secondary; opacity: .6; font-size: $font-size-11; }
+                &.is-active { background: $brand-gray-100; color: $brand-primary; }
+            }
+
+            .management-header-search-empty { padding: 8px 10px; color: $brand-secondary; opacity: .7; font-size: $font-size-13; }
+        }
+    }
+    .noti-badge { border-color: $white; }
+
+    .management-header-account { position: relative; min-width: 0; }
+
+    .management-header-profile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        max-width: 280px;
+        padding: 3px 12px 3px 4px;
+        border: 1px solid $brand-gray-200;
+        border-radius: 999px;
+        background: $brand-gray-100;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background .2s ease;
+
+        &:hover, &[aria-expanded="true"] { background: $brand-gray-200; }
+        &:focus-visible { outline: 2px solid $brand-primary; outline-offset: 2px; }
+
+        .management-header-caret { flex-shrink: 0; color: $brand-gray-600; font-size: 14px; transition: transform .18s ease; }
+        &[aria-expanded="true"] .management-header-caret { transform: rotate(180deg); }
+        @media (prefers-reduced-motion: reduce) { .management-header-caret { transition: none; } }
+
+        .avatar { width: 32px !important; height: 32px !important; flex-shrink: 0; }
+        .verify-tick { display: none; }
+
+        .management-header-profile-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.25;
+        }
+
+        .sbp-name {
+            font-size: $font-size-13;
+            font-weight: $font-weight-semibold;
+            color: $brand-secondary;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sbp-email {
+            font-size: $font-size-11;
+            color: $brand-gray-600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    // Menu thả xuống của thẻ tài khoản: Cài đặt, Đăng xuất.
+    .management-header-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 20;
+        min-width: 180px;
+        padding: 6px;
+        background: $white;
+        border: 1px solid $brand-neutral;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        // Xòe xuống từ góc phải trên (chỗ thẻ tài khoản); chỉ chạy khi mở vì menu được dựng lúc mở.
+        transform-origin: top right;
+        animation: management-header-menu-in .18s cubic-bezier(.2, .8, .2, 1);
+
+        @media (prefers-reduced-motion: reduce) { animation: none; }
+
+        a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            color: $brand-secondary;
+            font-size: $font-size-13;
+            font-weight: $font-weight-medium;
+            white-space: nowrap;
+
+            i { color: $brand-primary; font-size: 16px; }
+            &:hover, &:focus-visible { background: $brand-gray-100; color: $brand-primary; outline: none; }
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        padding-inline: 14px;
+        .management-header-profile-info { display: none; }
+        .management-header-profile { padding: 3px 8px 3px 3px; }
+        .management-header-search { flex: 1 1 120px; width: auto; }
+    }
 }
 
 @media (min-width: 992px) {
@@ -1408,28 +1606,15 @@
             .sidebar-brand {
                 flex-direction: column;
                 justify-content: flex-start;
-                min-height: 88px;
-                padding: 8px 2px 42px;
+                padding: 8px 2px;
                 gap: 0;
 
                 .sidebar-brand-text { display: none; }
-                .sidebar-notification-wrapper {
-                    top: auto !important;
-                    right: auto !important;
-                    bottom: 6px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                }
             }
 
             .sidebar-label, .menu-header-label, .sidebar-menu-text,
             .sidebar-middle .badge, .sidebar-bottom-profile-info, .sbp-edit {
                 display: none !important;
-            }
-
-            .sidebar-collapse-button {
-                align-self: center;
-                margin: 0 0 4px;
             }
 
             .sidebar-middle { padding-right: 0; }
@@ -1454,7 +1639,7 @@
 }
 
 @media (max-width: 991.98px) {
-    .settings-sidebar.instructor-sidebar-shell .sidebar-collapse-button { display: none; }
+    .management-header .management-header-toggle { display: none; }
 }
 
 // ─── Instructor: page background ──────────────────────────────────────
@@ -1497,6 +1682,41 @@ body:has(.instructor-sidebar-shell) {
                 height: 100%;
             }
         }
+    }
+}
+
+// ─── Lưới khung quản lý: sidebar (cả hai hàng) | thanh đầu trang (hàng trên) + nội dung tự cuộn (hàng dưới) ─
+@media (min-width: 992px) {
+    .content:has(.instructor-sidebar-shell) > .container > .row {
+        display: grid;
+        grid-template-columns: 25% minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+
+        &:has(> .management-sidebar-column.is-collapsed) { grid-template-columns: 80px minmax(0, 1fr); }
+
+        > .management-sidebar-column { grid-column: 1; grid-row: 1 / span 2; }
+        > .management-header { grid-column: 2; grid-row: 1; }
+        > .management-main-column {
+            grid-column: 2;
+            grid-row: 2;
+            flex: none;
+            width: auto;
+            max-width: none;
+            min-height: 0;
+        }
+    }
+
+    .content.management-frame-admin:has(.instructor-sidebar-shell) > .container > .row {
+        grid-template-columns: 250px minmax(0, 1fr);
+        &:has(> .management-sidebar-column.is-collapsed) { grid-template-columns: 64px minmax(0, 1fr); }
+    }
+}
+
+@media (max-width: 991.98px) {
+    .content:has(.instructor-sidebar-shell) > .container > .row > .management-header {
+        order: -1;
+        flex: 0 0 auto;
+        width: 100%;
     }
 }
 
@@ -2537,4 +2757,168 @@ body:has(.instructor-sidebar-shell) {
         height: 100%;
         object-fit: cover;
     }
+}
+
+.content-tree-page {
+    --package-accent: var(--admin-primary, #{$primary});
+}
+
+/* Fit the admin navigation and work area into a single compact frame. */
+.content.management-frame-admin:has(.instructor-sidebar-shell) {
+    padding: 0 !important;
+    background: $white !important;
+
+    --admin-font-body: .875rem;
+    --admin-font-secondary: .8125rem;
+    --admin-font-page-title: 1.375rem;
+    --admin-font-section-title: 1.125rem;
+    --admin-font-group-title: 1rem;
+    --bs-primary-rgb: 176, 13, 14;
+
+    .btn.btn-primary {
+        background-color: var(--admin-primary);
+        border-color: var(--admin-primary);
+
+        &:hover:not(:disabled), &:active:not(:disabled) {
+            background-color: var(--admin-primary-hover);
+            border-color: var(--admin-primary-hover);
+        }
+    }
+
+    .btn.btn-outline-primary {
+        border-color: var(--admin-primary) !important;
+        color: var(--admin-primary) !important;
+
+        &:hover:not(:disabled), &:active:not(:disabled) {
+            background-color: var(--admin-primary-hover) !important;
+            border-color: var(--admin-primary-hover) !important;
+            color: #fff !important;
+        }
+    }
+
+    > .container {
+        width: 100%;
+        padding: 0;
+
+        > .row {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: 0;
+            flex-wrap: nowrap;
+
+            > .management-main-column {
+                flex: 1 1 0;
+                width: auto;
+                max-width: none;
+                min-width: 0;
+                padding: 16px clamp(14px, 1.5vw, 24px) 24px;
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            // Thanh đầu trang của khung admin: nền trắng, kẻ ngang với vùng nội dung bên dưới.
+            > .management-header {
+                padding: 0 clamp(14px, 1.5vw, 24px);
+                background: $white;
+                border-bottom: 1px solid var(--admin-neutral);
+            }
+        }
+    }
+
+    .settings-sidebar.instructor-sidebar-shell {
+        border: 0;
+        border-right: 1px solid rgba(57, 44, 125, .13);
+        border-radius: 0;
+        box-shadow: none;
+        gap: 6px;
+
+        .sidebar-menu li { margin-bottom: 3px; }
+        .sidebar-menu a {
+            min-height: 34px;
+            font-size: var(--admin-font-body);
+            border: 1px solid transparent;
+        }
+        .sidebar-menu a i { flex-shrink: 0; }
+
+        .sidebar-brand {
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-hover));
+        }
+
+        // Hover xám nhạt; mục đang chọn nền đỏ nhạt đậm hơn nền trắng rõ rệt kèm vạch đỏ bên trái (tương phản chữ/nền ~5:1).
+        .sidebar-menu a:hover {
+            background: #F2F4F7;
+            border-color: #E4E7EC;
+            color: var(--admin-primary);
+        }
+
+        .sidebar-menu a.active {
+            background: var(--admin-soft);
+            border-color: transparent;
+            box-shadow: inset 3px 0 0 var(--admin-primary);
+            color: var(--admin-primary);
+            font-weight: 600;
+        }
+
+        .sidebar-bottom-profile {
+            background: var(--admin-surface);
+            border-color: var(--admin-soft);
+        }
+
+        .sidebar-middle .menu-header-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: .65rem !important;
+            padding-right: 4px !important;
+
+            &::after {
+                content: "";
+                flex: 1;
+                border-top: 1px solid var(--admin-neutral);
+            }
+        }
+    }
+
+    @media (min-width: 992px) {
+        > .container > .row > .management-sidebar-column:not(.is-collapsed) {
+            flex: 0 0 250px;
+            width: 250px;
+        }
+
+        > .container > .row > .management-sidebar-column.is-collapsed {
+            flex-basis: 64px;
+            width: 64px;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        overflow-y: auto !important;
+        overscroll-behavior-y: contain;
+
+        > .container { height: auto; }
+        > .container > .row {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            height: auto;
+
+            > .management-sidebar-column,
+            > .management-main-column { height: auto; }
+
+            > .management-main-column { overflow: visible; }
+        }
+
+        .settings-sidebar.instructor-sidebar-shell {
+            margin-bottom: 0 !important;
+            border-right: 0;
+            border-bottom: 1px solid rgba(57, 44, 125, .13);
+
+            .sidebar-middle { max-height: 30vh; overflow-y: auto; }
+        }
+    }
+}
+
+/* Match the ERP management canvas while keeping the sidebar on its own surface. */
+.management-frame-admin.package-editor-page > .container > .row > .management-main-column {
+    background: color-mix(in srgb, var(--white, #fff) 96%, #667085);
 }

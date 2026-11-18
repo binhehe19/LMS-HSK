@@ -2,7 +2,9 @@ import { act, cleanup, render, screen, waitFor, within } from "@testing-library/
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ManagementHeader } from "@/components/management/management-header";
 import { ManagementSidebar } from "@/components/management/management-sidebar";
+import { useUnreadCount } from "@/components/management/notifications/use-unread-count";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import { fetchNotifications, getUnreadCount, markAllNotificationsRead, markNotificationRead } from "@/lib/api/notification-client";
 import { getTickets } from "@/lib/api/ticket-client";
@@ -46,29 +48,79 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_AUTH_FRONTEND_URL", "http://auth.test.invalid");
 });
 
+// Sidebar và thanh đầu trang (thu gọn, tìm kiếm, chuông, tài khoản) dùng chung một lần gọi số chưa đọc như trong ManagementPageFrame.
+function Chrome({ area }: { area: "admin" | "instructor" }) {
+  const unread = useUnreadCount();
+  return (
+    <>
+      <ManagementHeader area={area} unread={unread} />
+      <ManagementSidebar area={area} unread={unread} />
+    </>
+  );
+}
+
 function renderSidebar(area: "admin" | "instructor" = "admin", user = area === "admin" ? adminUser : teacherUser) {
   const store = makeStore({ status: "authenticated", user });
   render(
     <Provider store={store}>
-      <ManagementSidebar area={area} />
+      <Chrome area={area} />
     </Provider>,
   );
   return store;
 }
 
+describe("bố cục sidebar và thanh đầu trang", () => {
+  it("nút thu gọn, tìm kiếm, chuông và tài khoản (kèm menu Cài đặt, Đăng xuất) nằm ở thanh đầu trang; sidebar chỉ còn thương hiệu và menu", async () => {
+    renderSidebar();
+    const header = document.querySelector(".management-header") as HTMLElement;
+    const sidebar = document.querySelector(".settings-sidebar") as HTMLElement;
+    expect(within(header).getByTestId("notification-bell")).toBeInTheDocument();
+    expect(within(header).getByText("Quản Trị Viên")).toBeInTheDocument();
+    expect(within(header).getByText("admin@example.test")).toBeInTheDocument();
+    // Cài đặt và Đăng xuất nằm trong menu thả xuống của thẻ tài khoản, chỉ có khi mở menu.
+    expect(within(header).queryByRole("menuitem", { name: "Đăng xuất" })).toBeNull();
+    await userEvent.click(within(header).getByRole("button", { name: "Tài khoản" }));
+    expect(within(header).getByRole("menuitem", { name: "Cài đặt" })).toHaveAttribute("target", "_blank");
+    expect(within(header).getByRole("menuitem", { name: "Đăng xuất" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(within(header).queryByRole("menuitem", { name: "Đăng xuất" })).toBeNull();
+    expect(within(sidebar).queryByTestId("notification-bell")).toBeNull();
+    expect(within(sidebar).queryByText("admin@example.test")).toBeNull();
+    expect(within(sidebar).queryByRole("link", { name: "Đăng xuất" })).toBeNull();
+    expect(within(sidebar).queryByRole("link", { name: "Cài đặt" })).toBeNull();
+    // Nút thu gọn/mở rộng và ô tìm kiếm nằm ở thanh đầu trang, không còn trong sidebar.
+    expect(within(header).getByRole("button", { name: "Thu gọn menu" })).toBeInTheDocument();
+    expect(within(header).getByRole("searchbox", { name: "Tìm chức năng" })).toBeInTheDocument();
+    expect(within(sidebar).queryByRole("button", { name: /Thu gọn menu|Mở rộng menu/ })).toBeNull();
+  });
+
+  it("ô tìm kiếm lọc menu không phân biệt dấu, Enter chuyển tới mục đầu tiên; không có kết quả thì báo rõ", async () => {
+    renderSidebar();
+    const search = screen.getByRole("searchbox", { name: "Tìm chức năng" });
+    await userEvent.type(search, "lop hoc");
+    expect(await screen.findByRole("option", { name: /Lớp học/ })).toBeInTheDocument();
+    await userEvent.keyboard("{Enter}");
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("listbox")).toBeNull();
+
+    await userEvent.type(search, "zzzz không có");
+    expect(await screen.findByText("Không tìm thấy chức năng phù hợp")).toBeInTheDocument();
+  });
+});
+
 describe("ManagementSidebar — khu vực Admin", () => {
-  it("hiển thị người dùng hiện tại, phụ đề 'LMS · Admin' và đánh dấu 'Quản lý lớp học' đang active", () => {
+  it("hiển thị người dùng hiện tại, phụ đề 'LMS · Admin' và đánh dấu 'Lớp học' đang active", () => {
     renderSidebar();
     expect(screen.getByText("Quản Trị Viên")).toBeInTheDocument();
     expect(screen.getByText("admin@example.test")).toBeInTheDocument();
     expect(screen.getByText("LMS · Admin")).toBeInTheDocument();
     const active = document.querySelector(".sidebar-menu a.active");
-    expect(active?.textContent).toContain("Quản lý lớp học");
+    expect(active?.textContent).toContain("Lớp học");
   });
 
-  it("liên kết ngoài (Quản lý người dùng, Cài đặt) mở tab mới tới Authentication_Frontend", () => {
+  it("liên kết ngoài (Người dùng, Cài đặt) mở tab mới tới Authentication_Frontend", () => {
     renderSidebar();
-    const users = screen.getByText("Quản lý người dùng").closest("a");
+    const users = screen.getByText("Người dùng").closest("a");
     expect(users).toHaveAttribute("href", "http://auth.test.invalid/admin/users");
     expect(users).toHaveAttribute("target", "_blank");
     expect(users).toHaveAttribute("rel", "noopener noreferrer");
@@ -77,7 +129,8 @@ describe("ManagementSidebar — khu vực Admin", () => {
 
   it("đăng xuất: đổi trạng thái 'signed-out', xóa phiên proxy rồi sang IdP kết thúc phiên chung và quay về trang gốc", async () => {
     const store = renderSidebar();
-    await userEvent.click(screen.getByRole("link", { name: "Đăng xuất" }));
+    await userEvent.click(screen.getByRole("button", { name: "Tài khoản" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
     expect(store.getState().auth.status).toBe("signed-out");
     const idpLogout = "http://auth.test.invalid/api/auth/logout/idp?client_id=lms&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3100%2F";
@@ -92,7 +145,7 @@ describe("ManagementSidebar — khu vực Admin", () => {
     expect(column.className).toContain("is-collapsed");
     expect(window.localStorage.getItem("management-sidebar-collapsed")).toBe("true");
     // Thu gọn: mỗi mục có title/aria-label để người dùng vẫn biết mục là gì.
-    expect(screen.getByRole("link", { name: "Quản lý lớp học" })).toHaveAttribute("title", "Quản lý lớp học");
+    expect(screen.getByRole("link", { name: "Lớp học" })).toHaveAttribute("title", "Lớp học");
     await userEvent.click(screen.getByRole("button", { name: /Mở rộng menu|Thu gọn menu/ }));
     expect(column.className).not.toContain("is-collapsed");
   });
@@ -105,9 +158,9 @@ describe("ManagementSidebar — khu vực Admin", () => {
       const href = a.getAttribute("href") ?? "";
       expect(a.dataset.migrationStatus, `${a.textContent} (${href})`).toBe(getNavTargetStatus(href).toLowerCase().replace("_", "-"));
     }
-    expect(links.filter((a) => a.dataset.migrationStatus === "migrated").map((a) => a.textContent)).toContain("Quản lý lớp học");
+    expect(links.filter((a) => a.dataset.migrationStatus === "migrated").map((a) => a.textContent)).toContain("Lớp học");
     expect(links.filter((a) => a.dataset.migrationStatus === "unknown").map((a) => a.textContent)).toEqual(["Yêu cầu hỗ trợ"]);
-    expect(links.filter((a) => a.dataset.migrationStatus === "external").map((a) => a.textContent)).toEqual(["Quản lý người dùng"]);
+    expect(links.filter((a) => a.dataset.migrationStatus === "external").map((a) => a.textContent)).toEqual(["Người dùng"]);
   });
 
   it("lưu và khôi phục vị trí cuộn của menu bằng khóa riêng của Admin", () => {
@@ -158,7 +211,8 @@ describe("ManagementSidebar — khu vực Giảng viên", () => {
 
   it("đăng xuất giống Admin", async () => {
     const store = renderSidebar("instructor");
-    await userEvent.click(screen.getByRole("link", { name: "Đăng xuất" }));
+    await userEvent.click(screen.getByRole("button", { name: "Tài khoản" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
     await waitFor(() => expect(assign).toHaveBeenCalledWith(expect.stringMatching(/^\/oauth2\/sign_out\?rd=/)));
     expect(store.getState().auth.status).toBe("signed-out");
   });
@@ -205,11 +259,11 @@ describe("chuông thông báo và huy hiệu — có dữ liệu (mock ở lớp
     ...over,
   });
 
-  it("Admin: số chưa đọc hiện ở chuông và ở 'Quản lý thông báo'; >99 hiện '99+'", async () => {
+  it("Admin: số chưa đọc hiện ở chuông và ở 'Thông báo'; >99 hiện '99+'", async () => {
     vi.mocked(getUnreadCount).mockResolvedValue(150);
     renderSidebar();
     await waitFor(() => expect(document.querySelector(".noti-badge")?.textContent).toBe("99+"));
-    const badge = within(screen.getByText("Quản lý thông báo").closest("a")!).getByTestId("menu-unread-badge");
+    const badge = within(screen.getByRole("link", { name: /Thông báo.*99\+/ })).getByTestId("menu-unread-badge");
     expect(badge).toHaveTextContent("99+");
     // Chỉ MỘT mục có huy hiệu ở Admin.
     expect(screen.getAllByTestId("menu-unread-badge")).toHaveLength(1);

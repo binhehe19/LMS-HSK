@@ -9,34 +9,27 @@
 //  - Sidebar Teacher-manager/Collaborator: quyền chưa xác minh.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, type MouseEvent, type UIEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { MANAGEMENT_AREAS } from "@/components/management/management-areas";
 import { isNavItemActive } from "@/components/management/management-nav";
-import { SidebarNotificationBell } from "@/components/management/notifications/sidebar-notification-bell";
-import { useUnreadCount } from "@/components/management/notifications/use-unread-count";
+import type { UnreadCountState } from "@/components/management/notifications/use-unread-count";
 import { TicketWelcomeToast } from "@/components/management/tickets/ticket-welcome-toast";
 import { useAuthFrontendUrl } from "@/components/management/use-auth-frontend-url";
-import { SidebarCollapseButton, useSidebarCollapse } from "@/components/management/use-sidebar-collapse";
+import { useSidebarCollapse } from "@/components/management/use-sidebar-collapse";
 import { AssetImage } from "@/components/shared/asset-image";
-import { redirectToSignOut } from "@/lib/auth/auth-redirect";
 import type { ManagementArea } from "@/lib/management/area";
 import { getNavTargetStatus } from "@/lib/management/route-registry";
 import { formatUnreadBadge } from "@/lib/notifications/unread-badge";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { signout } from "@/redux/slices/auth-slice";
 
-export function ManagementSidebar({ area }: { area: ManagementArea }) {
+// Chuông thông báo, tìm kiếm, nút thu gọn, hồ sơ, cài đặt và đăng xuất nằm ở ManagementHeader; sidebar chỉ còn thương hiệu + menu. `unread` do khung truyền xuống (huy hiệu menu).
+export function ManagementSidebar({ area, unread }: { area: ManagementArea; unread: UnreadCountState }) {
   const config = MANAGEMENT_AREAS[area];
   const pathname = usePathname();
-  const { collapsed, toggle } = useSidebarCollapse();
+  const { collapsed } = useSidebarCollapse();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.auth.user);
-  const unread = useUnreadCount();
   const unreadBadge = formatUnreadBadge(unread.count);
 
-  // Giống buildAuthAccountProfileUrl / buildAuthAdminUsersUrl của bản cũ (redirect param rỗng).
-  const authAccountProfileUrl = useAuthFrontendUrl("/account/profile", "#");
+  // Giống buildAuthAdminUsersUrl của bản cũ (redirect param rỗng).
   const authAdminUsersUrl = useAuthFrontendUrl("/admin/users", "");
 
   const navItems = useMemo(() => config.buildNav(authAdminUsersUrl), [config, authAdminUsersUrl]);
@@ -50,15 +43,6 @@ export function ManagementSidebar({ area }: { area: ManagementArea }) {
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     sessionStorage.setItem(config.scrollKey, e.currentTarget.scrollTop.toString());
-  };
-
-  const displayName = user?.fullName || user?.email || config.fallbackDisplayName;
-  const displayEmail = user?.email || "";
-
-  const handleLogout = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    dispatch(signout());
-    redirectToSignOut();
   };
 
   return (
@@ -79,15 +63,12 @@ export function ManagementSidebar({ area }: { area: ManagementArea }) {
                 <span className="brand-title">Học Bá</span>
                 <span className="brand-subtitle">{config.brandSubtitle}</span>
               </span>
-              <SidebarNotificationBell unread={unread} listHref={config.notificationListHref} />
             </div>
           </div>
 
           <div className="sidebar-label">
             <h6>Menu chính</h6>
           </div>
-          <SidebarCollapseButton collapsed={collapsed} onClick={toggle} />
-
           <div className="sidebar-middle" ref={scrollRef} onScroll={handleScroll}>
             <ul className="sidebar-menu mb-2 pb-1">
               {navItems.map((menu, index) => {
@@ -149,73 +130,6 @@ export function ManagementSidebar({ area }: { area: ManagementArea }) {
                   </Fragment>
                 );
               })}
-            </ul>
-          </div>
-
-          <div className="sidebar-fixed-bottom">
-            <div className="sidebar-bottom-profile">
-              <span className="avatar avatar-md avatar-rounded flex-shrink-0 position-relative">
-                {user?.avatarUrl ? (
-                  <AssetImage src={user.avatarUrl} alt="avatar" />
-                ) : (
-                  <AssetImage
-                    src="assets/hocba/hocba2co.png"
-                    alt="avatar"
-                    style={{
-                      objectFit: "contain",
-                      padding: "5px",
-                      background: "rgba(255, 255, 255, 0.6)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(255, 255, 255, 0.8)",
-                    }}
-                  />
-                )}
-                <span className="verify-tick">
-                  <i className="isax isax-verify5" />
-                </span>
-              </span>
-              <div className="sidebar-bottom-profile-info">
-                <span className={config.profileNameClass}>{displayName}</span>
-                {displayEmail && <span className="sbp-email">{displayEmail}</span>}
-              </div>
-              <a
-                href={authAccountProfileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sbp-edit"
-                title="Chỉnh sửa hồ sơ"
-              >
-                <i className="isax isax-edit-2" />
-              </a>
-            </div>
-
-            <ul className="sidebar-menu mt-2">
-              <li>
-                <a
-                  href={authAccountProfileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={collapsed ? "Cài đặt" : undefined}
-                  aria-label={collapsed ? "Cài đặt" : undefined}
-                >
-                  <i className="isax isax-setting-25 me-2" />
-                  <span className="sidebar-menu-text">Cài đặt</span>
-                </a>
-              </li>
-              <li>
-                {/* "/login" là trang của Authentication_Frontend (miền khác), không phải route của app này; handler chặn điều hướng mặc định,
-                    gọi logout rồi chuyển sang Auth. Giữ href như HSK cũ (DOM giống hệt). Quy tắc Next khớp nhầm "/login" với route động [...slug]. */}
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-                <a
-                  href="/login"
-                  onClick={handleLogout}
-                  title={collapsed ? "Đăng xuất" : undefined}
-                  aria-label={collapsed ? "Đăng xuất" : undefined}
-                >
-                  <i className="isax isax-logout5 me-2" />
-                  <span className="sidebar-menu-text">Đăng xuất</span>
-                </a>
-              </li>
             </ul>
           </div>
         </div>

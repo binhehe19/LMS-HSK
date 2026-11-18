@@ -75,7 +75,9 @@ describe("màn Tổng quan giảng viên — có dữ liệu (mock ở lớp cli
     // (toast ticket của sidebar có thể chèn <style> + khối cố định vào cùng .row như HSK cũ; chỉ xét hai cột)
     const sidebar = row.querySelector(":scope > .management-sidebar-column")!;
     expect(sidebar).toHaveClass("col-lg-3");
-    expect(sidebar.nextElementSibling).toHaveClass("col-lg-9");
+    // Sau sidebar là thanh đầu trang chung rồi mới tới cột nội dung.
+    expect(sidebar.nextElementSibling).toHaveClass("management-header");
+    expect(sidebar.nextElementSibling?.nextElementSibling).toHaveClass("col-lg-9");
     expect(document.querySelectorAll(".management-sidebar-column")).toHaveLength(1); // sidebar không bị render trùng
     expect(document.querySelector(".welcome-hero-card")).not.toBeNull();
     expect(document.querySelectorAll(".welcome-stat-card")).toHaveLength(4);

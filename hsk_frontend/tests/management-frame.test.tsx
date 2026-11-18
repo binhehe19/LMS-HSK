@@ -27,21 +27,24 @@ function renderFrame(area: "admin" | "instructor") {
 }
 
 describe("ManagementPageFrame + ManagementShell", () => {
-  it("giữ đúng DOM cũ: .content > .container > .row > (sidebar .col-lg-3 + .col-lg-9)", () => {
+  it("khung: .content > .container > .row > (sidebar .col-lg-3 + thanh đầu trang + .col-lg-9)", () => {
     renderFrame("admin");
     const content = document.querySelector(".content.demo-page")!;
     const row = content.querySelector(":scope > .container > .row")!;
-    expect(row.children).toHaveLength(2);
+    expect(row.children).toHaveLength(3);
     expect(row.children[0]).toHaveClass("col-lg-3", "management-sidebar-column");
-    expect(row.children[1]).toHaveClass("col-lg-9");
-    expect(row.children[1]).toContainElement(screen.getByTestId("page-body"));
+    expect(row.children[1]).toHaveClass("management-header");
+    expect(row.children[2]).toHaveClass("col-lg-9");
+    // Thanh đầu trang tách khỏi vùng nội dung: không nằm trong cột nội dung (cột này tự cuộn).
+    expect(row.children[2]).toContainElement(screen.getByTestId("page-body"));
+    expect(row.children[2]).not.toContainElement(row.children[1] as HTMLElement);
     expect(document.querySelector(".main-wrapper .sidebar-overlay")).not.toBeNull();
   });
 
   it("area=admin hiện sidebar Admin; area=instructor hiện sidebar Giảng viên (không lẫn menu)", () => {
     renderFrame("admin");
     expect(screen.getByText("LMS · Admin")).toBeInTheDocument();
-    expect(screen.getByText("Quản lý người dùng")).toBeInTheDocument();
+    expect(screen.getByText("Người dùng")).toBeInTheDocument();
     expect(screen.queryByText("Thông báo của tôi")).toBeNull();
   });
 
@@ -49,7 +52,7 @@ describe("ManagementPageFrame + ManagementShell", () => {
     renderFrame("instructor");
     expect(screen.getByText("LMS · Quản lý")).toBeInTheDocument();
     expect(screen.getByText("Thông báo của tôi")).toBeInTheDocument();
-    expect(screen.queryByText("Quản lý người dùng")).toBeNull();
+    expect(screen.queryByText("Người dùng")).toBeNull();
   });
 
   it("dùng khung ngoài ManagementShell là lỗi lập trình, không âm thầm chọn một vai trò", () => {
