@@ -9,7 +9,7 @@
 // (bài tập gắn qua học phần ở LMS 2.0) → không gửi lên, không đọc lại.
 // Package→Folder→StudySet→Item rút gọn còn Package→resource (phẳng); sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listManagedPackages, syllabusBinding, type ManagedPackage } from "@/lib/api/package-management-client";
+import { listManagedPackages, syllabusBinding, toContentPackage } from "@/lib/api/package-management-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { GrammarPoint, GrammarPointInput } from "@/types/content-grammar";
@@ -107,25 +107,9 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
   };
 }
 
-function toUiPackage(pkg: ManagedPackage): ContentPackage {
-  const version = pkg.draftVersion ?? pkg.publishedVersion;
-  return {
-    id: pkg.id,
-    sessionCount: version?.sessionCount ?? 1,
-    syllabusId: pkg.syllabusId,
-    name: version?.title ?? "",
-    description: version?.description ?? undefined,
-    type: PACKAGE_TYPE,
-    publishStatus: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
-    createdAt: pkg.createdAt,
-    updatedAt: pkg.updatedAt,
-  };
-}
-
 // ---- gói ----
-/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listGrammarPackages(): Promise<ContentPackage[]> {
-  return (await listManagedPackages(PACKAGE_TYPE)).map(toUiPackage);
+  return (await listManagedPackages(PACKAGE_TYPE)).map(toContentPackage);
 }
 
 export async function createGrammarPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
@@ -137,7 +121,7 @@ export async function createGrammarPackage(input: ContentPackageInput, demo: boo
     description: input.description || undefined,
     sessionCount: input.sessionCount,
   });
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 async function ensureDraftVersionId(packageId: string): Promise<string> {
@@ -156,7 +140,7 @@ export async function updateGrammarPackage(packageId: string, input: ContentPack
     sessionCount: input.sessionCount,
   });
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 export async function deleteGrammarPackage(packageId: string, demo: boolean): Promise<void> {

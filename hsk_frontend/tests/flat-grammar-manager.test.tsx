@@ -55,6 +55,14 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+vi.mock("@/lib/api/package-edit-session-client", () => ({
+  packageEditSessionClient: (id: string) => ({
+    acquire: async () => ({ acquired: true }),
+    draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
+    heartbeat: async () => ({ acquired: true, saved: true }),
+    release: async () => undefined,
+  }),
+}));
 vi.mock("@/lib/api/lms-grammar-client", () => ({
   listGrammarPackages: vi.fn(),
   createGrammarPackage: vi.fn(),
@@ -84,7 +92,7 @@ beforeEach(() => {
   vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
   vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
   for (const fn of Object.values(client)) if (typeof fn === "function" && "mockReset" in fn) vi.mocked(fn as unknown as ReturnType<typeof vi.fn>).mockReset();
-  vi.mocked(client.listGrammarPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED" })]);
+  vi.mocked(client.listGrammarPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED", publishedVersion: 2 })]);
   vi.mocked(client.listPackageGrammarPoints).mockResolvedValue([point(2), point(1)]);
   vi.mocked(client.createGrammarPackage).mockResolvedValue(pkg(9));
   vi.mocked(client.deleteGrammarPackage).mockResolvedValue(undefined);
@@ -108,7 +116,12 @@ function renderPage(user = adminUser, area: ManagementArea = "admin") {
   );
 }
 
-const packageRows = () => screen.getAllByTestId("content-package-row");
+const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+async function choosePackageAction(name: string, action: string) {
+  await waitFor(() => expect(screen.getByRole("button", { name: "Tải lại" })).toBeEnabled());
+  await userEvent.click(screen.getByRole("button", { name: `Thao tác ${name}` }));
+  await userEvent.click(await screen.findByRole("menuitem", { name: text => text === action }));
+}
 const modalOk = (modal: HTMLElement, name: RegExp | string) => within(modal).getByRole("button", { name });
 const antModal = () => document.querySelector(".ant-modal") as HTMLElement;
 
@@ -118,17 +131,18 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     expect(client.listGrammarPackages).toHaveBeenCalledWith();
     expect(packageRows()).toHaveLength(2);
-    expect(within(packageRows()[0]).getByTestId("content-package-status")).toHaveTextContent("Draft");
-    expect(within(packageRows()[1]).getByTestId("content-package-status")).toHaveTextContent("Published");
-    expect(screen.getByRole("button", { name: "Tạo package" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý ngữ pháp theo khóa học/ })).toBeInTheDocument();
+    expect(within(packageRows()[0]).getByText("Chưa xuất bản")).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByText("v2")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tạo học phần" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Ngữ pháp" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Học phần ngữ pháp" })).toBeInTheDocument();
     expect(screen.queryByTestId("flat-content-missing")).toBeNull();
   });
 
   it("Admin có nút Publish/Unpublish: xác nhận rồi gọi đúng hàm (packageId, demo), toast, tải lại danh sách", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Publish Gói 1" }));
+    await choosePackageAction("Gói 1", "Xuất bản");
     await waitFor(() => expect(client.publishGrammarPackage).toHaveBeenCalledWith("p1", false));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã được publish');
   });
@@ -137,9 +151,9 @@ describe("cấp gói (Admin)", () => {
     vi.mocked(confirmAction).mockResolvedValueOnce(false);
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     expect(client.deleteGrammarPackage).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     await waitFor(() => expect(client.deleteGrammarPackage).toHaveBeenCalledWith("p1", false));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã xóa thành công!');
   });
@@ -147,11 +161,10 @@ describe("cấp gói (Admin)", () => {
   it("tạo gói qua modal: thiếu tên => toast lỗi; đủ => createGrammarPackage, đóng modal, tải lại", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Tạo package" }));
+    await userEvent.click(screen.getByRole("button", { name: "Tạo học phần" }));
     const modal = antModal();
     // Không còn ô "Loại Package" trong modal — type gán mặc định (GRAMMAR), xác nhận qua createGrammarPackage bên dưới.
-    await userEvent.click(modalOk(modal, "Tạo Package"));
-    expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên package");
+    expect(modalOk(modal, "Tạo Package")).toBeDisabled();
     expect(client.createGrammarPackage).not.toHaveBeenCalled();
     await userEvent.type(within(modal).getByLabelText("Tên Package"), "  Ngữ pháp HSK 4  ");
     await userEvent.click(modalOk(modal, "Tạo Package"));
@@ -161,15 +174,17 @@ describe("cấp gói (Admin)", () => {
 });
 
 describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
-  it("bấm gói => push ?packageId; tải mục qua listPackageGrammarPoints; breadcrumb về cấp gói", async () => {
+  it("chọn Chỉnh sửa từ bảng và quay lại danh sách sau khi lưu nháp", async () => {
     renderPage();
-    await userEvent.click(await screen.findByText("Gói 1"));
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Chỉnh sửa");
     expect(nav.push.at(-1)).toBe("/grammar/manage?packageId=p1");
     await screen.findAllByText("Điểm 1");
-    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1");
-    expect(screen.getAllByText("Gói 1").length).toBeGreaterThan(0);
-    await userEvent.click(screen.getByRole("button", { name: /Quản lý Ngữ pháp/ }));
-    expect(nav.push.at(-1)).toBe("/grammar/manage");
+    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1", 1);
+    expect(screen.getByDisplayValue("Gói 1")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Quay lại" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Lưu nháp và thoát" }));
+    await waitFor(() => expect(nav.push.at(-1)).toBe("/grammar/manage"));
   });
 
   it("vào thẳng URL có packageId (reload) => hiện cấp mục; packageId không tồn tại => khối 'Không tìm thấy'", async () => {
@@ -230,7 +245,7 @@ describe("quyền theo ticket + công tắc ghi", () => {
     renderPage(teacher, "instructor");
     await screen.findByText("Gói 1");
     expect(await screen.findByTestId("flat-content-readonly-alert")).toHaveTextContent("Chế độ Xem duy nhất");
-    expect(screen.queryByRole("button", { name: "Tạo package" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
   });
 
   it("công tắc ghi ĐÓNG (Admin): WriteLockedNotice, không nút ghi", async () => {
@@ -238,7 +253,7 @@ describe("quyền theo ticket + công tắc ghi", () => {
     renderPage();
     await screen.findByText("Gói 1");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
-    expect(screen.queryByRole("button", { name: "Tạo package" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
   });
 });
 

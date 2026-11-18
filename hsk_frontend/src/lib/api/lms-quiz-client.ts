@@ -17,7 +17,7 @@
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
 //    cấp URL riêng. sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listManagedPackages, syllabusBinding, type ManagedPackage } from "@/lib/api/package-management-client";
+import { listManagedPackages, syllabusBinding, toContentPackage } from "@/lib/api/package-management-client";
 import { ApiError } from "@/lib/api/api-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
@@ -429,25 +429,9 @@ function fromQuizContent(id: string, index: number, content: QuizContent | null,
   };
 }
 
-function toUiPackage(pkg: ManagedPackage): ContentPackage {
-  const version = pkg.draftVersion ?? pkg.publishedVersion;
-  return {
-    id: pkg.id,
-    sessionCount: version?.sessionCount ?? 1,
-    syllabusId: pkg.syllabusId,
-    name: version?.title ?? "",
-    description: version?.description ?? undefined,
-    type: PACKAGE_TYPE,
-    publishStatus: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
-    createdAt: pkg.createdAt,
-    updatedAt: pkg.updatedAt,
-  };
-}
-
 // ---- gói ----
-/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listQuizPackages(): Promise<ContentPackage[]> {
-  return (await listManagedPackages(PACKAGE_TYPE)).map(toUiPackage);
+  return (await listManagedPackages(PACKAGE_TYPE)).map(toContentPackage);
 }
 
 export async function createQuizPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
@@ -459,7 +443,7 @@ export async function createQuizPackage(input: ContentPackageInput, demo: boolea
     description: input.description || undefined,
     sessionCount: input.sessionCount,
   });
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 async function ensureDraftVersionId(packageId: string): Promise<string> {
@@ -478,7 +462,7 @@ export async function updateQuizPackage(packageId: string, input: ContentPackage
     sessionCount: input.sessionCount,
   });
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 export async function deleteQuizPackage(packageId: string, demo: boolean): Promise<void> {

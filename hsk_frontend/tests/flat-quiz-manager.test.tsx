@@ -59,7 +59,18 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
-vi.mock("@/lib/api/package-topics-client", () => ({ packageTopicsClient: { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() } }));
+vi.mock("@/lib/api/package-edit-session-client", () => ({
+  packageEditSessionClient: (id: string) => ({
+    acquire: async () => ({ acquired: true }),
+    draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
+    heartbeat: async () => ({ acquired: true, saved: true }),
+    release: async () => undefined,
+  }),
+}));
+vi.mock("@/lib/api/package-topics-client", () => {
+  const packageTopicsClient = { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() };
+  return { packageTopicsClient, packageTopicsForSession: () => packageTopicsClient };
+});
 vi.mock("@/lib/api/lms-quiz-client", () => ({
   listQuizPackages: vi.fn(),
   createQuizPackage: vi.fn(),
@@ -95,7 +106,7 @@ beforeEach(() => {
   vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
   vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
   for (const fn of Object.values(client)) if (typeof fn === "function" && "mockReset" in fn) vi.mocked(fn as unknown as ReturnType<typeof vi.fn>).mockReset();
-  vi.mocked(client.listQuizPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED" })]);
+  vi.mocked(client.listQuizPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED", publishedVersion: 2, resourceCount: 7, sessionCount: 6 })]);
   vi.mocked(client.listPackageQuizItems).mockResolvedValue([quiz(2, { difficulty: "HARD", durationMinutes: 0, skill: "READING" }), quiz(1)]);
   vi.mocked(client.createQuizPackage).mockResolvedValue(pkg(9));
   vi.mocked(client.deleteQuizPackage).mockResolvedValue(undefined);
@@ -123,7 +134,12 @@ function renderPage(user = adminUser, area: ManagementArea = "admin") {
   );
 }
 
-const packageRows = () => screen.getAllByTestId("content-package-row");
+const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+async function choosePackageAction(name: string, action: string) {
+  await waitFor(() => expect(screen.getByRole("button", { name: "Tải lại" })).toBeEnabled());
+  await userEvent.click(screen.getByRole("button", { name: `Thao tác ${name}` }));
+  await userEvent.click(await screen.findByRole("menuitem", { name: text => text === action }));
+}
 const modalOk = (modal: HTMLElement, name: RegExp | string) => within(modal).getByRole("button", { name });
 const antModal = () => document.querySelector(".ant-modal") as HTMLElement;
 
@@ -133,23 +149,26 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     expect(client.listQuizPackages).toHaveBeenCalledWith();
     expect(packageRows()).toHaveLength(2);
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý bài tập theo khóa học/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Bài tập" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Học phần bài tập" })).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByText("v2")).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByText("7")).toBeInTheDocument();
   });
 
-  it("Kho chỉ liệt kê học phần tự do: không có bộ lọc hay nhãn nguồn giáo trình", async () => {
+  it("hiện bộ lọc giáo trình và nhãn học phần tự do", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    expect(screen.queryByLabelText("Lọc theo giáo trình")).toBeNull();
-    expect(screen.queryByTestId("content-package-syllabus")).toBeNull();
+    expect(screen.getByRole("combobox", { name: "Giáo trình" })).toBeInTheDocument();
+    expect(within(packageRows()[0]).getByText("Học phần tự do")).toBeInTheDocument();
   });
 
   it("xoá gói: huỷ => không gọi API; đồng ý => deleteQuizPackage + toast", async () => {
     vi.mocked(confirmAction).mockResolvedValueOnce(false);
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     expect(client.deleteQuizPackage).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     await waitFor(() => expect(client.deleteQuizPackage).toHaveBeenCalledWith("p1", false));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã xóa thành công!');
   });
@@ -158,11 +177,12 @@ describe("cấp gói (Admin)", () => {
 describe("cấp bài tập qua URL (?packageId=)", () => {
   it("bấm gói => push ?packageId; tải bài tập qua listPackageQuizItems; cột Độ khó/Thời gian/Điểm đạt; liên kết 'Soạn câu hỏi' thêm quizId", async () => {
     renderPage();
-    await userEvent.click(await screen.findByText("Gói 1"));
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Chỉnh sửa");
     expect(nav.push.at(-1)).toBe("/quiz/manage?packageId=p1");
     await screen.findByText("Quiz 1");
-    expect(client.listPackageQuizItems).toHaveBeenCalledWith("p1");
-    const rows = document.querySelectorAll(".ant-table-tbody tr.ant-table-row");
+    expect(client.listPackageQuizItems).toHaveBeenCalledWith("p1", 1);
+    const rows = within(screen.getByRole("list", { name: "Học liệu trong buổi" })).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("Quiz 1");
     expect(rows[0]).toHaveTextContent("Dễ");
     expect(rows[0]).toHaveTextContent("10 phút");
@@ -338,7 +358,8 @@ describe("chủ đề trong gói", () => {
     });
   const openPackage = async () => {
     renderPage();
-    await userEvent.click(await screen.findByText("Gói 1"));
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Chỉnh sửa");
     await screen.findByText("Quiz 1");
   };
 

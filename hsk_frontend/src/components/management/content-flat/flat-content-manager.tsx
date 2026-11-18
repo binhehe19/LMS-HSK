@@ -11,7 +11,7 @@ import { PackageFormModal } from "@/components/management/content-tree/content-e
 import { useFlatContent, type FlatContentClient } from "@/components/management/content-flat/use-flat-content";
 import { FlatItemsBreadcrumbView } from "./flat-items-breadcrumb-view";
 import { PackageWorkspace } from "./package-workspace";
-import { ContentPackagesView } from "@/components/management/content-tree/content-packages-view";
+import { PackageCatalog } from "./package-catalog";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import { confirmAction } from "@/components/shared/confirm-action";
 import { WriteLockedNotice } from "@/components/shared/fetch-state-notice";
@@ -25,11 +25,14 @@ interface ItemModalState<TItem> { mode: Mode; editing: TItem | null; key: number
 
 const bump = <T extends { key: number }>(prev: T | null) => (prev?.key ?? 0) + 1;
 
-export function FlatContentManager<TItem extends ContentItemBase>({ config, client }: { config: ContentModuleConfig<TItem>; client: FlatContentClient<TItem> }) {
+export function FlatContentManager<TItem extends ContentItemBase>({ config, client }: {
+  config: ContentModuleConfig<TItem>; client: FlatContentClient<TItem>;
+}) {
   const tree = useFlatContent(config, client);
   const { labels } = config;
   const { location, level } = tree;
   const ItemsViewComp = FlatItemsBreadcrumbView;
+  const packageType = config.packageTypes[0];
   const editing = tree.edit.status === "ready";
 
   const [packageModal, setPackageModal] = useState<PackageModalState | null>(null);
@@ -85,20 +88,17 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
       </div>
     ) : level === "packages" ? (
       <div className="flashcard-package-type-manager">
-        <ContentPackagesView
-          key="packages"
-          config={config}
+        <PackageCatalog
+          heading={packageType?.label ?? config.title}
+          icon={config.icon}
           state={tree.packages.state}
           packages={tree.packages.list}
-          canWrite={tree.canWrite}
-          canPublish={tree.canPublish}
           busy={tree.busy}
-          onOpen={(pkg) => tree.go(flatPackageLocation(pkg.id))}
-          onCreate={(type) => setPackageModal((prev) => ({ type: type ?? null, key: bump(prev) }))}
-          onEdit={(pkg) => tree.go(flatPackageLocation(pkg.id))}
-          onDelete={(pkg) => void deletePackage(pkg)}
-          onTogglePublish={(pkg) => void togglePublish(pkg)}
-          onImport={() => {}}
+          onCreate={tree.canWrite ? () => setPackageModal(prev => ({ type: packageType?.value ?? null, key: bump(prev) })) : undefined}
+          onOpenReadOnly={tree.canWrite ? undefined : pkg => tree.go(flatPackageLocation(pkg.id))}
+          onEdit={tree.canWrite ? pkg => tree.go(flatPackageLocation(pkg.id)) : undefined}
+          onDelete={tree.canWrite ? pkg => void deletePackage(pkg) : undefined}
+          onTogglePublish={tree.canPublish ? pkg => void togglePublish(pkg) : undefined}
           onRetry={tree.packages.reload}
         />
       </div>

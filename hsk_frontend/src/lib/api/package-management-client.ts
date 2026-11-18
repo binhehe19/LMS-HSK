@@ -3,7 +3,10 @@
 import { lmsClient } from "./lms-client";
 import { listSyllabusVersions } from "./lms-syllabus-client";
 import { assertWriteEnabled } from "./write-gate";
+import type { ContentPackage } from "@/types/content";
 import type { PageResponse } from "@/types/lms";
+
+type ManagedVersion = { title: string | null; description?: string | null; sessionCount?: number | null; level?: string | null; topic?: string | null; version?: number };
 
 export interface ManagedPackage {
   id: string;
@@ -13,8 +16,10 @@ export interface ManagedPackage {
   syllabusId?: string | null;
   draftVersionId?: string | null;
   publishedVersionId?: string | null;
-  draftVersion?: { title: string | null; description?: string | null; sessionCount?: number | null } | null;
-  publishedVersion?: { title: string | null; description?: string | null; sessionCount?: number | null } | null;
+  resourceCount?: number;
+  sessionCount?: number;
+  draftVersion?: ManagedVersion | null;
+  publishedVersion?: ManagedVersion | null;
 }
 export interface PackageLink {
   id: string;
@@ -29,6 +34,31 @@ export interface PackageLink {
   displayOrder: number;
 }
 export const packageTitle = (p: ManagedPackage) => p.draftVersion?.title || p.publishedVersion?.title || p.id;
+
+export function toContentPackage(pkg: ManagedPackage): ContentPackage {
+  const version = pkg.draftVersion ?? pkg.publishedVersion;
+  return {
+    id: pkg.id,
+    type: pkg.type,
+    name: version?.title ?? "",
+    description: version?.description ?? undefined,
+    syllabusId: pkg.syllabusId,
+    resourceCount: pkg.resourceCount,
+    sessionCount: Math.max(1, pkg.sessionCount ?? 0, version?.sessionCount ?? 0),
+    level: version?.level,
+    topic: version?.topic,
+    publishedVersion: pkg.publishedVersion?.version,
+    publishStatus: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
+    createdAt: pkg.createdAt,
+    updatedAt: pkg.updatedAt,
+  };
+}
+
+export function packageResourceTitle(row: PackageLink): string {
+  const content = row.resourceContent as { title?: unknown; word?: unknown } | null;
+  const title = content?.title || content?.word;
+  return row.resourceTitle || (typeof title === "string" && title ? title : row.learningResourceId);
+}
 
 export async function listManagedPackages(type?: string, syllabusId?: string): Promise<ManagedPackage[]> {
   const items: ManagedPackage[] = [];

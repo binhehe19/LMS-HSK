@@ -13,7 +13,7 @@
 //  - Mọi thao tác ghi (attach/sửa nội dung/xoá resource) chỉ áp dụng được lên phiên bản DRAFT của package (backend từ chối nếu không phải draft) → luôn
 //    ensureDraft trước khi ghi. Publish cần khoá chỉnh sửa (POST .../lock lấy sessionToken) trước khi gọi publish.
 import { lmsClient } from "@/lib/api/lms-client";
-import { listManagedPackages, syllabusBinding, type ManagedPackage } from "@/lib/api/package-management-client";
+import { listManagedPackages, syllabusBinding, toContentPackage } from "@/lib/api/package-management-client";
 import { fileUrl } from "@/lib/api/storage-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
@@ -144,25 +144,9 @@ function fromVocabularyContent(id: string, index: number, content: VocabularyCon
   };
 }
 
-function toUiPackage(pkg: ManagedPackage): ContentPackage {
-  const version = pkg.draftVersion ?? pkg.publishedVersion;
-  return {
-    id: pkg.id,
-    sessionCount: version?.sessionCount ?? 1,
-    syllabusId: pkg.syllabusId,
-    name: version?.title ?? "",
-    description: version?.description ?? undefined,
-    type: PACKAGE_TYPE,
-    publishStatus: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
-    createdAt: pkg.createdAt,
-    updatedAt: pkg.updatedAt,
-  };
-}
-
 // ---- gói ----
-/** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listFlashcardPackages(): Promise<ContentPackage[]> {
-  return (await listManagedPackages(PACKAGE_TYPE)).map(toUiPackage);
+  return (await listManagedPackages(PACKAGE_TYPE)).map(toContentPackage);
 }
 
 export async function createFlashcardPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
@@ -174,7 +158,7 @@ export async function createFlashcardPackage(input: ContentPackageInput, demo: b
     description: input.description || undefined,
     sessionCount: input.sessionCount,
   });
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 async function ensureDraftVersionId(packageId: string): Promise<string> {
@@ -193,7 +177,7 @@ export async function updateFlashcardPackage(packageId: string, input: ContentPa
     sessionCount: input.sessionCount,
   });
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
-  return toUiPackage(pkg);
+  return toContentPackage(pkg);
 }
 
 export async function deleteFlashcardPackage(packageId: string, demo: boolean): Promise<void> {

@@ -97,6 +97,8 @@ describe("bố cục sidebar và thanh đầu trang", () => {
   it("ô tìm kiếm lọc menu không phân biệt dấu, Enter chuyển tới mục đầu tiên; không có kết quả thì báo rõ", async () => {
     renderSidebar();
     const search = screen.getByRole("searchbox", { name: "Tìm chức năng" });
+    await userEvent.keyboard("{Control>}k{/Control}");
+    expect(search).not.toHaveFocus();
     await userEvent.type(search, "lop hoc");
     expect(await screen.findByRole("option", { name: /Lớp học/ })).toBeInTheDocument();
     await userEvent.keyboard("{Enter}");
@@ -114,6 +116,7 @@ describe("ManagementSidebar — khu vực Admin", () => {
     expect(screen.getByText("Quản Trị Viên")).toBeInTheDocument();
     expect(screen.getByText("admin@example.test")).toBeInTheDocument();
     expect(screen.getByText("LMS · Admin")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Học Bá" })).toHaveAttribute("src", "/assets/hocba/hb-color.svg");
     const active = document.querySelector(".sidebar-menu a.active");
     expect(active?.textContent).toContain("Lớp học");
   });

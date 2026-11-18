@@ -8,6 +8,10 @@ import type { ContentModule } from "@/lib/tickets/ticket-access";
 export type ContentPublishStatus = "DRAFT" | "PUBLISHED";
 
 export interface ContentPackage {
+  resourceCount?: number;
+  publishedVersion?: number;
+  level?: string | null;
+  topic?: string | null;
   sessionCount?: number;
   syllabusId?: string | null;
   id: string;

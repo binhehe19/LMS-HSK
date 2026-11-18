@@ -3,6 +3,7 @@
 // Thanh đầu trang chung của khu vực quản lý (hàng trên của cột phải trong ManagementPageFrame, tách khỏi vùng nội dung nên luôn hiện): bên trái nút thu gọn/mở rộng
 // sidebar và ô tìm kiếm chức năng, bên phải chuông thông báo và thẻ tài khoản; bấm thẻ tài khoản mở menu có "Cài đặt" và "Đăng xuất". Trước đây các mục này nằm ở sidebar.
 // Số chưa đọc do khung truyền xuống để chuông và huy hiệu menu dùng chung một lần gọi API.
+import { MenuOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { MANAGEMENT_AREAS } from "@/components/management/management-areas";
 import { ManagementHeaderSearch } from "@/components/management/management-header-search";
@@ -61,7 +62,7 @@ export function ManagementHeader({ area, unread }: { area: ManagementArea; unrea
     <header className="management-header" aria-label="Thanh đầu trang">
       <div className="management-header-start">
         <button type="button" className="management-header-toggle" onClick={toggle} aria-label={toggleLabel} aria-expanded={!collapsed} title={toggleLabel}>
-          <i className={`ti ti-${collapsed ? "layout-sidebar-left-expand" : "layout-sidebar-left-collapse"}`} aria-hidden="true" />
+          <MenuOutlined aria-hidden="true" />
         </button>
 
         <ManagementHeaderSearch items={navItems} />

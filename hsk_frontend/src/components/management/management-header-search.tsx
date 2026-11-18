@@ -68,7 +68,7 @@ export function ManagementHeaderSearch({ items }: { items: NavItem[] }) {
       <input
         type="search"
         value={query}
-        placeholder="Tìm chức năng…"
+        placeholder="Tìm kiếm hoặc nhập lệnh…"
         aria-label="Tìm chức năng"
         aria-controls={listId}
         aria-autocomplete="list"

@@ -55,14 +55,9 @@ export function ManagementSidebar({ area, unread }: { area: ManagementArea; unre
       <div className={`col-lg-3 management-sidebar-column${collapsed ? " is-collapsed" : ""}`}>
         <div className="settings-sidebar instructor-sidebar-shell mb-lg-0 theiaStickySidebar">
           <div className="sidebar-fixed-top">
-            <div className="sidebar-brand mb-2" style={{ position: "relative" }}>
-              <span className="sidebar-brand-logo-box">
-                <AssetImage src="assets/hocba/hocbadentrang.png" alt="logo" className="sidebar-brand-logo" />
-              </span>
-              <span className="sidebar-brand-text">
-                <span className="brand-title">Học Bá</span>
-                <span className="brand-subtitle">{config.brandSubtitle}</span>
-              </span>
+            <div className="sidebar-brand mb-2">
+              <AssetImage src="assets/hocba/hb-color.svg" alt="Học Bá" className="sidebar-brand-logo" />
+              <span className="visually-hidden">{config.brandSubtitle}</span>
             </div>
           </div>
 

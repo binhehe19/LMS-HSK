@@ -80,6 +80,14 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+vi.mock("@/lib/api/package-edit-session-client", () => ({
+  packageEditSessionClient: (id: string) => ({
+    acquire: async () => ({ acquired: true }),
+    draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
+    heartbeat: async () => ({ acquired: true, saved: true }),
+    release: async () => undefined,
+  }),
+}));
 vi.mock("@/lib/api/lms-content-client", () => ({
   listFlashcardPackages: vi.fn(),
   createFlashcardPackage: vi.fn(),
@@ -110,7 +118,7 @@ beforeEach(() => {
   vi.mocked(getTickets).mockReset().mockResolvedValue([] as never);
   vi.mocked(confirmAction).mockReset().mockResolvedValue(true);
   for (const fn of Object.values(client)) if (typeof fn === "function" && "mockReset" in fn) vi.mocked(fn as unknown as ReturnType<typeof vi.fn>).mockReset();
-  vi.mocked(client.listFlashcardPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED" })]);
+  vi.mocked(client.listFlashcardPackages).mockResolvedValue([pkg(1), pkg(2, { publishStatus: "PUBLISHED", publishedVersion: 2 })]);
   vi.mocked(client.listPackageItems).mockResolvedValue([card(2), card(1)]);
   vi.mocked(client.createFlashcardPackage).mockResolvedValue(pkg(9));
   vi.mocked(client.deleteFlashcardPackage).mockResolvedValue(undefined);
@@ -134,7 +142,12 @@ function renderPage(user = adminUser, area: ManagementArea = "admin") {
   );
 }
 
-const packageRows = () => screen.getAllByTestId("content-package-row");
+const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+async function choosePackageAction(name: string, action: string) {
+  await waitFor(() => expect(screen.getByRole("button", { name: "Tải lại" })).toBeEnabled());
+  await userEvent.click(screen.getByRole("button", { name: `Thao tác ${name}` }));
+  await userEvent.click(await screen.findByRole("menuitem", { name: text => text === action }));
+}
 const modalOk = (modal: HTMLElement, name: RegExp | string) => within(modal).getByRole("button", { name });
 const antModal = () => document.querySelector(".ant-modal") as HTMLElement;
 
@@ -144,23 +157,24 @@ describe("cấp gói (Admin)", () => {
     await screen.findByText("Gói 1");
     expect(client.listFlashcardPackages).toHaveBeenCalledWith();
     expect(packageRows()).toHaveLength(2);
-    expect(within(packageRows()[0]).getByTestId("content-package-status")).toHaveTextContent("Draft");
-    expect(within(packageRows()[1]).getByTestId("content-package-status")).toHaveTextContent("Published");
+    expect(within(packageRows()[0]).getByText("Chưa xuất bản")).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByText("v2")).toBeInTheDocument();
     // Tab lọc theo loại (Tất Cả/...) đã bỏ — chỉ còn thanh tìm kiếm.
     expect(screen.queryByRole("button", { name: /Tất Cả \(/ })).toBeNull();
-    expect(screen.getByRole("button", { name: "Tạo package" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 5, name: /Quản Lý Packages Flashcard/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tạo học phần" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Flashcard" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Học phần flashcard" })).toBeInTheDocument();
     expect(screen.queryByTestId("flat-content-missing")).toBeNull();
   });
 
   it("Admin có nút Publish/Unpublish: xác nhận rồi gọi đúng hàm (packageId, demo), toast, tải lại danh sách", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Publish Gói 1" }));
+    await choosePackageAction("Gói 1", "Xuất bản");
     await waitFor(() => expect(client.publishFlashcardPackage).toHaveBeenCalledWith("p1", false));
     expect(confirmAction).toHaveBeenCalledWith(expect.objectContaining({ title: "Xác nhận Publish", okText: "Publish" }));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã được publish');
-    await userEvent.click(screen.getByRole("button", { name: "Unpublish Gói 2" }));
+    await choosePackageAction("Gói 2", "Ngừng xuất bản");
     await waitFor(() => expect(client.unpublishFlashcardPackage).toHaveBeenCalledWith("p2", false));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 2" đã chuyển về Draft');
     expect(vi.mocked(client.listFlashcardPackages).mock.calls.length).toBeGreaterThanOrEqual(3);
@@ -170,10 +184,10 @@ describe("cấp gói (Admin)", () => {
     vi.mocked(confirmAction).mockResolvedValueOnce(false);
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     await waitFor(() => expect(confirmAction).toHaveBeenCalledWith(expect.objectContaining({ title: "Xóa Package", danger: true })));
     expect(client.deleteFlashcardPackage).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Xóa Gói 1" }));
+    await choosePackageAction("Gói 1", "Xóa");
     await waitFor(() => expect(client.deleteFlashcardPackage).toHaveBeenCalledWith("p1", false));
     expect(toast.success).toHaveBeenCalledWith('Package "Gói 1" đã xóa thành công!');
   });
@@ -181,11 +195,10 @@ describe("cấp gói (Admin)", () => {
   it("tạo gói qua modal: thiếu tên => toast lỗi không gọi API; đủ => createFlashcardPackage, đóng modal, tải lại", async () => {
     renderPage();
     await screen.findByText("Gói 1");
-    await userEvent.click(screen.getByRole("button", { name: "Tạo package" }));
+    await userEvent.click(screen.getByRole("button", { name: "Tạo học phần" }));
     const modal = antModal();
     // Không còn ô "Loại Package" trong modal — type gán mặc định (VOCABULARY), xác nhận qua createFlashcardPackage bên dưới.
-    await userEvent.click(modalOk(modal, "Tạo Package"));
-    expect(toast.error).toHaveBeenCalledWith("Vui lòng nhập tên package");
+    expect(modalOk(modal, "Tạo Package")).toBeDisabled();
     expect(client.createFlashcardPackage).not.toHaveBeenCalled();
     await userEvent.type(within(modal).getByLabelText("Tên Package"), "  HSK 4  ");
     await userEvent.click(modalOk(modal, "Tạo Package"));
@@ -199,16 +212,17 @@ describe("cấp gói (Admin)", () => {
 describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
   it("bấm gói => push ?packageId; tải mục qua listPackageItems; 'Quay lại' về cấp gói", async () => {
     renderPage();
-    await userEvent.click(await screen.findByText("Gói 1"));
+    await screen.findByText("Gói 1");
+    await choosePackageAction("Gói 1", "Chỉnh sửa");
     expect(nav.push.at(-1)).toBe("/flashcard/manage?packageId=p1");
     await screen.findAllByText("词1");
-    expect(client.listPackageItems).toHaveBeenCalledWith("p1");
-    expect(screen.getByTestId("flat-content-items-count")).toHaveTextContent("2");
+    expect(client.listPackageItems).toHaveBeenCalledWith("p1", 1);
     // sắp theo index: 词1 (index 0) trước 词2
-    const rows = document.querySelectorAll(".ant-table-tbody tr.ant-table-row");
+    const rows = within(screen.getByRole("list", { name: "Học liệu trong buổi" })).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("词1");
     await userEvent.click(screen.getByRole("button", { name: /Quay lại/ }));
-    expect(nav.push.at(-1)).toBe("/flashcard/manage");
+    await userEvent.click(await screen.findByRole("button", { name: "Lưu nháp và thoát" }));
+    await waitFor(() => expect(nav.push.at(-1)).toBe("/flashcard/manage"));
   });
 
   it("vào thẳng URL có packageId (reload) => hiện cấp mục; packageId không tồn tại => khối 'Không tìm thấy' + Quay lại về gốc", async () => {
@@ -277,9 +291,11 @@ describe("quyền theo ticket + công tắc ghi", () => {
     renderPage(teacher, "instructor");
     await screen.findByText("Gói 1");
     expect(await screen.findByTestId("flat-content-readonly-alert")).toHaveTextContent("Chế độ Xem duy nhất");
-    expect(screen.queryByRole("button", { name: "Tạo package" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Publish Gói/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Xóa Gói 1" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Thao tác Gói 1" }));
+    expect(await screen.findByRole("menuitem", { name: "Xem chi tiết" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Xuất bản" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Xóa" })).toBeNull();
   });
 
   it("công tắc ghi ĐÓNG (Admin): WriteLockedNotice, không nút ghi, không Alert ticket", async () => {
@@ -287,7 +303,7 @@ describe("quyền theo ticket + công tắc ghi", () => {
     renderPage();
     await screen.findByText("Gói 1");
     expect(screen.getByTestId("write-locked")).toHaveTextContent("WAITING FOR BACKEND");
-    expect(screen.queryByRole("button", { name: "Tạo package" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tạo học phần" })).toBeNull();
     expect(screen.queryByTestId("flat-content-readonly-alert")).toBeNull();
   });
 });
@@ -298,7 +314,7 @@ describe("trạng thái dữ liệu", () => {
     renderPage();
     const notice = await screen.findByTestId("content-packages-notice");
     expect(notice).toHaveAttribute("data-kind", "waiting");
-    expect(notice).toHaveTextContent("WAITING FOR BACKEND");
+    expect(notice).toHaveTextContent("Chưa kết nối được API học phần.");
     expect(toast.error).not.toHaveBeenCalled();
   });
 

@@ -3,7 +3,7 @@
 import { Alert, Checkbox, Modal, Select } from "antd";
 import { useRef, useState } from "react";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
-import { importPackageResources, listManagedPackages, packageLinks, packageTitle, type PackageLink } from "@/lib/api/package-management-client";
+import { importPackageResources, listManagedPackages, packageLinks, packageResourceTitle, packageTitle } from "@/lib/api/package-management-client";
 
 export function PackageImportModal({ packageId, type, sessionNo, demo, hasLock, onClose, onAdded }: {
   packageId: string; type: string; sessionNo: number; demo: boolean; hasLock?: () => boolean; onClose: () => void; onAdded: () => void;
@@ -16,7 +16,6 @@ export function PackageImportModal({ packageId, type, sessionNo, demo, hasLock, 
   const lock = useRef(false);
   const [error, setError] = useState("");
   const rows = resources.state.kind === "ok" ? resources.state.data : [];
-  const label = (r: PackageLink) => r.resourceTitle || (r.resourceContent && typeof r.resourceContent === "object" ? String((r.resourceContent as Record<string, unknown>).title || (r.resourceContent as Record<string, unknown>).word || r.learningResourceId) : r.learningResourceId);
   const submit = async () => {
     if (lock.current || hasLock?.() === false) return;
     lock.current = true; setBusy(true); setError("");
@@ -40,7 +39,7 @@ export function PackageImportModal({ packageId, type, sessionNo, demo, hasLock, 
     {resources.state.kind === "ok" && !rows.length && <p>Package chưa có học liệu.</p>}
     <div style={{ maxHeight: 450, overflowY: "auto" }}>
       {rows.map(row => <div className="border-bottom py-2" key={row.id}>
-        <Checkbox disabled={busy} checked={selected.has(row.id)} onChange={e => setSelected(prev => { const next = new Set(prev); if (e.target.checked) next.add(row.id); else next.delete(row.id); return next; })}>Buổi {row.sessionNo}: {label(row)}</Checkbox>
+        <Checkbox disabled={busy} checked={selected.has(row.id)} onChange={e => setSelected(prev => { const next = new Set(prev); if (e.target.checked) next.add(row.id); else next.delete(row.id); return next; })}>Buổi {row.sessionNo}: {packageResourceTitle(row)}</Checkbox>
         <details><summary>Xem nội dung</summary><pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(row.resourceContent, null, 2)}</pre></details>
       </div>)}
     </div>
