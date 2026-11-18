@@ -1,5 +1,6 @@
 "use client";
 
+import { PackageImportModal } from "@/components/management/content-flat/package-import-modal";
 import { useState } from "react";
 import { BulkUploadModal } from "@/components/management/lesson-materials-management/bulk-upload-modal";
 import { GroupFormModal } from "@/components/management/lesson-materials-management/group-form-modal";
@@ -16,6 +17,7 @@ type ModalState = { kind: "group"; values: GroupFormValues; key: number } | { ki
  */
 export function LessonMaterialsManagementPageContent() {
   const lm = useLessonMaterials();
+  const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<ModalState>(null);
   const nextKey = (prev: ModalState) => (prev?.key ?? 0) + 1;
@@ -39,6 +41,8 @@ export function LessonMaterialsManagementPageContent() {
 
   return (
     <>
+      {lm.selectedGroup && <div className="d-flex gap-3 p-3"><label>Buổi <input aria-label="Buổi trong học phần" type="number" min={1} value={lm.sessionNo} disabled={lm.busy || importOpen} onChange={e => { const n = Number(e.target.value); if (Number.isInteger(n) && n > 0) lm.setSessionNo(n); }} /></label>{lm.writeEnabled && <button disabled={lm.busy} onClick={() => setImportOpen(true)}>Nhập từ Kho / package khác</button>}</div>}
+      {importOpen && lm.selectedGroup && <PackageImportModal packageId={lm.selectedGroup.id} type={lm.selectedGroup.type} sessionNo={lm.sessionNo} demo={lm.demo} onClose={() => setImportOpen(false)} onAdded={lm.retryDetail} />}
       <LessonMaterialsView
         state={lm.state}
         groups={lm.groups}

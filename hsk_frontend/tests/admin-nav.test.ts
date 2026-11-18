@@ -29,9 +29,9 @@ describe("menu sidebar Admin: khớp golden của M1", () => {
     expect(indices).toEqual(expected);
   });
 
-  it("'Quản lý người dùng' trỏ ra Authentication_Frontend theo URL truyền vào", () => {
-    expect(nav.find((m) => m.title === "Quản lý người dùng")?.href).toBe(golden.authAdminUsersUrl);
-    expect(buildAdminNav("").find((m) => m.title === "Quản lý người dùng")?.href).toBe("");
+  it("'Người dùng' trỏ ra Authentication_Frontend theo URL truyền vào", () => {
+    expect(nav.find((m) => m.title === "Người dùng")?.href).toBe(golden.authAdminUsersUrl);
+    expect(buildAdminNav("").find((m) => m.title === "Người dùng")?.href).toBe("");
   });
 
   it("không còn mục dành riêng cho teacher ('Tổng quan') và không có mục trùng nhãn", () => {

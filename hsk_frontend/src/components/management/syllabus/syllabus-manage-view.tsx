@@ -17,10 +17,9 @@ import { SyllabusDetailPanel } from "@/components/management/syllabus/syllabus-d
 import { SyllabusListTable } from "@/components/management/syllabus/syllabus-list-table";
 import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { PageHeader } from "@/components/shared/page-header";
-import type { ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
-import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
+import type { ScheduleTopicsMap } from "@/components/management/syllabus/use-schedule-resources";
 import type { SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
-import type { SyllabusDetailResponse, SyllabusScheduleItem, SyllabusSummaryResponse, SyllabusVersionResponse } from "@/types/lms";
+import type { SyllabusDetailResponse, SyllabusSummaryResponse, SyllabusVersionResponse } from "@/types/lms";
 
 export type SyllabusManageMode = "list" | "detail" | "invalid-id";
 
@@ -46,12 +45,8 @@ export interface SyllabusManageViewProps {
   onReloadDetail: () => void;
   // module ôn luyện theo buổi
   resourcesState: FetchState<ScheduleResourcesMap>;
-  busyScheduleId: string | null;
   onRetryResources: () => void;
-  onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
-  onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
-  onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
-  topicUi?: ScheduleTopicUi;
+  topics: ScheduleTopicsMap | null;
 }
 
 export function SyllabusManageView(p: SyllabusManageViewProps) {
@@ -102,12 +97,12 @@ export function SyllabusManageView(p: SyllabusManageViewProps) {
                 canManage={p.isAdmin}
                 writeEnabled={p.writeEnabled}
                 resourcesState={p.resourcesState}
-                busyScheduleId={p.busyScheduleId}
+
                 onRetryResources={p.onRetryResources}
-                onAddModule={p.onAddModule}
-                onMoveResource={p.onMoveResource}
-                onDeleteResource={p.onDeleteResource}
-                topicUi={p.topicUi}
+
+
+
+                topics={p.topics}
               />
             )}
           </div>

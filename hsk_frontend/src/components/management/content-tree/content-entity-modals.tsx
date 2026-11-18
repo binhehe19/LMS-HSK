@@ -3,14 +3,18 @@
 // Ba modal Tạo/Sửa gói, thư mục, bộ của nền content-tree — port CreatePackageModal / CreateFolderModal / CreateStudySetWithCardsModal (phần thông tin
 // bộ) của HSK cũ sang antd Modal (khác bản cũ có chủ đích theo quy ước M5: modal tự vẽ bằng div overlay → antd Modal; cùng nhãn/placeholder).
 // Không gọi API: `onSubmit(values)` do container xử lý; giá trị khởi tạo lấy một lần lúc mount (container remount bằng `key` mỗi lần mở).
-import { Modal } from "antd";
+import { Alert, Modal, Select } from "antd";
 import { useState } from "react";
 import type { ContentFolderInput, ContentLabels, ContentPackageInput, ContentSkillOption, ContentStudySetInput } from "@/types/content";
+
+import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
+import { listSyllabuses } from "@/lib/api/lms-syllabus-client";
 
 const LABEL_CLASS = "form-label small fw-700 text-uppercase mb-2";
 const LABEL_STYLE = { letterSpacing: "0.5px" } as const;
 
 export interface PackageFormModalProps {
+  allowSyllabus?: boolean;
   labels: ContentLabels;
   mode: "create" | "edit";
   initialValues: ContentPackageInput;
@@ -19,9 +23,10 @@ export interface PackageFormModalProps {
   onSubmit: (values: ContentPackageInput) => void;
 }
 
-export function PackageFormModal({ labels, mode, initialValues, submitting, onCancel, onSubmit }: PackageFormModalProps) {
+export function PackageFormModal({ labels, mode, initialValues, submitting, onCancel, onSubmit, allowSyllabus = false }: PackageFormModalProps) {
   const [values, setValues] = useState<ContentPackageInput>(initialValues);
   const isEdit = mode === "edit";
+  const syllabuses = useKeyedFetch(allowSyllabus && mode === "create" ? "package-syllabuses" : null, listSyllabuses);
   const noun = labels.package;
   return (
     <Modal
@@ -29,15 +34,21 @@ export function PackageFormModal({ labels, mode, initialValues, submitting, onCa
       open
       centered
       wrapClassName="content-tree-modal"
-      width={550}
+      width={allowSyllabus ? 820 : 550}
       onCancel={onCancel}
       onOk={() => onSubmit(values)}
       okText={submitting ? (isEdit ? "Đang cập nhật..." : "Đang tạo...") : isEdit ? "Cập nhật" : `Tạo ${noun}`}
       cancelText="Hủy"
-      okButtonProps={{ disabled: submitting }}
+      okButtonProps={{ disabled: submitting || !values.name.trim() }}
       confirmLoading={submitting}
     >
       <div data-testid="package-form">
+        {allowSyllabus && <div className="bg-light rounded-3 p-3 mb-4"><strong>1. Thông tin học phần</strong><p className="text-muted mb-0 mt-1">Đặt tên và chọn giáo trình. Sau khi tạo, thêm buổi học và nhập học liệu từ kho hoặc soạn mới.</p></div>}
+        {allowSyllabus && !isEdit && <div className="mb-3">
+          <label className={LABEL_CLASS}>Giáo trình (không chọn = học phần tự do)</label>
+          <Select popupClassName="package-select-popup" aria-label="Giáo trình của học phần" allowClear showSearch optionFilterProp="label" style={{width: "100%"}} value={values.syllabusId} loading={syllabuses.state.kind === "loading"} disabled={submitting} onChange={syllabusId => setValues(v => ({...v, syllabusId}))} options={syllabuses.state.kind === "ok" ? syllabuses.state.data.map(s => ({value:s.id,label:s.name || s.code || s.id})) : []} />
+          {syllabuses.state.kind === "error" && <Alert type="error" message="Không tải được giáo trình" action={<button onClick={syllabuses.reload}>Thử lại</button>} />}
+        </div>}
         <div className="mb-4">
           <label className={LABEL_CLASS} style={LABEL_STYLE} htmlFor="content-package-name">
             Tên {noun}

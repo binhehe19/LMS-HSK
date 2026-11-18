@@ -11,10 +11,14 @@ import { useKeyedFetch } from "@/components/management/notifications/use-keyed-f
 import { useContentAccess } from "@/hooks/use-content-access";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { ApiError } from "@/lib/api/api-client";
+import { attachPackageToSyllabus, copyPackageToSyllabus } from "@/lib/api/package-management-client";
 import { isPublished, sortByIndex } from "@/lib/content/content-tree-model";
-import { FLAT_ROOT_LOCATION, flatHref, flatLevel, readFlatLocation, type FlatContentLocation } from "@/lib/content/flat-content-params";
+import { FLAT_ROOT_LOCATION, flatPackageLocation, flatHref, flatLevel, readFlatLocation, type FlatContentLocation } from "@/lib/content/flat-content-params";
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import { usePackageTopics } from "@/components/management/content-flat/use-package-topics";
+import { usePackageEditSession } from "./use-package-edit-session";
+import type { PackageDraftFields } from "@/lib/api/package-edit-session-client";
+import { packageTopicsForSession } from "@/lib/api/package-topics-client";
 import type { PackageTopicsClient } from "@/lib/api/package-topics-client";
 import { sortByTopic } from "@/lib/content/topic-grouping";
 import type { ContentItemBase, ContentItemInput, ContentModuleConfig, ContentPackage, ContentPackageInput } from "@/types/content";
@@ -27,8 +31,8 @@ export interface FlatContentClient<TItem extends ContentItemBase> {
   deletePackage(packageId: string, demo: boolean): Promise<void>;
   publishPackage(packageId: string, demo: boolean): Promise<void>;
   unpublishPackage(packageId: string, demo: boolean): Promise<void>;
-  listItems(packageId: string): Promise<TItem[]>;
-  createItem(packageId: string, input: ContentItemInput<TItem>, demo: boolean): Promise<TItem>;
+  listItems(packageId: string, sessionNo?: number): Promise<TItem[]>;
+  createItem(packageId: string, input: ContentItemInput<TItem>, demo: boolean, sessionNo?: number): Promise<TItem>;
   updateItem(packageId: string, itemId: string, input: ContentItemInput<TItem>, demo: boolean): Promise<TItem>;
   deleteItem(packageId: string, itemId: string, demo: boolean): Promise<void>;
   /** Chủ đề trong gói (gom và sắp thứ tự mục); không có = module không dùng chủ đề. Mọi module Kho dùng chung `packageTopicsClient`. */
@@ -54,17 +58,22 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
   const { labels } = config;
 
   const { packageId } = location;
+  const [sessionNo, setSessionNo] = useState(1);
+  const sessionTopics = useMemo(() => client.topics ? packageTopicsForSession(sessionNo) : undefined, [client.topics, sessionNo]);
   const packages = useKeyedFetch<ContentPackage[]>(`${config.key}:packages`, () => expectList(client.listPackages(), labels.package.toLowerCase()));
-  const items = useKeyedFetch<TItem[]>(packageId ? `${config.key}:items:${packageId}` : null, () => expectList(client.listItems(packageId ?? ""), labels.item.toLowerCase()));
+  const packageList = packages.state.kind === "ok" ? packages.state.data : (packages.lastData ?? []);
+  const selectedPackage = packageId ? (packageList.find((p) => p.id === packageId) ?? null) : null;
+  const edit = usePackageEditSession(canWrite ? selectedPackage?.id ?? null : null);
+  const visiblePackageId = !edit.status || edit.status === "ready" ? selectedPackage?.id ?? null : null;
+  const viewKey = `${config.key}:${sessionNo}:${edit.draft?.id ?? "read"}`;
+  const items = useKeyedFetch<TItem[]>(visiblePackageId ? `${viewKey}:items:${visiblePackageId}` : null, () => expectList(client.listItems(visiblePackageId ?? "", sessionNo), labels.item.toLowerCase()));
 
   // Chủ đề trong gói (nếu module khai báo): tải lỗi thì màn vẫn hiện mục như trước, chỉ không hiện chủ đề.
-  const topics = usePackageTopics(client.topics, packageId, config.key, demo, items.reload);
+  const topics = usePackageTopics(sessionTopics, visiblePackageId, viewKey, demo, items.reload, edit.hasLock);
 
-  const packageList = packages.state.kind === "ok" ? packages.state.data : (packages.lastData ?? []);
   // Mục theo thứ tự chủ đề rồi theo thứ tự trong gói; mục chưa phân chủ đề đứng cuối.
   const itemList = useMemo(() => (items.state.kind === "ok" ? sortByTopic(sortByIndex(items.state.data), topics.data) : []), [items.state, topics.data]);
 
-  const selectedPackage = packageId ? (packageList.find((p) => p.id === packageId) ?? null) : null;
   const missing: "package" | null = packageId && packages.state.kind === "ok" && !selectedPackage ? "package" : null;
 
   const go = useCallback((next: FlatContentLocation) => router.push(flatHref(pathname, next)), [router, pathname]);
@@ -86,18 +95,62 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     }
   };
 
-  const savePackage = async (input: ContentPackageInput, editing: ContentPackage | null): Promise<boolean> => {
+  const savePackage = async (input: ContentPackageInput): Promise<boolean> => {
     if (!input.name.trim()) {
       toast.error(`Vui lòng nhập tên ${labels.package.toLowerCase()}`);
       return false;
     }
     const body = { ...input, name: input.name.trim(), description: input.description?.trim() || undefined };
-    const result = editing
-      ? await run(`Cập nhật ${labels.package.toLowerCase()} thất bại`, () => client.updatePackage(editing.id, body, demo))
-      : await run(`Không thể tạo ${labels.package.toLowerCase()}`, () => client.createPackage(body, demo));
+    const result = await run(`Không thể tạo ${labels.package.toLowerCase()}`, () => client.createPackage(body, demo));
     if (!result) return false;
-    toast.success(editing ? `Cập nhật ${labels.package.toLowerCase()} thành công!` : `Tạo ${labels.package.toLowerCase()} thành công!`);
+    toast.success(`Tạo ${labels.package.toLowerCase()} thành công!`);
     packages.reload();
+    go(flatPackageLocation(result.id));
+    return true;
+  };
+
+  const saveWorkspace = async (input: ContentPackageInput, publish = false): Promise<boolean> => {
+    if (!selectedPackage || !edit.hasLock() || (publish && !canPublish)) return false;
+    const syllabusId = input.syllabusId;
+    const bind = syllabusId && syllabusId !== selectedPackage.syllabusId
+      ? async () => {
+          try {
+            await attachPackageToSyllabus(selectedPackage.id, syllabusId, demo);
+          } catch (error) {
+            throw new Error(`Đã lưu bản nháp. ${writeErrorMessage(error, "Không đổi được giáo trình.")}`);
+          }
+        }
+      : undefined;
+    const result = await run(
+      publish ? "Không xuất bản được học phần." : "Không lưu được bản nháp.",
+      () => edit.run({ title: input.name.trim(), description: input.description ?? "", sessionCount: input.sessionCount ?? 1 }, bind, publish ? "publish" : undefined),
+    );
+    packages.reload();
+    if (!result) return false;
+    toast.success(publish ? "Đã lưu và xuất bản học phần." : "Đã lưu bản nháp.");
+    if (publish) go(FLAT_ROOT_LOCATION);
+    return true;
+  };
+
+  const discardWorkspace = async () => {
+    if (!edit.hasLock()) return false;
+    const result = await run("Không hủy được bản nháp.", () => edit.run(undefined, undefined, "discard"));
+    if (!result) return false;
+    toast.success("Đã hủy bản nháp.");
+    packages.reload();
+    go(FLAT_ROOT_LOCATION);
+    return true;
+  };
+
+  const heartbeat = (fields?: PackageDraftFields) => edit.run(fields, undefined, undefined, true);
+
+  const copyPackage = async (source: ContentPackage, syllabusId: string): Promise<boolean> => {
+    if (!edit.hasLock()) return false;
+    const copy = await run("Không thể tạo bản sao học phần.", () => copyPackageToSyllabus(source.id, syllabusId, demo));
+    if (!copy) return false;
+    packages.reload();
+    go(flatPackageLocation(copy.id));
+    toast.success("Đã tạo bản sao học phần.");
     return true;
   };
 
@@ -128,11 +181,11 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
       toast.error(invalid);
       return false;
     }
-    if (!packageId) return false;
+    if (!packageId || !edit.hasLock()) return false;
     const body = config.normalizeItemInput(input);
     const result = editing
       ? await run(`Cập nhật ${labels.item.toLowerCase()} thất bại`, () => client.updateItem(packageId, editing.id, body, demo))
-      : await run(`Không thể thêm ${labels.item.toLowerCase()}`, () => client.createItem(packageId, { ...body, index: itemList.length }, demo));
+      : await run(`Không thể thêm ${labels.item.toLowerCase()}`, () => client.createItem(packageId, { ...body, index: itemList.length }, demo, sessionNo));
     if (!result) return false;
     toast.success(editing ? `Cập nhật ${labels.item.toLowerCase()} thành công!` : `Đã thêm ${labels.item.toLowerCase()} mới`);
     items.reload();
@@ -140,7 +193,7 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
   };
 
   const removeItem = async (item: TItem): Promise<boolean> => {
-    if (!packageId) return false;
+    if (!packageId || !edit.hasLock()) return false;
     const result = await run(`Xóa ${labels.item.toLowerCase()} thất bại`, () => client.deleteItem(packageId, item.id, demo));
     if (result === null) return false;
     toast.success(`Đã xóa ${labels.item.toLowerCase()} "${config.itemSummary(item)}"`);
@@ -150,6 +203,7 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
 
   return {
     config,
+    sessionNo, setSessionNo,
     location,
     level,
     go,
@@ -158,6 +212,8 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     demo,
     canWrite,
     canPublish,
+    edit,
+    heartbeat,
     busy: busy || topics.busy,
     packages: { state: packages.state, list: packageList, reload: packages.reload },
     items: { state: items.state, list: itemList, reload: items.reload },
@@ -165,6 +221,9 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     topicUi: topics.topicUi,
     missing,
     savePackage,
+    saveWorkspace,
+    discardWorkspace,
+    copyPackage,
     removePackage,
     togglePublish,
     saveItem,

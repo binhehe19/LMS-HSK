@@ -3,6 +3,7 @@
 // /hanzi/manage/select-type — HanziSelectTypePage của HSK cũ chỉ còn là `navigate('/hanzi/manage', { replace: true })` (bước chọn loại đã gộp vào
 // màn quản lý). Khác bản cũ có chủ đích: giữ URL cũ hoạt động bằng một trang mỏng THẬT "chọn loại gói" (4 loại của WRITING_PACKAGE_TYPES) dẫn sang
 // /hanzi/manage/create-package?type=..., kèm lối về màn quản lý; không gọi API nên không cần hook/quyền (trang tạo gói mới kiểm tra quyền).
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import Link from "next/link";
 import { HANZI_CREATE_PACKAGE_PATH, HANZI_MANAGE_PATH, WRITING_PACKAGE_TYPES } from "@/components/management/content-hanzi/hanzi-config";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
@@ -12,10 +13,8 @@ export function HanziSelectTypePageContent() {
     <ManagementPageFrame contentClassName="manage-hanzi-page content-tree-page">
       <div className="card manage-lp-container border-0 shadow-sm" data-testid="hanzi-select-type">
         <div className="manage-lp-header px-4 pt-4 border-0">
-          <div className="d-flex align-items-center gap-3 mb-3">
-            <Link href={HANZI_MANAGE_PATH} prefetch={false} className="btn btn-sm btn-icon btn-light rounded-circle" aria-label="Quay lại">
-              <i className="isax isax-arrow-left" />
-            </Link>
+          <div className="d-flex align-items-center flex-wrap gap-3 mb-3">
+            <ManagementBackButton href={HANZI_MANAGE_PATH} />
             <div>
               <h5 className="section-title mb-1 fw-800">
                 <i className="isax isax-edit-2 me-2 text-primary" />

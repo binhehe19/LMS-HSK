@@ -1,8 +1,6 @@
-// Test VocabSetManagePageContent (/vocab-set/manage) — biến thể nhãn của FlashcardManagePageContent, giờ cũng dùng FlatContentManager +
-// lms-content-client.ts (API thật repo-lms) thay vì ContentTreeManager/content-tree-client.ts (mock). Chỉ kiểm tra phần khác Flashcard
-// (nhãn/tiêu đề/class trang, không thẻ lật) — phần chung (CRUD gói/mục, quyền, trạng thái dữ liệu) đã có đủ ở tests/flat-content-manager.test.tsx
-// vì dùng chung VOCAB_SET_CONFIG = {...FLASHCARD_CONFIG, nhãn khác} và chung client.
+// Mount the real vocabulary workspace and inject the server's lock decision.
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useSyncExternalStore } from "react";
 import { Provider } from "react-redux";
 import { toast } from "sonner";
@@ -46,6 +44,8 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+const editApi = vi.hoisted(() => ({ acquire: vi.fn(), draft: vi.fn(), release: vi.fn() }));
+vi.mock("@/lib/api/package-edit-session-client", () => ({ packageEditSessionClient: () => editApi }));
 vi.mock("@/lib/api/lms-content-client", () => ({
   listFlashcardPackages: vi.fn(),
   createFlashcardPackage: vi.fn(),
@@ -76,6 +76,9 @@ beforeEach(() => {
   for (const fn of Object.values(client)) if (typeof fn === "function" && "mockReset" in fn) vi.mocked(fn as unknown as ReturnType<typeof vi.fn>).mockReset();
   vi.mocked(client.listFlashcardPackages).mockResolvedValue([pkg(1)]);
   vi.mocked(client.listPackageItems).mockResolvedValue([card(1)]);
+  editApi.acquire.mockReset().mockResolvedValue({ acquired: true });
+  editApi.draft.mockReset().mockResolvedValue({ id: "draft-p1", title: "Bản nháp đang soạn" });
+  editApi.release.mockReset().mockResolvedValue(undefined);
   for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
   nav.set("/vocab-set/manage?packageId=p1");
 });
@@ -91,15 +94,30 @@ function renderPage() {
 }
 
 describe("biến thể Bộ từ vựng (/vocab-set/manage)", () => {
-  it("cùng dữ liệu/dịch vụ Flashcard (lms-content-client.ts) nhưng tiêu đề/nhãn khác, class trang manage-vocabulary-page, không thẻ lật", async () => {
+  it("mở bản nháp dưới khóa phiên và tải từ vựng theo buổi", async () => {
     renderPage();
+    const input = await screen.findByDisplayValue("Bản nháp đang soạn");
     await screen.findByText("词1");
     expect(client.listFlashcardPackages).toHaveBeenCalledWith();
-    expect(client.listPackageItems).toHaveBeenCalledWith("p1");
-    expect(screen.getByRole("heading", { level: 5, name: /Quản lý Từ vựng/ })).toBeInTheDocument();
+    expect(client.listPackageItems).toHaveBeenCalledWith("p1", 1);
+    expect(input).toBeEnabled();
     expect(document.querySelector(".content.manage-vocabulary-page")).not.toBeNull();
-    expect(screen.getByText("Tổng số từ:")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Thêm từ" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Thêm học liệu" })).toBeInTheDocument();
     expect(screen.queryByTestId("flashcard-preview")).toBeNull();
+  });
+
+  it("hiện màn khóa riêng và mở trình soạn khi thử lại thành công", async () => {
+    editApi.acquire.mockResolvedValueOnce({ acquired: false });
+    renderPage();
+    expect(await screen.findByRole("heading", { name: "Học phần đang được soạn" })).toBeInTheDocument();
+    expect(screen.getByText(/đang được chỉnh sửa trong một phiên khác/)).toBeInTheDocument();
+    expect(editApi.draft).not.toHaveBeenCalled();
+    expect(client.listPackageItems).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Tên học phần")).not.toBeInTheDocument();
+    expect(screen.queryByText("Buổi học & học liệu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quay lại" })).toBeEnabled();
+    await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+    expect(await screen.findByDisplayValue("Bản nháp đang soạn")).toBeEnabled();
+    expect(await screen.findByText("词1")).toBeInTheDocument();
   });
 });

@@ -22,7 +22,7 @@ function summaryOf(word: Vocabulary): { pinyin: string; meaning: string } {
   return { pinyin: primary?.pinyin ?? "", meaning: primary?.meanings?.[0]?.meaning ?? "" };
 }
 
-export function DictionaryWordPickerModal({ open, pkg, items, demo, onClose, onAdded }: ItemPickerProps<FlashcardCard>) {
+export function DictionaryWordPickerModal({ open, pkg, items, demo, hasLock, onClose, onAdded, sessionNo = 1 }: ItemPickerProps<FlashcardCard>) {
   const [keyword, setKeyword] = useState("");
   const [applied, setApplied] = useState("");
   const [page, setPage] = useState(0);
@@ -51,10 +51,10 @@ export function DictionaryWordPickerModal({ open, pkg, items, demo, onClose, onA
   };
 
   const submit = async () => {
-    if (!pkg || selected.size === 0 || busy) return;
+    if (!pkg || selected.size === 0 || busy || hasLock?.() === false) return;
     setBusy(true);
     try {
-      const result = await addDictionaryWordsToPackage(pkg.id, Array.from(selected, ([id, label]) => ({ id, label })), demo);
+      const result = await addDictionaryWordsToPackage(pkg.id, Array.from(selected, ([id, label]) => ({ id, label })), demo, sessionNo);
       if (result.added > 0) toast.success(`Đã thêm ${result.added} từ vào bộ`);
       result.failed.forEach((f) => toast.error(`Không thêm được "${f.label}": ${f.message}`));
       if (result.added > 0) onAdded();

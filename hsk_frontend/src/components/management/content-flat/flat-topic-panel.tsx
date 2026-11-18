@@ -3,14 +3,15 @@
 // Chủ đề trong gói của màn Kho phẳng: khối quản lý chủ đề (thêm, đổi tên, xóa, lên/xuống) + cột "Chủ đề" trong bảng mục để chuyển mục sang chủ đề
 // khác. Dùng lại hộp nhập tên chủ đề của màn lịch giáo trình. Chủ đề chỉ để gom và sắp thứ tự mục, không phải một cấp chứa riêng.
 import { useState } from "react";
-import type { TableColumnType } from "antd";
+import styles from "./package-workspace.module.css";
+import { Select, type TableColumnType } from "antd";
 import { TopicTitleModal } from "@/components/management/syllabus/topic-title-modal";
 import { confirmAction } from "@/components/shared/confirm-action";
 import type { ContentItemBase, FlatTopic, FlatTopicUi } from "@/types/content";
 
 type TitleTarget = { mode: "create" } | { mode: "rename"; topic: FlatTopic };
 
-export function FlatTopicPanel({ ui, canWrite, busy }: { ui: FlatTopicUi; canWrite: boolean; busy: boolean }) {
+export function FlatTopicPanel({ ui, canWrite, busy, compact = false }: { compact?: boolean; ui: FlatTopicUi; canWrite: boolean; busy: boolean }) {
   const [target, setTarget] = useState<TitleTarget | null>(null);
   const { topics } = ui;
 
@@ -32,19 +33,19 @@ export function FlatTopicPanel({ ui, canWrite, busy }: { ui: FlatTopicUi; canWri
   };
 
   return (
-    <div className="card border-0 shadow-sm rounded-4 mb-4" data-testid="flat-topic-panel">
-      <div className="card-header bg-white py-3 border-bottom px-4 d-flex justify-content-between align-items-center">
-        <h6 className="fw-800 mb-0 text-uppercase small" style={{ color: "#1e293b", letterSpacing: "0.5px" }}>
+    <div className={compact ? "mb-3 border-bottom" : "card border-0 shadow-sm rounded-4 mb-4"} data-testid="flat-topic-panel">
+      <div className={`d-flex flex-wrap gap-2 justify-content-between align-items-center ${compact ? "pb-3" : "card-header bg-white py-3 border-bottom px-4"}`}>
+        <h6 className={compact ? styles.topicTitle : "fw-800 mb-0 text-uppercase small"}>
           Chủ đề ({topics.length})
         </h6>
         {canWrite && (
-          <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" onClick={() => setTarget({ mode: "create" })} disabled={busy} data-testid="flat-topic-add">
+          <button type="button" className={compact ? `btn btn-outline-primary ${styles.resourceAction}` : "btn btn-sm btn-outline-primary rounded-pill px-3"} onClick={() => setTarget({ mode: "create" })} disabled={busy} data-testid="flat-topic-add">
             <i className="isax isax-add-circle me-1" />
             Thêm chủ đề
           </button>
         )}
       </div>
-      <div className="card-body p-3">
+      <div className={compact ? "pb-2" : "card-body p-3"}>
         {topics.length === 0 ? (
           <p className="text-muted small mb-0">Chưa có chủ đề. Thêm chủ đề để gom các mục theo nhóm; mục chưa phân chủ đề vẫn hiện bình thường.</p>
         ) : (
@@ -82,10 +83,25 @@ export function FlatTopicPanel({ ui, canWrite, busy }: { ui: FlatTopicUi; canWri
 }
 
 /** Ô chọn chủ đề của một mục (chỉ đọc khi không có quyền ghi). Dùng ở bảng antd (topicColumn) và bảng riêng của màn tài liệu học tập. */
-export function FlatTopicSelect({ ui, itemId, canWrite, busy }: { ui: FlatTopicUi; itemId: string; canWrite: boolean; busy: boolean }) {
+export function FlatTopicSelect({ ui, itemId, canWrite, busy, inCard = false }: { ui: FlatTopicUi; itemId: string; canWrite: boolean; busy: boolean; inCard?: boolean }) {
   const current = ui.topicOf(itemId);
   const name = ui.topics.find((t) => t.id === current)?.title;
   if (!canWrite) return <span className="text-muted small">{name ?? "Chưa phân chủ đề"}</span>;
+  if (inCard) {
+    return (
+      <Select
+        variant="filled"
+        size="small"
+        popupClassName="package-select-popup"
+        value={current ?? ""}
+        options={[{ value: "", label: "Chưa phân chủ đề" }, ...ui.topics.map(t => ({ value: t.id, label: t.title }))]}
+        onChange={value => ui.onAssign(itemId, value || null)}
+        disabled={busy}
+        aria-label="Chủ đề của mục"
+        data-testid="flat-topic-select"
+      />
+    );
+  }
   return (
     <select className="form-select form-select-sm" value={current ?? ""} onChange={(e) => ui.onAssign(itemId, e.target.value || null)} disabled={busy} aria-label="Chủ đề của mục" data-testid="flat-topic-select">
       <option value="">Chưa phân chủ đề</option>

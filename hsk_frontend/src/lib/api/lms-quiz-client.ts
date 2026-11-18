@@ -17,7 +17,7 @@
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
 //    cấp URL riêng. sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listFreeContentPackages } from "@/lib/api/lms-package-list";
+import { listManagedPackages, syllabusBinding, type ManagedPackage } from "@/lib/api/package-management-client";
 import { ApiError } from "@/lib/api/api-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
@@ -27,9 +27,10 @@ const PACKAGE_TYPE = "ASSESSMENT";
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface BackendPackageVersion {
+  sessionCount?: number;
   id: string;
   title: string | null;
-  description: string | null;
+  description?: string | null;
 }
 interface BackendPackage {
   id: string;
@@ -136,6 +137,7 @@ interface BackendLearningResource {
   skill?: string | null;
 }
 interface BackendPackageVersionResource {
+  sessionNo: number;
   id: string;
   learningResourceId: string;
   learningResourceVersionId: string;
@@ -427,10 +429,12 @@ function fromQuizContent(id: string, index: number, content: QuizContent | null,
   };
 }
 
-function toUiPackage(pkg: BackendPackage): ContentPackage {
+function toUiPackage(pkg: ManagedPackage): ContentPackage {
   const version = pkg.draftVersion ?? pkg.publishedVersion;
   return {
     id: pkg.id,
+    sessionCount: version?.sessionCount ?? 1,
+    syllabusId: pkg.syllabusId,
     name: version?.title ?? "",
     description: version?.description ?? undefined,
     type: PACKAGE_TYPE,
@@ -443,7 +447,7 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 // ---- gói ----
 /** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listQuizPackages(): Promise<ContentPackage[]> {
-  return (await listFreeContentPackages<BackendPackage>(PACKAGE_TYPE)).map(toUiPackage);
+  return (await listManagedPackages(PACKAGE_TYPE)).map(toUiPackage);
 }
 
 export async function createQuizPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
@@ -451,7 +455,9 @@ export async function createQuizPackage(input: ContentPackageInput, demo: boolea
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: PACKAGE_TYPE,
     title: input.name,
+    ...await syllabusBinding(input.syllabusId),
     description: input.description || undefined,
+    sessionCount: input.sessionCount,
   });
   return toUiPackage(pkg);
 }
@@ -469,6 +475,7 @@ export async function updateQuizPackage(packageId: string, input: ContentPackage
   await lmsClient.put(`/content-packages/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(versionId)}`, {
     title: input.name,
     description: input.description || undefined,
+    sessionCount: input.sessionCount,
   });
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
   return toUiPackage(pkg);
@@ -505,9 +512,10 @@ async function resolveVersionAndLinks(packageId: string): Promise<{ versionId: s
   return { versionId, links };
 }
 
-export async function listPackageQuizItems(packageId: string): Promise<QuizItem[]> {
+export async function listPackageQuizItems(packageId: string, sessionNo?: number): Promise<QuizItem[]> {
   const { links } = await resolveVersionAndLinks(packageId);
   return links
+    .filter(link => sessionNo === undefined || link.sessionNo === sessionNo)
     .map((link) => fromQuizContent(link.learningResourceId, link.displayOrder, link.resourceContent, link.skill))
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
@@ -530,7 +538,7 @@ function placeholderQuestion(): QuizQuestion {
   };
 }
 
-export async function createQuizItem(packageId: string, input: ContentItemInput<QuizItem>, demo: boolean): Promise<QuizItem> {
+export async function createQuizItem(packageId: string, input: ContentItemInput<QuizItem>, demo: boolean, sessionNo = 1): Promise<QuizItem> {
   assertWriteEnabled("content", demo);
   const versionId = await ensureDraftVersionId(packageId);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
@@ -544,7 +552,7 @@ export async function createQuizItem(packageId: string, input: ContentItemInput<
   await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, {
     learningResourceId: resource.id,
     learningResourceVersionId: resourceVersionId,
-    sessionNo: 1,
+    sessionNo,
     displayOrder: input.index ?? 0,
   });
   return fromQuizContent(resource.id, input.index ?? 0, resource.content, resource.skill);

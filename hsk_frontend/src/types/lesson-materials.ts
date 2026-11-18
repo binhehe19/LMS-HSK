@@ -8,6 +8,7 @@ export type LessonMaterialType = "SLIDE" | "MATERIAL";
 export type LessonMaterialGroupStatus = "DRAFT" | "PUBLISHED";
 
 export interface LessonMaterialGroup {
+  syllabusId?: string | null;
   id: string;
   name: string;
   description?: string | null;
@@ -18,6 +19,7 @@ export interface LessonMaterialGroup {
 }
 
 export interface CreateLessonMaterialGroupRequest {
+  syllabusId?: string;
   type: LessonMaterialType;
   name: string;
   description?: string;

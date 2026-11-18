@@ -1,15 +1,18 @@
 "use client";
 
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import type { ReactNode } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { ScheduleTable } from "@/components/management/syllabus/schedule-table";
 import type { ScheduleResourcesMap } from "@/components/management/syllabus/use-schedule-resources";
 import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
-import type { ScheduleTopicUi } from "@/components/management/syllabus/schedule-topic-ui";
-import type { ScheduleResourceType } from "@/lib/syllabus/schedule-resource-types";
+import type { ScheduleTopicsMap } from "@/components/management/syllabus/use-schedule-resources";
 import { buildSyllabusInfoFields, cloCodes, displayText, formatSyllabusDate, syllabusTitle, type InfoField } from "@/lib/syllabus/syllabus-model";
 import { SYLLABUS_TABS, type SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
-import type { SyllabusDetailResponse, SyllabusScheduleItem, SyllabusVersionResponse } from "@/types/lms";
+import type { SyllabusDetailResponse, SyllabusVersionResponse } from "@/types/lms";
+
+import { SyllabusPackages } from "./syllabus-packages";
+import { useWriteGate } from "@/hooks/use-write-gate";
 
 interface SyllabusDetailPanelProps {
   detailState: FetchState<SyllabusDetailResponse>;
@@ -21,12 +24,8 @@ interface SyllabusDetailPanelProps {
   canManage: boolean;
   writeEnabled: boolean;
   resourcesState: FetchState<ScheduleResourcesMap>;
-  busyScheduleId: string | null;
   onRetryResources: () => void;
-  onAddModule: (item: SyllabusScheduleItem, sessionNo: number) => void;
-  onMoveResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string, direction: -1 | 1) => void;
-  onDeleteResource: (scheduleId: string, type: ScheduleResourceType, resourceId: string) => void;
-  topicUi?: ScheduleTopicUi;
+  topics: ScheduleTopicsMap | null;
 }
 
 interface SectionColumn<T> {
@@ -105,15 +104,16 @@ function VersionsTab({ state, onRetry }: { state: FetchState<SyllabusVersionResp
 }
 
 export function SyllabusDetailPanel(p: SyllabusDetailPanelProps) {
+  const packageWrite = useWriteGate("content");
   const detail = p.detailState;
   return (
     <>
       <div className="toolbar px-4 py-3 border-bottom bg-light">
         <div className="d-flex flex-wrap align-items-center gap-3">
-          <button type="button" className="btn btn-outline-secondary btn-sm rounded-pill px-3" onClick={p.onBack}>
-            <i className="isax isax-arrow-left-2 me-1" />
-            Danh sách giáo trình
-          </button>
+          <ManagementBackButton label="Danh sách giáo trình" onClick={p.onBack} />
+          <h5 className="mb-0 fw-700" data-testid={detail.kind === "ok" ? "syllabus-title" : undefined}>
+            {detail.kind === "ok" ? syllabusTitle(detail.data) : "Chi tiết giáo trình"}
+          </h5>
           <button type="button" className="btn btn-outline-secondary btn-sm rounded-pill px-3" onClick={p.onReload} disabled={detail.kind === "loading"}>
             <i className="isax isax-arrow-2 me-1" />
             Tải lại
@@ -138,12 +138,10 @@ export function SyllabusDetailPanel(p: SyllabusDetailPanelProps) {
         {detail.kind === "ok" && (
           <div className="syllabus-detail-panel p-3 p-lg-4">
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-              <h5 className="mb-0 fw-700" data-testid="syllabus-title">
-                {syllabusTitle(detail.data)}
-              </h5>
               <span className="text-muted small">{[detail.data.code, detail.data.educationLevelName, detail.data.status].filter(Boolean).join(" · ")}</span>
             </div>
 
+            <SyllabusPackages syllabusId={detail.data.id} canWrite={p.canManage && p.writeEnabled} demo={packageWrite.demo} onChanged={p.onRetryResources} />
             <ul className="nav nav-tabs syllabus-tabs" role="tablist">
               {SYLLABUS_TABS.map((t) => (
                 <li className="nav-item" key={t.key} role="presentation">
@@ -190,14 +188,12 @@ export function SyllabusDetailPanel(p: SyllabusDetailPanelProps) {
               <ScheduleTable
                 detail={detail.data}
                 resourcesState={p.resourcesState}
-                busyScheduleId={p.busyScheduleId}
-                canManage={p.canManage}
-                writeEnabled={p.writeEnabled}
+
                 onRetryResources={p.onRetryResources}
-                onAddModule={p.onAddModule}
-                onMoveResource={p.onMoveResource}
-                onDeleteResource={p.onDeleteResource}
-                topicUi={p.topicUi}
+
+
+
+                topics={p.topics}
               />
             )}
 

@@ -3,6 +3,7 @@
 // Giao diện thuần của trang tạo gói luyện viết — port create-package.tsx (HanziCreatePackage) của HSK cũ: card có nút quay lại + "Tạo gói mới",
 // ba trường Tên gói*/Loại gói*/Mô tả, hai nút Hủy/Tạo gói. Không gọi API; container (hanzi-create-package-page-content.tsx) xử lý submit.
 // Khác bản cũ có chủ đích: loại gói là danh sách cố định 4 loại với nhãn tiếng Việt (bản cũ gọi GET /packages/types rồi hiện mã thô "LEARNING PATH").
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import type { ContentPackageInput, ContentPackageTypeMeta } from "@/types/content";
@@ -28,10 +29,8 @@ export function HanziCreatePackageForm({ values, types, disabled, submitting, ca
   return (
     <div className="card border-0 shadow-sm rounded-3" data-testid="hanzi-create-package">
       <div className="card-header bg-white border-bottom-0 pt-4 px-4">
-        <div className="d-flex align-items-center gap-3">
-          <Link href={cancelHref} prefetch={false} className="btn btn-icon btn-light btn-sm rounded-circle" aria-label="Quay lại">
-            <i className="isax isax-arrow-left" />
-          </Link>
+        <div className="d-flex align-items-center flex-wrap gap-3">
+          <ManagementBackButton href={cancelHref} />
           <div>
             <h4 className="fw-bold mb-1">Tạo gói mới</h4>
             <p className="text-muted mb-0 small">Điền thông tin để tạo gói luyện viết mới</p>

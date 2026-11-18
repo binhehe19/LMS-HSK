@@ -60,7 +60,7 @@ const FLASHCARD_COLUMNS: ContentItemColumn<FlashcardCard>[] = [
       <div className="d-flex align-items-center gap-3">
         <CardThumb card={card} />
         <div>
-          <div className="fw-800 fs-5 text-dark flashcard-term-cell">{card.term}</div>
+          <div className="fw-semibold text-dark flashcard-term-cell">{card.term}</div>
           <div className="text-muted">{card.pinyin || "Chưa có pinyin"}</div>
           {card.wordType && <div className="small text-muted">{card.wordType}</div>}
         </div>
@@ -70,7 +70,7 @@ const FLASHCARD_COLUMNS: ContentItemColumn<FlashcardCard>[] = [
   {
     key: "meaning",
     title: "Nghĩa",
-    render: (card) => (
+    render: (card) => (card.meaning || card.example) && (
       <>
         <div className="fw-700" style={{ color: "#D4AF37" }}>
           {card.meaning}
@@ -87,6 +87,7 @@ const FLASHCARD_COLUMNS: ContentItemColumn<FlashcardCard>[] = [
   {
     key: "audio",
     title: "Phát âm",
+    cardAction: true,
     width: 90,
     render: (card) => <RowAudioButton card={card} />,
   },

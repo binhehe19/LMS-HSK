@@ -8,6 +8,8 @@ import type { ContentModule } from "@/lib/tickets/ticket-access";
 export type ContentPublishStatus = "DRAFT" | "PUBLISHED";
 
 export interface ContentPackage {
+  sessionCount?: number;
+  syllabusId?: string | null;
   id: string;
   name: string;
   description?: string;
@@ -20,6 +22,8 @@ export interface ContentPackage {
 }
 
 export interface ContentPackageInput {
+  sessionCount?: number;
+  syllabusId?: string;
   name: string;
   type: string;
   description?: string;
@@ -123,6 +127,8 @@ export interface ContentItemColumn<TItem extends ContentItemBase> {
   title: string;
   render: (item: TItem) => ReactNode;
   width?: number | string;
+  /** Các ô chứa thao tác nằm cạnh nút sửa/xóa khi hiển thị dưới dạng card. */
+  cardAction?: boolean;
 }
 
 export interface ContentItemFormProps<TItem extends ContentItemBase> {
@@ -192,6 +198,8 @@ export interface ContentModuleConfig<TItem extends ContentItemBase = ContentItem
 
 /** Props của hộp chọn mục có sẵn (FlatContentManager truyền xuống). */
 export interface ItemPickerProps<TItem extends ContentItemBase> {
+  hasLock?: () => boolean;
+  sessionNo?: number;
   open: boolean;
   pkg: ContentPackage | null;
   /** Mục đang có trong gói (để đánh dấu mục đã có). */
@@ -225,6 +233,7 @@ export interface FlatTopicUi {
 
 /** Props của giao diện cấp mục trên nền phẳng (FlatContentManager) — dùng chung cho FlatItemsView và các biến thể riêng từng module. */
 export interface FlatItemsViewProps<TItem extends ContentItemBase> {
+  embedded?: boolean;
   config: ContentModuleConfig<TItem>;
   pkg: ContentPackage | null;
   state: FetchState<TItem[]>;

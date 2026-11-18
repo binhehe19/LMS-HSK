@@ -13,7 +13,7 @@
 //  - Mọi thao tác ghi (attach/sửa nội dung/xoá resource) chỉ áp dụng được lên phiên bản DRAFT của package (backend từ chối nếu không phải draft) → luôn
 //    ensureDraft trước khi ghi. Publish cần khoá chỉnh sửa (POST .../lock lấy sessionToken) trước khi gọi publish.
 import { lmsClient } from "@/lib/api/lms-client";
-import { listFreeContentPackages } from "@/lib/api/lms-package-list";
+import { listManagedPackages, syllabusBinding, type ManagedPackage } from "@/lib/api/package-management-client";
 import { fileUrl } from "@/lib/api/storage-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
@@ -24,9 +24,10 @@ const PACKAGE_TYPE = "VOCABULARY";
 
 // ---- shape thật của repo-lms (chỉ các trường dùng tới) ----
 interface BackendPackageVersion {
+  sessionCount?: number;
   id: string;
   title: string | null;
-  description: string | null;
+  description?: string | null;
 }
 interface BackendPackage {
   id: string;
@@ -50,6 +51,7 @@ interface BackendLearningResource {
   content: VocabularyContent | null;
 }
 interface BackendPackageVersionResource {
+  sessionNo: number;
   id: string;
   learningResourceId: string;
   learningResourceVersionId: string;
@@ -142,10 +144,12 @@ function fromVocabularyContent(id: string, index: number, content: VocabularyCon
   };
 }
 
-function toUiPackage(pkg: BackendPackage): ContentPackage {
+function toUiPackage(pkg: ManagedPackage): ContentPackage {
   const version = pkg.draftVersion ?? pkg.publishedVersion;
   return {
     id: pkg.id,
+    sessionCount: version?.sessionCount ?? 1,
+    syllabusId: pkg.syllabusId,
     name: version?.title ?? "",
     description: version?.description ?? undefined,
     type: PACKAGE_TYPE,
@@ -158,7 +162,7 @@ function toUiPackage(pkg: BackendPackage): ContentPackage {
 // ---- gói ----
 /** Các gói của Kho: học phần tự do (chưa thuộc giáo trình nào). */
 export async function listFlashcardPackages(): Promise<ContentPackage[]> {
-  return (await listFreeContentPackages<BackendPackage>(PACKAGE_TYPE)).map(toUiPackage);
+  return (await listManagedPackages(PACKAGE_TYPE)).map(toUiPackage);
 }
 
 export async function createFlashcardPackage(input: ContentPackageInput, demo: boolean): Promise<ContentPackage> {
@@ -166,7 +170,9 @@ export async function createFlashcardPackage(input: ContentPackageInput, demo: b
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: PACKAGE_TYPE,
     title: input.name,
+    ...await syllabusBinding(input.syllabusId),
     description: input.description || undefined,
+    sessionCount: input.sessionCount,
   });
   return toUiPackage(pkg);
 }
@@ -184,6 +190,7 @@ export async function updateFlashcardPackage(packageId: string, input: ContentPa
   await lmsClient.put(`/content-packages/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(versionId)}`, {
     title: input.name,
     description: input.description || undefined,
+    sessionCount: input.sessionCount,
   });
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
   return toUiPackage(pkg);
@@ -213,17 +220,18 @@ export async function unpublishFlashcardPackage(packageId: string, demo: boolean
 }
 
 // ---- mục (thẻ), phẳng trong gói — sessionNo cố định = 1 ----
-export async function listPackageItems(packageId: string): Promise<FlashcardCard[]> {
+export async function listPackageItems(packageId: string, sessionNo?: number): Promise<FlashcardCard[]> {
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
   const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
   if (!versionId) return [];
   const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`);
   return links
+    .filter(link => sessionNo === undefined || link.sessionNo === sessionNo)
     .map((link) => fromVocabularyContent(link.learningResourceId, link.displayOrder, link.resourceContent))
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 
-export async function createFlashcardItem(packageId: string, input: ContentItemInput<FlashcardCard>, demo: boolean): Promise<FlashcardCard> {
+export async function createFlashcardItem(packageId: string, input: ContentItemInput<FlashcardCard>, demo: boolean, sessionNo = 1): Promise<FlashcardCard> {
   assertWriteEnabled("content", demo);
   const versionId = await ensureDraftVersionId(packageId);
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
@@ -237,7 +245,7 @@ export async function createFlashcardItem(packageId: string, input: ContentItemI
   await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, {
     learningResourceId: resource.id,
     learningResourceVersionId: resourceVersionId,
-    sessionNo: 1,
+    sessionNo,
     displayOrder: input.index ?? 0,
   });
   return fromVocabularyContent(resource.id, input.index ?? 0, resource.content);
@@ -263,7 +271,7 @@ export interface AddWordsResult {
  * `sourceResourceId` trỏ về từ ở từ điển (đồng bộ và sao chép tiến độ đi theo nguồn đó). Từ lỗi không làm dừng các từ còn lại; tạo bản sao xong mà
  * gắn lỗi thì xóa bản sao vừa tạo (không để bản mồ côi).
  */
-export async function addDictionaryWordsToPackage(packageId: string, words: { id: string; label: string }[], demo: boolean): Promise<AddWordsResult> {
+export async function addDictionaryWordsToPackage(packageId: string, words: { id: string; label: string }[], demo: boolean, sessionNo = 1): Promise<AddWordsResult> {
   assertWriteEnabled("content", demo);
   const versionId = await ensureDraftVersionId(packageId);
   const existing = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`);
@@ -277,7 +285,7 @@ export async function addDictionaryWordsToPackage(packageId: string, words: { id
       created = await lmsClient.post<BackendLearningResource>("/learning-resources", { type: PACKAGE_TYPE, content: source.content, publishImmediately: true, inLibrary: false, sourceResourceId: word.id });
       const resourceVersionId = created.publishedVersionId ?? created.draftVersionId;
       if (!resourceVersionId) throw new Error("Không lấy được phiên bản của từ vừa tạo.");
-      await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: created.id, learningResourceVersionId: resourceVersionId, sessionNo: 1, displayOrder: nextOrder++ });
+      await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: created.id, learningResourceVersionId: resourceVersionId, sessionNo, displayOrder: nextOrder++ });
       result.added++;
     } catch (error) {
       if (created) await lmsClient.delete(`/learning-resources/${encodeURIComponent(created.id)}`).catch(() => undefined);

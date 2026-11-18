@@ -15,6 +15,50 @@
   gap: 10px 16px;
 }
 
+.sessionState {
+  justify-self: center;
+  width: min(100%, 560px);
+  margin-block: clamp(24px, 9vh, 88px);
+  padding: clamp(24px, 5vw, 44px);
+  border: 1px solid var(--package-border);
+  border-radius: 20px;
+  background: var(--white, #fff);
+  box-shadow: 0 1px 3px rgb(16 24 40 / 8%);
+  text-align: center;
+}
+
+.sessionMessage {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
+.sessionStateIcon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+  border-radius: 18px;
+  background: var(--package-tint);
+  color: var(--package-accent);
+  font-size: 28px;
+}
+
+.sessionPackage {
+  margin: 0;
+  font-weight: 700;
+}
+
+.sessionStateActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
 .details {
   display: grid;
   gap: 14px;

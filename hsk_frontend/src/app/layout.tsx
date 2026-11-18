@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ReduxProvider } from "@/components/auth/redux-provider";
 import { AntdStaticRender } from "@/components/shared/antd-static-render";
+import { AntdUiProvider } from "@/components/shared/antd-ui-provider";
 
 // Thứ tự nạp CSS cố ý giống LMS_Frontend/src/index.tsx: iconsax -> CSS của từng trang -> bootstrap ->
 // index.scss -> tabler -> fontawesome. Thứ tự này ảnh hưởng độ ưu tiên khi các rule cùng độ đặc hiệu
@@ -24,24 +25,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <head>
-        {/* Cùng nguồn font với LMS_Frontend cũ (Google Fonts). Xem ghi chú ở _variables.scss. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&display=swap"
         />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" />
       </head>
       <body>
         <AntdRegistry>
           {/* antd 5 + React 19: trỏ các API tĩnh (Modal.confirm, message) sang createRoot — xem components/shared/antd-static-render.tsx */}
           <AntdStaticRender />
-          <ReduxProvider>{children}</ReduxProvider>
+          <AntdUiProvider><ReduxProvider>{children}</ReduxProvider></AntdUiProvider>
         </AntdRegistry>
       </body>
     </html>

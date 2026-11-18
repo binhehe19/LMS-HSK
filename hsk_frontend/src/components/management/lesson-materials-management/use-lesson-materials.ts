@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePackageTopics } from "@/components/management/content-flat/use-package-topics";
 import { useKeyedFetch, type FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { useWriteGate } from "@/hooks/use-write-gate";
-import { packageTopicsClient } from "@/lib/api/package-topics-client";
+import { packageTopicsForSession } from "@/lib/api/package-topics-client";
 import { sortByTopic } from "@/lib/content/topic-grouping";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import { createMaterial, createMaterialGroup, deleteMaterial, deleteMaterialGroup, listGroupMaterials, listMaterialGroups, publishMaterialGroup, unpublishMaterialGroup, updateMaterialGroup } from "@/lib/api/lesson-materials-client";
@@ -17,6 +18,7 @@ import type { BulkCreateMaterialResult, BulkItemError, LessonMaterial, LessonMat
 export type MaterialSelection = { id: string } | null;
 
 export interface GroupFormValues {
+  syllabusId?: string;
   id: string | null;
   type: LessonMaterialType;
   name: string;
@@ -57,16 +59,19 @@ function uploadErrorMessage(error: unknown): string {
  */
 export function useLessonMaterials() {
   const { enabled: writeEnabled, demo } = useWriteGate("content");
+  const [sessionNo, setSessionNo] = useState(1);
+  const topicsClient = useMemo(() => packageTopicsForSession(sessionNo), [sessionNo]);
   const storageConfigured = isStorageApiConfigured();
 
   const groupsFetch = useKeyedFetch<LessonMaterialGroup[]>("lesson-materials-groups", listMaterialGroups);
   const groups = groupsFetch.state.kind === "ok" ? groupsFetch.state.data : (groupsFetch.lastData ?? []);
 
-  const [selection, setSelection] = useState<MaterialSelection>(null);
+  const params = useSearchParams();
+  const [selection, setSelection] = useState<MaterialSelection>(() => { const id = params.get("packageId"); return id ? { id } : null; });
   const selectedGroup = selection === null ? null : (groups.find((g) => g.id === selection.id) ?? null);
-  const detailFetch = useKeyedFetch<LessonMaterial[]>(selection === null ? null : `group-materials:${selection.id}`, () => listGroupMaterials(selection!.id));
+  const detailFetch = useKeyedFetch<LessonMaterial[]>(selection === null ? null : `group-materials:${selection.id}:${sessionNo}`, () => listGroupMaterials(selection!.id, sessionNo));
   // Chủ đề của bộ đang chọn (gom tài liệu); tài liệu xếp theo thứ tự chủ đề, chưa phân chủ đề đứng cuối.
-  const topics = usePackageTopics(packageTopicsClient, selection?.id ?? null, "lesson-materials", demo, detailFetch.reload);
+  const topics = usePackageTopics(topicsClient, selection?.id ?? null, `lesson-materials:${sessionNo}`, demo, detailFetch.reload);
   const detailState: FetchState<LessonMaterial[]> =
     selection === null ? { kind: "ok", data: [] } : detailFetch.state.kind === "ok" ? { kind: "ok", data: sortByTopic(detailFetch.state.data, topics.data) } : detailFetch.state;
 
@@ -94,7 +99,11 @@ export function useLessonMaterials() {
     try {
       const description = values.description.trim() || undefined;
       if (values.id) await updateMaterialGroup(values.id, values.type, { name, description }, demo);
-      else await createMaterialGroup({ type: values.type, name, description }, demo);
+      else {
+        const created = await createMaterialGroup({ type: values.type, name, description, syllabusId: values.syllabusId }, demo);
+        setSelection({ id: created.id });
+        setSessionNo(1);
+      }
     } catch (error) {
       toast.error(writeErrorMessage(error, "Không thể lưu bộ tài liệu"));
       return false;
@@ -185,7 +194,7 @@ export function useLessonMaterials() {
       const group = await resolveGroup(values.groupSelection, values.newGroupType, values.newGroupName);
       if (group === false) return false;
       try {
-        await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title, fileId: meta.fileId, filename: meta.filename || file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo);
+        await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title, fileId: meta.fileId, filename: meta.filename || file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo, group.id === selection?.id ? sessionNo : 1);
       } catch (error) {
         toast.error(writeErrorMessage(error, "Không thể thêm tài liệu học tập"));
         return false;
@@ -239,7 +248,7 @@ export function useLessonMaterials() {
         try {
           const meta = await uploadFile(item.file);
           current[i] = { ...current[i], uploadStatus: "uploaded", fileId: meta.fileId };
-          const material = await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title: item.title.trim(), fileId: meta.fileId, filename: meta.filename || item.file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo);
+          const material = await createMaterial(group.id, group.type, group.status === "PUBLISHED", { title: item.title.trim(), fileId: meta.fileId, filename: meta.filename || item.file.name, mimeType: meta.mimeType, sizeBytes: meta.sizeBytes }, demo, group.id === selection?.id ? sessionNo : 1);
           created.push(material);
         } catch (error) {
           current[i] = { ...current[i], uploadStatus: "error", errorMessage: error instanceof Error && error.message ? error.message : uploadErrorMessage(error) };
@@ -257,6 +266,7 @@ export function useLessonMaterials() {
   };
 
   return {
+    sessionNo, setSessionNo, demo,
     state: groupsFetch.state,
     groups,
     refreshing: groupsFetch.state.kind === "loading" && groupsFetch.lastData !== null,
@@ -269,7 +279,7 @@ export function useLessonMaterials() {
     selection,
     selectedGroup,
     detailState,
-    select: (next: MaterialSelection) => setSelection(next),
+    select: (next: MaterialSelection) => { setSelection(next); setSessionNo(1); },
     retryDetail: detailFetch.reload,
     saveGroup,
     togglePublish,

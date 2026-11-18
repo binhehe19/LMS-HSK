@@ -4,8 +4,8 @@
 // danh sách mục (mỗi mục một card với form của module), "Thêm mới", "Nhập nhanh" nhiều mục từ văn bản (bulk import cũ, phía client).
 // Khác bản cũ có chủ đích: chọn gói → thư mục bằng hai select (bản cũ một select thư mục toàn hệ thống); ảnh qua kho lưu trữ (fileId) thay cho URL;
 // lỗi tải/chưa cấu hình là khối thông báo; nút Lưu khoá khi không có quyền (ticket) hay công tắc ghi đóng.
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import { Alert } from "antd";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { type ContentSetEditorMode, type ContentSetSaved, useContentSetEditor } from "@/components/management/content-tree/use-content-set-editor";
@@ -59,10 +59,8 @@ export function ContentSetEditor<TItem extends ContentItemBase>({ config, mode, 
       <div className="card manage-lp-container border-0 shadow-sm" data-testid="content-set-editor" data-mode={mode.kind}>
         <div className="manage-lp-header px-4 pt-4 border-0">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-            <div className="d-flex align-items-center gap-3">
-              <Link href={backHref} prefetch={false} className="btn btn-sm btn-icon btn-light rounded-circle" aria-label="Quay lại">
-                <i className="isax isax-arrow-left" />
-              </Link>
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <ManagementBackButton href={backHref} />
               <h5 className="section-title mb-0 fw-800">{isEdit ? `Chỉnh sửa ${labels.studySet}` : `Tạo ${labels.studySet} mới`}</h5>
             </div>
             {editor.canWrite && draft && (

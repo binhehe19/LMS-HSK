@@ -10,7 +10,7 @@ import type { PackageTopicState, PackageTopicsClient } from "@/lib/api/package-t
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import type { FlatTopic, FlatTopicUi } from "@/types/content";
 
-export function usePackageTopics(api: PackageTopicsClient | undefined, packageId: string | null, key: string, demo: boolean, onWritten?: () => void) {
+export function usePackageTopics(api: PackageTopicsClient | undefined, packageId: string | null, key: string, demo: boolean, onWritten?: () => void, canMutate?: () => boolean) {
   const fetch = useKeyedFetch<PackageTopicState>(packageId && api ? `${key}:topics:${packageId}` : null, () => (api as PackageTopicsClient).list(packageId ?? ""));
   const data = fetch.state.kind === "ok" ? fetch.state.data : null;
   const [busy, setBusy] = useState(false);
@@ -26,7 +26,7 @@ export function usePackageTopics(api: PackageTopicsClient | undefined, packageId
 
     // Một thao tác ghi tại một thời điểm; ghi xong tải lại chủ đề (id có thể đổi khi gói được tạo bản nháp) và gọi onWritten (tải lại mục).
     const mutate = async (fallback: string, work: () => Promise<void>, success?: string): Promise<boolean> => {
-      if (lock.current) return false;
+      if (lock.current || canMutate?.() === false) return false;
       lock.current = true;
       setBusy(true);
       try {
@@ -63,7 +63,7 @@ export function usePackageTopics(api: PackageTopicsClient | undefined, packageId
         void mutate("Không thể chuyển chủ đề", () => api.assign(packageId, itemId, target ? ref(target) : null, demo));
       },
     };
-  }, [api, packageId, data, demo, reload, onWritten]);
+  }, [api, packageId, data, demo, reload, onWritten, canMutate]);
 
   return { data, topicUi, busy };
 }

@@ -13,7 +13,7 @@ function backend(pkg: { draftVersionId: string | null; publishedVersionId: strin
     if (url === "/content-packages/p1") return pkg;
     const topics = /\/versions\/([^/]+)\/topics\?sessionNo=1$/.exec(url);
     if (topics) return topicsByVersion[topics[1]] ?? [];
-    const resources = /\/versions\/([^/]+)\/resources$/.exec(url);
+    const resources = /\/versions\/([^/]+)\/resources\?sessionNo=1$/.exec(url);
     if (resources) return links[resources[1]] ?? [];
     throw Error("Unexpected GET " + url);
   });

@@ -20,7 +20,7 @@ import { FLAT_ROOT_LOCATION, flatPackageLocation } from "@/lib/content/flat-cont
 import type { ContentItemBase, ContentModuleConfig, ContentPackage } from "@/types/content";
 
 type Mode = "create" | "edit";
-interface PackageModalState { mode: Mode; editing: ContentPackage | null; type: string | null; key: number }
+interface PackageModalState { type: string | null; key: number }
 interface ItemModalState<TItem> { mode: Mode; editing: TItem | null; key: number }
 
 const bump = <T extends { key: number }>(prev: T | null) => (prev?.key ?? 0) + 1;
@@ -30,6 +30,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
   const { labels } = config;
   const { location, level } = tree;
   const ItemsViewComp = FlatItemsBreadcrumbView;
+  const editing = tree.edit.status === "ready";
 
   const [packageModal, setPackageModal] = useState<PackageModalState | null>(null);
   const [itemModal, setItemModal] = useState<ItemModalState<TItem> | null>(null);
@@ -65,8 +66,8 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
     if (ok) await tree.togglePublish(pkg);
   };
 
-  const submitPackage = async (values: ContentPackage | null, input: Parameters<typeof tree.savePackage>[0]) => {
-    if (await tree.savePackage(input, values)) setPackageModal(null);
+  const submitPackage = async (input: Parameters<typeof tree.savePackage>[0]) => {
+    if (await tree.savePackage(input)) setPackageModal(null);
   };
   const submitItem = async (input: Parameters<typeof tree.saveItem>[0]) => {
     if (!itemModal) return;
@@ -93,7 +94,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           canPublish={tree.canPublish}
           busy={tree.busy}
           onOpen={(pkg) => tree.go(flatPackageLocation(pkg.id))}
-          onCreate={(type) => setPackageModal((prev) => ({ mode: "create", editing: null, type: type ?? null, key: bump(prev) }))}
+          onCreate={(type) => setPackageModal((prev) => ({ type: type ?? null, key: bump(prev) }))}
           onEdit={(pkg) => tree.go(flatPackageLocation(pkg.id))}
           onDelete={(pkg) => void deletePackage(pkg)}
           onTogglePublish={(pkg) => void togglePublish(pkg)}
@@ -109,7 +110,7 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
         pkg={tree.selectedPackage}
         state={tree.items.state}
         items={tree.items.list}
-        canWrite={tree.canWrite}
+        canWrite={editing}
         busy={tree.busy}
         onCreate={() => (ItemPicker ? setPickerOpen(true) : setItemModal((prev) => ({ mode: "create", editing: null, key: bump(prev) })))}
         onEdit={(item) => setItemModal((prev) => ({ mode: "edit", editing: item, key: bump(prev) }))}
@@ -154,19 +155,30 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
         <div className={tree.selectedPackage ? "card-body p-0" : "card-body p-3"}>
           {level === "items" && tree.selectedPackage ? (
             <PackageWorkspace
-              key={tree.selectedPackage.id}
-              pkg={tree.selectedPackage}
+              key={tree.edit.draft?.id ?? tree.selectedPackage.id}
+              pkg={tree.edit.draft ? {
+                ...tree.selectedPackage,
+                name: tree.edit.draft.title ?? "",
+                description: tree.edit.draft.description ?? "",
+                sessionCount: tree.edit.draft.sessionCount ?? tree.selectedPackage.sessionCount,
+              } : tree.selectedPackage}
               sessionNo={tree.sessionNo}
               onSession={tree.setSessionNo}
-              busy={tree.busy || importOpen || pickerOpen || !!itemModal}
-              canWrite={tree.canWrite}
+              busy={tree.busy || (editing && (importOpen || pickerOpen || !!itemModal))}
+              canWrite={editing}
               canPublish={tree.canPublish}
               demo={tree.demo}
               itemCount={tree.items.list.length}
               topicUi={tree.topicUi}
-              onSave={(input, publish) => tree.savePackage(input, tree.selectedPackage, publish)}
+              status={tree.edit.status}
+              statusMessage={tree.edit.message}
+              onRetryEdit={tree.edit.retry}
+              hasLock={tree.edit.hasLock}
+              onHeartbeat={tree.heartbeat}
+              onSave={tree.saveWorkspace}
+              onDiscard={tree.discardWorkspace}
               onCopy={syllabusId => tree.selectedPackage ? tree.copyPackage(tree.selectedPackage, syllabusId) : Promise.resolve(false)}
-              onBack={() => tree.go(FLAT_ROOT_LOCATION)}
+              onBack={() => { tree.packages.reload(); tree.go(FLAT_ROOT_LOCATION); }}
               onImport={() => setImportOpen(true)}
               onCreate={() => ItemPicker ? setPickerOpen(true) : setItemModal(prev => ({ mode: "create", editing: null, key: bump(prev) }))}
             >
@@ -181,16 +193,16 @@ export function FlatContentManager<TItem extends ContentItemBase>({ config, clie
           key={packageModal.key}
           allowSyllabus
           labels={labels}
-          mode={packageModal.mode}
-          initialValues={packageModal.editing ? { name: packageModal.editing.name, type: packageModal.editing.type, description: packageModal.editing.description ?? "" } : { name: "", type: packageModal.type ?? config.packageTypes[0]?.value ?? "", description: "" }}
+          mode="create"
+          initialValues={{ name: "", type: packageModal.type ?? config.packageTypes[0]?.value ?? "", description: "" }}
           submitting={tree.busy}
           onCancel={() => setPackageModal(null)}
-          onSubmit={(values) => void submitPackage(packageModal.editing, values)}
+          onSubmit={(values) => void submitPackage(values)}
         />
       )}
-      {importOpen && tree.selectedPackage && <PackageImportModal packageId={tree.selectedPackage.id} type={tree.selectedPackage.type} sessionNo={tree.sessionNo} demo={tree.demo} onClose={() => setImportOpen(false)} onAdded={tree.items.reload} />}
-      {ItemPicker && <ItemPicker sessionNo={tree.sessionNo} open={pickerOpen} pkg={tree.selectedPackage} items={tree.items.list} demo={tree.demo} onClose={() => setPickerOpen(false)} onAdded={() => tree.items.reload()} />}
-      {itemModal && (
+      {editing && importOpen && tree.selectedPackage && <PackageImportModal packageId={tree.selectedPackage.id} type={tree.selectedPackage.type} sessionNo={tree.sessionNo} demo={tree.demo} hasLock={tree.edit.hasLock} onClose={() => setImportOpen(false)} onAdded={tree.items.reload} />}
+      {editing && ItemPicker && <ItemPicker sessionNo={tree.sessionNo} open={pickerOpen} pkg={tree.selectedPackage} items={tree.items.list} demo={tree.demo} hasLock={tree.edit.hasLock} onClose={() => setPickerOpen(false)} onAdded={() => tree.items.reload()} />}
+      {editing && itemModal && (
         <ContentItemModal
           config={config}
           mode={itemModal.mode}

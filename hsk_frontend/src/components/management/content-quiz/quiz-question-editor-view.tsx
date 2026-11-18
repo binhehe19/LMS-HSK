@@ -3,6 +3,7 @@
 // Cấp CÂU HỏI (level "questions" của manage-quiz.tsx cũ): tiêu đề "Câu hỏi — {quiz}", khối audio/ảnh/đoạn văn đọc của quiz, danh sách câu hỏi.
 // View thuần, cùng khung `.card.manage-lp-container` + breadcrumb của nền content-tree để chuyển giữa cây và trình soạn không đổi bố cục.
 // Khác bản cũ có chủ đích: breadcrumb là liên kết URL thật (reload/back đúng chỗ); lỗi tải là khối thông báo; nút ghi ẩn khi không có quyền.
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import { Alert } from "antd";
 import Link from "next/link";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
@@ -133,10 +134,13 @@ export function QuizQuestionEditorView({ state, quiz, questions, packageName, ac
             <>
               <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                  <h5 className="fw-800 mb-1">
-                    <i className="isax isax-message-question me-2 text-success" />
-                    Câu hỏi — {quiz?.title ?? "…"}
-                  </h5>
+                  <div className="d-flex align-items-center flex-wrap gap-3 mb-2">
+                    <ManagementBackButton href={backHref} />
+                    <h5 className="fw-800 mb-0">
+                        <i className="isax isax-message-question me-2 text-success" />
+                        Câu hỏi — {quiz?.title ?? "…"}
+                    </h5>
+                  </div>
                   {quiz && (
                     <div className="d-flex align-items-center gap-2 flex-wrap small text-muted" data-testid="quiz-meta">
                       <span className={`difficulty-badge ${difficulty.className}`}>{difficulty.label}</span>
@@ -151,10 +155,6 @@ export function QuizQuestionEditorView({ state, quiz, questions, packageName, ac
                   )}
                 </div>
                 <div className="d-flex gap-2">
-                  <Link href={backHref} prefetch={false} className="btn btn-outline-secondary btn-sm rounded-pill">
-                    <i className="isax isax-arrow-left me-1" />
-                    Quay lại
-                  </Link>
                   {canWrite && (
                     <button type="button" className="btn btn-primary btn-sm rounded-pill" onClick={onAdd} disabled={busy || !quiz}>
                       <i className="isax isax-add me-1" />

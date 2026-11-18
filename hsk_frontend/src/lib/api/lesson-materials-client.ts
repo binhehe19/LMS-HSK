@@ -6,7 +6,7 @@
 // gắn vào bản DRAFT của package ở sessionNo cố định = 1 (tài liệu không thuộc buổi/giáo trình nào). Dùng lmsClient (base NEXT_PUBLIC_LMS_API_BASE_PATH),
 // cùng write-gate "content" như Kho (đã enabled, không còn "lesson-materials" — xem docs/api-requirements/lesson-materials.md).
 import { lmsClient } from "@/lib/api/lms-client";
-import { listFreeContentPackages } from "@/lib/api/lms-package-list";
+import { listManagedPackages, syllabusBinding, type ManagedPackage } from "./package-management-client";
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { CreateLessonMaterialGroupRequest, CreateLessonMaterialRequest, LessonMaterial, LessonMaterialGroup, LessonMaterialType, UpdateLessonMaterialGroupRequest } from "@/types/lesson-materials";
 
@@ -52,10 +52,11 @@ interface EditLockResponse {
   holderUserId?: string | null;
 }
 
-function toUiGroup(pkg: BackendPackage, type: LessonMaterialType): LessonMaterialGroup {
+function toUiGroup(pkg: ManagedPackage, type: LessonMaterialType): LessonMaterialGroup {
   const version = pkg.draftVersion ?? pkg.publishedVersion;
   return {
     id: pkg.id,
+    syllabusId: pkg.syllabusId,
     name: version?.title ?? "",
     description: version?.description ?? undefined,
     type,
@@ -82,7 +83,7 @@ function toUiMaterial(groupId: string, link: BackendPackageVersionResource): Les
 export async function listMaterialGroups(): Promise<LessonMaterialGroup[]> {
   const types: LessonMaterialType[] = ["SLIDE", "MATERIAL"];
   // Các bộ của Kho: học phần tự do (chưa thuộc giáo trình nào).
-  const lists = await Promise.all(types.map((type) => listFreeContentPackages<BackendPackage>(type)));
+  const lists = await Promise.all(types.map((type) => listManagedPackages(type)));
   return types.flatMap((type, i) => lists[i].map((pkg) => toUiGroup(pkg, type)));
 }
 
@@ -90,6 +91,7 @@ export async function createMaterialGroup(input: CreateLessonMaterialGroupReques
   assertWriteEnabled(FEATURE, demo);
   const pkg = await lmsClient.post<BackendPackage>("/content-packages", {
     type: input.type,
+    ...await syllabusBinding(input.syllabusId),
     title: input.name,
     description: input.description || undefined,
   });
@@ -135,15 +137,15 @@ export async function deleteMaterialGroup(groupId: string, demo: boolean): Promi
 }
 
 // ---- tài liệu (LearningResource), phẳng trong bộ — sessionNo cố định = 1 ----
-export async function listGroupMaterials(groupId: string): Promise<LessonMaterial[]> {
+export async function listGroupMaterials(groupId: string, sessionNo = 1): Promise<LessonMaterial[]> {
   const pkg = await lmsClient.get<BackendPackage>(`/content-packages/${encodeURIComponent(groupId)}`);
   const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
   if (!versionId) return [];
-  const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=1`);
+  const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
   return links.map((link) => toUiMaterial(groupId, link)).sort((a, b) => a.displayOrder - b.displayOrder);
 }
 
-export async function createMaterial(groupId: string, groupType: LessonMaterialType, groupPublished: boolean, input: CreateLessonMaterialRequest, demo: boolean): Promise<LessonMaterial> {
+export async function createMaterial(groupId: string, groupType: LessonMaterialType, groupPublished: boolean, input: CreateLessonMaterialRequest, demo: boolean, sessionNo = 1): Promise<LessonMaterial> {
   assertWriteEnabled(FEATURE, demo);
   const versionId = await ensureDraftVersionId(groupId);
   const content: SlideMaterialContent = { fileId: input.fileId, fileName: input.filename || input.title, mimeType: input.mimeType, sizeBytes: input.sizeBytes };
@@ -153,10 +155,10 @@ export async function createMaterial(groupId: string, groupType: LessonMaterialT
     publishImmediately: groupPublished,
     inLibrary: false,
   });
-  const existing = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=1`);
+  const existing = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources?sessionNo=${sessionNo}`);
   const displayOrder = existing.length ? Math.max(...existing.map((r) => r.displayOrder)) + 1 : 0;
   const resourceVersionId = resource.publishedVersionId ?? resource.draftVersionId;
-  await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: resource.id, learningResourceVersionId: resourceVersionId, sessionNo: 1, displayOrder });
+  await lmsClient.post(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`, { learningResourceId: resource.id, learningResourceVersionId: resourceVersionId, sessionNo, displayOrder });
   return toUiMaterial(groupId, { id: resource.id, learningResourceId: resource.id, learningResourceVersionId: resourceVersionId ?? "", displayOrder, resourceContent: resource.content });
 }
 

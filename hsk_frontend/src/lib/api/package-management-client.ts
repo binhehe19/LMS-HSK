@@ -1,0 +1,107 @@
+"use client";
+
+import { lmsClient } from "./lms-client";
+import { listSyllabusVersions } from "./lms-syllabus-client";
+import { assertWriteEnabled } from "./write-gate";
+import type { PageResponse } from "@/types/lms";
+
+export interface ManagedPackage {
+  id: string;
+  type: string;
+  createdAt?: string;
+  updatedAt?: string;
+  syllabusId?: string | null;
+  draftVersionId?: string | null;
+  publishedVersionId?: string | null;
+  draftVersion?: { title: string | null; description?: string | null; sessionCount?: number | null } | null;
+  publishedVersion?: { title: string | null; description?: string | null; sessionCount?: number | null } | null;
+}
+export interface PackageLink {
+  id: string;
+  learningResourceId: string;
+  learningResourceVersionId: string;
+  resourceType: string;
+  resourceTitle?: string;
+  resourceContent: unknown;
+  subType?: string;
+  skill?: string;
+  sessionNo: number;
+  displayOrder: number;
+}
+export const packageTitle = (p: ManagedPackage) => p.draftVersion?.title || p.publishedVersion?.title || p.id;
+
+export async function listManagedPackages(type?: string, syllabusId?: string): Promise<ManagedPackage[]> {
+  const items: ManagedPackage[] = [];
+  for (let page = 0; ; page++) {
+    const query = new URLSearchParams({ page: String(page), size: "100" });
+    if (type) query.set("type", type);
+    if (syllabusId) query.set("syllabusId", syllabusId);
+    const result = await lmsClient.get<PageResponse<ManagedPackage>>(`/content-packages?${query}`);
+    items.push(...result.items);
+    if (!result.items.length || page + 1 >= result.total_pages) return items;
+  }
+}
+export async function syllabusBinding(syllabusId?: string) {
+  if (!syllabusId) return {};
+  const versions = await listSyllabusVersions(syllabusId);
+  const version = versions.find(v => v.status === "PUBLISHED") ?? versions[0];
+  if (!version) throw new Error("Giáo trình chưa có phiên bản.");
+  return { syllabusId, syllabusVersionId: version.id };
+}
+export async function attachOrCopyPackage(packageId: string, syllabusId: string, demo: boolean) {
+  assertWriteEnabled("content", demo);
+  const pkg = await lmsClient.get<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
+  return pkg.syllabusId
+    ? copyPackageToSyllabus(packageId, syllabusId, demo)
+    : attachPackageToSyllabus(packageId, syllabusId, demo);
+}
+
+export async function copyPackageToSyllabus(packageId: string, syllabusId: string, demo: boolean) {
+  assertWriteEnabled("content", demo);
+  return lmsClient.post<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}/copy`, await syllabusBinding(syllabusId));
+}
+
+export async function attachPackageToSyllabus(packageId: string, syllabusId: string, demo: boolean) {
+  assertWriteEnabled("content", demo);
+  return lmsClient.put<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}/syllabus`, await syllabusBinding(syllabusId));
+}
+export async function packageLinks(packageId: string): Promise<PackageLink[]> {
+  const pkg = await lmsClient.get<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
+  const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
+  return versionId ? lmsClient.get<PackageLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`) : [];
+}
+
+/** Copy the version shown in the source package, not the resource's latest draft. */
+export async function importPackageResources(packageId: string, rows: PackageLink[], sessionNo: number, demo: boolean) {
+  assertWriteEnabled("content", demo);
+  if (!Number.isInteger(sessionNo) || sessionNo < 1) throw new Error("Buổi học không hợp lệ.");
+  const pkg = await lmsClient.get<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
+  const versionId = pkg.draftVersionId ?? (await lmsClient.post<{ id: string }>(`/content-packages/${encodeURIComponent(packageId)}/draft`)).id;
+  const path = `/content-packages/versions/${encodeURIComponent(versionId)}/resources`;
+  const existing = await lmsClient.get<PackageLink[]>(`${path}?sessionNo=${sessionNo}`);
+  let order = Math.max(-1, ...existing.map(r => r.displayOrder)) + 1;
+  const result = { added: 0, failed: [] as { id: string; message: string }[] };
+  for (const row of rows) {
+    let createdId: string | undefined;
+    try {
+      if (row.resourceType !== pkg.type) throw new Error("Loại học liệu không khớp học phần đích.");
+      const created = await lmsClient.post<{ id: string; publishedVersionId?: string; draftVersionId?: string }>("/learning-resources", {
+        type: row.resourceType, content: row.resourceContent, subType: row.subType, skill: row.skill,
+        sourceResourceId: row.learningResourceId, inLibrary: false, publishImmediately: true,
+      });
+      createdId = created.id;
+      const resourceVersionId = created.publishedVersionId ?? created.draftVersionId;
+      if (!resourceVersionId) throw new Error("Không lấy được phiên bản học liệu vừa sao chép.");
+      await lmsClient.post(path, { learningResourceId: created.id, learningResourceVersionId: resourceVersionId, sessionNo, displayOrder: order++ });
+      result.added++;
+    } catch (error) {
+      let message = error instanceof Error ? error.message : "Không thể nhập học liệu.";
+      if (createdId) {
+        try { await lmsClient.delete(`/learning-resources/${encodeURIComponent(createdId)}`); }
+        catch { message += ` Không thể dọn bản sao ${createdId}.`; }
+      }
+      result.failed.push({ id: row.id, message });
+    }
+  }
+  return result;
+}

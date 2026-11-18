@@ -61,7 +61,7 @@ const toNumber = (v: string | number | number[]): number => (Array.isArray(v) ? 
 export function buildRevenueColumnChart(channels: readonly RevenueChannel[]): ChartConfig<{ name: string; data: number[] }[]> {
   return {
     options: {
-      chart: { type: "bar", fontFamily: "Inter, sans-serif", toolbar: { show: false }, sparkline: { enabled: false } },
+      chart: { type: "bar", fontFamily: "var(--hsk-font-ui)", toolbar: { show: false }, sparkline: { enabled: false } },
       plotOptions: { bar: { horizontal: false, columnWidth: "55%", borderRadius: 8, dataLabels: { position: "top" }, distributed: false } },
       dataLabels: { enabled: true, offsetY: -20, style: { fontSize: "13px", fontWeight: 700, colors: ["#1e293b"] }, formatter: (val) => formatVnd(toNumber(val)) },
       stroke: { show: false },
@@ -88,7 +88,7 @@ export function buildCourseDonutChart(items: readonly CourseDistributionItem[]):
   const total = sumCounts(items);
   return {
     options: {
-      chart: { type: "donut", fontFamily: "Inter, sans-serif" },
+      chart: { type: "donut", fontFamily: "var(--hsk-font-ui)" },
       labels: items.map((i) => i.label),
       colors: COURSE_COLORS.slice(0, Math.max(1, items.length)),
       legend: { position: "bottom", fontSize: "13px", fontWeight: 500 },

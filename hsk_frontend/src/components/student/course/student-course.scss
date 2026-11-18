@@ -74,7 +74,7 @@ $hb-drop-5: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
 .hb-course {
     background: $hb-bg;
     min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--hsk-font-ui);
     color: $hb-text-primary;
 
     *,
@@ -1327,7 +1327,7 @@ $hb-drop-5: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
 }
 
 .hb-course-modal {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--hsk-font-ui);
     &__dismiss { display: none; }
     // Neo từ trên xuống (không dùng `centered`) + lề 24px, để `.modal` cuộn được
     // TOÀN BỘ card — xem trọn cả phần đầu lẫn phần cuối, không chỉ vùng lộ trình.
