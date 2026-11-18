@@ -138,7 +138,7 @@ describe("biến thể Bộ từ vựng (/vocab-set/manage)", () => {
     renderPage();
     const table = await screen.findByRole("table");
     expect(screen.queryByRole("heading", { name: /Danh sách học phần từ vựng/ })).not.toBeInTheDocument();
-    expect(within(table).getByRole("columnheader", { name: "Thao tác" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "Thao tác" })).toHaveClass("ant-table-cell-fix-right");
     expect(await screen.findByText("22 bản ghi")).toBeInTheDocument();
     expect(within(table).getAllByRole("row")).toHaveLength(21);
     await user.click(screen.getByTitle("Trang sau"));

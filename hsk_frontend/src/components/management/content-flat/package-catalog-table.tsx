@@ -51,7 +51,7 @@ export function PackageCatalogTable({ heading, packages, page, size, onPageChang
     },
     { title: "Số buổi", key: "sessions", width: 90, align: "center", render: (_, pkg) => pkg.sessionCount ?? "—" },
     {
-      title: <span className="visually-hidden">Thao tác</span>, key: "actions", width: 100, align: "center",
+      title: <span className="visually-hidden">Thao tác</span>, key: "actions", width: 64, align: "center", fixed: "right",
       render: (_, pkg) => (
         <Dropdown trigger={["click"]} placement="bottomRight" menu={{ items: [
           { key: "view", label: "Xem chi tiết", icon: <i className="isax isax-eye" aria-hidden="true" />, onClick: () => onPreview(pkg) },
@@ -76,7 +76,7 @@ export function PackageCatalogTable({ heading, packages, page, size, onPageChang
         dataSource={paginate(packages, page, size)}
         pagination={false}
         loading={loading}
-        scroll={{ x: 1040 }}
+        scroll={{ x: 1019 }}
         locale={{ emptyText: `Không tìm thấy ${packageLabel}` }}
       />
       <CatalogPagination page={page} size={size} total={packages.length} onChange={onPageChange} />
