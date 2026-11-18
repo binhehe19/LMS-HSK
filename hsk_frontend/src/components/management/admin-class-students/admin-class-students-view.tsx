@@ -7,8 +7,8 @@
 // => FetchStateNotice (kèm "Thử lại" khi lỗi) thay vì "Không tìm thấy thông tin lớp học" / bảng rỗng; (3) cột "Số buổi đi học" hiện "x/y" khi nguồn có
 // attendanceSummary (backend chung), vẫn "—" khi không có như bản cũ; (4) dải thông tin lớp thêm giáo trình / trợ giảng / quản lý học viên khi nguồn có
 // (backend chung); (5) nút quay lại dùng next/link (prefetch tắt) thay cho <a href> tải lại trang; (6) phản hồi không phải mảng là lỗi hợp đồng.
+import { ManagementBackButton } from "@/components/management/management-back-button";
 import { Pagination, Spin } from "antd";
-import Link from "next/link";
 import { useState } from "react";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
@@ -52,7 +52,7 @@ function ClassInfoStrip({ info }: { info: AdminClassInfo }) {
         <div className="acm-modal-strip" style={{ padding: 0, background: "none", border: "none" }}>
           <div className="acm-strip-item">
             <i className="isax isax-code" />
-            <span className="fw-bold" style={{ color: "#b10019" }}>{info.classCode}</span>
+            <span className="fw-bold" style={{ color: "#B00D0E" }}>{info.classCode}</span>
           </div>
           <div className="acm-strip-item">
             <i className="isax isax-book-1" />
@@ -122,16 +122,10 @@ export function AdminClassStudentsView({ paramNotice, info, students, onRetry }:
   return (
     <ManagementPageFrame contentClassName="acm-page-bg">
       {/* ─── Breadcrumb / return ─── */}
-      <div className="d-flex align-items-center gap-2 mb-3">
-        <Link href="/admin/class-management" prefetch={false} className="btn btn-light border acm-back-btn">
-          <i className="isax isax-arrow-left-2 me-1" />
-          Quay lại Quản lý lớp học
-        </Link>
+      <div className="d-flex align-items-center flex-wrap gap-3 mb-3">
+        <ManagementBackButton href="/admin/class-management" label="Quay lại Quản lý lớp học" />
         {classInfo && (
-          <>
-            <span className="text-muted">›</span>
-            <span className="fw-semibold text-dark">Lớp {classInfo.classCode}</span>
-          </>
+          <h4 className="mb-0">Lớp {classInfo.classCode}</h4>
         )}
       </div>
 
@@ -159,7 +153,7 @@ export function AdminClassStudentsView({ paramNotice, info, students, onRetry }:
         <div
           className="d-flex align-items-center justify-content-between"
           style={{
-            background: "linear-gradient(125deg, #b10019 0%, #8e0014 100%)",
+            background: "linear-gradient(125deg, #B00D0E 0%, #860707 100%)",
             borderRadius: "16px 16px 0 0",
             padding: "14px 18px",
             color: "#fff",

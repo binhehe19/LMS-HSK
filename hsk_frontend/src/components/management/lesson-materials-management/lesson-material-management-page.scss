@@ -299,7 +299,7 @@
 
   .lesson-material-management__group-top {
     align-items: center;
-    color: #b10019;
+    color: #B00D0E;
     display: flex;
     font-size: 22px;
     justify-content: space-between;
@@ -379,7 +379,7 @@
   font-weight: 700;
   padding: 8px 16px;
 
-  &.active { border-bottom-color: #b10019; color: #b10019; }
+  &.active { border-bottom-color: #B00D0E; color: #B00D0E; }
 }
 
 .lesson-material-management__type-section {
@@ -624,8 +624,8 @@
   gap: 12px;
 
   .lesson-material-management__group-card.is-selected {
-    border-color: #b10019;
-    box-shadow: 0 0 0 2px rgba(177, 0, 25, 0.15);
+    border-color: #B00D0E;
+    box-shadow: 0 0 0 2px rgba(176, 13, 14, 0.15);
   }
 }
 

@@ -5,7 +5,7 @@ import type { GradingAttemptSummaryResponse, GradingStudentResponse, LessonDetai
 import type { AttendanceAnalysisResponse, AttendanceLogEntry, AttendanceStatus, AttendanceTrendPoint, LearningAnalysisAssignment, SkillScorePoint, TeacherNoteResponse } from "@/types/learning-analysis";
 
 // ---- màu/nhãn của HSK cũ (giữ nguyên) ----
-export const SERIES_COLOR_STUDENT = "#b10019";
+export const SERIES_COLOR_STUDENT = "#B00D0E";
 export const SERIES_COLOR_CLASS_AVG = "#9a9690";
 const STATUS_GOOD = "#0ca30c";
 const STATUS_WARNING = "#fab219";

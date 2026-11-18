@@ -16,7 +16,7 @@ export const QUIZ_API_TARGET: ContentApiTarget = { apiPrefix: "/quiz", itemsPath
 
 /** PackageTypeConfig của quiz (components/package-type-manager.tsx bản quiz), thứ tự ALL_PACKAGE_TYPES của manage-quiz.tsx. */
 export const QUIZ_PACKAGE_TYPES: ContentPackageTypeMeta[] = [
-  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Gói học theo lộ trình học tập", icon: "isax isax-path-2", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" },
+  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Gói học theo lộ trình học tập", icon: "isax isax-path-2", color: "#B00D0E", gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)" },
   { value: "FREE", label: "Học miễn phí", description: "Tài nguyên học tập miễn phí", icon: "isax isax-gift", color: "#43e97b", gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },
   { value: "LEARNING", label: "Khóa học", description: "Khóa học với nội dung video và tài liệu", icon: "isax isax-video", color: "#f093fb", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
   { value: "VIDEO_COURSE", label: "Khóa học video", description: "Khóa học video tập trung vào nội dung video", icon: "isax isax-play-circle", color: "#D4AF37", gradient: "linear-gradient(135deg, #D4AF37 0%, #F0CF72 100%)" },
@@ -52,9 +52,6 @@ const QUIZ_COLUMNS: ContentItemColumn<QuizItem>[] = [
     title: "Bài tập",
     render: (quiz) => (
       <div className="d-flex align-items-center gap-3">
-        <div className="icon-box d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: 40, height: 40, background: "linear-gradient(135deg, #B1001920, #7A001220)" }} aria-hidden>
-          <i className="isax isax-clipboard-text" style={{ fontSize: 20, color: "#B10019" }} />
-        </div>
         <div className="min-width-0">
           <div className="fw-700 text-dark">{quiz.title}</div>
           {quiz.description && <div className="small text-muted text-truncate" style={{ maxWidth: 320 }}>{quiz.description}</div>}
@@ -84,7 +81,7 @@ const QUIZ_COLUMNS: ContentItemColumn<QuizItem>[] = [
     ),
   },
   { key: "passing", title: "Điểm đạt", width: 100, render: (quiz) => <span className="text-muted small">{typeof quiz.passingScore === "number" ? `${quiz.passingScore}%` : "—"}</span> },
-  { key: "questions", title: "Câu hỏi", width: 150, render: (quiz) => <QuizQuestionsLink quiz={quiz} /> },
+  { key: "questions", title: "Câu hỏi", width: 150, cardAction: true, render: (quiz) => <QuizQuestionsLink quiz={quiz} /> },
 ];
 
 export const QUIZ_CONFIG: ContentModuleConfig<QuizItem> = {

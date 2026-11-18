@@ -416,11 +416,11 @@
 
       &.active {
         background: #fff;
-        color: #b10019;
+        color: #B00D0E;
         box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 
         i {
-          color: #b10019;
+          color: #B00D0E;
         }
       }
     }
@@ -549,7 +549,7 @@
     font-size: clamp(2.5rem, 4.5vw, 3.5rem);
     line-height: 1.2;
     color: #0f172a;
-    font-family: 'DengXian', 'SimSun', 'FangSong', serif;
+    font-family: var(--hsk-font-ui);
   }
 
   .flashcard-pinyin-text {
@@ -845,11 +845,11 @@
 
       &.active {
         background: #fff;
-        color: #b10019;
+        color: #B00D0E;
         box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 
         i {
-          color: #b10019;
+          color: #B00D0E;
         }
       }
     }
@@ -997,7 +997,6 @@
   }
 
   .flashcard-term-cell {
-    font-family: 'DengXian', 'SimSun', 'FangSong', serif;
-    font-size: 1.1rem;
+    font-family: var(--hsk-font-ui);
   }
 }

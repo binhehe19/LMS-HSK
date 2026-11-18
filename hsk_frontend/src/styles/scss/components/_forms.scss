@@ -87,19 +87,19 @@ textarea {
     }
   }
   option:checked {
-    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B10019), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
+    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B00D0E), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
     color: $primary;
   }
   option:select {
-    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B10019), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
+    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B00D0E), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
     color: $primary;
   }
   option:hover {
-    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B10019), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
+    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B00D0E), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
     color: $primary;
   }
   option:focus {
-    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B10019), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
+    // [M1] Bỏ khai báo không hợp lệ: rgba(var($primary), 0.2) biên dịch ra rgba(var(#B00D0E), 0.2). Trình duyệt vốn bỏ qua nó (HSK cũ không áp dụng), parser CSS của Next báo lỗi build.
     color: $primary;
   }
 }

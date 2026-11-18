@@ -27,8 +27,8 @@ const GRAMMAR_PACKAGE_TYPE: ContentPackageTypeMeta = {
   label: "Ngữ pháp",
   description: "Gói điểm ngữ pháp HSK",
   icon: "isax isax-book-1",
-  color: "#B10019",
-  gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)",
+  color: "#B00D0E",
+  gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)",
 };
 
 const GRAMMAR_FLAT_CONFIG = { ...GRAMMAR_CONFIG, packageTypes: [GRAMMAR_PACKAGE_TYPE] };

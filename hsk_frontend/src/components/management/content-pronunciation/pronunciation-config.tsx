@@ -16,7 +16,7 @@ export const PRONUNCIATION_MANAGE_PATH = "/pronunciation/manage";
 
 /** Thứ tự tab + nhãn/mô tả/màu của PackageTypeConfig bản phát âm (pronunciation-package-manager.tsx). */
 export const PRONUNCIATION_PACKAGE_TYPES: ContentPackageTypeMeta[] = [
-  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học phát âm theo từng bước", icon: "isax isax-path-2", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" },
+  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học phát âm theo từng bước", icon: "isax isax-path-2", color: "#B00D0E", gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)" },
   { value: "FREE", label: "Học miễn phí", description: "Nội dung phát âm miễn phí", icon: "isax isax-gift", color: "#43e97b", gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },
   { value: "LEARNING", label: "Khóa học", description: "Khóa học phát âm có cấu trúc", icon: "isax isax-video", color: "#f093fb", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
   { value: "VIDEO_COURSE", label: "Khóa học video", description: "Luyện phát âm theo bài học video", icon: "isax isax-play-circle", color: "#D4AF37", gradient: "linear-gradient(135deg, #D4AF37 0%, #F0CF72 100%)" },

@@ -107,7 +107,7 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
                     type="button"
                     onClick={onOpenTickets}
                     className="btn fw-bold px-4 py-2"
-                    style={{ borderRadius: "12px", boxShadow: "0 10px 20px rgba(255,255,255,0.14)", background: "#ffffff", color: "#B10019" }}
+                    style={{ borderRadius: "12px", boxShadow: "0 10px 20px rgba(255,255,255,0.14)", background: "#ffffff", color: "#B00D0E" }}
                   >
                     <i className="isax isax-ticket me-2"></i>
                     Xem công việc
@@ -129,28 +129,28 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center justify-content-between mb-4">
                       <div>
-                        <p className="text-uppercase small fw-bold mb-1" style={{ letterSpacing: "0.08em", color: "#B10019" }}>Tổng quan hôm nay</p>
+                        <p className="text-uppercase small fw-bold mb-1" style={{ letterSpacing: "0.08em", color: "#B00D0E" }}>Tổng quan hôm nay</p>
                         <h5 className="fw-bold mb-0" style={{ color: "#7f1d1d" }}>Công việc của bạn</h5>
                       </div>
-                      <div className="welcome-stat-icon" style={{ background: "rgba(225, 29, 72, 0.12)", color: "#B10019" }}>
+                      <div className="welcome-stat-icon" style={{ background: "rgba(225, 29, 72, 0.12)", color: "#B00D0E" }}>
                         <i className="isax isax-chart-21 fs-4"></i>
                       </div>
                     </div>
 
                     <div className="d-grid gap-3">
-                      <div className="rounded-4 p-3" style={{ background: "linear-gradient(135deg, rgba(177, 0, 25, 0.12), rgba(244, 162, 97, 0.14))" }}>
+                      <div className="rounded-4 p-3" style={{ background: "linear-gradient(135deg, rgba(176, 13, 14, 0.12), rgba(244, 162, 97, 0.14))" }}>
                         <div className="d-flex align-items-center justify-content-between mb-2">
                           <span className="small fw-semibold" style={{ color: "#7f1d1d" }}>Tỷ lệ hoàn tất</span>
                           <span className="fw-bold" style={{ color: "#7f1d1d" }}>{completionText}</span>
                         </div>
                         <div className="progress" style={{ height: "8px", borderRadius: "999px" }}>
-                          <div className="progress-bar" role="progressbar" style={{ width: `${completionRate}%`, background: "linear-gradient(90deg, #B10019, #E63946)" }}></div>
+                          <div className="progress-bar" role="progressbar" style={{ width: `${completionRate}%`, background: "linear-gradient(90deg, #B00D0E, #E63946)" }}></div>
                         </div>
                       </div>
 
                       <div className="d-flex align-items-center justify-content-between rounded-4 px-3 py-3" style={{ background: "rgba(225, 29, 72, 0.08)" }}>
                         <span className="fw-semibold" style={{ color: "#7f1d1d" }}>Đã hoàn tất</span>
-                        <span className="fw-bold fs-5" style={{ color: "#B10019" }}>{ticketNumber("doneTickets")}</span>
+                        <span className="fw-bold fs-5" style={{ color: "#B00D0E" }}>{ticketNumber("doneTickets")}</span>
                       </div>
 
                       <div className="d-flex align-items-center justify-content-between rounded-4 px-3 py-3" style={{ background: "rgba(244, 162, 97, 0.12)" }}>
@@ -172,7 +172,7 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
                 <h4 className="fw-bold mb-1" style={{ color: "#7f1d1d" }}>Thống kê nhanh</h4>
                 <p className="mb-0" style={{ color: "#92400e" }}>Các số liệu quan trọng để bạn nắm tình hình ngay từ màn đầu tiên.</p>
               </div>
-              <div className="badge rounded-pill px-3 py-2" style={{ background: "rgba(177, 0, 25, 0.1)", color: "#B10019", fontWeight: 700 }}>
+              <div className="badge rounded-pill px-3 py-2" style={{ background: "rgba(176, 13, 14, 0.1)", color: "#B00D0E", fontWeight: 700 }}>
                 <i className="isax isax-chart-2 me-2"></i>
                 Cập nhật liên tục
               </div>
@@ -203,7 +203,7 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
                       </div>
                       <div className="flex-grow-1">
                         <p className="small fw-semibold mb-1" style={{ color: "#7f1d1d" }}>{card.title}</p>
-                        <h3 className="fw-bold mb-1" style={{ color: "#B10019", letterSpacing: "-0.02em" }}>{card.value}</h3>
+                        <h3 className="fw-bold mb-1" style={{ color: "#B00D0E", letterSpacing: "-0.02em" }}>{card.value}</h3>
                         <p className="small mb-0" style={{ color: "#92400e" }}>{card.note}</p>
                       </div>
                     </div>

@@ -135,7 +135,7 @@ export function AdminDashboardView({ state, onRetry }: AdminDashboardViewProps) 
             <i className="isax isax-teacher text-danger" /> Lớp học &amp; chấm bài
           </h5>
         </div>
-        <StatCard title="Lớp đang học" value={num((d) => d.classes.ongoing)} iconClass="isax-teacher" bgColor="rgba(177, 0, 25, 0.1)" textColor="#b10019" phase={phase} />
+        <StatCard title="Lớp đang học" value={num((d) => d.classes.ongoing)} iconClass="isax-teacher" bgColor="rgba(176, 13, 14, 0.1)" textColor="#B00D0E" phase={phase} />
         <StatCard title="Bài chờ chấm" value={num((d) => d.grading.pendingAttempts)} iconClass="isax-edit-2" bgColor="rgba(245, 158, 11, 0.1)" textColor="#f59e0b" phase={phase} />
         <StatCard title="Bài nộp tuần này" value={num((d) => d.grading.submittedThisWeek)} iconClass="isax-document-upload" bgColor="rgba(99, 102, 241, 0.1)" textColor="#6366f1" phase={phase} />
         <StatCard title="Đã trả bài tuần này" value={num((d) => d.grading.returnedThisWeek)} iconClass="isax-tick-circle" bgColor="rgba(16, 185, 129, 0.1)" textColor="#10b981" phase={phase} />

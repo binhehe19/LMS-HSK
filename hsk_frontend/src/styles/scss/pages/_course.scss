@@ -2359,7 +2359,7 @@ iframe {
 
 // --- PREMIUM REFINED CARDS (BOXED LOOK) ---
 .text-crimson {
-    color: #B10019 !important;
+    color: #B00D0E !important;
 }
 
 .course-category-tag-refined {
@@ -2367,11 +2367,11 @@ iframe {
     font-weight: 800;
     text-transform: uppercase;
     color: #fff !important;
-    background: #B10019 !important;
+    background: #B00D0E !important;
     padding: 4px 10px;
     border-radius: 6px;
     letter-spacing: 0.3px;
-    box-shadow: 0 2px 6px rgba(177, 0, 25, 0.2);
+    box-shadow: 0 2px 6px rgba(176, 13, 14, 0.2);
     display: inline-block;
 }
 
@@ -2390,7 +2390,7 @@ iframe {
     &:hover {
         transform: translateY(-4px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        border-color: #B10019;
+        border-color: #B00D0E;
     }
 
     .course-img-grid {
@@ -2419,9 +2419,9 @@ iframe {
         }
 
         &.is-fallback {
-            background: rgba(177, 0, 25, 0.08);
+            background: rgba(176, 13, 14, 0.08);
             backdrop-filter: blur(25px);
-            border-color: rgba(177, 0, 25, 0.15);
+            border-color: rgba(176, 13, 14, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2460,7 +2460,7 @@ iframe {
         position: absolute;
         top: 10px;
         left: 10px;
-        background: rgba(177, 0, 25, 0.9);
+        background: rgba(176, 13, 14, 0.9);
         color: #fff;
         padding: 4px 10px;
         border-radius: 6px;
@@ -2488,7 +2488,7 @@ iframe {
         z-index: 2;
 
         &:hover {
-            color: #B10019;
+            color: #B00D0E;
             transform: scale(1.1);
         }
     }
@@ -2578,7 +2578,7 @@ iframe {
 
             i {
                 font-size: 15px;
-                color: #B10019;
+                color: #B00D0E;
             }
         }
     }
@@ -2625,7 +2625,7 @@ iframe {
     &:hover {
         transform: translateX(4px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-        border-color: #B10019;
+        border-color: #B00D0E;
     }
 
     .course-img-list {
@@ -2656,9 +2656,9 @@ iframe {
         }
 
         &.is-fallback {
-            background: rgba(177, 0, 25, 0.08);
+            background: rgba(176, 13, 14, 0.08);
             backdrop-filter: blur(25px);
-            border-color: rgba(177, 0, 25, 0.15);
+            border-color: rgba(176, 13, 14, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2707,7 +2707,7 @@ iframe {
             transition: color 0.2s;
 
             &:hover {
-                color: #B10019 !important;
+                color: #B00D0E !important;
             }
         }
 
@@ -2742,7 +2742,7 @@ iframe {
 
                 i {
                     font-size: 15px;
-                    color: #B10019;
+                    color: #B00D0E;
                 }
             }
         }
@@ -2766,7 +2766,7 @@ iframe {
                 transition: all 0.2s;
 
                 &:hover {
-                    background: #B10019;
+                    background: #B00D0E;
                     color: #fff;
                 }
 

@@ -1,5 +1,5 @@
 // Course Details — Premium Redesign
-$brand-red: #B10019;
+$brand-red: #B00D0E;
 $brand-dark: #111827;
 $text-muted: #6B7280;
 $bg-page: #f8fafc;
@@ -9,7 +9,7 @@ $transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 .cd-page {
   background: $bg-page;
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--hsk-font-ui);
 }
 
 // ─── TOP BAR (BACK + BREADCRUMB) ───

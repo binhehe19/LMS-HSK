@@ -17,9 +17,9 @@ const enc = encodeURIComponent;
 
 /** Thứ tự tab + nhãn/mô tả/màu của PackageTypeConfig bản hanzi (package-type-manager.tsx, i18n hanzi.manage.type.* / typeDesc.*). */
 export const WRITING_PACKAGE_TYPES: ContentPackageTypeMeta[] = [
-  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học tập chi tiết với các bước cụ thể", icon: "isax isax-path-2", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" },
+  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học tập chi tiết với các bước cụ thể", icon: "isax isax-path-2", color: "#B00D0E", gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)" },
   { value: "LEARNING", label: "Khóa học", description: "Khóa học với nội dung bài tập và tài liệu", icon: "isax isax-video", color: "#f093fb", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
-  { value: "VIDEO_COURSE", label: "Khóa học video", description: "Khóa học tập trung vào hướng dẫn viết qua video", icon: "isax isax-play-circle", color: "#8E0014", gradient: "linear-gradient(135deg, #8E0014 0%, #5D000D 100%)" },
+  { value: "VIDEO_COURSE", label: "Khóa học video", description: "Khóa học tập trung vào hướng dẫn viết qua video", icon: "isax isax-play-circle", color: "#860707", gradient: "linear-gradient(135deg, #860707 0%, #5D000D 100%)" },
   { value: "FREE", label: "Học miễn phí", description: "Tài nguyên luyện viết miễn phí", icon: "isax isax-gift", color: "#FFC107", gradient: "linear-gradient(135deg, #FFC107 0%, #FFB300 100%)" },
 ];
 

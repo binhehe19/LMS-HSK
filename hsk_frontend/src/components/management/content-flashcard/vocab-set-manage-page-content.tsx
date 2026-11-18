@@ -40,8 +40,8 @@ const VOCABULARY_PACKAGE_TYPE: ContentPackageTypeMeta = {
   label: "Từ vựng",
   description: "Gói từ vựng HSK",
   icon: "isax isax-book-1",
-  color: "#B10019",
-  gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)",
+  color: "#B00D0E",
+  gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)",
 };
 
 const VOCAB_SET_FLAT_CONFIG = { ...VOCAB_SET_CONFIG, packageTypes: [VOCABULARY_PACKAGE_TYPE] };

@@ -5,7 +5,7 @@ import type { ContentItemBase, ContentLabels, ContentPackage, ContentPackageType
 
 /** Bốn loại gói của module flashcard HSK cũ (components/package-type-manager.tsx bản flashcard): nhãn, icon, màu nguyên văn. */
 export const DEFAULT_PACKAGE_TYPES: ContentPackageTypeMeta[] = [
-  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học tập chi tiết với các bước cụ thể", icon: "isax isax-path-2", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" },
+  { value: "LEARNING_PATH", label: "Lộ trình học", description: "Lộ trình học tập chi tiết với các bước cụ thể", icon: "isax isax-path-2", color: "#B00D0E", gradient: "linear-gradient(135deg, #B00D0E 0%, #7A0A0B 100%)" },
   { value: "LEARNING", label: "Khóa học", description: "Khóa học với nội dung video và tài liệu", icon: "isax isax-video", color: "#f093fb", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
   { value: "VIDEO_COURSE", label: "Khóa học video", description: "Khóa học video tập trung vào nội dung video", icon: "isax isax-play-circle", color: "#D4AF37", gradient: "linear-gradient(135deg, #D4AF37 0%, #F0CF72 100%)" },
   { value: "FREE", label: "Học miễn phí", description: "Tài nguyên học tập miễn phí", icon: "isax isax-gift", color: "#43e97b", gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },

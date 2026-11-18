@@ -74,7 +74,7 @@ export function ContentFoldersView<TItem extends ContentItemBase>({ config, pkg,
               <div className="card h-100 border-0 shadow-sm hover-up pointer" onClick={() => onOpen(folder)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") onOpen(folder); }}>
                 <div className="card-body p-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="icon-box me-3 rounded-3 shadow-sm" style={{ background: "linear-gradient(135deg, #B1001920, #B1001910)", color: "#B10019", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div className="icon-box me-3 rounded-3 shadow-sm" style={{ background: "linear-gradient(135deg, #B00D0E20, #B00D0E10)", color: "#B00D0E", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <i className="isax isax-folder-2" style={{ fontSize: "24px" }} />
                     </div>
                     <div className="flex-grow-1">

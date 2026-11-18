@@ -110,7 +110,7 @@ export function ContentPackagesView<TItem extends ContentItemBase>({ config, sta
               ) : filtered.length === 0 ? (
                 <div className="text-center py-5 px-4" data-testid="content-packages-empty">
                   <div className="mb-3 opacity-50">
-                    <i className="isax isax-search-status" style={{ fontSize: "48px", color: "#B10019" }} />
+                    <i className="isax isax-search-status" style={{ fontSize: "48px", color: "#B00D0E" }} />
                   </div>
                   <h6 className="text-muted fw-600 mb-2">Không tìm thấy gói</h6>
                   <p className="text-muted small mb-3">{keyword ? "Thử tìm kiếm với từ khóa khác" : "Hãy tạo gói mới để bắt đầu"}</p>

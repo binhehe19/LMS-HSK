@@ -88,7 +88,7 @@ export function ClassManagementView({ state, onRetry, onOpenClass }: ClassManage
             {/* ─── Stat cards ─── */}
             <div className="row g-3 mb-3">
               {[
-                { label: "Tổng lớp",      value: totalClasses,  icon: "isax-teacher",      color: "#b10019" },
+                { label: "Tổng lớp",      value: totalClasses,  icon: "isax-teacher",      color: "#B00D0E" },
                 { label: "Đang học",       value: activeClasses, icon: "isax-people",        color: "#0d6efd" },
                 { label: "Đã kết thúc",   value: endedClasses,  icon: "isax-tick-circle",   color: "#198754" },
                 { label: "Tổng học viên", value: totalStudents, icon: "isax-profile-2user", color: "#fd7e14" },
@@ -112,7 +112,7 @@ export function ClassManagementView({ state, onRetry, onOpenClass }: ClassManage
               <div className="card-body py-3">
                 <div className="row g-3 align-items-end">
                   <div className="col-md-5">
-                    <label className="form-label fw-bold mb-1" style={{ color: "#b10019" }}>Tìm kiếm</label>
+                    <label className="form-label fw-bold mb-1" style={{ color: "#B00D0E" }}>Tìm kiếm</label>
                     <div className="input-group">
                       <span className="input-group-text bg-white" style={{ borderColor: "#e0c8cc" }}>
                         <i className="isax isax-search-normal text-muted" />
@@ -127,7 +127,7 @@ export function ClassManagementView({ state, onRetry, onOpenClass }: ClassManage
                     </div>
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label fw-bold mb-1" style={{ color: "#b10019" }}>Trạng thái</label>
+                    <label className="form-label fw-bold mb-1" style={{ color: "#B00D0E" }}>Trạng thái</label>
                     <select
                       className="form-select"
                       style={{ borderColor: "#e0c8cc" }}
@@ -155,7 +155,7 @@ export function ClassManagementView({ state, onRetry, onOpenClass }: ClassManage
               <div
                 className="d-flex align-items-center justify-content-between"
                 style={{
-                  background: "linear-gradient(125deg, #b10019 0%, #8e0014 100%)",
+                  background: "linear-gradient(125deg, #B00D0E 0%, #860707 100%)",
                   borderRadius: "16px 16px 0 0",
                   padding: "14px 18px",
                   color: "#fff",

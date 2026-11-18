@@ -154,7 +154,7 @@ describe("cấu hình biểu đồ (ApexCharts) — màu HSK cũ, trung bình l�
     ]);
     expect(spec.options.chart?.type).toBe("line");
     expect(spec.options.xaxis?.categories).toEqual(["Buổi 1", "Buổi 2"]);
-    expect(spec.options.colors).toEqual(["#b10019", "#9a9690"]);
+    expect(spec.options.colors).toEqual(["#B00D0E", "#9a9690"]);
     expect(spec.options.stroke?.dashArray).toEqual([0, 5]);
     expect(spec.series).toEqual([
       { name: "Học viên", data: [100, null] },
