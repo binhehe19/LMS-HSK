@@ -65,6 +65,7 @@ export const MIGRATED_ROUTES: readonly string[] = [
   // M5 — W2-B: bài tập (quiz + câu hỏi) và ngữ pháp trên nền content-tree; từ điển (màn riêng)
   "/quiz/manage",
   "/grammar/manage",
+  "/grammar/library",
   "/vocabulary/manage",
 ];
 
@@ -186,6 +187,16 @@ export const MANAGEMENT_ROUTES: readonly ManagementRoute[] = OLD_MANAGEMENT_ROUT
 // ---- tra cứu theo URL ------------------------------------------------------------------------------------------------------------
 
 const exact = new Map<string, ManagementRoute>();
+exact.set("/grammar/library", {
+  path: "/grammar/library",
+  status: "MIGRATED",
+  allowedRoles: [ROLES.ADMIN],
+  oldComponent: "—",
+  oldGuard: "none",
+  oldRoles: [],
+  roleSource: "owner-decision",
+  reason: "Kho ngữ pháp dùng API quản lý học liệu dành cho Admin.",
+});
 const patterns: { segments: string[]; paramCount: number; route: ManagementRoute }[] = [];
 for (const route of MANAGEMENT_ROUTES) {
   if (route.path.includes(":")) {

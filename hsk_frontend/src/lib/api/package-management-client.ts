@@ -33,6 +33,7 @@ export interface PackageLink {
   sessionNo: number;
   displayOrder: number;
 }
+export type PackageResourceSource = Pick<PackageLink, "id" | "learningResourceId" | "resourceType" | "resourceTitle" | "resourceContent" | "subType" | "skill"> & { sessionNo?: number };
 export const packageTitle = (p: ManagedPackage) => p.draftVersion?.title || p.publishedVersion?.title || p.id;
 
 export function toContentPackage(pkg: ManagedPackage): ContentPackage {
@@ -54,7 +55,7 @@ export function toContentPackage(pkg: ManagedPackage): ContentPackage {
   };
 }
 
-export function packageResourceTitle(row: PackageLink): string {
+export function packageResourceTitle(row: PackageResourceSource): string {
   const content = row.resourceContent as { title?: unknown; word?: unknown } | null;
   const title = content?.title || content?.word;
   return row.resourceTitle || (typeof title === "string" && title ? title : row.learningResourceId);
@@ -102,7 +103,7 @@ export async function packageLinks(packageId: string): Promise<PackageLink[]> {
 }
 
 /** Copy the version shown in the source package, not the resource's latest draft. */
-export async function importPackageResources(packageId: string, rows: PackageLink[], sessionNo: number, demo: boolean) {
+export async function importPackageResources(packageId: string, rows: PackageResourceSource[], sessionNo: number, demo: boolean) {
   assertWriteEnabled("content", demo);
   if (!Number.isInteger(sessionNo) || sessionNo < 1) throw new Error("Buổi học không hợp lệ.");
   const pkg = await lmsClient.get<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}`);

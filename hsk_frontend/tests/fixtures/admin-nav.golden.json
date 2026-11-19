@@ -2,7 +2,7 @@
   "authAdminUsersUrl": "https://auth.test.invalid/admin/users",
   "items": [
     {
-      "header": null,
+      "header": "TỔNG QUAN",
       "title": "Overview",
       "icon": "isax isax-grid-3",
       "route": "/admin/dashboard",
@@ -10,15 +10,7 @@
       "activePrefix": null
     },
     {
-      "header": null,
-      "title": "Thông báo",
-      "icon": "isax isax-notification-bing",
-      "route": "/admin/settings/notifications",
-      "subRoute": null,
-      "activePrefix": "/admin/settings/notifications"
-    },
-    {
-      "header": null,
+      "header": "CHƯƠNG TRÌNH HỌC",
       "title": "Lớp học",
       "icon": "isax isax-teacher",
       "route": "/admin/class-management",
@@ -27,38 +19,14 @@
     },
     {
       "header": null,
-      "title": "Chấm bài",
-      "icon": "isax isax-edit-2",
-      "route": "/instructor/list-class",
-      "subRoute": null,
-      "activePrefix": "/instructor/list-class"
-    },
-    {
-      "header": null,
-      "title": "Yêu cầu hỗ trợ",
-      "icon": "isax isax-ticket",
-      "route": "/instructor/instructor-support-tickets",
+      "title": "Giáo trình",
+      "icon": "isax isax-book-saved",
+      "route": "/learning-path/syllabus/manage",
       "subRoute": null,
       "activePrefix": null
     },
     {
       "header": "HỆ THỐNG HỌC LIỆU",
-      "title": "Luyện viết (Hán tự)",
-      "icon": "isax isax-pen-add",
-      "route": "/hanzi/manage",
-      "subRoute": null,
-      "activePrefix": "/hanzi"
-    },
-    {
-      "header": null,
-      "title": "Luyện phát âm",
-      "icon": "isax isax-microphone",
-      "route": "/pronunciation/manage",
-      "subRoute": null,
-      "activePrefix": "/pronunciation"
-    },
-    {
-      "header": null,
       "title": "Ngữ pháp",
       "icon": "isax isax-book",
       "route": "/grammar/manage",
@@ -83,14 +51,6 @@
     },
     {
       "header": null,
-      "title": "Từ điển",
-      "icon": "isax isax-book-1",
-      "route": "/vocabulary/manage",
-      "subRoute": null,
-      "activePrefix": "/vocabulary"
-    },
-    {
-      "header": null,
       "title": "Tài liệu học tập",
       "icon": "isax isax-document-text",
       "route": "/learning-path/lesson-materials/manage",
@@ -98,15 +58,23 @@
       "activePrefix": "/learning-path/lesson-materials/manage"
     },
     {
-      "header": "CHƯƠNG TRÌNH HỌC",
-      "title": "Giáo trình",
-      "icon": "isax isax-book-saved",
-      "route": "/learning-path/syllabus/manage",
+      "header": "QUẢN TRỊ HỆ THỐNG",
+      "title": "Thông báo",
+      "icon": "isax isax-notification-bing",
+      "route": "/admin/settings/notifications",
+      "subRoute": null,
+      "activePrefix": "/admin/settings/notifications"
+    },
+    {
+      "header": null,
+      "title": "Yêu cầu hỗ trợ",
+      "icon": "isax isax-ticket",
+      "route": "/instructor/instructor-support-tickets",
       "subRoute": null,
       "activePrefix": null
     },
     {
-      "header": "QUẢN TRỊ HỆ THỐNG",
+      "header": null,
       "title": "Người dùng",
       "icon": "isax isax-profile-2user",
       "route": "https://auth.test.invalid/admin/users",
@@ -119,40 +87,31 @@
       0
     ],
     "/admin/class-management": [
-      2
-    ],
-    "/admin/class-management/students": [
-      2
-    ],
-    "/admin/settings/notifications": [
       1
     ],
-    "/hanzi/manage": [
-      5
+    "/admin/class-management/students": [
+      1
     ],
-    "/hanzi/manage/create": [
-      5
+    "/admin/settings/notifications": [
+      7
+    ],
+    "/grammar/manage": [
+      3
     ],
     "/vocab-set/manage": [
-      8
-    ],
-    "/quiz/manage": [
-      9
-    ],
-    "/learning-path/syllabus/manage": [
-      12
-    ],
-    "/instructor/instructor-support-tickets": [
       4
     ],
+    "/quiz/manage": [
+      5
+    ],
+    "/learning-path/syllabus/manage": [
+      2
+    ],
+    "/instructor/instructor-support-tickets": [
+      8
+    ],
     "/admin/users": [
-      13
-    ],
-    "/instructor/list-class": [
-      3
-    ],
-    "/instructor/list-class/grading": [
-      3
+      9
     ],
     "/": [],
     "/admin": []

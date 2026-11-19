@@ -116,7 +116,7 @@ describe("ManagementSidebar — khu vực Admin", () => {
     expect(screen.getByText("Quản Trị Viên")).toBeInTheDocument();
     expect(screen.getByText("admin@example.test")).toBeInTheDocument();
     expect(screen.getByText("LMS · Admin")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Học Bá" })).toHaveAttribute("src", "/assets/hocba/hb-color.svg");
+    expect(screen.getByRole("img", { name: "LMS × Học Bá" })).toHaveAttribute("src", "/assets/hocba/lms-hoc-ba.png");
     const active = document.querySelector(".sidebar-menu a.active");
     expect(active?.textContent).toContain("Lớp học");
   });
@@ -140,23 +140,66 @@ describe("ManagementSidebar — khu vực Admin", () => {
     expect(assign).toHaveBeenCalledWith(`/oauth2/sign_out?rd=${encodeURIComponent(idpLogout)}`);
   });
 
-  it("thu gọn sidebar đổi class và lưu localStorage; mở lại thì bỏ class", async () => {
+  it("sidebar luôn bắt đầu mở và nút trên header vẫn thu gọn được", async () => {
+    window.localStorage.setItem("management-sidebar-collapsed", "true");
     renderSidebar();
     const column = document.querySelector(".management-sidebar-column") as HTMLElement;
     expect(column.className).not.toContain("is-collapsed");
     await userEvent.click(screen.getByRole("button", { name: "Thu gọn menu" }));
     expect(column.className).toContain("is-collapsed");
-    expect(window.localStorage.getItem("management-sidebar-collapsed")).toBe("true");
+    expect(screen.queryByRole("img", { name: "LMS × Học Bá" })).toBeNull();
+    expect(screen.getByRole("img", { name: "Học Bá" })).toHaveAttribute("src", "/assets/hocba/hb-color.svg");
     // Thu gọn: mỗi mục có title/aria-label để người dùng vẫn biết mục là gì.
     expect(screen.getByRole("link", { name: "Lớp học" })).toHaveAttribute("title", "Lớp học");
     await userEvent.click(screen.getByRole("button", { name: /Mở rộng menu|Thu gọn menu/ }));
     expect(column.className).not.toContain("is-collapsed");
   });
 
+  it("mở sẵn các nhóm học liệu, đánh dấu trang con hiện tại và thu gọn bằng tiêu đề", async () => {
+    pathname = "/vocab-set/manage";
+    renderSidebar();
+
+    const group = screen.getByText("Từ vựng", { exact: true }).closest("summary")!;
+    const vocabularyLinks = within(group.closest("details")!).getAllByRole("link");
+    expect(vocabularyLinks.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Học phần từ vựng", "/vocab-set/manage"],
+      ["Từ điển", "/vocabulary/manage"],
+      ["Luyện viết", "/hanzi/manage"],
+      ["Luyện phát âm", "/pronunciation/manage"],
+    ]);
+    const groups = document.querySelectorAll(".sidebar-menu-group[open]");
+    expect(groups).toHaveLength(4);
+    expect(screen.getByRole("link", { name: "Học phần từ vựng" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Kho ngữ pháp" })).toHaveAttribute("href", "/grammar/library");
+    expect(screen.queryByText("Kho tài liệu")).toBeNull();
+
+    await userEvent.click(group);
+    expect(group.closest("details")).not.toHaveAttribute("open");
+    await userEvent.click(group);
+    expect(group.closest("details")).toHaveAttribute("open");
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "Tìm chức năng" }), "tai lieu hoc tap");
+    const result = await screen.findByRole("option", { name: /Bộ tài liệu/ });
+    await userEvent.click(within(result).getByRole("button"));
+    expect(router.push).toHaveBeenCalledWith("/learning-path/lesson-materials/manage");
+  });
+
+  it("đặt Chấm bài trong nhóm Bài tập và đánh dấu mục này khi đang chấm", () => {
+    pathname = "/instructor/list-class/grading";
+    renderSidebar();
+
+    const group = screen.getByText("Bài tập", { exact: true }).closest("details")!;
+    expect(group).toHaveAttribute("open");
+    expect(within(group).getByRole("link", { name: "Học phần bài tập" })).toHaveAttribute("href", "/quiz/manage");
+    const grading = within(group).getByRole("link", { name: "Chấm bài" });
+    expect(grading).toHaveAttribute("href", "/instructor/list-class");
+    expect(grading).toHaveAttribute("aria-current", "page");
+  });
+
   it("đánh dấu trạng thái đích theo registry trên từng mục (số lượng từng trạng thái: tests/route-registry.test.ts); 1 unknown ('Yêu cầu hỗ trợ': HSK cũ không có PrivateRoute), 1 external; không mục nào bị ẩn", () => {
     renderSidebar();
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(".sidebar-middle .sidebar-menu a"));
-    expect(links).toHaveLength(14);
+    expect(links).toHaveLength(15);
     for (const a of links) {
       const href = a.getAttribute("href") ?? "";
       expect(a.dataset.migrationStatus, `${a.textContent} (${href})`).toBe(getNavTargetStatus(href).toLowerCase().replace("_", "-"));

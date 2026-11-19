@@ -23,8 +23,11 @@ export function ManagementHeaderSearch({ items }: { items: NavItem[] }) {
   const results = useMemo(() => {
     const needle = fold(query.trim());
     if (!needle) return [];
+    const matches = ({ title, header }: NavItem) =>
+      fold(title).includes(needle) || Boolean(header && fold(header).includes(needle));
     return items
-      .filter((item) => item.href && item.href !== "#" && (fold(item.title).includes(needle) || (item.header ? fold(item.header).includes(needle) : false)))
+      .flatMap((item) => (item.children ?? [item]).filter((child) => matches(item) || matches(child)))
+      .filter((item) => item.href && item.href !== "#")
       .slice(0, MAX_RESULTS);
   }, [items, query]);
 

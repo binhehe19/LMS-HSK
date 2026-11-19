@@ -1252,6 +1252,13 @@
         padding: 6px 12px;
         background: $white;
 
+        .sidebar-brand-lockup {
+            display: block;
+            width: 100%;
+            max-width: 220px;
+            height: auto;
+        }
+
         .sidebar-brand-logo {
             width: 106px;
             max-width: 100%;
@@ -1282,6 +1289,11 @@
     }
 
     .sidebar-menu {
+        .menu-header-label small {
+            font-size: .625rem;
+            letter-spacing: .05em;
+        }
+
         li {
             margin-bottom: 4px;
             &:last-child {
@@ -2749,6 +2761,7 @@ body:has(.instructor-sidebar-shell) {
     --admin-font-page-title: 1.375rem;
     --admin-font-section-title: 1.125rem;
     --admin-font-group-title: 1rem;
+    --admin-scrollbar-thumb: color-mix(in srgb, var(--admin-primary-hover) 80%, white);
     --bs-primary-rgb: 176, 13, 14;
 
     .btn.btn-primary {
@@ -2790,6 +2803,10 @@ body:has(.instructor-sidebar-shell) {
                 border: 0;
                 border-radius: 0;
                 box-shadow: none;
+
+                &::-webkit-scrollbar-thumb {
+                    background: var(--admin-scrollbar-thumb);
+                }
             }
 
             // Thanh đầu trang của khung admin: nền trắng, kẻ ngang với vùng nội dung bên dưới.
@@ -2797,6 +2814,18 @@ body:has(.instructor-sidebar-shell) {
                 padding: 0 clamp(14px, 1.5vw, 24px);
                 background: $white;
                 border-bottom: 1px solid var(--admin-neutral);
+            }
+        }
+    }
+
+    .management-sidebar-column:not(.is-collapsed) .settings-sidebar.instructor-sidebar-shell {
+        padding-inline-start: 3px;
+
+        .sidebar-middle {
+            padding-inline-end: 10px;
+
+            > .sidebar-menu > li:not(.menu-header-label) {
+                margin-inline-start: 10px;
             }
         }
     }
@@ -2816,7 +2845,56 @@ body:has(.instructor-sidebar-shell) {
         }
         .sidebar-menu a i { flex-shrink: 0; }
 
-        // Hover xám nhạt; mục đang chọn nền đỏ nhạt đậm hơn nền trắng rõ rệt kèm vạch đỏ bên trái (tương phản chữ/nền ~5:1).
+        .sidebar-menu-group > summary,
+        .sidebar-submenu-disabled {
+            display: flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 7px 10px;
+            font-size: var(--admin-font-body);
+            line-height: 1.4;
+        }
+
+        .sidebar-menu-group > summary {
+            gap: 8px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            color: $gray-700;
+            font-weight: 500;
+            cursor: pointer;
+
+            &::-webkit-details-marker { display: none; }
+            &:hover { background: $brand-gray-100; }
+            &:focus-visible { outline: 2px solid var(--admin-primary); }
+
+            .sidebar-menu-caret {
+                margin-inline-start: auto;
+                transform: rotate(-90deg);
+            }
+        }
+
+        .sidebar-menu-group[open] > summary .sidebar-menu-caret { transform: none; }
+        .sidebar-menu-group:not([open]) > summary.has-active-child {
+            color: var(--admin-primary);
+            background: var(--admin-soft);
+        }
+
+        .sidebar-submenu {
+            margin: 3px 0 6px 17px;
+            padding: 0 0 0 6px;
+            border-inline-start: 1px solid var(--admin-soft);
+            list-style: none;
+        }
+
+        .sidebar-submenu-disabled {
+            border: 1px solid transparent;
+            color: $gray-600;
+        }
+
+        .sidebar-middle::-webkit-scrollbar-thumb {
+            background: var(--admin-scrollbar-thumb);
+        }
+
         .sidebar-menu a:hover {
             background: #F2F4F7;
             border-color: #E4E7EC;
@@ -2826,9 +2904,12 @@ body:has(.instructor-sidebar-shell) {
         .sidebar-menu a.active {
             background: var(--admin-soft);
             border-color: transparent;
-            box-shadow: inset 3px 0 0 var(--admin-primary);
             color: var(--admin-primary);
             font-weight: 600;
+        }
+
+        .sidebar-menu > li > a.active {
+            box-shadow: inset 3px 0 0 var(--admin-primary);
         }
 
         .sidebar-bottom-profile {
@@ -2841,12 +2922,15 @@ body:has(.instructor-sidebar-shell) {
             align-items: center;
             gap: 8px;
             margin-top: .65rem !important;
+            padding-block: 4px;
             padding-right: 4px !important;
+
+            small { font-size: .6875rem; }
 
             &::after {
                 content: "";
                 flex: 1;
-                border-top: 1px solid var(--admin-neutral);
+                border-top: 2px solid var(--admin-neutral);
             }
         }
     }

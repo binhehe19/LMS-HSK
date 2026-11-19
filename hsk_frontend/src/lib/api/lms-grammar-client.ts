@@ -13,6 +13,7 @@ import { listManagedPackages, syllabusBinding, toContentPackage } from "@/lib/ap
 import { assertWriteEnabled } from "@/lib/api/write-gate";
 import type { ContentItemInput, ContentPackage, ContentPackageInput } from "@/types/content";
 import type { GrammarPoint, GrammarPointInput } from "@/types/content-grammar";
+import type { PageResponse } from "@/types/lms";
 
 const PACKAGE_TYPE = "GRAMMAR";
 
@@ -39,6 +40,7 @@ interface GrammarExampleItem {
   sentenceZh?: string;
   pinyin?: string;
   translationVi?: string;
+  explanation?: string;
 }
 interface GrammarContent {
   title: string;
@@ -105,6 +107,64 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
     exampleSentencePinyin: example?.pinyin || undefined,
     exampleSentenceVi: example?.translationVi || undefined,
   };
+}
+
+export type GrammarLibraryEntry = BackendLearningResource & { point: GrammarPoint };
+
+function toLibraryEntry(resource: BackendLearningResource): GrammarLibraryEntry {
+  return { ...resource, point: fromGrammarContent(resource.id, 0, resource.content) };
+}
+
+export async function listGrammarLibrary({ page, size, keyword, level, publishedOnly }: {
+  page: number; size: number; keyword: string; level?: string; publishedOnly?: boolean;
+}): Promise<PageResponse<GrammarLibraryEntry>> {
+  const query = new URLSearchParams({ type: PACKAGE_TYPE, subType: "ZH", inLibrary: "true", page: String(page - 1), size: String(size) });
+  if (keyword.trim()) query.set("keyword", keyword.trim());
+  if (level) query.set("cefrLevel", level);
+  if (publishedOnly) query.set("publishedOnly", "true");
+  const result = await lmsClient.get<PageResponse<BackendLearningResource>>(`/learning-resources?${query}`);
+  return { ...result, items: result.items.map(toLibraryEntry) };
+}
+
+export async function getGrammarLibraryDraft(resourceId: string): Promise<GrammarLibraryEntry> {
+  const path = `/learning-resources/${encodeURIComponent(resourceId)}`;
+  const resource = await lmsClient.get<BackendLearningResource>(path);
+  if (!resource.draftVersionId || !resource.publishedVersionId) return toLibraryEntry(resource);
+  const versions = await lmsClient.get<{ id: string; content: GrammarContent }[]>(`${path}/versions`);
+  const draft = versions.find(version => version.id === resource.draftVersionId);
+  if (!draft) throw new Error("Không tải được bản nháp đang chỉnh sửa.");
+  return toLibraryEntry({ ...resource, content: draft.content });
+}
+
+export async function saveGrammarLibraryDraft(input: GrammarPointInput, entry: GrammarLibraryEntry | null, demo: boolean): Promise<void> {
+  assertWriteEnabled("content", demo);
+  const content = toGrammarContent(input);
+  if (!entry) {
+    await lmsClient.post("/learning-resources", { type: PACKAGE_TYPE, subType: "ZH", inLibrary: true, publishImmediately: false, content });
+    return;
+  }
+
+  const otherExamples = entry.content?.examples?.slice(1) ?? [];
+  const explanation = entry.content?.examples?.[0]?.explanation;
+  if (explanation && content.examples?.[0]) content.examples[0].explanation = explanation;
+  if (otherExamples.length) content.examples = [...(content.examples ?? []), ...otherExamples];
+  const path = `/learning-resources/${encodeURIComponent(entry.id)}/versions`;
+  if (entry.draftVersionId) {
+    await lmsClient.put(`${path}/${encodeURIComponent(entry.draftVersionId)}`, { content });
+  } else {
+    await lmsClient.post(path, { content });
+  }
+}
+
+export async function publishGrammarLibraryDraft(entry: GrammarLibraryEntry, demo: boolean): Promise<void> {
+  assertWriteEnabled("content", demo);
+  if (!entry.draftVersionId) throw new Error("Điểm ngữ pháp chưa có bản nháp để xuất bản.");
+  await lmsClient.post(`/learning-resources/${encodeURIComponent(entry.id)}/versions/${encodeURIComponent(entry.draftVersionId)}/publish`);
+}
+
+export async function deleteGrammarLibraryEntry(id: string, demo: boolean): Promise<void> {
+  assertWriteEnabled("content", demo);
+  await lmsClient.delete(`/learning-resources/${encodeURIComponent(id)}`);
 }
 
 // ---- gói ----

@@ -2,6 +2,7 @@
 
 import { Input, Select } from "antd";
 import { useState } from "react";
+import { CatalogToolbar } from "./catalog-toolbar";
 import styles from "./content-catalog.module.css";
 
 export interface PackageFilters {
@@ -27,44 +28,37 @@ export function PackageCatalogToolbar({ heading, icon, filters, onFilters, sylla
   const { keyword, status, syllabus, level } = filters;
 
   return (
-    <section className={styles.panel} aria-label="Bộ lọc danh sách học phần">
-      <div className={`${styles.bar} ${styles.header}`}>
-        <div className={styles.heading}>
-          <span className={styles.headingIcon} aria-hidden="true"><i className={`isax ${icon}`} /></span>
-          <div>
-            <h1 className={styles.title}>{heading}</h1>
-            <p className={styles.description}>Quản lý học phần {heading.toLowerCase()} theo giáo trình và buổi học.</p>
-          </div>
-        </div>
-        <div className={styles.actions}>
-          {onCreate && <button type="button" className={`btn btn-light rounded-pill ${styles.createButton}`} disabled={busy} onClick={onCreate}><i className="isax isax-add" aria-hidden="true" />Tạo học phần</button>}
-          <button type="button" className={`btn btn-light rounded-pill ${styles.reloadButton}`} onClick={onReload} disabled={loading}><i className="isax isax-refresh" aria-hidden="true" />Tải lại</button>
-        </div>
-      </div>
-      <div className={`${styles.bar} ${styles.filters}`}>
-        <Input className={styles.search} aria-label="Tìm học phần" placeholder="Tìm theo tên, mã hoặc giáo trình" value={keyword} onChange={event => onFilters({ ...filters, keyword: event.target.value })} allowClear prefix={<i className="isax isax-search-normal-1" aria-hidden="true" />} />
-        <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Trạng thái" placeholder="Tất cả trạng thái" allowClear value={status} onChange={value => onFilters({ ...filters, status: value })} options={[{ value: "PUBLISHED", label: "Đã xuất bản" }, { value: "DRAFT", label: "Chưa xuất bản" }]} />
-        <Select
-          className={styles.filter}
-          popupClassName="package-select-popup"
-          aria-label="Giáo trình"
-          placeholder={syllabusOpen ? "Tìm giáo trình…" : "Tất cả giáo trình"}
-          showSearch
-          allowClear
-          value={syllabus}
-          onDropdownVisibleChange={setSyllabusOpen}
-          onChange={value => onFilters({ ...filters, syllabus: value })}
-          filterOption={(query, option) => !!option && [option.label, option.code, option.value].some(text =>
-            text?.toLowerCase().includes(query.trim().toLowerCase()),
-          )}
-          notFoundContent="Không tìm thấy giáo trình"
-          options={syllabuses}
-        />
-        {levels.length > 0 && (
-          <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Trình độ" placeholder="Tất cả trình độ" allowClear value={level} onChange={value => onFilters({ ...filters, level: value })} options={levels.map(value => ({ value, label: value }))} />
+    <CatalogToolbar
+      label="Bộ lọc danh sách học phần"
+      heading={heading}
+      icon={icon}
+      description={`Quản lý học phần ${heading.toLowerCase()} theo giáo trình và buổi học.`}
+      onReload={onReload}
+      loading={loading}
+      actions={onCreate && <button type="button" className={`btn btn-light rounded-pill ${styles.createButton}`} disabled={busy} onClick={onCreate}><i className="isax isax-add" aria-hidden="true" />Tạo học phần</button>}
+    >
+      <Input className={styles.search} aria-label="Tìm học phần" placeholder="Tìm theo tên, mã hoặc giáo trình" value={keyword} onChange={event => onFilters({ ...filters, keyword: event.target.value })} allowClear prefix={<i className="isax isax-search-normal-1" aria-hidden="true" />} />
+      <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Trạng thái" placeholder="Tất cả trạng thái" allowClear value={status} onChange={value => onFilters({ ...filters, status: value })} options={[{ value: "PUBLISHED", label: "Đã xuất bản" }, { value: "DRAFT", label: "Chưa xuất bản" }]} />
+      <Select
+        className={styles.filter}
+        popupClassName="package-select-popup"
+        aria-label="Giáo trình"
+        placeholder={syllabusOpen ? "Tìm giáo trình…" : "Tất cả giáo trình"}
+        showSearch
+        allowClear
+        value={syllabus}
+        onDropdownVisibleChange={setSyllabusOpen}
+        onChange={value => onFilters({ ...filters, syllabus: value })}
+        filterOption={(query, option) => !!option && [option.label, option.code, option.value].some(text =>
+          text?.toLowerCase().includes(query.trim().toLowerCase()),
         )}
-        {(keyword || status || syllabus || level) && <button type="button" className="btn btn-sm btn-light" onClick={() => onFilters({ keyword: "" })}>Xóa bộ lọc</button>}
-      </div>
-    </section>
+        notFoundContent="Không tìm thấy giáo trình"
+        options={syllabuses}
+      />
+      {levels.length > 0 && (
+        <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Trình độ" placeholder="Tất cả trình độ" allowClear value={level} onChange={value => onFilters({ ...filters, level: value })} options={levels.map(value => ({ value, label: value }))} />
+      )}
+      {(keyword || status || syllabus || level) && <button type="button" className="btn btn-sm btn-light" onClick={() => onFilters({ keyword: "" })}>Xóa bộ lọc</button>}
+    </CatalogToolbar>
   );
 }

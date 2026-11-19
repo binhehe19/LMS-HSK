@@ -11,7 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { MANAGEMENT_AREAS } from "@/components/management/management-areas";
-import { isNavItemActive } from "@/components/management/management-nav";
+import { isNavItemActive, type NavItem } from "@/components/management/management-nav";
 import type { UnreadCountState } from "@/components/management/notifications/use-unread-count";
 import { TicketWelcomeToast } from "@/components/management/tickets/ticket-welcome-toast";
 import { useAuthFrontendUrl } from "@/components/management/use-auth-frontend-url";
@@ -45,6 +45,48 @@ export function ManagementSidebar({ area, unread }: { area: ManagementArea; unre
     sessionStorage.setItem(config.scrollKey, e.currentTarget.scrollTop.toString());
   };
 
+  const renderLink = (menu: NavItem) => {
+    const isExternal = menu.href.startsWith("http://") || menu.href.startsWith("https://");
+    const active = isNavItemActive(menu, pathname);
+    const linkProps = {
+      className: active ? "active" : "",
+      title: collapsed ? menu.title : undefined,
+      "aria-label": collapsed ? menu.title : undefined,
+      "aria-current": active ? "page" as const : undefined,
+      "data-migration-status": getNavTargetStatus(menu.href).toLowerCase().replace("_", "-"),
+      style: { whiteSpace: "pre-wrap", lineHeight: "1.4" } as const,
+    };
+    const content = (
+      <div className="d-flex align-items-center w-100 justify-content-between pe-2">
+        <div>
+          <i className={`${menu.icon} me-2`} aria-hidden="true" />
+          <span className="sidebar-menu-text">{menu.title}</span>
+        </div>
+        {menu.unreadBadge && unreadBadge && (
+          <span
+            className="badge rounded-pill"
+            data-testid="menu-unread-badge"
+            style={{
+              background: "linear-gradient(135deg, #FF4667 0%, #392C7D 100%)",
+              fontSize: "10px",
+              minWidth: "20px",
+              padding: "3px 6px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            {unreadBadge}
+          </span>
+        )}
+      </div>
+    );
+
+    return isExternal ? (
+      <a href={menu.href} target="_blank" rel="noopener noreferrer" {...linkProps}>{content}</a>
+    ) : (
+      <Link href={menu.href || "#"} prefetch={false} {...linkProps}>{content}</Link>
+    );
+  };
+
   return (
     <>
       <TicketWelcomeToast
@@ -56,75 +98,56 @@ export function ManagementSidebar({ area, unread }: { area: ManagementArea; unre
         <div className="settings-sidebar instructor-sidebar-shell mb-lg-0 theiaStickySidebar">
           <div className="sidebar-fixed-top">
             <div className="sidebar-brand mb-2">
-              <AssetImage src="assets/hocba/hb-color.svg" alt="Học Bá" className="sidebar-brand-logo" />
+              {collapsed ? (
+                <AssetImage src="assets/hocba/hb-color.svg" alt="Học Bá" className="sidebar-brand-logo" />
+              ) : (
+                <AssetImage src="assets/hocba/lms-hoc-ba.png" alt="LMS × Học Bá" className="sidebar-brand-lockup" />
+              )}
               <span className="visually-hidden">{config.brandSubtitle}</span>
             </div>
           </div>
 
-          <div className="sidebar-label">
-            <h6>Menu chính</h6>
-          </div>
+          {area !== "admin" && (
+            <div className="sidebar-label">
+              <h6>Menu chính</h6>
+            </div>
+          )}
           <div className="sidebar-middle" ref={scrollRef} onScroll={handleScroll}>
             <ul className="sidebar-menu mb-2 pb-1">
-              {navItems.map((menu, index) => {
-                const isExternal = menu.href.startsWith("http://") || menu.href.startsWith("https://");
-                const linkProps = {
-                  className: `${isNavItemActive(menu, pathname) ? "active" : ""}`,
-                  title: collapsed ? menu.title : undefined,
-                  "aria-label": collapsed ? menu.title : undefined,
-                  // Trạng thái của đích (không ảnh hưởng giao diện): migrated | not-migrated | unknown | out-of-scope | external (| unregistered: test cấm).
-                  "data-migration-status": getNavTargetStatus(menu.href).toLowerCase().replace("_", "-"),
-                  style: { whiteSpace: "pre-wrap", lineHeight: "1.4" } as const,
-                };
-                const content = (
-                  <div className="d-flex align-items-center w-100 justify-content-between pe-2">
-                    <div>
-                      <i className={`${menu.icon} me-2`} />
-                      <span className="sidebar-menu-text">{menu.title}</span>
-                    </div>
-                    {menu.unreadBadge && unreadBadge && (
-                      <span
-                        className="badge rounded-pill"
-                        data-testid="menu-unread-badge"
-                        style={{
-                          background: "linear-gradient(135deg, #FF4667 0%, #392C7D 100%)",
-                          fontSize: "10px",
-                          minWidth: "20px",
-                          padding: "3px 6px",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        {unreadBadge}
-                      </span>
-                    )}
-                  </div>
-                );
-                return (
-                  <Fragment key={index}>
-                    {menu.header && (
-                      <li className="menu-header-label mt-3 mb-1 px-3">
-                        <small
-                          className="text-muted fw-bold text-uppercase"
-                          style={{ fontSize: "10px", letterSpacing: "0.05em" }}
-                        >
-                          {menu.header}
-                        </small>
-                      </li>
-                    )}
-                    <li>
-                      {isExternal ? (
-                        <a href={menu.href} target="_blank" rel="noopener noreferrer" {...linkProps}>
-                          {content}
-                        </a>
-                      ) : (
-                        <Link href={menu.href || "#"} prefetch={false} {...linkProps}>
-                          {content}
-                        </Link>
-                      )}
+              {navItems.map((menu) => (
+                <Fragment key={menu.title}>
+                  {menu.header && (
+                    <li className="menu-header-label mt-3 mb-1 px-3">
+                      <small className="text-muted fw-bold text-uppercase">
+                        {menu.header}
+                      </small>
                     </li>
-                  </Fragment>
-                );
-              })}
+                  )}
+                  <li>
+                    {menu.children && !collapsed ? (
+                      <details className="sidebar-menu-group" open>
+                        <summary className={menu.children.some((item) => isNavItemActive(item, pathname)) ? "has-active-child" : undefined}>
+                          <i className={menu.icon} aria-hidden="true" />
+                          <span>{menu.title}</span>
+                          <i className="isax isax-arrow-down-1 sidebar-menu-caret" aria-hidden="true" />
+                        </summary>
+                        <ul className="sidebar-submenu">
+                          {menu.children.map((item) => (
+                            <li key={item.title}>
+                              {item.href ? renderLink(item) : (
+                                <span className="sidebar-submenu-disabled" aria-disabled="true" title="Sắp có">
+                                  <i className={`${item.icon} me-2`} aria-hidden="true" />
+                                  {item.title}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : renderLink(menu)}
+                  </li>
+                </Fragment>
+              ))}
             </ul>
           </div>
         </div>

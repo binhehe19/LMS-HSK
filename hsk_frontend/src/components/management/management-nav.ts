@@ -4,7 +4,7 @@ export interface NavItem {
   /** Tiêu đề nhóm hiện phía trên mục này. */
   header?: string;
   title: string;
-  /** Class icon (iconsax). */
+  /** Class icon. */
   icon: string;
   /** Đường dẫn nội bộ, hoặc URL tuyệt đối (liên kết ngoài, mở tab mới). */
   href: string;
@@ -12,6 +12,7 @@ export interface NavItem {
   activePrefix?: string;
   /** Hiện huy hiệu số thông báo chưa đọc cạnh mục này (bản cũ gắn theo nhãn "Quản lý thông báo"/"Thông báo của tôi"). */
   unreadBadge?: boolean;
+  children?: NavItem[];
 }
 
 /**

@@ -12,6 +12,7 @@ import { confirmAction } from "@/components/shared/confirm-action";
 import { resetContentAccessCache } from "@/hooks/use-content-access";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import * as client from "@/lib/api/lms-grammar-client";
+import * as packageClient from "@/lib/api/package-management-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { makeStore } from "@/redux/store";
@@ -71,6 +72,7 @@ vi.mock("@/lib/api/lms-grammar-client", () => ({
   publishGrammarPackage: vi.fn(),
   unpublishGrammarPackage: vi.fn(),
   listPackageGrammarPoints: vi.fn(),
+  listGrammarLibrary: vi.fn(),
   createGrammarItem: vi.fn(),
   updateGrammarItem: vi.fn(),
   deleteGrammarItem: vi.fn(),
@@ -117,6 +119,29 @@ function renderPage(user = adminUser, area: ManagementArea = "admin") {
 }
 
 const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+
+it("sao chép điểm đã xuất bản từ kho vào buổi đang soạn", async () => {
+  nav.set("/grammar/manage?packageId=p1");
+  const content = { title: "Câu với 是", hskLevel: "1" };
+  vi.mocked(client.listGrammarLibrary).mockResolvedValue({
+    items: [{ id: "lib1", content, point: point(7, { title: content.title }), publishedVersionId: "v1", draftVersionId: null }],
+    page: 0, size: 20, total_elements: 1, total_pages: 1,
+  });
+  const copy = vi.spyOn(packageClient, "importPackageResources").mockResolvedValue({ added: 1, failed: [] });
+  try {
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Từ kho / học phần khác" }));
+    expect(screen.getByRole("tab", { name: "Từ kho ngữ pháp" })).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(await screen.findByRole("checkbox", { name: content.title }));
+    await userEvent.click(screen.getByRole("button", { name: "Sao chép 1 mục" }));
+    await waitFor(() => expect(copy).toHaveBeenCalledWith("p1", [
+      expect.objectContaining({ learningResourceId: "lib1", resourceType: "GRAMMAR", subType: "ZH", resourceContent: content }),
+    ], 1, false));
+    expect(client.listGrammarLibrary).toHaveBeenCalledWith(expect.objectContaining({ publishedOnly: true }));
+  } finally {
+    copy.mockRestore();
+  }
+});
 async function choosePackageAction(name: string, action: string) {
   await waitFor(() => expect(screen.getByRole("button", { name: "Tải lại" })).toBeEnabled());
   await userEvent.click(screen.getByRole("button", { name: `Thao tác ${name}` }));

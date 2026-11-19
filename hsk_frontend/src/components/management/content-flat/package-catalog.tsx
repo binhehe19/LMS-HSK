@@ -6,7 +6,7 @@ import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { listSyllabuses } from "@/lib/api/lms-syllabus-client";
 import { clampPage, filterByKeyword, isPublished } from "@/lib/content/content-tree-model";
 import type { ContentPackage } from "@/types/content";
-import { DEFAULT_CATALOG_PAGE_SIZE } from "./catalog-pagination";
+import { DEFAULT_CATALOG_PAGE_SIZE } from "@/lib/content/catalog-page-sizes";
 import { PackageCatalogTable, type PackageCatalogActions } from "./package-catalog-table";
 import { PackageCatalogToolbar, type PackageFilters } from "./package-catalog-toolbar";
 import { PackagePreviewModal } from "./package-preview-modal";

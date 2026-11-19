@@ -3,11 +3,9 @@ import { buildAdminNav } from "@/components/management/admin-nav";
 import { isNavItemActive } from "@/components/management/management-nav";
 import golden from "./fixtures/admin-nav.golden.json";
 
-// Golden được sinh từ code M1 (menu Admin dựng từ dữ liệu menu instructor + bảng map route) TRƯỚC khi refactor.
-// Test này chứng minh cấu hình tĩnh mới cho ra đúng từng mục, đúng thứ tự, đúng trạng thái active.
 const nav = buildAdminNav(golden.authAdminUsersUrl);
 
-describe("menu sidebar Admin: khớp golden của M1", () => {
+describe("menu cấp chính của sidebar Admin", () => {
   it("cùng số mục", () => {
     expect(nav).toHaveLength(golden.items.length);
   });

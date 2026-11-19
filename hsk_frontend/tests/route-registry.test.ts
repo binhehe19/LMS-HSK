@@ -100,6 +100,11 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
     expect(roles("/admin/class-management")).toEqual([ROLES.ADMIN]);
   });
 
+  it("Kho ngữ pháp dùng API dành cho Admin", () => {
+    expect(getServedRoute("/grammar/library")?.status).toBe("MIGRATED");
+    expect(roles("/grammar/library")).toEqual([ROLES.ADMIN]);
+  });
+
   it("luồng chấm bài /instructor/list-class(+list-lesson, submissions, grading): TEACHER, MENTOR và ADMIN (quyết định chủ dự án vì backend chỉ cho Admin chấm)", () => {
     for (const url of ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"]) {
       expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
@@ -280,7 +285,9 @@ describe("registry khớp với App Router thực tế", () => {
 });
 
 describe("navigation khớp với registry", () => {
-  const admin = buildAdminNav("https://auth.example/admin/users");
+  const admin = buildAdminNav("https://auth.example/admin/users")
+    .flatMap((item) => item.children ?? [item])
+    .filter((item) => item.href);
   const teacher = buildInstructorNav();
   const count = (items: { href: string }[]) =>
     items.reduce<Record<string, number>>((acc, m) => {
@@ -294,10 +301,10 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 14 mục = 12 MIGRATED (có Chấm bài) + 1 UNKNOWN (Yêu cầu hỗ trợ) + 1 EXTERNAL (Quản lý người dùng) — không mục nào NOT_MIGRATED", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 12, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 15 liên kết = 13 MIGRATED + 1 UNKNOWN + 1 EXTERNAL", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
-    expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Quản lý người dùng"]);
+    expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Người dùng"]);
   });
 
   it("Giảng viên: 11 mục = 10 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
