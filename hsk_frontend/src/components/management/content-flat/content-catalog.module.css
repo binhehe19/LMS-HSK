@@ -52,6 +52,13 @@
   --bs-btn-disabled-border-color: var(--bs-btn-border-color);
 }
 
+:global(.btn).reloadButton:hover:not(:disabled),
+:global(.btn).createButton:hover:not(:disabled) {
+  color: #a6261d;
+  background-color: var(--light);
+  border-color: var(--light);
+}
+
 .bar.header {
   padding-block: 20px;
 }

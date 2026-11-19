@@ -37,8 +37,8 @@ export function PackageCatalogToolbar({ heading, icon, filters, onFilters, sylla
           </div>
         </div>
         <div className={styles.actions}>
-          {onCreate && <button type="button" className="btn btn-primary rounded-pill" disabled={busy} onClick={onCreate}><i className="isax isax-add" aria-hidden="true" />Tạo học phần</button>}
-          <button type="button" className={`btn rounded-pill ${styles.refresh}`} onClick={onReload} disabled={loading}><i className="isax isax-refresh" aria-hidden="true" />Tải lại</button>
+          {onCreate && <button type="button" className={`btn btn-light rounded-pill ${styles.createButton}`} disabled={busy} onClick={onCreate}><i className="isax isax-add" aria-hidden="true" />Tạo học phần</button>}
+          <button type="button" className={`btn btn-light rounded-pill ${styles.reloadButton}`} onClick={onReload} disabled={loading}><i className="isax isax-refresh" aria-hidden="true" />Tải lại</button>
         </div>
       </div>
       <div className={`${styles.bar} ${styles.filters}`}>
