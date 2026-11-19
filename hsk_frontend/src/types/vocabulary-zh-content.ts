@@ -31,7 +31,6 @@ export interface VocabularyZhContent {
   word: string;
   imageUrl?: string;
   note?: string;
-  externalId?: string;
   sortOrder?: number;
   hskLevel?: number;
   audioUrl?: string;
