@@ -24,6 +24,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => mocks.params,
 }));
 vi.mock("@/components/student/student-notifications", () => ({ default: () => null }));
+vi.mock("@/redux/hooks", () => ({ useAppDispatch: () => vi.fn() }));
 vi.mock("@/components/student/student-data", () => ({
   useStudentIdentity: () => ({ avatarUrl: "/assets/avatar.png", user: { id: "timetable-test-user", roles: mocks.roles } }),
   useStudentData: () => ({ history: { loading: false } }),
@@ -50,6 +51,25 @@ beforeEach(() => {
   mocks.resources.mockResolvedValue({});
 });
 afterEach(() => vi.restoreAllMocks());
+
+it("keeps the mobile overview compact and lists only available class details", async () => {
+  mocks.classDetail.mockResolvedValue({
+    id: "a", code: "GS0353", syllabusName: "Tiếng Trung công sở",
+    startDate: "2026-11-04", totalSessions: 32, completedSessions: 6,
+  });
+  mocks.progress.mockResolvedValue({ personalProgress: 0, sessions: [] });
+  render(<StudentTimetable />);
+
+  const overview = await screen.findByRole("region", { name: "Tổng quan lớp học" });
+  const content = within(overview);
+  expect(content.getAllByText("GS0353")).toHaveLength(1);
+  expect(overview).toHaveTextContent("6/32 buổi · 18,8%");
+  const details = content.getByText("Xem thêm thông tin lớp").closest("details");
+  expect(details).not.toHaveAttribute("open");
+  expect(details).toHaveTextContent("Khai giảng04/11/2026");
+  expect(details).toHaveTextContent("Tiến độ cá nhân0%");
+  expect(details).not.toHaveTextContent(/Giáo viên|Điểm trung bình|Chuyên cần/);
+});
 
 it("loads only one class for a bare URL even when 50 classes are available", async () => {
   mocks.classes.mockResolvedValue(Array.from({ length: 50 }, (_, index) => ({ id: String(index) })));
@@ -133,7 +153,7 @@ it("opens the session dialog with a named title, progress and separate activity 
     sessions: [{ id: "session-a", classId: "a", sessionNo: 1, topic: "Chủ đề buổi học", startAt: "2026-11-15T08:00:00", status: "DONE" }],
   });
   render(<StudentTimetable />);
-  fireEvent.click(await screen.findByRole("button", { name: "Xem lại buổi học!" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Xem lại buổi học" }));
   const reviewUrl = new URL(mocks.push.mock.lastCall?.[0], "http://localhost");
   expect(reviewUrl.searchParams.get("tab")).toBe("slides");
   expect(reviewUrl.searchParams.get("sessionId")).toBe("session-a");

@@ -27,7 +27,7 @@
 .student-dashboard-wrapper.student-preview .student-topnav .student-timetable-nav > a { padding-inline-end: 5px; }
 .student-dashboard-wrapper.student-preview .student-topbar .student-timetable-menu-trigger { min-width: 30px; min-height: 32px; padding-inline: 4px 8px; border-radius: 16px; font-size: 11px; }
 .student-dashboard-wrapper.student-preview .student-topbar .student-timetable-menu-trigger.is-labeled { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-weight: 700; font-size: 14px; white-space: nowrap; }
-.student-timetable-menu-trigger.is-labeled i { font-size: 10px; }
+:is(.student-timetable-menu-trigger, .student-account) > .fa-chevron-down { font-size: 10px; }
 .student-dashboard-wrapper.student-preview .student-topbar .student-timetable-menu-trigger:hover,
 .student-dashboard-wrapper.student-preview .student-topbar .student-timetable-menu-trigger[aria-expanded="true"] { background: rgb(255 255 255 / 16%); }
 .student-dashboard-wrapper.student-preview .student-topbar .student-timetable-menu-trigger:focus-visible { outline: 2px solid white; outline-offset: -2px; }
@@ -39,8 +39,36 @@
 .student-dashboard-wrapper.student-preview .student-account { display: flex; align-items: center; gap: 6px; text-align: left; font-size: 13px; font-weight: 800; }
 .student-dashboard-wrapper.student-preview .student-account img { width: 38px; height: 38px; border: 2px solid white; border-radius: 50%; }
 .student-dashboard-wrapper.student-preview .student-account small { display: block; color: #b5090b; background: white; border-radius: 20px; text-align: center; font-size: 10px; margin-top: 2px; }
+.student-account-dropdown.ant-dropdown .ant-dropdown-menu {
+  width: min(248px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid #edd8db;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgb(40 20 24 / 16%);
+}
+.student-account-dropdown.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-group-title { padding: 0 0 4px; }
+.student-account-dropdown.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-group-list { margin: 0; }
+.student-account-dropdown__identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--brand-surface, #fff4f4);
+  color: #521c22;
+  overflow-wrap: anywhere;
+}
+.student-account-dropdown__identity img { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; object-fit: cover; }
+.student-account-dropdown .ant-dropdown-menu .ant-dropdown-menu-item { min-height: 44px; padding: 8px 10px; border-radius: 8px; font-weight: 600; }
+.student-account-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-danger { color: var(--brand-primary, #b00d0e); }
+.student-account-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-danger:is(:hover, :focus-visible) {
+  background: var(--brand-surface, #fff4f4);
+  color: var(--brand-primary-hover, #860707);
+}
 .student-dashboard-wrapper.student-preview .student-menu-toggle { display: none; }
 .student-dashboard-wrapper.student-preview .student-page-content { padding: 24px 0 100px; background: #f8f9fa; }
+/* The shared stylesheet gives all headers a menu-level z-index. */
+.student-dashboard-wrapper.student-preview > .student-page-content :where(header) { z-index: auto; }
 .student-dashboard-wrapper.student-preview .student-dashboard-container { max-width: 1600px; padding: 0 40px; }
 
 @media (min-width: 992px) {
@@ -146,9 +174,9 @@
 }
 @media (max-width: 767px) {
   .student-dashboard-wrapper.student-preview { --student-header-height: 64px; }
-  .student-dashboard-wrapper.student-preview > .student-topbar { gap: 16px; }
+  .student-dashboard-wrapper.student-preview > .student-topbar { gap: 8px; }
   .student-dashboard-wrapper.student-preview .student-brand { width: 62px; }
-  .student-dashboard-wrapper.student-preview .student-menu-toggle { display: block; font-size: 20px; }
+  .student-dashboard-wrapper.student-preview .student-menu-toggle { display: grid; place-items: center; min-width: 44px; min-height: 44px; font-size: 20px; }
   .student-dashboard-wrapper.student-preview .student-topbar-account { margin-left: auto; }
   .student-dashboard-wrapper.student-preview .student-topnav { display: none; }
   .student-dashboard-wrapper.student-preview .student-topnav.is-open { display: flex; position: absolute; top: 100%; left: 0; right: 0; background: var(--brand-primary, #b00d0e); padding: 16px var(--student-wide-gutter); flex-direction: column; align-items: stretch; gap: 12px; z-index: 50; }

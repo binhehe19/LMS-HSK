@@ -6,11 +6,14 @@ import StudentShell from "@/components/student/dashboard/student-shell";
 import StudentAuth from "@/components/student/student-auth";
 import { StudentContentState, StudentFetchError } from "@/components/student/student-content-state";
 import { brandTheme, desktopTheme } from "@/theme/brand-tokens";
+import { signout } from "@/redux/slices/auth-slice";
 
-const route = vi.hoisted(() => ({ pathname: "/student/student-quiz" }));
+const route = vi.hoisted(() => ({ pathname: "/student/student-quiz", push: vi.fn(), dispatch: vi.fn(), redirectToSignOut: vi.fn() }));
+vi.mock("@/redux/hooks", () => ({ useAppDispatch: () => route.dispatch }));
+vi.mock("@/lib/auth/auth-redirect", () => ({ redirectToSignOut: route.redirectToSignOut }));
 vi.mock("next/navigation", () => ({
   usePathname: () => route.pathname,
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: route.push }),
 }));
 vi.mock("@/components/student/student-data", () => ({
   StudentDataProvider: ({ children }: { children: ReactNode }) => children,
@@ -43,6 +46,23 @@ it("dùng chung điều hướng cho cả trang có sidebar, nội dung rộng v
   rerender(<StudentShell layout="wide">Chi tiết từ vựng</StudentShell>);
   expect(nav.getByRole("link", { name: "Từ điển" })).toHaveAttribute("aria-current", "location");
   expect(nav.getByRole("link", { name: "Thời khóa biểu" })).not.toHaveAttribute("aria-current");
+});
+
+it("mở menu tài khoản để vào hồ sơ hoặc đăng xuất", async () => {
+  render(<StudentShell>Trang học viên</StudentShell>);
+  const trigger = screen.getByRole("button", { name: "Tài khoản của Học viên" });
+  expect(trigger).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(trigger);
+  const profile = await screen.findByRole("menuitem", { name: "Hồ sơ của tôi" });
+  expect(trigger).toHaveAttribute("aria-expanded", "true");
+  fireEvent.click(profile);
+  expect(route.push).toHaveBeenCalledWith("/student/student-profile");
+  expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+  fireEvent.click(trigger);
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Đăng xuất" }));
+  expect(route.dispatch).toHaveBeenCalledWith(signout());
+  expect(route.redirectToSignOut).toHaveBeenCalledOnce();
 });
 
 it("dùng thông báo Ant Design trên desktop và giữ thông báo hiện tại trên mobile", () => {

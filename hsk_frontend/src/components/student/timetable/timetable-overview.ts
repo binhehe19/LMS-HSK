@@ -3,14 +3,31 @@ import type { TimetableClass } from "./timetable-source";
 import type { TimetableSession } from "./timetable-data";
 
 const days: Record<string,string> = {MONDAY:"T2",TUESDAY:"T3",WEDNESDAY:"T4",THURSDAY:"T5",FRIDAY:"T6",SATURDAY:"T7",SUNDAY:"CN"};
-export function classSchedule(course?: TimetableClass): string {
+export function classSchedule(course?: TimetableClass, compact = false): string {
  const patterns=course?.schedulePatterns ?? [];
- if(patterns.length)return patterns.map(p=>`${days[p.dayOfWeek.toUpperCase()] ?? p.dayOfWeek} | ${p.startTime.slice(0,5)} - ${p.endTime.slice(0,5)}`).join(" · ");
- const slots=[...new Set((course?.sessions ?? []).filter(s=>s.status!=="CANCELLED" && s.startAt && s.endAt).map(s=>{
-  const start=dayjs(s.startAt),end=dayjs(s.endAt);
-  return start.isValid() && end.isValid()?`${["CN","T2","T3","T4","T5","T6","T7"][start.day()]} | ${start.format("HH:mm")} - ${end.format("HH:mm")}`:"";
- }).filter(Boolean))];
- return slots.join(" · ") || "Chưa xếp lịch";
+ const slots=patterns.length ? patterns.map(pattern=>({
+  day:days[pattern.dayOfWeek.toUpperCase()] ?? pattern.dayOfWeek,
+  start:pattern.startTime.slice(0,5),
+  end:pattern.endTime.slice(0,5),
+ })) : (course?.sessions ?? []).flatMap(session=>{
+  if(session.status==="CANCELLED" || !session.startAt || !session.endAt)return [];
+  const start=dayjs(session.startAt),end=dayjs(session.endAt);
+  if(!start.isValid() || !end.isValid())return [];
+  return [{day:["CN","T2","T3","T4","T5","T6","T7"][start.day()],start:start.format("HH:mm"),end:end.format("HH:mm")}];
+ });
+ if(!slots.length)return compact ? "" : "Chưa xếp lịch";
+ if(!compact){
+  const labels=slots.map(slot=>`${slot.day} | ${slot.start} - ${slot.end}`);
+  return (patterns.length ? labels : [...new Set(labels)]).join(" · ");
+ }
+ const daysByTime=new Map<string, Set<string>>();
+ for(const slot of slots){
+  const time=`${slot.start}–${slot.end}`;
+  const weekdays=daysByTime.get(time) ?? new Set<string>();
+  weekdays.add(slot.day);
+  daysByTime.set(time,weekdays);
+ }
+ return Array.from(daysByTime,([time,weekdays])=>`${[...weekdays].join(", ")} · ${time}`).join(" / ");
 }
 // One class owns every hero metric. The ALL list may span classes; never average
 // class percentages or combine the first teacher with another class's schedule.

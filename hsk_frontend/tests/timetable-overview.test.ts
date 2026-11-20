@@ -9,6 +9,15 @@ describe("learner timetable overview",()=>{
  it("does not fall back to another class for an unauthorized or stale class query",()=>{const result=timetableOverview(courses,"not-mine");expect(result.course).toBeUndefined();expect(result.progress).toBeNull();expect(result.attendanceRate).toBeNull();});
  it("counts LATE attendance and excludes cancelled sessions without declaring past dates completed",()=>{const result=timetableOverview([{id:"c",sessions:[{id:"1",classId:"c",myAttendanceStatus:"LATE",status:"DONE"},{id:"2",classId:"c",myAttendanceStatus:"ABSENT",status:"UPCOMING",startAt:"2020-01-01"},{id:"3",classId:"c",status:"CANCELLED",myAttendanceStatus:"PRESENT"}]}],"c");expect(result.attendanceRate).toBe(50);expect(result.done).toBe(1);expect(result.total).toBe(2);});
  it("derives schedule only from this class when recurring patterns are unavailable",()=>{expect(classSchedule(courses[0])).toContain("08:00 - 10:00");expect(classSchedule({id:"c",sessions:[{id:"s",classId:"c",startAt:"2026-11-02T18:00:00",endAt:"2026-11-02T19:30:00"}]})).toBe("T2 | 18:00 - 19:30");});
+ it("groups mobile weekdays with the same hours and keeps different time slots separate",()=>{
+  const course: TimetableClass={id:"a",schedulePatterns:[
+   {dayOfWeek:"MONDAY",startTime:"20:00:00",endTime:"21:15:00"},
+   {dayOfWeek:"WEDNESDAY",startTime:"20:00:00",endTime:"21:15:00"},
+   {dayOfWeek:"FRIDAY",startTime:"18:00:00",endTime:"19:15:00"},
+  ]};
+  expect(classSchedule(course,true)).toBe("T2, T4 · 20:00–21:15 / T6 · 18:00–19:15");
+  expect(classSchedule(courses[1],true)).toBe("");
+ });
  it("switches month/all scope without showing undated entries in every month",()=>{const course={id:"c"};const rows=[classSession(course,{id:"nov",classId:"c",startAt:"2026-11-01T08:00:00"}),classSession(course,{id:"dec",classId:"c",startAt:"2026-12-01T08:00:00"}),classSession(course,{id:"undated",classId:"c"})];expect(visibleTimetableSessions(rows,"2026-11",false).map(s=>s.id)).toEqual(["nov"]);expect(visibleTimetableSessions(rows,"2026-12",false).map(s=>s.id)).toEqual(["dec"]);expect(visibleTimetableSessions(rows,"2026-11",true)).toHaveLength(3);});
 });
 
