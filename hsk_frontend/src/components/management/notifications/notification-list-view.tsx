@@ -5,6 +5,7 @@
 //
 // Khác bản cũ có chủ đích: khi dịch vụ chưa cấu hình / gọi lỗi, vùng danh sách hiện một khối thông báo (kèm nút "Thử lại" khi lỗi)
 // thay vì trạng thái rỗng "Không tìm thấy thông báo nào" (nó sẽ nói sai rằng người dùng không có thông báo). Các trạng thái còn lại giống bản cũ.
+import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
@@ -104,18 +105,7 @@ export function NotificationListView({
             </div>
           ) : state.kind === "waiting" || state.kind === "error" ? (
             <div className="p-4">
-              <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="notifications-data-notice" data-kind={state.kind}>
-                <span>
-                  {state.kind === "error"
-                    ? state.message
-                    : "Dịch vụ thông báo chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị."}
-                </span>
-                {state.kind === "error" && (
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={onRetry}>
-                    Thử lại
-                  </button>
-                )}
-              </div>
+              <FetchStateNotice state={state} waitingText="Dịch vụ thông báo chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị." onRetry={onRetry} testId="notifications-data-notice" />
             </div>
           ) : items.length > 0 ? (
             items.map((noti) => (

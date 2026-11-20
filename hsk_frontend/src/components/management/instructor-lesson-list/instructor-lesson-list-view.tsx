@@ -7,6 +7,7 @@
 // Khác bản cũ có chủ đích: (1) classId thiếu/không hợp lệ => dòng thông báo (không gọi API) thay vì "Chưa có bài học"; (2) dịch vụ chưa cấu hình / gọi lỗi =>
 // dòng thông báo (kèm "Thử lại" khi lỗi, 403 khi lớp không thuộc giảng viên) thay vì "Chưa có bài học"; (3) trang trong URL được chuẩn hoá và kẹp theo tổng số trang;
 // (4) `next/link` cho đường dẫn "Danh sách lớp học" (prefetch tắt); (5) type="button" + aria-label cho ba nút biểu tượng.
+import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { Pagination } from "antd";
 import Link from "next/link";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
@@ -148,18 +149,7 @@ export function InstructorLessonListView({
                 {fetchNotice && (
                   <tr>
                     <td colSpan={5} className="p-3">
-                      <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="lesson-list-notice" data-kind={fetchNotice.kind}>
-                        <span>
-                          {fetchNotice.kind === "error"
-                            ? fetchNotice.message
-                            : "Danh sách bài học chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị."}
-                        </span>
-                        {fetchNotice.kind === "error" && (
-                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={onRetry}>
-                            Thử lại
-                          </button>
-                        )}
-                      </div>
+                      <FetchStateNotice state={fetchNotice} waitingText="Danh sách bài học chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị." onRetry={onRetry} testId="lesson-list-notice" />
                     </td>
                   </tr>
                 )}

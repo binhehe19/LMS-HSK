@@ -5,6 +5,7 @@
 //
 // Khác bản cũ có chủ đích: (1) dịch vụ chưa cấu hình (WAITING FOR BACKEND) / gọi lỗi => dòng thông báo trong bảng (kèm "Thử lại" khi lỗi) thay vì
 // "Không tìm thấy người dùng"; (2) "Chọn tất cả …" báo lỗi nếu máy chủ chỉ trả một phần; (3) thêm role/aria cho hộp thoại.
+import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { useRecipientSelector } from "@/components/management/notifications/use-recipient-selector";
 import { RECIPIENT_ROLE_OPTIONS, recipientName, selectAllLabel, stripRolePrefix, type RecipientMap } from "@/lib/notifications/recipient-selection";
 import type { AdminUser } from "@/types/admin-user";
@@ -110,18 +111,7 @@ export function RecipientSelectorModal({ show, onClose, selected, onToggleUser, 
                   ) : sel.state.kind === "waiting" || sel.state.kind === "error" ? (
                     <tr>
                       <td colSpan={4} className="p-3">
-                        <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="recipient-data-notice" data-kind={sel.state.kind}>
-                          <span>
-                            {sel.state.kind === "error"
-                              ? sel.state.message
-                              : "Danh sách người dùng chưa được kết nối API (WAITING FOR BACKEND). Chưa thể chọn người nhận."}
-                          </span>
-                          {sel.state.kind === "error" && (
-                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={sel.reload}>
-                              Thử lại
-                            </button>
-                          )}
-                        </div>
+                        <FetchStateNotice state={sel.state} waitingText="Danh sách người dùng chưa được kết nối API (WAITING FOR BACKEND). Chưa thể chọn người nhận." onRetry={sel.reload} testId="recipient-data-notice" />
                       </td>
                     </tr>
                   ) : users.length === 0 ? (

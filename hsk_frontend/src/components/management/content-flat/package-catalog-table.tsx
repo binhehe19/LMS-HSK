@@ -14,8 +14,9 @@ export interface PackageCatalogActions {
   busy: boolean;
 }
 
-export function PackageCatalogTable({ heading, packages, page, size, onPageChange, loading, syllabusName, onPreview, onEdit, onDelete, onTogglePublish, busy }: PackageCatalogActions & {
+export function PackageCatalogTable({ heading, packages, page, size, onPageChange, loading, syllabusName, onPreview, onEdit, onDelete, onTogglePublish, busy, loadError }: PackageCatalogActions & {
   heading: string;
+  loadError?: React.ReactNode;
   packages: ContentPackage[];
   page: number;
   size: number;
@@ -77,9 +78,9 @@ export function PackageCatalogTable({ heading, packages, page, size, onPageChang
         pagination={false}
         loading={loading}
         scroll={{ x: 1019 }}
-        locale={{ emptyText: `Không tìm thấy ${packageLabel}` }}
+        locale={{ emptyText: loadError ?? `Không tìm thấy ${packageLabel}` }}
       />
-      <CatalogPagination page={page} size={size} total={packages.length} onChange={onPageChange} />
+      {!loadError && <CatalogPagination page={page} size={size} total={packages.length} onChange={onPageChange} />}
     </>
   );
 }

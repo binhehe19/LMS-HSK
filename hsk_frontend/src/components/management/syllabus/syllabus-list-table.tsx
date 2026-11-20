@@ -3,7 +3,7 @@
 import type { TableProps } from "antd";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { DataTable } from "@/components/shared/data-table";
-import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import { FetchErrorNotice, FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { displayText, formatSyllabusDate, syllabusTitle } from "@/lib/syllabus/syllabus-model";
 import type { SyllabusSummaryResponse } from "@/types/lms";
 
@@ -49,7 +49,7 @@ export function SyllabusListTable({ state, keyword, filtered, onKeywordChange, o
     },
   ];
 
-  const notice = state.kind === "waiting" || state.kind === "error";
+  const notice = state.kind === "waiting";
 
   return (
     <>
@@ -77,11 +77,13 @@ export function SyllabusListTable({ state, keyword, filtered, onKeywordChange, o
           <div className="p-3 p-lg-4" data-testid="syllabus-list">
             <DataTable<SyllabusSummaryResponse>
               columns={columns}
-              dataSource={filtered}
+              dataSource={state.kind === "error" ? [] : filtered}
               rowKey="id"
               search={false}
               loading={state.kind === "loading"}
-              locale={{ emptyText: keyword.trim() ? "Không tìm thấy giáo trình phù hợp" : "Chưa có syllabus" }}
+              locale={{ emptyText: state.kind === "error"
+                ? <FetchErrorNotice title="Không thể tải danh sách giáo trình" description={state.message} onRetry={onRetry} testId="syllabus-notice" />
+                : keyword.trim() ? "Không tìm thấy giáo trình phù hợp" : "Chưa có syllabus" }}
             />
           </div>
         )}

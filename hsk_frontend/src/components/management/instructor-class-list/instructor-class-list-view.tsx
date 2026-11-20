@@ -1,5 +1,7 @@
 "use client";
 
+import { FetchErrorNotice } from "@/components/shared/fetch-state-notice";
+
 // Port của LMS_Frontend/src/features/instructor/class-management/class-list-page.tsx (cùng DOM, class, style nội tuyến và chữ).
 // View thuần: không gọi API, nhận dữ liệu và bộ lọc qua props (container: instructor-class-list-page-content.tsx). Chỉ ĐỌC — bản cũ không có thao tác ghi.
 //
@@ -162,18 +164,13 @@ export function InstructorClassListView({
                 {(state.kind === "not-integrated" || state.kind === "error") && (
                   <tr>
                     <td colSpan={8} className="p-3">
-                      <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="class-list-notice" data-kind={state.kind}>
-                        <span>
-                          {state.kind === "error"
-                            ? state.message
-                            : "Danh sách lớp chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị."}
-                        </span>
-                        {state.kind === "error" && (
-                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={onRetry}>
-                            Thử lại
-                          </button>
-                        )}
-                      </div>
+                      {state.kind === "error" ? (
+                        <FetchErrorNotice title="Không thể tải danh sách lớp học" description={state.message} onRetry={onRetry} testId="class-list-notice" />
+                      ) : (
+                        <div className="alert alert-warning mb-0" role="status" data-testid="class-list-notice" data-kind={state.kind}>
+                          Danh sách lớp chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị.
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )}

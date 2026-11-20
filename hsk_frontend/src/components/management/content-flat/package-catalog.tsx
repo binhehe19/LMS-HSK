@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useKeyedFetch, type FetchState } from "@/components/management/notifications/use-keyed-fetch";
-import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
+import { FetchErrorNotice, FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { listSyllabuses } from "@/lib/api/lms-syllabus-client";
 import { clampPage, filterByKeyword, isPublished } from "@/lib/content/content-tree-model";
 import type { ContentPackage } from "@/types/content";
@@ -61,13 +61,14 @@ export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpe
         busy={actions.busy}
       />
       <section className={styles.panel} aria-label={`Danh sách học phần ${heading.toLowerCase()}`}>
-        {state.kind === "error" || state.kind === "waiting" ? (
+        {state.kind === "waiting" ? (
           <div className="p-3"><FetchStateNotice state={state} waitingText="Chưa kết nối được API học phần." onRetry={onRetry} testId="content-packages-notice" /></div>
         ) : (
           <PackageCatalogTable
             {...actions}
             heading={heading}
-            packages={matches}
+            packages={state.kind === "error" ? [] : matches}
+            loadError={state.kind === "error" ? <FetchErrorNotice title="Không thể tải danh sách học phần" description={state.message} onRetry={onRetry} testId="content-packages-notice" /> : undefined}
             page={clampPage(page, matches.length, size)}
             size={size}
             onPageChange={(next, nextSize) => { setPage(next); setSize(nextSize); }}

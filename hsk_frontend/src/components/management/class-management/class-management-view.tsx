@@ -1,5 +1,7 @@
 "use client";
 
+import { FetchErrorNotice } from "@/components/shared/fetch-state-notice";
+
 // Giao diện thuần của màn /admin/class-management: nhận state qua props, không gọi API (dữ liệu do
 // class-management-page-content + use-admin-classes cung cấp). Port từ LMS_Frontend admin-class-management-page.tsx,
 // giữ nguyên bố cục, class CSS (class-management.css, nạp qua styles/page-styles.ts) và hành vi lọc/phân trang.
@@ -169,22 +171,18 @@ export function ClassManagementView({ state, onRetry, onOpenClass }: ClassManage
               <div className="card-body p-0">
                 {loading ? (
                   <div className="text-center py-5"><Spin size="large" /></div>
-                ) : !ready ? (
+                ) : state.kind === "error" ? (
+                    <FetchErrorNotice title="Không thể tải danh sách lớp học" description={state.message} onRetry={onRetry} testId="acm-state-error" />
+                  ) : !ready ? (
                   <div className="text-center text-muted py-5" role="status" data-testid={`acm-state-${state.kind}`}>
                     <i
-                      className={`isax ${state.kind === "error" ? "isax-warning-2" : "isax-link-21"} d-block mb-2`}
+                      className="isax isax-link-21 d-block mb-2"
                       style={{ fontSize: 32 }}
                     />
                     <div className="fw-semibold mb-1">
-                      {state.kind === "error" ? "Không tải được danh sách lớp học" : "Chưa kết nối dữ liệu"}
+                      Chưa kết nối dữ liệu
                     </div>
                     <div className="small mb-3">{state.message}</div>
-                    {state.kind === "error" && onRetry && (
-                      <button type="button" className="btn acm-btn-export" onClick={onRetry}>
-                        <i className="isax isax-refresh me-1" />
-                        Thử lại
-                      </button>
-                    )}
                   </div>
                 ) : (
                   <div className="table-responsive acm-scroll-x">

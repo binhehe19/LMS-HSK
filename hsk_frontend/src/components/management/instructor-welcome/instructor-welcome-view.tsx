@@ -5,6 +5,7 @@
 //
 // Khác bản cũ có chủ đích (như màn lớp học ở M1): khi số liệu KHÔNG có (dịch vụ chưa cấu hình / lỗi) thẻ hiện "—" và có một dòng thông báo,
 // thay vì số 0 như đang có dữ liệu thật; khi đang tải vẫn hiện 0 như cũ. Trạng thái có dữ liệu giống hệt bản cũ.
+import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import { INSTRUCTOR_WELCOME_CSS } from "@/components/management/instructor-welcome/instructor-welcome.styles";
 import type { WelcomeTicketsState } from "@/components/management/instructor-welcome/use-instructor-welcome";
@@ -29,7 +30,7 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
   const completionRate = tickets.kind === "ok" ? tickets.summary.completionRate : 0;
   const completionText = tickets.kind === "loading" ? "0%" : tickets.kind === "ok" ? `${completionRate}%` : UNAVAILABLE;
   const unreadCount: number | string = unread.status === "loading" ? 0 : (unread.count ?? UNAVAILABLE);
-  const noticeKind = tickets.kind === "waiting" || tickets.kind === "error" ? tickets.kind : null;
+  const notice = tickets.kind === "waiting" || tickets.kind === "error" ? tickets : null;
 
   const statCards = [
     {
@@ -178,19 +179,8 @@ export function InstructorWelcomeView({ displayName, displayEmail, roleLabel, ti
               </div>
             </div>
 
-            {noticeKind && (
-              <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4" role="status" data-testid="welcome-data-notice" data-kind={noticeKind}>
-                <span>
-                  {tickets.kind === "error"
-                    ? tickets.message
-                    : "Số liệu công việc chưa được kết nối API (WAITING FOR BACKEND). Các ô hiển thị — nghĩa là chưa có dữ liệu."}
-                </span>
-                {tickets.kind === "error" && (
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={onRetry}>
-                    Thử lại
-                  </button>
-                )}
-              </div>
+            {notice && (
+              <FetchStateNotice state={notice} waitingText="Số liệu công việc chưa được kết nối API (WAITING FOR BACKEND). Các ô hiển thị — nghĩa là chưa có dữ liệu." onRetry={onRetry} testId="welcome-data-notice" className="mb-4" />
             )}
 
             <div className="row g-3">

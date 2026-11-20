@@ -7,7 +7,7 @@
 // "Tạm thời không tải được" chung chung; (2) ba thao tác ghi (gửi nhận xét, tạo/duyệt nhận xét AI) bị KHOÁ khi công tắc "teacher-note" đóng
 // (WriteLockedNotice) — không có thành công giả; (3) nhận xét đã gửi cũng có trạng thái waiting/error riêng với Thử lại.
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
-import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
+import { FetchErrorNotice, FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import {
   aiWeakAreas,
   canApproveReport,
@@ -88,12 +88,7 @@ function TeacherNoteCard({ noteState, onRetryNote, writeEnabled, draft, onDraftC
       )}
       {noteState.kind === "loading" && <div className="small text-muted mb-2">Đang tải nhận xét đã gửi...</div>}
       {noteState.kind === "error" && (
-        <div className="small text-muted mb-2 d-flex flex-wrap align-items-center gap-2" role="status" data-testid="note-notice" data-kind="error">
-          <span>Không tải được nhận xét đã gửi cho buổi học này.</span>
-          <button type="button" className="btn btn-sm btn-outline-danger" onClick={onRetryNote}>
-            Thử lại
-          </button>
-        </div>
+        <FetchErrorNotice title="Không tải được nhận xét đã gửi cho buổi học này." onRetry={onRetryNote} testId="note-notice" className="border rounded-3 mb-2" />
       )}
       {noteState.kind === "waiting" && <FetchStateNotice state={noteState} waitingText="Nhận xét đã gửi chưa được kết nối API (WAITING FOR BACKEND)." testId="note-notice" className="mb-2" />}
       {noteState.kind === "ok" && !note && <div className="small text-muted mb-2">Chưa có nhận xét nào được gửi cho buổi học này.</div>}

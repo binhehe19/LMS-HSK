@@ -3,6 +3,7 @@
 import { Alert, Select } from "antd";
 import { useRef, useState } from "react";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
+import { FetchErrorNotice } from "@/components/shared/fetch-state-notice";
 import { attachOrCopyPackage, listManagedPackages, packageTitle } from "@/lib/api/package-management-client";
 
 const editors: Record<string, string> = { VOCABULARY: "/vocab-set/manage", ASSESSMENT: "/quiz/manage", GRAMMAR: "/grammar/manage", SLIDE: "/learning-path/lesson-materials/manage", MATERIAL: "/learning-path/lesson-materials/manage" };
@@ -24,7 +25,7 @@ export function SyllabusPackages({ syllabusId, canWrite, demo, onChanged }: { sy
   return <section className="border rounded p-3 mb-3" aria-label="Học phần của giáo trình">
     <h6>Học phần của giáo trình</h6><p className="small text-muted">Mở học phần để quản lý học liệu theo buổi và chủ đề. Học phần đã gắn giáo trình sẽ được sao chép; ưu tiên phiên bản đã xuất bản nếu có.</p>
     {packages.state.kind === "loading" && <p role="status">Đang tải học phần…</p>}
-    {packages.state.kind === "error" && <Alert type="error" message="Không tải được học phần" action={<button onClick={packages.reload}>Thử lại</button>} />}
+    {packages.state.kind === "error" && <FetchErrorNotice title="Không tải được học phần" description={packages.state.message} onRetry={packages.reload} />}
     {error && <Alert type="error" message={error} />}
     <ul>{items.filter(p => p.syllabusId === syllabusId).map(p => <li key={p.id}>{packageTitle(p)} ({p.type}) {editors[p.type] && <a href={`${editors[p.type]}?packageId=${encodeURIComponent(p.id)}`}>Mở học phần</a>}</li>)}</ul>
     {canWrite && <div className="d-flex gap-2">

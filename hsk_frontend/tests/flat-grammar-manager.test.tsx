@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GrammarManagePageContent } from "@/components/management/content-grammar/grammar-manage-page-content";
+import { GrammarLibraryPageContent } from "@/components/management/content-grammar/grammar-library-page-content";
 import { ManagementShell } from "@/components/management/management-shell";
 import { confirmAction } from "@/components/shared/confirm-action";
 import { resetContentAccessCache } from "@/hooks/use-content-access";
@@ -119,6 +120,28 @@ function renderPage(user = adminUser, area: ManagementArea = "admin") {
 }
 
 const packageRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
+
+it("Kho ngữ pháp giữ tiêu đề bảng khi tải lỗi và chuyển về trạng thái rỗng khi thử lại thành công", async () => {
+  nav.set("/grammar/library");
+  vi.mocked(client.listGrammarLibrary)
+    .mockRejectedValueOnce(new ApiError("Internal Server Error", 500))
+    .mockResolvedValue({ items: [], total_elements: 0, total_pages: 0, page: 0, size: 20 });
+  render(
+    <Provider store={makeStore({ status: "authenticated", user: adminUser })}>
+      <ManagementShell area="admin">
+        <GrammarLibraryPageContent />
+      </ManagementShell>
+    </Provider>,
+  );
+  const table = within(screen.getByRole("table"));
+  expect(await table.findByText("Không thể tải danh sách điểm ngữ pháp")).toBeInTheDocument();
+  expect(table.getByText(/^Điểm ngữ pháp$/i)).toBeInTheDocument();
+  expect(table.queryByText("Internal Server Error")).not.toBeInTheDocument();
+
+  await userEvent.click(table.getByRole("button", { name: "Thử lại" }));
+  expect(await table.findByText("Không tìm thấy điểm ngữ pháp")).toBeInTheDocument();
+  expect(client.listGrammarLibrary).toHaveBeenCalledTimes(2);
+});
 
 it("sao chép điểm đã xuất bản từ kho vào buổi đang soạn", async () => {
   nav.set("/grammar/manage?packageId=p1");

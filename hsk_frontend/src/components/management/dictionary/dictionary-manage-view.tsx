@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Empty, Input, Select, Table, Tag, type TableColumnsType } from "antd";
+import { Alert, Input, Select, Table, Tag, type TableColumnsType } from "antd";
 import { useEffect, useState } from "react";
 import { CatalogPagination } from "@/components/management/content-flat/catalog-pagination";
 import { CatalogRowMenu } from "@/components/management/content-flat/catalog-row-menu";
@@ -10,7 +10,7 @@ import { DictionaryWordTypeTag } from "@/components/management/dictionary/dictio
 import { VocabularyRowDetails } from "@/components/management/dictionary/vocabulary-row-details";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
-import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
+import { FetchErrorNotice, FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import type { ContentAccess } from "@/hooks/use-content-access";
 import { DEFAULT_CATALOG_PAGE_SIZE } from "@/lib/content/catalog-page-sizes";
 import { DEFAULT_DICTIONARY_FILTERS, HSK_LEVELS, WORD_TYPES, hskBadgeStyle, meaningsSummary, primaryPinyin, wordTypesOf, type DictionaryFilters } from "@/lib/dictionary/vocabulary-model";
@@ -61,23 +61,14 @@ export function DictionaryManageView({ filters, state, page, access, writeEnable
   const change = (patch: Partial<DictionaryFilters>) => onFiltersChange({ ...filters, ...patch, page: 1 });
   const loading = state.kind === "loading";
   const loadError = state.kind === "error" ? (
-    <div role="alert" data-testid="dictionary-notice" data-kind="error" className="py-2">
-      <Empty
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description={(
-          <>
-            <div className="fw-semibold text-dark">Không thể tải danh sách từ vựng</div>
-            <div className="small text-muted mt-1">
-              {page
-                ? "Bảng đang hiển thị kết quả từ lần tải thành công gần nhất. Hãy thử lại để cập nhật."
-                : "Hãy thử tải lại danh sách với bộ lọc hiện tại."}
-            </div>
-          </>
-        )}
-      >
-        <Button onClick={onRetry} icon={<i className="isax isax-refresh" aria-hidden="true" />}>Thử lại</Button>
-      </Empty>
-    </div>
+    <FetchErrorNotice
+      title="Không thể tải danh sách từ vựng"
+      description={page
+        ? "Bảng đang hiển thị kết quả từ lần tải thành công gần nhất. Hãy thử lại để cập nhật."
+        : "Hãy thử tải lại danh sách với bộ lọc hiện tại."}
+      onRetry={onRetry}
+      testId="dictionary-notice"
+    />
   ) : null;
   const readOnly = access.status !== "loading" && !access.canManage;
   const toggleDetails = (id: string) => setExpanded(keys =>

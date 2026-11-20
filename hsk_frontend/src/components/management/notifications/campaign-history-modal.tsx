@@ -5,6 +5,7 @@
 //
 // Khác bản cũ có chủ đích: dịch vụ chưa cấu hình (WAITING FOR BACKEND) / gọi lỗi => dòng thông báo trong bảng (kèm "Thử lại" khi lỗi) thay vì
 // "Chưa có thông báo nào được gửi." (sẽ nói sai rằng chưa từng gửi); thêm role/aria cho hộp thoại.
+import { FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import dayjs from "dayjs";
 import { useCampaignHistory } from "@/components/management/notifications/use-campaign-history";
 import { campaignStatusClass } from "@/lib/notifications/recipient-selection";
@@ -75,18 +76,7 @@ export function CampaignHistoryModal({ show, onClose }: { show: boolean; onClose
                     ) : history.state.kind === "waiting" || history.state.kind === "error" ? (
                       <tr>
                         <td colSpan={5} className="p-3">
-                          <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="campaign-data-notice" data-kind={history.state.kind}>
-                            <span>
-                              {history.state.kind === "error"
-                                ? history.state.message
-                                : "Lịch sử chiến dịch chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị."}
-                            </span>
-                            {history.state.kind === "error" && (
-                              <button type="button" className="btn btn-sm btn-outline-danger" onClick={history.reload}>
-                                Thử lại
-                              </button>
-                            )}
-                          </div>
+                          <FetchStateNotice state={history.state} waitingText="Lịch sử chiến dịch chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị." onRetry={history.reload} testId="campaign-data-notice" />
                         </td>
                       </tr>
                     ) : campaigns.length === 0 ? (

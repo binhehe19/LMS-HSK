@@ -12,7 +12,7 @@ import { ContentItemModal } from "@/components/management/content-tree/content-i
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
 import { confirmAction } from "@/components/shared/confirm-action";
-import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
+import { FetchErrorNotice, FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { deleteGrammarLibraryEntry, getGrammarLibraryDraft, listGrammarLibrary, publishGrammarLibraryDraft, saveGrammarLibraryDraft, type GrammarLibraryEntry } from "@/lib/api/lms-grammar-client";
 import { syncPublishedToPackages } from "@/lib/api/library-sync-client";
@@ -124,13 +124,15 @@ export function GrammarLibraryPageContent() {
         </CatalogToolbar>
         {!canWrite && <WriteLockedNotice />}
         <section className={styles.panel} aria-label="Danh sách điểm ngữ pháp">
-          {list.state.kind === "error" || list.state.kind === "waiting"
+          {list.state.kind === "waiting"
             ? <FetchStateNotice state={list.state} waitingText="Kho ngữ pháp chưa được kết nối API." onRetry={list.reload} />
             : <>
                 <Table className={styles.table} columns={columns} dataSource={rows} rowKey="id" pagination={false}
-                  loading={loading} scroll={{ x: 750 }} locale={{ emptyText: "Không tìm thấy điểm ngữ pháp" }} />
-                <CatalogPagination page={page} size={size} total={list.lastData?.total_elements ?? 0} showQuickJumper={false}
-                  onChange={(nextPage, nextSize) => setPagination({ page: nextPage, size: nextSize })} />
+                  loading={loading} scroll={{ x: 750 }} locale={{ emptyText: list.state.kind === "error"
+                    ? <FetchErrorNotice title="Không thể tải danh sách điểm ngữ pháp" description="Hãy thử tải lại danh sách với bộ lọc hiện tại." onRetry={list.reload} />
+                    : "Không tìm thấy điểm ngữ pháp" }} />
+                {list.state.kind !== "error" && <CatalogPagination page={page} size={size} total={list.lastData?.total_elements ?? 0} showQuickJumper={false}
+                  onChange={(nextPage, nextSize) => setPagination({ page: nextPage, size: nextSize })} />}
               </>}
         </section>
       </div>
