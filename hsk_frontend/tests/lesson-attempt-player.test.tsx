@@ -12,6 +12,14 @@ const client = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/api/assessment-attempt-client", () => client);
 
+vi.mock("@/components/shared/rich-text-editor", () => ({
+  RichTextEditor: ({ label, text, html, disabled, onChange }: {
+    label: string; text: string; html?: string; disabled?: boolean;
+    onChange: (text: string, html?: string) => void;
+  }) => <textarea aria-label={label} value={html ?? text} disabled={disabled}
+    onChange={event => onChange(event.target.value.replace(/<[^>]*>/g, ""), event.target.value)} />,
+}));
+
 const attempt = {
   attemptId: "a1",
   status: "IN_PROGRESS",
@@ -47,7 +55,7 @@ describe("LessonAttemptPlayer — luồng làm bài dùng chung với backend", 
 
     fireEvent.click(screen.getByRole("button", { name: "Câu sau ›" }));
     await waitFor(() => expect(screen.getByLabelText("Câu trả lời")).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText("Câu trả lời"), { target: { value: "bài viết" } });
+    fireEvent.change(screen.getByLabelText("Câu trả lời"), { target: { value: "<p><strong>bài viết</strong></p>" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Nộp bài" }));
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận nộp" }));
@@ -55,7 +63,7 @@ describe("LessonAttemptPlayer — luồng làm bài dùng chung với backend", 
     await waitFor(() => expect(client.submitAttempt).toHaveBeenCalled());
     const [id, , answers] = client.submitAttempt.mock.calls[0];
     expect(id).toBe("a1");
-    expect(answers).toEqual(expect.arrayContaining([{ questionId: "q1", answerJson: '{"selectedOptionIndex":0}' }, { questionId: "q2", answerJson: '{"text":"bài viết"}' }]));
+    expect(answers).toEqual(expect.arrayContaining([{ questionId: "q1", answerJson: '{"selectedOptionIndex":0}' }, { questionId: "q2", answerJson: '{"text":"bài viết","html":"<p><strong>bài viết</strong></p>"}' }]));
     await waitFor(() => expect(onSubmitted).toHaveBeenCalled());
   });
 

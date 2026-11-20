@@ -1,23 +1,90 @@
-/* Keep the existing groups and nested rows; strengthen selection without shifting them. */
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel{border-color:#e3e7ef;background:#fff;box-shadow:0 3px 12px #26374d05;overflow:hidden}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item,
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab,
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button{position:relative;isolation:isolate;transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;color:#52637b;cursor:pointer}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item:hover,
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab:hover,
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button:hover{background:#fff7f8;color:#a71120}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active{outline:0;border-radius:8px;background:linear-gradient(100deg,#ffe7eb,#fff4f5);box-shadow:inset 0 0 0 1px #efb8c0;color:#b00d25;font-weight:700}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:4px;border-radius:0 4px 4px 0;background:#c6122f}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__label{color:#a60d24;font-weight:700}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__icon img{filter:none;opacity:1}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item.is-active .ochp-menu__pct:not(.is-complete){background:#fff;border-radius:12px;color:#b00d25;padding:2px 7px;box-shadow:0 1px 3px #b00d0e0b}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .ochp-menu__item .ochp-menu__pct.is-complete{color:#119947}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab{min-height:42px;border-color:#e0e5ee;border-radius:9px}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab.is-active,
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-game-children button.is-active{border-color:#ecadb8;background:linear-gradient(100deg,#ffe7eb,#fff4f5);color:#a60d24;font-weight:700;box-shadow:inset 3px 0 0 #c6122f,0 2px 6px #b00d0e08}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-tab.is-active>i{color:#c6122f}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-children{border-left-color:#f4dbe0}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-toggle{font-weight:650;color:#38475b;transition:color .18s ease}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel .lesson-vocab-toggle:hover{color:#b00d25}
-.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel button:focus-visible{outline:2px solid #b00d25;outline-offset:-3px;z-index:1}
-@media(prefers-reduced-motion:reduce){.hsk-lesson-workspace .ochp-sidebar .lesson-sidebar-panel button{transition:none!important}}
+.hsk-lesson-workspace .lesson-sidebar-card {
+ --lesson-menu-text: #34445b;
+ --lesson-menu-accent: #9a1d30;
+ --lesson-menu-tint: #fff1f3;
+ --lesson-menu-border: #e9edf2;
+ display: grid;
+ gap: 6px;
+ min-width: 0;
+ padding: 10px;
+ border: 1px solid #dfe5ef;
+ border-radius: 14px;
+ background: #fff;
+ box-shadow: 0 3px 12px rgb(38 55 77 / 5%);
+}
+.hsk-lesson-workspace section.lesson-sidebar-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hsk-lesson-workspace section.lesson-sidebar-card > :is(.lesson-sidebar-heading, .lesson-sidebar-row--wide, .lesson-sidebar-children) {
+ grid-column: 1 / -1;
+}
+.hsk-lesson-workspace section.lesson-sidebar-card > .lesson-sidebar-row { gap: 8px; padding-inline: 8px; }
+.hsk-lesson-workspace .lesson-practice-menu {
+ --lesson-menu-accent: #28588c;
+ --lesson-menu-tint: #eef5ff;
+}
+.hsk-lesson-workspace .lesson-sidebar-heading {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ min-height: 40px;
+ margin: 0 0 2px;
+ padding: 6px 10px;
+ border-radius: 8px;
+ background: var(--lesson-menu-tint);
+ color: var(--lesson-menu-accent);
+ font-size: 15px;
+ font-weight: 750;
+}
+.hsk-lesson-workspace .lesson-sidebar-heading img { width: 22px; height: 22px; }
+.hsk-lesson-workspace .lesson-sidebar-row {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ width: 100%;
+ min-height: 44px;
+ padding: 8px 10px;
+ border: 1px solid var(--lesson-menu-border);
+ border-radius: 8px;
+ background: #fff;
+ color: var(--lesson-menu-text);
+ text-align: start;
+ font-size: 13px;
+ font-weight: 600;
+ line-height: 1.4;
+}
+.hsk-lesson-workspace .lesson-sidebar-row > :is(img, i) { flex: none; width: 18px; text-align: center; }
+.hsk-lesson-workspace .lesson-sidebar-row > span:not(.lesson-sidebar-count) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hsk-lesson-workspace .lesson-sidebar-row small { display: block; color: #52637b; font-size: 12px; font-weight: 400; }
+.hsk-lesson-workspace button.lesson-sidebar-row:is(:hover, [aria-current="page"]) {
+ border-color: var(--lesson-menu-accent);
+ background: var(--lesson-menu-tint);
+ color: var(--lesson-menu-accent);
+}
+.hsk-lesson-workspace .lesson-sidebar-row[aria-current="page"] { box-shadow: inset 3px 0 var(--lesson-menu-accent); }
+.hsk-lesson-workspace .lesson-sidebar-count {
+ flex: none;
+ margin-inline-start: auto;
+ padding: 2px 7px;
+ border-radius: 20px;
+ background: #e8f0fb;
+ color: #28588c;
+ font-size: 11px;
+ font-weight: 700;
+}
+.hsk-lesson-workspace .lesson-practice-menu > .lesson-sidebar-row {
+ display: grid;
+ grid-template-columns: 18px minmax(0, 1fr);
+ row-gap: 4px;
+ align-content: center;
+}
+.hsk-lesson-workspace .lesson-practice-menu .lesson-sidebar-row > .lesson-sidebar-count {
+ grid-column: 2;
+ justify-self: start;
+ margin-inline-start: 0;
+}
+.hsk-lesson-workspace .lesson-sidebar-children {
+ display: grid;
+ gap: 6px;
+ margin: 6px 0 0 8px;
+ padding-inline-start: 8px;
+ border-inline-start: 1px solid #e7d6db;
+}

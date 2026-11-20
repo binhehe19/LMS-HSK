@@ -10,15 +10,12 @@ type LessonMaterialTab = "grammar" | "vocabulary" | "flashcards" | "handwriting"
 export function lessonActivity(value: string | null): typeof LESSON_ACTIVITIES[number] {
  return LESSON_ACTIVITIES.find(item=>item.key === value || item.type === value) ?? LESSON_ACTIVITIES[0];
 }
-export function lessonHref(input: { scheduleId: string; sessionId: string; title: string; sessionNo: number; className: string; returnUrl: string; syllabusId?: string; classId?: string }, tab: LessonActivity | LessonMaterialTab): string {
- const query=new URLSearchParams({tab,sessionId:input.sessionId,sessionTitle:input.title,sessionNo:String(input.sessionNo),className:input.className,returnUrl:input.returnUrl});
- const activity=LESSON_ACTIVITIES.find(item=>item.key===tab);
- if(activity)query.set("moduleType",activity.type);
- if(input.syllabusId)query.set("syllabusId",input.syllabusId);
- if(input.classId)query.set("classId",input.classId);
+export function lessonHref(input: { scheduleId: string; classId: string; sessionId: string }, tab: LessonActivity | LessonMaterialTab): string {
+ const query=new URLSearchParams({classId:input.classId,sessionId:input.sessionId,tab});
  return `/learning-path/online-course/homework/${encodeURIComponent(input.scheduleId)}?${query}`;
 }
-export function safeTimetableReturn(value: string | null): string {
- if(!value || value.includes("\\") || value.includes("\r") || value.includes("\n"))return "/student/student-timetable";
- try{const url=new URL(value,"http://localhost");return value.startsWith("/") && url.origin === "http://localhost" && url.pathname === "/student/student-timetable" ? url.pathname+url.search : "/student/student-timetable";}catch{return "/student/student-timetable";}
+export function safeTimetableReturn(value: string | null, classId?: string): string {
+ const fallback = classId ? `/student/student-timetable?${new URLSearchParams({ classId })}` : "/student/student-timetable";
+ if(!value || value.includes("\\") || value.includes("\r") || value.includes("\n"))return fallback;
+ try{const url=new URL(value,"http://localhost");return value.startsWith("/") && url.origin === "http://localhost" && url.pathname === "/student/student-timetable" ? url.pathname+url.search : fallback;}catch{return fallback;}
 }

@@ -163,6 +163,9 @@ describe("màn học viên — phần chứa câu hỏi", () => {
     expect(sectionOfQuestion(content, "q9")).toBeNull();
     expect(sectionOfQuestion({}, "q1")).toBeNull();
     expect(sectionOfQuestion(content, undefined)).toBeNull();
+    const meta = { passageText: "Đoạn đọc cũ" };
+    expect(sectionOfQuestion({ layout: { meta } }, "q1")).toEqual({ content: "Đoạn đọc cũ" });
+    expect(sectionOfQuestion({ layout: { ...content.layout, meta } }, "q9")).toBeNull();
   });
 
   it("văn bản của phần thành các đoạn thuần, thẻ HTML bị bỏ (không render HTML)", () => {

@@ -32,7 +32,7 @@ export function ExercisePanel({ resources, skill, session, isAdmin }: Props) {
 
   const loaded = live.data?.resources ?? resources;
   const modules = loaded.map((module) => started[module.id] ?? module);
-  const module = modules[Math.min(active, Math.max(0, modules.length - 1))];
+  const exercise = modules[Math.min(active, Math.max(0, modules.length - 1))];
   const markFinished = useCallback((id: string) => setFinished((previous) => (previous[id] ? previous : { ...previous, [id]: true })), []);
 
   const start = async (target: TimetableModule) => {
@@ -50,19 +50,20 @@ export function ExercisePanel({ resources, skill, session, isAdmin }: Props) {
     }
   };
 
-  const content = obj(module?.content);
+  const content = obj(exercise?.content);
   const attempt = content.attempt ? (content.attempt as AssessmentAttemptResponse) : null;
   const questions = (Array.isArray(content.questions) ? content.questions : []).map(obj);
-  const title = module?.title || `Phần ${NAMES[skill]}`;
-  const canStart = !isAdmin && !!module?.resourceId && !!module.packageVersionId;
+  const title = exercise?.title || `Phần ${NAMES[skill]}`;
+  const canStart = !isAdmin && !!session && !!exercise?.resourceId && !!exercise.packageVersionId;
+  const readyToStart = canStart && !attempt;
 
   let body;
-  if (module && attempt && (attempt.status === "SUBMITTED" || finished[module.id])) {
-    body = <LessonAttemptResult key={attempt.attemptId} attemptId={attempt.attemptId} onRetake={canStart ? () => void start(module) : undefined} />;
-  } else if (module && attempt && questions.length) {
-    body = <LessonAttemptPlayer key={attempt.attemptId} attempt={attempt} title={title} content={module.content} questions={questions} skill={skill} skillName={NAMES[skill]} onSubmitted={() => markFinished(module.id)} />;
-  } else if (module && !attempt && questions.length && isAdmin) {
-    body = <LessonQuestionPreview key={module.id} title={title} content={module.content} questions={questions} skill={skill} skillName={NAMES[skill]} />;
+  if (exercise && attempt && (attempt.status === "SUBMITTED" || finished[exercise.id])) {
+    body = <LessonAttemptResult key={attempt.attemptId} attemptId={attempt.attemptId} onRetake={canStart ? () => void start(exercise) : undefined} />;
+  } else if (exercise && attempt && questions.length) {
+    body = <LessonAttemptPlayer key={attempt.attemptId} attempt={attempt} title={title} content={exercise.content} questions={questions} skill={skill} skillName={NAMES[skill]} onSubmitted={() => markFinished(exercise.id)} />;
+  } else if (exercise && !attempt && questions.length && isAdmin) {
+    body = <LessonQuestionPreview key={exercise.id} title={title} content={exercise.content} questions={questions} skill={skill} skillName={NAMES[skill]} />;
   } else {
     body = (
       <div className={`hsk-exercise is-${skill}`}>
@@ -72,14 +73,14 @@ export function ExercisePanel({ resources, skill, session, isAdmin }: Props) {
             <h2>{title}</h2>
           </header>
           <div className="hsk-lesson-empty">
-            <h3>{live.loading ? "Đang tải bài tập…" : "Chưa có dữ liệu"}</h3>
-            <p>{resources.length ? "Bài tập đã được gắn nhưng chưa có nội dung đề được cấp cho trang này." : "Buổi học chưa được gắn bài tập này."}</p>
-            {module && canStart && (
-              <button type="button" className="lesson-start-attempt" disabled={starting || live.loading} onClick={() => void start(module)}>
+            <h3>{live.loading ? "Đang tải bài tập…" : readyToStart ? "Sẵn sàng làm bài" : "Chưa có dữ liệu"}</h3>
+            {!live.loading && <p>{readyToStart ? "Bấm bắt đầu để mở câu hỏi." : resources.length ? "Không tải được nội dung câu hỏi của bài tập này." : "Buổi học chưa được gắn bài tập này."}</p>}
+            {exercise && canStart && (
+              <button type="button" className="lesson-start-attempt" disabled={starting || live.loading} onClick={() => void start(exercise)}>
                 {starting ? "Đang tải…" : "Bắt đầu bài tập"}
               </button>
             )}
-            {(startError || live.data?.warnings.length) && <p role="alert">{startError || live.data?.warnings.join(" · ")}</p>}
+            {(startError || !!live.data?.warnings.length) && <p role="alert">{startError || live.data?.warnings.join(" · ")}</p>}
           </div>
         </div>
       </div>

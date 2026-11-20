@@ -103,16 +103,16 @@ export function QuestionStage({ title, content, questions, answers, onAnswer, sk
               {note}
             </>
           )}
-          <div className="hsk-exercise-nav">
+          {questions.length > 1 && <div className="hsk-exercise-nav">
             <button type="button" disabled={busy || index === 0} onClick={() => setIndex(index - 1)}>
               ‹ Câu trước
             </button>
             <button type="button" disabled={busy || index >= questions.length - 1} onClick={() => setIndex(index + 1)}>
               Câu sau ›
             </button>
-          </div>
+          </div>}
         </section>
-        <footer className="hsk-question-map">
+        {questions.length > 1 && <nav className="hsk-question-map" aria-label="Chọn câu hỏi">
           {questions.map((item, i) => {
             const qid = typeof item.questionId === "string" ? item.questionId : String(i);
             return (
@@ -121,7 +121,7 @@ export function QuestionStage({ title, content, questions, answers, onAnswer, sk
               </button>
             );
           })}
-        </footer>
+        </nav>}
         {actions}
       </div>
     </div>

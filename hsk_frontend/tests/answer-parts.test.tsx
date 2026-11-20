@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AttemptGradingPanel } from "@/components/management/instructor-grading/attempt-grading-panel";
 import { LessonAttemptResult } from "@/components/student/timetable/lesson-attempt-result";
 import { answerLines } from "@/lib/assessment/answer-parts";
+import { AnswerLines } from "@/components/shared/answer-lines";
 
 const hooks = vi.hoisted(() => ({ result: vi.fn() }));
 vi.mock("@/components/student/timetable/use-assessment-attempt-result", () => ({ useAssessmentAttemptResult: hooks.result }));
@@ -38,6 +39,14 @@ describe("answerLines — dấu đúng/sai từng dòng theo parts của backend
     expect(answerLines({ questionType: "ESSAY", questionText: "x" }, '{"text":"bài"}', parts)).toEqual([{ text: "bài" }]);
     expect(answerLines(matching, null, parts)).toEqual([]);
   });
+});
+
+it("renders submitted essay formatting safely in the shared answer viewer", () => {
+  const question = { questionType: "ESSAY", questionText: "Viết" };
+  const answer = JSON.stringify({ text: "你好", html: '<p><strong>你好</strong><img src="x" onerror="alert(1)"></p>' });
+  const { container } = render(<AnswerLines lines={answerLines(question, answer)} />);
+  expect(container.querySelector("strong")).toHaveTextContent("你好");
+  expect(container.querySelector("img")).toBeNull();
 });
 
 describe("màn kết quả của học viên", () => {

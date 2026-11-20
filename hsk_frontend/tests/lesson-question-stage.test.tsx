@@ -22,6 +22,8 @@ describe("QuestionStage — đủ dữ liệu câu hỏi như LMS 1.0", () => {
       <QuestionStage title="Bài 1" content={content} questions={[question]} answers={{}} onAnswer={() => {}} skill="reading" skillName="Đọc" />,
     );
     expect(screen.getByText("Đọc kỹ đoạn văn")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Câu trước|Câu sau/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Chọn câu hỏi" })).not.toBeInTheDocument();
     expect(screen.getByText("Độ khó: Khó")).toBeInTheDocument();
     expect(screen.getByAltText("hinh.png")).toHaveAttribute("src", "/api/storage/file/pic");
     expect(screen.getByText(/Dùng 把/)).toBeInTheDocument();

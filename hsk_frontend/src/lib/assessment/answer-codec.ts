@@ -2,7 +2,7 @@
 //   trắc nghiệm -> {"selectedOptionIndex": n}          chọn nhiều   -> {"selectedOptionIndexes": [n, ...]}
 //   câu nối     -> {"matchingAnswers": {"<pairIndex>": <optionIndex của lựa chọn>}}  (chấm theo chỉ số: hai lựa chọn trùng chữ vẫn phân biệt)
 //   câu điền    -> {"blankAnswers": {"<blankIndex>": "<chữ nhập>"}}
-//   xếp câu     -> {"chunkOrder": [chỉ số trong sentenceChunks, ...]}      tự luận -> {"text": "..."}
+//   xếp câu     -> {"chunkOrder": [chỉ số trong sentenceChunks, ...]}      tự luận -> {"text": "...", "html"?: "..."}
 // Chuỗi rỗng = chưa trả lời. Backend ghi đè đáp án theo CÂU nên luôn mã hoá đủ mọi ý đã có của câu.
 
 import { audioFromAnswer, filesFromAnswer, type FileAnswerRef } from "@/lib/assessment/file-answer";
@@ -65,7 +65,7 @@ export function encodeKeyed(field: "blankAnswers", values: Record<string, string
 
 export const encodeChunks = (order: number[]): string => (order.length ? JSON.stringify({ chunkOrder: order }) : "");
 
-export const encodeText = (text: string): string => (text.trim() === "" ? "" : JSON.stringify({ text }));
+export const encodeText = (text: string, html?: string): string => (text.trim() === "" ? "" : JSON.stringify({ text, html }));
 
 /** Ghi âm: một bản ghi đã tải lên storage. Backend (QuizAnswerSanitizer) chỉ giữ fileId, fileName, mimeType, sizeBytes, durationSeconds. */
 export const encodeAudio = (audio: FileAnswerRef | null): string => (audio ? JSON.stringify({ audio }) : "");
@@ -100,6 +100,11 @@ export const chunkOrder = (json: string | undefined): number[] => {
 export const answerText = (json: string | undefined): string => {
   const value = parseAnswer(json).text;
   return typeof value === "string" ? value : "";
+};
+
+export const answerHtml = (json: string | null | undefined): string | undefined => {
+  const value = parseAnswer(json).html;
+  return typeof value === "string" && value.trim() ? value : undefined;
 };
 
 export const isAnswered = (json: string | undefined): boolean => !!json && json.trim() !== "";

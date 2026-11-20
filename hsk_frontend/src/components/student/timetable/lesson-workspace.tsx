@@ -34,9 +34,9 @@ export default function LessonWorkspace() {
  const resourceTab=grammar || tab==="resource";
  const contentIcon=grammar?"nguphap":comments?"tailieu":activity.icon;
  const activeResources=grammar ? grammarResources(modules) : tab === "resource" ? extra.filter(item=>item.id === query.get("moduleId")) : activityResources(modules,activity.key);
- const returnUrl=safeTimetableReturn(query.get("returnUrl"));
- const switchTab=(key:string,resourceId?:string)=>{const next=new URLSearchParams(query.toString());next.set("tab",key);next.delete("moduleId");next.delete("lessonMaterialId");if(resourceId)next.set("moduleId",resourceId);if(key === "comments" || key === "resource" || key === "grammar" || key === "vocabulary" || key === "flashcards" || key === "handwriting" || key.startsWith("game-"))next.delete("moduleType");else next.set("moduleType",lessonActivity(key).type);router.push(pathname+"?"+next,{scroll:false});};
- const emptyTitle=grammar ? "Ngữ pháp" : tab === "resource" ? activeResources[0]?.resourceType === "VOCABULARY" ? "Từ vựng" : activeResources[0]?.resourceType === "GRAMMAR" ? "Ngữ pháp" : activeResources[0]?.title || "Nội dung học tập" : comments?"Nhận xét buổi học":activity.key === "slides"?title:`${sessionNo?`Bài ${sessionNo} – `:""}${activity.chinese}`;
+ const returnUrl=safeTimetableReturn(query.get("returnUrl"),classId);
+ const switchTab=(key:string,resourceId?:string)=>{const next=new URLSearchParams(query.toString());next.set("tab",key);next.delete("moduleId");next.delete("lessonMaterialId");if(resourceId)next.set("moduleId",resourceId);next.delete("moduleType");router.push(pathname+"?"+next,{scroll:false});};
+ const emptyTitle=grammar ? "Ngữ pháp" : tab === "resource" ? activeResources[0]?.resourceType === "VOCABULARY" ? "Từ vựng" : activeResources[0]?.resourceType === "GRAMMAR" ? "Ngữ pháp" : activeResources[0]?.title || "Nội dung học tập" : comments?"Nhận xét của giáo viên":activity.key === "slides"?title:`${sessionNo?`Bài ${sessionNo} – `:""}${activity.chinese}`;
  if (tab === "game-match" || tab === "game-blast") {
   if (source.loading || source.error) {
    return <StudentShell layout="wide">{source.loading
@@ -47,9 +47,24 @@ export default function LessonWorkspace() {
   return <StudentShell layout="bleed" spacing="game"><LessonGames key={tab + route.scheduleId} words={vocabularyWords(modules)} mode={tab === "game-match" ? "match" : "blast"} onBack={() => switchTab("flashcards")} /></StudentShell>;
  }
  return <StudentShell layout="bleed" spacing="lesson"><div className="hsk-lesson-workspace">
-  <header className="ochp-header"><div className="ochp-header__inner"><div className="ochp-header__left"><Link href={returnUrl} className="ochp-header__back"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Quay lại thời khóa biểu</Link><div className="ochp-header__row"><h1>{sessionNo?`Buổi ${sessionNo}`:title}</h1><span className="ochp-header__pill">{className}</span>{sessionNo && <span className="ochp-header__session">Buổi {sessionNo}</span>}</div></div><div className="hsk-lesson-progress"><span>Tiến độ luyện bài</span><strong>{source.data?.session.homeworkProgress == null?"—":`${source.data.session.homeworkProgress}%`}</strong><div><span style={{display:"block",height:"100%",background:"white",borderRadius:10,width:`${source.data?.session.homeworkProgress ?? 0}%`}}/></div><small>{source.data?.session.homeworkProgress == null?"Chưa có dữ liệu":"Tiến độ luyện bài của bạn"}</small></div></div></header>
-  <div className="ochp-page-container hsk-lesson-layout"><section className="module-content-panel hsk-lesson-content" aria-label={grammar ? "Ngữ pháp" : tab === "resource" ? "Nội dung bổ sung" : comments?"Nhận xét buổi học":activity.label}>
-   {!vocabularyView && (resourceTab || comments) && <><div className={`hsk-lesson-breadcrumb ${activity.key === "slides"?"is-material":""}`}><img src={`/assets/hocba/tkb-mod-${contentIcon}.svg`} alt="" />{resourceTab ? "NỘI DUNG HỌC TẬP" : comments?"Nhận xét buổi học":activity.key === "slides"?"TÀI LIỆU HỌC TẬP - SLIDES":""}</div>
+  <header className="ochp-header">
+   <div className="ochp-header__inner">
+    <div className="ochp-header__left">
+     <div className="ochp-header__row">
+      <h1>{sessionNo ? `Buổi ${sessionNo}` : title}</h1>
+      <span className="ochp-header__pill">{className}</span>
+     </div>
+     <Link href={returnUrl} className="ochp-header__back"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Quay lại</Link>
+    </div>
+    <div className="hsk-lesson-progress">
+     <span>Tiến độ luyện bài</span><strong>{source.data?.session.homeworkProgress == null ? "—" : `${source.data.session.homeworkProgress}%`}</strong>
+     <div><span style={{ display:"block", height:"100%", background:"white", borderRadius:10, width:`${source.data?.session.homeworkProgress ?? 0}%` }} /></div>
+     <small>{source.data?.session.homeworkProgress == null ? "Chưa có dữ liệu" : "Tiến độ luyện bài của bạn"}</small>
+    </div>
+   </div>
+  </header>
+  <div className="ochp-page-container hsk-lesson-layout"><section className="module-content-panel hsk-lesson-content" aria-label={vocabularyView === "vocabulary" ? "Từ vựng" : grammar ? "Ngữ pháp" : tab === "resource" ? "Nội dung bổ sung" : comments?"Nhận xét của giáo viên":activity.label}>
+   {!vocabularyView && (resourceTab || comments) && <><div className={`hsk-lesson-breadcrumb ${activity.key === "slides"?"is-material":""}`}><img src={`/assets/hocba/tkb-mod-${contentIcon}.svg`} alt="" />{resourceTab ? "NỘI DUNG HỌC TẬP" : comments?"Nhận xét của giáo viên":activity.key === "slides"?"TÀI LIỆU HỌC TẬP - SLIDES":""}</div>
    <h2>{emptyTitle}</h2></>}
    {source.loading ? <StudentContentState kind="loading" className="hsk-lesson-empty"><h3>Đang tải dữ liệu buổi học…</h3></StudentContentState> : source.error ? <StudentFetchError title="Không tải được dữ liệu buổi học" description={source.error} className="hsk-lesson-empty" onRetry={source.reload} mobileRetryClassName="btn btn-outline-danger" mobileContent={<><h3>Không tải được dữ liệu</h3><p>{source.error}</p></>} />  : vocabularyView ? <VocabularyPanel key={vocabularyView+route.scheduleId} resources={modules} view={vocabularyView}/> : !comments && !vocabularyView && !resourceTab && activity.key !== "slides" ? <ExercisePanel key={activity.key+route.scheduleId} resources={activeResources} skill={activity.key} session={source.data?.session} isAdmin={isAdmin}/> : !comments && !resourceTab && activity.key === "slides" ? <LessonSlides resources={activeResources}/> : !comments && activeResources.length ? <div>{activeResources.map(item=><LessonResourceContent key={item.id} resource={item} isAdmin={isAdmin} />)}</div> : <>
    <StudentContentState kind="empty" className={`hsk-lesson-empty ${activity.key === "slides" && !comments && !resourceTab?"is-slide":""}`}><img src={`/assets/hocba/tkb-mod-${contentIcon}.svg`} alt="" /><h3>Chưa có dữ liệu</h3><p>{comments?"Chưa có nhận xét cho buổi học này.":activity.key === "slides" && !resourceTab?"Slide và tài liệu của buổi học sẽ được hiển thị tại đây.":"Nội dung sẽ được hiển thị khi được gắn vào buổi học."}</p></StudentContentState>

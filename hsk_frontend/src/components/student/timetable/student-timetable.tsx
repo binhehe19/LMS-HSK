@@ -94,7 +94,7 @@ function TimetableContent() {
  };
  const openLink=(url: string|undefined,title: string)=>{if(url){try{const target=new URL(url,window.location.origin);if(["https:","http:"].includes(target.protocol)){window.open(target.href,"_blank","noopener,noreferrer");return;}}catch{/* Show an explicit unavailable state below. */}}setNotice({title,text:"Nguồn dữ liệu chưa cung cấp liên kết cho tác vụ này."});};
  const returnUrl=pathname+(params.size?`?${params}`:"");
- const practiceHref=(session:TimetableSession,activity:LessonActivity)=>lessonHref({scheduleId:session.scheduleItemId || session.id,sessionId:session.id,title:session.title,sessionNo:session.sessionNo,syllabusId:session.syllabusId,classId:session.classId,className:session.courseName,returnUrl},activity);
+ const practiceHref=(session:TimetableSession,activity:LessonActivity)=>lessonHref({scheduleId:session.scheduleItemId || session.id,sessionId:session.id,classId:session.classId},activity);
  const openPractice=(activity:LessonActivity=nextStudyActivity(selectedModules))=>{if(selected)router.push(practiceHref(selected,activity));};
  const currentSession=selected && sessions.find(item=>item.id===selected.id && item.classId===selected.classId);
  const knownProgress=currentSession ? currentSession.homeworkProgress : selected?.homeworkProgress;
@@ -182,8 +182,8 @@ function TimetableContent() {
      {detail.loading && <p role="status">Đang tải tài nguyên của buổi học…</p>}
      {detail.error && <div role="alert">{detail.error} <Button size="small" onClick={detail.reload}>Thử lại</Button></div>}
      {detail.data?.warnings.map((warning,index)=><p role="alert" className="text-danger" key={index}>{warning}</p>)}
-     <section aria-label="Tiến độ và kết quả">
-      <h3 className="tkb-session-section-title">Tiến độ và kết quả</h3>
+     <section aria-label="Tổng quan buổi học">
+      <h3 className="tkb-session-section-title">Tổng quan buổi học</h3>
       <div className="tkb-practice__summary">
        <div className="tkb-practice__summary-half">
         <Ring className="tkb-practice__ring" value={selectedProgress} size={54} />
@@ -227,7 +227,7 @@ function TimetableContent() {
       </div>
      </section>
      {selected.access === "materials-only" && <div className="tkb-preview-notice" role="status"><Icon name="lock" /> Bạn đang xem trước tài liệu buổi học. Bài tập chưa mở.</div>}
-     <LessonActivityCards session={selected} returnUrl={returnUrl} />
+     <LessonActivityCards session={selected} />
     </div>
    )}
   </Modal>

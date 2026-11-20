@@ -41,3 +41,32 @@ it("shows both sides in the flashcard list and highlights the selected word", ()
   expect(row).toHaveAttribute("aria-current", "true");
   expect(screen.getByRole("button", { name: "Lật thẻ từ vựng" })).toHaveTextContent("谢谢");
 });
+
+it("filters lesson vocabulary and opens the selected word with its examples", async () => {
+  const secondWord = {
+    ...word,
+    id: "link:1",
+    word: "谢谢",
+    pinyin: "xièxie",
+    meaning: "Cảm ơn",
+    topic: "Chào hỏi",
+    image: "/vocabulary-thanks.png",
+    learned: true,
+    examples: [{ cn: "谢谢您。", pinyin: "Xièxie nín.", vi: "Cảm ơn anh/chị." }],
+  };
+  render(<LessonVocabulary words={[word, secondWord]} view="vocabulary" />);
+  expect(screen.getByRole("heading", { name: "Từ vựng" })).toBeInTheDocument();
+  fireEvent.click(within(screen.getByRole("group", { name: "Chủ đề" })).getByRole("button", { name: "Chào hỏi" }));
+  expect(screen.queryByRole("heading", { name: "你好" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Nghe 谢谢" })).toBeInTheDocument();
+  const detailButton = screen.getByRole("button", { name: "Chi tiết 谢谢" });
+  const illustration = detailButton.parentElement?.nextElementSibling;
+  expect(illustration).toHaveAttribute("src", "/vocabulary-thanks.png");
+  fireEvent.error(illustration!);
+  expect(illustration).not.toBeVisible();
+  fireEvent.click(detailButton);
+  const dialog = within(await screen.findByRole("dialog", { name: "谢谢" }));
+  expect(dialog.getByText("Cảm ơn anh/chị.")).toBeInTheDocument();
+  fireEvent.click(dialog.getByRole("button", { name: /close|đóng/i }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});

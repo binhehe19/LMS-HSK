@@ -1,7 +1,7 @@
 // Đáp án của học viên thành từng dòng có dấu đúng/sai theo `parts[]` của backend (đúng/sai từng dòng của câu nối và từng chỗ trống của câu điền,
 // tính ở backend theo đáp án hệ thống). Không có `parts` (câu loại khác, hoặc câu chưa có điểm) thì trả các dòng chữ như `formatStudentAnswer`, không dấu.
 import type { ResultQuestionContent } from "@/lib/api/assessment-attempt-client";
-import { optionLabel } from "@/lib/assessment/answer-codec";
+import { answerHtml, optionLabel } from "@/lib/assessment/answer-codec";
 import { formatStudentAnswer } from "@/lib/assessment/result-format";
 
 export interface AnswerPart {
@@ -12,6 +12,7 @@ export interface AnswerPart {
 
 export interface AnswerLine {
   text: string;
+  html?: string;
   /** Có dấu đúng/sai khi backend trả `parts`; không thì undefined. */
   correct?: boolean;
 }
@@ -27,6 +28,10 @@ function parse(answerJson: string | null): { matchingAnswers?: Record<string, nu
 const EMPTY = "(bỏ trống)";
 
 export function answerLines(q: ResultQuestionContent, answerJson: string | null, parts?: readonly AnswerPart[] | null): AnswerLine[] {
+  if (q.questionType === "ESSAY") {
+    const html = answerHtml(answerJson);
+    return formatStudentAnswer(q, answerJson).map((text) => html ? { text, html } : { text });
+  }
   if (!parts?.length || !answerJson) return formatStudentAnswer(q, answerJson).map((text) => ({ text }));
   const answer = parse(answerJson);
   const markOf = (index: number) => parts.find((part) => part.index === index)?.correct;

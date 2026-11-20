@@ -6,15 +6,14 @@ import type {TimetableSession} from "@/components/student/timetable/timetable-da
 afterEach(cleanup);
 const session={id:"s",title:"Lesson",sessionNo:1,courseName:"HSK",classId:"c",syllabusId:"syllabus"} as TimetableSession;
 it("groups the materials and lists the four skills in learning order with their own links", () => {
- const returnUrl = "/student/student-timetable?classId=c";
- render(<LessonActivityCards session={session} returnUrl={returnUrl} />);
+ render(<LessonActivityCards session={session} />);
  const tabs = (group: string) => within(screen.getByRole("region", { name: group })).getAllByRole("link").map(link => {
   expect(link.textContent).toBe(link.getAttribute("aria-label"));
   expect(link.querySelector(".fa-chevron-right")).toHaveAttribute("aria-hidden", "true");
   const params = new URL(link.getAttribute("href")!, "http://localhost").searchParams;
-  expect(params.get("returnUrl")).toBe(returnUrl);
+  expect(Object.fromEntries(params)).toEqual({ classId: "c", sessionId: "s", tab: params.get("tab") });
   return params.get("tab");
  });
- expect(tabs("Học liệu")).toEqual(["grammar", "vocabulary", "flashcards", "handwriting"]);
- expect(tabs("Bài tập")).toEqual(["listening", "reading", "writing", "speaking"]);
+ expect(tabs("Ngữ pháp & Từ vựng")).toEqual(["grammar", "vocabulary", "flashcards", "handwriting"]);
+ expect(tabs("Luyện tập")).toEqual(["listening", "reading", "writing", "speaking"]);
 });

@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { AnswerFields, shuffledOrder } from "@/components/student/timetable/lesson-answer-fields";
 import { encodeChoice, encodeChunks, encodeKeyed, encodeMatching, encodeMultiple, encodeText, isAnswered, keyedAnswers, matchingAnswers, optionLabel, partKey, parseAnswer } from "@/lib/assessment/answer-codec";
 
+vi.mock("@/components/shared/rich-text-editor", () => ({
+  RichTextEditor: ({ label, html, text, disabled, onChange }: {
+    label: string; html?: string; text: string; disabled?: boolean;
+    onChange: (text: string, html?: string) => void;
+  }) => <textarea aria-label={label} value={html ?? text} disabled={disabled}
+    onChange={event => onChange(event.target.value.replace(/<[^>]*>/g, ""), event.target.value)} />,
+}));
+
 describe("answer-codec — định dạng đáp án của backend", () => {
   it("mã hoá từng loại câu đúng khoá backend, chuỗi rỗng khi chưa trả lời", () => {
     expect(encodeChoice(2)).toBe('{"selectedOptionIndex":2}');
@@ -124,10 +132,19 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
     expect(shuffledOrder(6, "q-chunks:chunks")).toEqual(shuffledOrder(6, "q-chunks:chunks"));
   });
 
-  it("tự luận: gõ gửi {text}, hiện số từ và số từ tối thiểu", () => {
-    const onChange = setup({ questionType: "ESSAY", minimumWords: 50 }, encodeText("một hai ba"));
+  it("đếm từ tiếng Trung ngay cả khi không có dấu cách", () => {
+    setup({ questionType: "ESSAY" }, encodeText("麻烦您。"));
+    expect(screen.getByText("2 từ")).toBeInTheDocument();
+  });
+
+  it("tự luận: khôi phục định dạng và lưu cả văn bản thuần để chấm", () => {
+    const onChange = setup({ questionType: "ESSAY", minimumWords: 50 }, encodeText("một hai ba", "<p>một <strong>hai</strong> ba</p>"));
     expect(screen.getByText(/3 từ · tối thiểu 50 từ/)).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Câu trả lời"), { target: { value: "bốn" } });
-    expect(onChange).toHaveBeenCalledWith('{"text":"bốn"}');
+    const editor = screen.getByRole("textbox", { name: "Câu trả lời" });
+    expect(editor).toHaveValue("<p>một <strong>hai</strong> ba</p>");
+    fireEvent.change(editor, { target: { value: "<p><em>四</em></p>" } });
+    expect(parseAnswer(onChange.mock.calls[0][0])).toEqual({ text: "四", html: "<p><em>四</em></p>" });
+    fireEvent.change(editor, { target: { value: "<p><br></p>" } });
+    expect(onChange).toHaveBeenLastCalledWith("");
   });
 });

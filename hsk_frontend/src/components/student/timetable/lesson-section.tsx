@@ -19,8 +19,12 @@ export function imagesOf(files: unknown): { src: string; alt: string }[] {
 /** Phần của bài làm chứa câu `questionId` (layout v2): mỗi câu thuộc đúng một phần. */
 export function sectionOfQuestion(content: unknown, questionId: unknown): Obj | null {
   if (typeof questionId !== "string") return null;
-  const found = list(obj(obj(content).layout).sections).find((section) => list(obj(section).questionIds).includes(questionId));
-  return found ? obj(found) : null;
+  const layout = obj(obj(content).layout);
+  const sections = list(layout.sections);
+  const found = sections.find((section) => list(obj(section).questionIds).includes(questionId));
+  if (found) return obj(found);
+  const passage = obj(layout.meta).passageText;
+  return !sections.length && typeof passage === "string" && passage.trim() ? { content: passage } : null;
 }
 
 /** Văn bản chung của phần thành các đoạn thuần (HTML bị bỏ thẻ, không render HTML): xuống dòng ở </p> và <br>. */

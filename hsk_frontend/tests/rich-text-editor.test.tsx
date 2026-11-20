@@ -6,14 +6,25 @@ const mockEditor = vi.hoisted(() => ({ initialize: undefined as (() => void) | u
 vi.mock("@tinymce/tinymce-react", async () => {
   const { useEffect, useRef } = await import("react");
   return {
-    Editor: ({ value, onInit, onEditorChange }: {
-      value: string; onInit: (event: unknown, editor: unknown) => void; onEditorChange: (value: string) => void;
+    Editor: ({ value, initialValue, onInit, onEditorChange, onCompositionStart, onCompositionEnd }: {
+      value?: string; initialValue?: string;
+      onInit: (event: unknown, editor: unknown) => void;
+      onEditorChange: (value: string) => void;
+      onCompositionStart?: () => void;
+      onCompositionEnd?: (event: unknown, editor: { getContent: () => string }) => void;
     }) => {
       const body = useRef<HTMLTextAreaElement>(null);
+      const editor = useRef({
+        getBody: () => body.current,
+        getContent: () => body.current?.value ?? "",
+        setContent: (html: string) => { if (body.current) body.current.value = html; },
+      }).current;
       useEffect(() => {
-        mockEditor.initialize = () => onInit(null, { getBody: () => body.current });
-      }, [onInit]);
-      return <textarea ref={body} aria-label="TinyMCE" defaultValue={value} onChange={event => onEditorChange(event.target.value)} />;
+        mockEditor.initialize = () => onInit(null, editor);
+      }, [editor, onInit]);
+      return <textarea ref={body} aria-label="TinyMCE" defaultValue={initialValue ?? value}
+        onChange={event => onEditorChange(event.target.value)}
+        onCompositionStart={onCompositionStart} onCompositionEnd={event => onCompositionEnd?.(event, editor)} />;
     },
   };
 });
@@ -48,4 +59,29 @@ it("chế độ xem chỉ hiển thị nội dung tĩnh", () => {
   expect(screen.getByText("cửa hàng")).toBeInTheDocument();
   expect(screen.queryByLabelText("TinyMCE")).not.toBeInTheDocument();
   expect(mockEditor.initialize).toBeUndefined();
+});
+
+it("giữ xuống dòng trong văn bản thuần khi dùng editor nhiều dòng", () => {
+  const onChange = vi.fn();
+  render(<RichTextEditor label="Câu trả lời" text="" multiline onChange={onChange} />);
+  act(() => mockEditor.initialize?.());
+  const html = "<p><strong>第一行</strong></p>\n<p>第二行</p>";
+  fireEvent.change(screen.getByRole("textbox", { name: "Câu trả lời" }), { target: { value: html } });
+  expect(onChange).toHaveBeenCalledWith("第一行\n第二行", html);
+});
+
+it("chờ bộ gõ tiếng Trung hoàn tất rồi mới lưu và vẫn đồng bộ bản nháp từ bên ngoài", () => {
+  const onChange = vi.fn();
+  const { rerender } = render(<RichTextEditor label="Câu trả lời" text="" multiline onChange={onChange} />);
+  act(() => mockEditor.initialize?.());
+  const editor = screen.getByRole("textbox", { name: "Câu trả lời" });
+  fireEvent.compositionStart(editor);
+  fireEvent.change(editor, { target: { value: "mafan" } });
+  expect(onChange).not.toHaveBeenCalled();
+  fireEvent.change(editor, { target: { value: "<p>麻烦</p>" } });
+  fireEvent.compositionEnd(editor, { data: "麻烦" });
+  expect(onChange).toHaveBeenCalledExactlyOnceWith("麻烦", "<p>麻烦</p>");
+
+  rerender(<RichTextEditor label="Câu trả lời" text="bản nháp" html="<p><em>bản nháp</em></p>" multiline onChange={onChange} />);
+  expect(editor).toHaveValue("<p><em>bản nháp</em></p>");
 });

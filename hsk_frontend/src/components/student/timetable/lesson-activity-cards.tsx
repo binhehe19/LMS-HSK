@@ -4,16 +4,16 @@ import "./lesson-workspace.css";
 import { LESSON_ACTIVITIES, lessonHref } from "./lesson-navigation";
 import type { TimetableSession } from "./timetable-data";
 const groups = [
- { title: "Học liệu", cards: [
+ { title: "Ngữ pháp & Từ vựng", cards: [
   {key:"grammar",label:"Ngữ pháp",chinese:"",icon:"nguphap"},
   {key:"vocabulary",label:"Từ vựng",chinese:"",icon:"doc"},
   {key:"flashcards",label:"Flashcard",chinese:"",icon:"flashcard"},
   {key:"handwriting",label:"Luyện viết",chinese:"",icon:"viet"},
  ] },
- { title: "Bài tập", cards: LESSON_ACTIVITIES.slice(1) },
+ { title: "Luyện tập", cards: LESSON_ACTIVITIES.slice(1) },
 ] as const;
-export default function LessonActivityCards({session,returnUrl}:{session:TimetableSession;returnUrl:string}) {
- const context={scheduleId:session.scheduleItemId || session.id,sessionId:session.id,title:session.title,sessionNo:session.sessionNo,syllabusId:session.syllabusId,classId:session.classId,className:session.courseName,returnUrl};
+export default function LessonActivityCards({session}:{session:TimetableSession}) {
+ const context={scheduleId:session.scheduleItemId || session.id,sessionId:session.id,classId:session.classId};
  return <div className="tkb-activity-groups">{groups.map(group=>(
  <section key={group.title} aria-label={group.title}>
  <h3 className="tkb-session-section-title">{group.title}</h3>

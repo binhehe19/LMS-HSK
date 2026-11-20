@@ -2,6 +2,7 @@
 import {
   answerAudio,
   answerFiles,
+  answerHtml,
   answerText,
   chunkOrder,
   encodeAudio,
@@ -20,6 +21,7 @@ import {
   selectedChoice,
   selectedMultiple,
 } from "@/lib/assessment/answer-codec";
+import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { safeResourceUrl } from "./lesson-source";
 import { plainText } from "./timetable-source";
 import { LessonAudioAnswer } from "./lesson-audio-answer";
@@ -201,14 +203,28 @@ function Chunks({ question, value, onChange, disabled }: AnswerFieldsProps) {
   );
 }
 
-const wordCount = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0);
+const chineseSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("zh", { granularity: "word" }) : null;
+const wordCount = (text: string) => {
+  if (chineseSegmenter && /\p{Script=Han}/u.test(text)) {
+    return Array.from(chineseSegmenter.segment(text)).filter(word => word.isWordLike).length;
+  }
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+};
 
 function Essay({ question, value, onChange, disabled }: AnswerFieldsProps) {
   const text = answerText(value);
   const minimum = typeof question.minimumWords === "number" ? question.minimumWords : 0;
   return (
-    <div className="hsk-answer-field">
-      <textarea aria-label="Câu trả lời" value={text} disabled={disabled} onChange={(e) => onChange(encodeText(e.target.value))} placeholder="Nhập câu trả lời của bạn…" />
+    <div className="hsk-answer-field hsk-essay-answer">
+      <RichTextEditor
+        label="Câu trả lời"
+        placeholder="Nhập câu trả lời của bạn…"
+        text={text}
+        html={answerHtml(value)}
+        multiline
+        disabled={disabled}
+        onChange={(nextText, html) => onChange(encodeText(nextText, html))}
+      />
       <small>
         {wordCount(text)} từ{minimum ? ` · tối thiểu ${minimum} từ` : ""}
       </small>
