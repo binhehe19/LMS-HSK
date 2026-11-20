@@ -57,6 +57,7 @@ interface BackendPackageVersionResource {
   learningResourceVersionId: string;
   displayOrder: number;
   resourceContent: VocabularyContent | null;
+  sourceResourceId?: string | null;
 }
 interface EditLockResponse {
   acquired: boolean;
@@ -229,7 +230,7 @@ export async function listPackageItems(packageId: string, sessionNo?: number): P
   const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`);
   return links
     .filter(link => sessionNo === undefined || link.sessionNo === sessionNo)
-    .map((link) => fromVocabularyContent(link.learningResourceId, link.displayOrder, link.resourceContent))
+    .map((link) => ({ ...fromVocabularyContent(link.learningResourceId, link.displayOrder, link.resourceContent), sourceResourceId: link.sourceResourceId ?? null }))
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 

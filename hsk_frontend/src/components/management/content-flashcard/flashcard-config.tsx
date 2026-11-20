@@ -119,6 +119,7 @@ export const FLASHCARD_CONFIG: ContentModuleConfig<FlashcardCard> = {
   validateItemInput: validateFlashcardInput,
   normalizeItemInput: normalizeFlashcardInput,
   itemSummary: flashcardSummary,
+  libraryEditHref: (card) => `/vocabulary/manage?keySearch=${enc(card.term)}&edit=${enc(card.sourceResourceId ?? "")}`,
   ItemPreview: FlashcardPreview,
   parseBulkText: parseBulkCards,
   setEditorRoutes: {

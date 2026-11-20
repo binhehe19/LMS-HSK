@@ -34,9 +34,15 @@ export function FlatItemsView<TItem extends ContentItemBase>({ config, pkg, stat
           )}
           {canWrite && (
             <>
-              <button type="button" className="btn btn-sm btn-light rounded-circle content-row-btn" onClick={() => onEdit(item)} disabled={busy} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${config.itemSummary(item)}`}>
-                <i className="isax isax-edit text-primary" />
-              </button>
+              {item.sourceResourceId && config.libraryEditHref ? (
+                <a className="btn btn-sm btn-light rounded-circle content-row-btn" href={config.libraryEditHref(item)} target="_blank" rel="noopener noreferrer" title="Sửa trong Kho (tab mới)" aria-label={`Sửa ${config.itemSummary(item)} trong Kho`}>
+                  <i className="isax isax-export-3 text-primary" />
+                </a>
+              ) : (
+                <button type="button" className="btn btn-sm btn-light rounded-circle content-row-btn" onClick={() => onEdit(item)} disabled={busy} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${config.itemSummary(item)}`}>
+                  <i className="isax isax-edit text-primary" />
+                </button>
+              )}
               <button type="button" className="btn btn-sm btn-light rounded-circle content-row-btn" onClick={() => onDelete(item)} disabled={busy} title="Xóa" aria-label={`Xóa ${config.itemSummary(item)}`}>
                 <i className="isax isax-trash text-danger" />
               </button>

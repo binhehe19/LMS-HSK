@@ -66,6 +66,7 @@ interface BackendPackageVersionResource {
   learningResourceVersionId: string;
   displayOrder: number;
   resourceContent: GrammarContent | null;
+  sourceResourceId?: string | null;
 }
 interface EditLockResponse {
   acquired: boolean;
@@ -234,7 +235,7 @@ export async function listPackageGrammarPoints(packageId: string, sessionNo?: nu
   const links = await lmsClient.get<BackendPackageVersionResource[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`);
   return links
     .filter(link => sessionNo === undefined || link.sessionNo === sessionNo)
-    .map((link) => fromGrammarContent(link.learningResourceId, link.displayOrder, link.resourceContent))
+    .map((link) => ({ ...fromGrammarContent(link.learningResourceId, link.displayOrder, link.resourceContent), sourceResourceId: link.sourceResourceId ?? null }))
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 

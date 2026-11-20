@@ -1,7 +1,8 @@
 "use client";
 
 import { Input, Modal, Select, Table, Tag, type TableColumnsType } from "antd";
-import { useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CatalogPagination } from "@/components/management/content-flat/catalog-pagination";
 import { CatalogRowMenu } from "@/components/management/content-flat/catalog-row-menu";
@@ -14,6 +15,7 @@ import { confirmAction } from "@/components/shared/confirm-action";
 import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { deleteGrammarLibraryEntry, getGrammarLibraryDraft, listGrammarLibrary, publishGrammarLibraryDraft, saveGrammarLibraryDraft, type GrammarLibraryEntry } from "@/lib/api/lms-grammar-client";
+import { syncPublishedToPackages } from "@/lib/api/library-sync-client";
 import { DEFAULT_CATALOG_PAGE_SIZE } from "@/lib/content/catalog-page-sizes";
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import { HSK_LEVEL_OPTIONS, emptyGrammarPointInput, grammarPointToInput, normalizeGrammarPointInput } from "@/lib/content/grammar-point";
@@ -34,6 +36,18 @@ export function GrammarLibraryPageContent() {
   const { page, size } = pagination;
   const list = useKeyedFetch(JSON.stringify([keyword, level, page, size]), () => listGrammarLibrary({ keyword, level, page, size }));
   const rows = list.state.kind === "ok" ? list.state.data.items : [];
+
+  // `?edit=<id>`: link "Sửa trong Kho" từ học phần mở thẳng form sửa (một lần, khi đã có quyền ghi).
+  const editId = useSearchParams().get("edit");
+  const openedEditId = useRef<string | null>(null);
+  const openLinkedEdit = useEffectEvent((id: string) => void run("Không tải được điểm ngữ pháp.", async () => {
+    setEditor({ entry: await getGrammarLibraryDraft(id) });
+  }));
+  useEffect(() => {
+    if (!editId || !canWrite || openedEditId.current === editId) return;
+    openedEditId.current = editId;
+    openLinkedEdit(editId);
+  }, [editId, canWrite]);
   const loading = list.state.kind === "loading";
 
   async function run(fallback: string, work: () => Promise<void>) {
@@ -71,9 +85,15 @@ export function GrammarLibraryPageContent() {
             setEditor({ entry: await getGrammarLibraryDraft(entry.id) });
           }) },
           ...(entry.draftVersionId ? [{ key: "publish", label: "Xuất bản", disabled: busy, onClick: () => void run("Không thể xuất bản.", async () => {
-            await publishGrammarLibraryDraft(entry, demo);
+            const toastId = toast.loading("Đang xuất bản…");
+            try {
+              await publishGrammarLibraryDraft(entry, demo);
+            } catch (error) {
+              toast.dismiss(toastId);
+              throw error;
+            }
             list.reload();
-            toast.success("Đã xuất bản điểm ngữ pháp.");
+            await syncPublishedToPackages(entry.id, toastId, "Đã xuất bản điểm ngữ pháp.");
           }) }] : []),
           { key: "delete", label: "Xóa", danger: true, disabled: busy, onClick: () => void run("Không thể xóa điểm ngữ pháp.", async () => {
             const confirmed = await confirmAction({ title: "Xóa điểm ngữ pháp", content: entry.point.title, okText: "Xóa", danger: true });

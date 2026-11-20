@@ -32,9 +32,15 @@ export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config,
       )}
       {(embedded || canWrite) && (
         <>
-          <button type="button" className={actionClass} onClick={() => onEdit(item)} disabled={!canWrite || busy} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${config.itemSummary(item)}`}>
-            <i className="isax isax-edit text-primary" />
-          </button>
+          {item.sourceResourceId && config.libraryEditHref && canWrite ? (
+            <a className={actionClass} href={config.libraryEditHref(item)} target="_blank" rel="noopener noreferrer" title="Sửa trong Kho (tab mới)" aria-label={`Sửa ${config.itemSummary(item)} trong Kho`}>
+              <i className="isax isax-export-3 text-primary" />
+            </a>
+          ) : (
+            <button type="button" className={actionClass} onClick={() => onEdit(item)} disabled={!canWrite || busy} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${config.itemSummary(item)}`}>
+              <i className="isax isax-edit text-primary" />
+            </button>
+          )}
           <button type="button" className={actionClass} onClick={() => onDelete(item)} disabled={!canWrite || busy} title="Xóa" aria-label={`Xóa ${config.itemSummary(item)}`}>
             <i className="isax isax-trash text-danger" />
           </button>

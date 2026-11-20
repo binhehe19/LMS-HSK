@@ -10,6 +10,7 @@ export type ContentPublishStatus = "DRAFT" | "PUBLISHED";
 export interface ContentPackage {
   resourceCount?: number;
   publishedVersion?: number;
+  hasDraft?: boolean;
   level?: string | null;
   topic?: string | null;
   sessionCount?: number;
@@ -80,6 +81,8 @@ export interface ContentItemBase {
   index?: number;
   createdAt?: string;
   updatedAt?: string;
+  /** Bản sao lấy từ Kho: id mục gốc; sửa ở Kho rồi đồng bộ xuống, không sửa tại học phần. null = mục tạo ngay trong học phần. */
+  sourceResourceId?: string | null;
 }
 
 /** Thân POST/PUT của một mục: mọi trường riêng của module + thứ tự; id/studySetId/thời gian do máy chủ quản lý. */
@@ -187,6 +190,8 @@ export interface ContentModuleConfig<TItem extends ContentItemBase = ContentItem
   normalizeItemInput: (input: ContentItemInput<TItem>) => ContentItemInput<TItem>;
   /** Tên ngắn của mục (hộp xác nhận xoá, toast). */
   itemSummary: (item: TItem) => string;
+  /** Trang sửa mục gốc ở Kho cho bản sao (`item.sourceResourceId`); có thì nút sửa của bản sao mở trang này ở tab mới. */
+  libraryEditHref?: (item: TItem) => string;
   /** Xem nhanh một mục ở cấp mục (vd thẻ lật của flashcard). */
   ItemPreview?: ComponentType<{ item: TItem }>;
   /** Nhập nhanh nhiều mục từ văn bản (mỗi dòng một mục) ở trang sửa bộ. */
@@ -202,6 +207,7 @@ export interface ContentModuleConfig<TItem extends ContentItemBase = ContentItem
 
 /** Props của hộp chọn mục có sẵn (FlatContentManager truyền xuống). */
 export interface ItemPickerProps<TItem extends ContentItemBase> {
+  write?: <T>(action: () => Promise<T>) => Promise<T>;
   hasLock?: () => boolean;
   sessionNo?: number;
   open: boolean;

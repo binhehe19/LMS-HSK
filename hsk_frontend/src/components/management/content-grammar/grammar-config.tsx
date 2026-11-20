@@ -91,5 +91,6 @@ export const GRAMMAR_CONFIG: ContentModuleConfig<GrammarPoint> = {
   validateItemInput: validateGrammarPointInput,
   normalizeItemInput: normalizeGrammarPointInput,
   itemSummary: grammarPointSummary,
+  libraryEditHref: (point) => `/grammar/library?edit=${encodeURIComponent(point.sourceResourceId ?? "")}`,
   ItemsView: FlatItemsBreadcrumbView,
 };
