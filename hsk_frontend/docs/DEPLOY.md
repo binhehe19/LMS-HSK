@@ -7,10 +7,10 @@ Tài liệu cho người đưa bản build lên môi trường thật (dev/stagi
 ## 1. Mô hình
 
 ```
-trình duyệt ──▶ Traefik (docker/infra của LMS_IELTS) ──┬── /api/lms, /api/notification, /api/storage ──▶ backend chung (priority cao hơn)
-                                                       └── còn lại (Host = HSK_DOMAIN, priority 1) ──▶ lms-hsk-frontend (Next.js standalone, cổng 3000)
-Authentication: đăng nhập qua oauth2-proxy (/oauth2/start, /oauth2/sign_out) cùng origin theo luồng IdP của IELTS — xem docs/AUTH-INTEGRATION.md.
-  ⚠ Sơ đồ trên là mô hình hiện tại của compose; luồng IdP cần thêm gateway oauth2-proxy cho HSK_DOMAIN đứng trước FE (chưa dựng, AUTH-INTEGRATION.md mục 5).
+trình duyệt ──▶ Traefik ── Host(DOMAIN của backend) ──▶ lms-gateway (oauth2-proxy, backend/repo-gateway/oauth2-proxy.yml)
+                                                          ├── /api/lms, /api/storage, /api/notification ──▶ backend chung
+                                                          └── còn lại ──▶ lms-hsk-frontend:3000 (Next.js standalone, không đăng ký Traefik)
+Authentication: đăng nhập qua gateway (/oauth2/start, /oauth2/sign_out) cùng origin theo luồng IdP — xem docs/AUTH-INTEGRATION.md.
 ```
 
 Cùng mẫu `LMS_IELTS/frontend/Dockerfile` + `docker-compose.yml`: build multi-stage (`npm ci` → `next build --webpack` → `output: standalone`), chạy bằng user `node`, `TZ=Asia/Bangkok`.
@@ -38,7 +38,7 @@ Base path để **trống** ⇒ màn hình dùng dịch vụ đó hiện **WAITI
 ## 3. Lệnh
 
 ```
-cp .env.example .env            # điền HSK_DOMAIN, TRAEFIK_NETWORK, NEXT_PUBLIC_AUTH_API_BASE_URL, NEXT_PUBLIC_AUTH_FRONTEND_URL
+cp .env.example .env            # điền TRAEFIK_NETWORK, NEXT_PUBLIC_AUTH_API_BASE_URL, NEXT_PUBLIC_AUTH_FRONTEND_URL
 docker compose build            # build arg = các NEXT_PUBLIC_* ở trên
 docker compose up -d
 docker compose logs -f hsk-frontend
