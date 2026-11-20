@@ -3,7 +3,6 @@
 
 @media (width < 992px) {.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding:0}}
 
-.student-dashboard-wrapper[data-timetable]{--timetable-width:1360px;--timetable-gutter:16px}
 .hsk-timetable{color:#263238;background:#f8f9fc;min-height:100vh}
 .hsk-timetable .tkb-hero{padding:82px 0 30px}
 .hsk-timetable .tkb-hero__mascot-owl{right:20px;bottom:0;width:180px;max-height:220px;object-fit:contain}
@@ -11,7 +10,7 @@
 .hsk-timetable .tkb-hero__greeting{display:table;border-radius:28px;background:#a30b0d;padding:8px 22px;font-size:21px;font-weight:700;margin:16px 0}
 .hsk-timetable .tkb-hero__chips{margin-top:10px;flex-wrap:wrap}
 .hsk-timetable .tkb-hero__chip{gap:8px}
-.hsk-timetable-body{max-width:var(--timetable-width);margin:auto;padding-inline:var(--timetable-gutter)}
+.hsk-timetable-body{max-width:var(--student-wide-width);margin:auto;padding-inline:var(--student-wide-gutter)}
 .tkb-preview-data{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;margin:12px 0;color:#7b5015;background:#fff9ec;border:1px solid #f1e3c5;border-radius:10px;font-size:12px}
 .tkb-preview-data button{border:0;background:none;color:#9c1116;text-decoration:underline;white-space:nowrap}
 .hsk-timetable .tkb-navbar{flex-wrap:wrap;gap:12px}
@@ -119,22 +118,7 @@
 
 @media (width < 992px) {.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-page-content{padding-top:0}.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding-left:0;padding-right:0}}
 .hsk-timetable .tkb-hero{width:100%;margin-inline:0}
-.hsk-timetable .tkb-hero,
-.student-dashboard-wrapper.student-preview[data-timetable] > .student-topbar{
- background:linear-gradient(90deg,#6b0708,var(--brand-primary));
-}
-.student-dashboard-wrapper.student-preview[data-timetable] > .student-topbar{
- position:sticky;
- top:0;
- z-index:1020;
- padding-inline:max(var(--timetable-gutter), calc((100% - var(--timetable-width)) / 2 + var(--timetable-gutter)));
-}
-@media (max-width:767px){
- .student-dashboard-wrapper.student-preview[data-timetable] .student-topnav.is-open{
-  background:var(--brand-primary);
-  padding-inline:var(--timetable-gutter);
- }
-}
+.hsk-timetable .tkb-hero{background:var(--student-header-background)}
 
 .hsk-timetable-modal {
  --session-gutter: clamp(16px, 3vw, 32px);
