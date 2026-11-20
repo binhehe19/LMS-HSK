@@ -37,7 +37,7 @@ export function VocabularyHomePageContent() {
   );
 
   return (
-    <StudentShell fullWidth>
+    <StudentShell layout="wide">
       <VocabularyHomeView
         keywordDraft={draft}
         onKeywordDraftChange={setDraft}

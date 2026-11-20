@@ -34,3 +34,26 @@
 
 .student-dashboard-wrapper.student-preview .student-topbar .student-native-modal button { color: #30343b; background: #f8f9fa; padding: 6px 12px; border: 1px solid #e2e8f0; }
 .student-dashboard-wrapper.student-preview .student-topbar .student-native-modal { color: #30343b; }
+
+@media (min-width: 992px) {
+  .student-dashboard-wrapper .student-native-modal[data-student-dialog="standard"] {
+    border-radius: var(--student-ui-radius);
+    color: var(--brand-secondary);
+  }
+
+  .student-dashboard-wrapper .student-native-modal[data-student-dialog="standard"] .modal-content {
+    max-height: calc(100dvh - 40px);
+    overflow: hidden;
+  }
+
+  .student-dashboard-wrapper .student-native-modal[data-student-dialog="standard"] .modal-body {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .student-dashboard-wrapper.student-preview .student-native-modal[data-student-dialog="standard"] .modal-header .btn-close {
+    background: transparent var(--bs-btn-close-bg) center / 1em auto no-repeat;
+    border: 0;
+    padding: .5rem;
+  }
+}

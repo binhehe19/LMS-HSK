@@ -23,7 +23,7 @@ export default function NativeModal({ show, onHide, title, children, className =
   }, [show]);
   if (!show) return null;
   return (
-    <dialog ref={ref} className={`student-native-modal ${className}`} aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : "Chi tiết khóa học"} onCancel={onHide} onClick={(event) => {
+    <dialog ref={ref} className={`student-native-modal ${className}`} data-student-dialog={title ? "standard" : undefined} aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : "Chi tiết khóa học"} onCancel={onHide} onClick={(event) => {
       if (event.target !== event.currentTarget) return;
       const box = event.currentTarget.getBoundingClientRect();
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onHide();

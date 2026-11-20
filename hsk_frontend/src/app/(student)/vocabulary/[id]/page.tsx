@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Chi tiết từ vựng | Học Bá" 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return (
-    <StudentShell fullWidth>
+    <StudentShell layout="wide">
       <VocabularyDetailPageContent key={id} id={id} />
     </StudentShell>
   );

@@ -20,7 +20,7 @@ export const BRAND_STATUS_COLORS = {
   error: "#ff4d4f",
 } as const;
 
-/** Theme Ant Design dùng chung toàn app; khung admin mở rộng thêm ở components/management/admin-theme.ts. */
+/** Theme Ant Design dùng chung toàn app. */
 export const brandTheme: ThemeConfig = {
   token: {
     colorPrimary: BRAND_COLORS.primary,
@@ -40,5 +40,15 @@ export const brandTheme: ThemeConfig = {
     // Lựa chọn đang chọn tô nền đỏ thương hiệu thay vì viên trắng mặc định (giống ERP).
     Segmented: { itemSelectedBg: BRAND_COLORS.primary, itemSelectedColor: BRAND_COLORS.white },
     Table: { headerColor: "#667085", headerBg: "#F9FAFB" },
+  },
+};
+
+export const UI_CONTROL_RADIUS = 10;
+
+export const desktopTheme: ThemeConfig = {
+  token: { ...brandTheme.token, borderRadius: UI_CONTROL_RADIUS },
+  components: {
+    ...brandTheme.components,
+    Button: { primaryShadow: "none", fontWeight: 600 },
   },
 };

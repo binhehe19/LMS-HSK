@@ -1,5 +1,5 @@
 import { describe,it,expect,vi,beforeEach } from "vitest";
-import { loadTimetable, syllabusSessions, classSession, loadSessionModules, mapLimited, loadSessionStudy, classifyModule, publishedModules } from "@/components/student/timetable/timetable-source";
+import { loadTimetable, loadTimetableClasses, syllabusSessions, classSession, loadSessionModules, mapLimited, loadSessionStudy, classifyModule, publishedModules } from "@/components/student/timetable/timetable-source";
 import { sessionProgress, getSessionState } from "@/components/student/timetable/timetable-data";
 import { activityResources } from "@/components/student/timetable/lesson-source";
 import type { SyllabusDetailResponse } from "@/types/lms";
@@ -11,10 +11,23 @@ vi.mock("@/lib/api/syllabus-schedule-resources-client",()=>({listScheduleResourc
 const syllabus:SyllabusDetailResponse={id:"s1",name:"HSK 3",schedule:[{id:"schedule-1",topic:"Bài trong giáo trình",content:"Nội dung thật",studentMaterials:[{materialTitle:"Slide học viên",materialLink:"https://example.com/slide"}],teacherMaterials:[{materialTitle:"Tài liệu giáo viên"}],studentTasks:"Làm bài",teacherTasks:"Chuẩn bị bài"}]};
 beforeEach(()=>{vi.resetAllMocks();api.vocabularyStates.mockResolvedValue([]);api.resources.mockResolvedValue({});api.draft.mockResolvedValue([]);api.progress.mockResolvedValue({personalProgress:null,homeworkDiligence:null,averageScore:null,sessions:[]});api.sessionProgress.mockResolvedValue({homeworkProgress:null});});
 describe("live timetable source",()=>{
- it("admin loads all classes and their dated sessions, not every syllabus row",async()=>{api.adminList.mockResolvedValue({items:[{id:"a"},{id:"b"}],truncated:false});api.adminClass.mockImplementation(async(id:string)=>({id,code:id,syllabusId:"s1"}));api.adminSessions.mockImplementation(async(id:string)=>[{id:id+"-session",sessionNo:1,startAt:"2026-11-14T08:00:00",endAt:"2026-11-14T10:00:00"}]);api.detail.mockResolvedValue(syllabus);const result=await loadTimetable(true);expect(result.classes?.map(c=>c.id)).toEqual(["a","b"]);expect(result.sessions.map(s=>[s.classId,s.date])).toEqual([["a","2026-11-14"],["b","2026-11-14"]]);expect(api.list).not.toHaveBeenCalled();expect(api.classes).not.toHaveBeenCalled();expect(api.progress).not.toHaveBeenCalled();expect(result.sessions[0].teacherTasks).toBe("Chuẩn bị bài");});
- it("reports class failure without falling back to syllabus previews",async()=>{api.adminList.mockResolvedValue({items:[{id:"bad"}],truncated:false});api.adminClass.mockRejectedValue(Error("ERP unavailable"));api.adminSessions.mockResolvedValue([]);const result=await loadTimetable(true);expect(result.sessions).toEqual([]);expect(result.warnings[0]).toContain("ERP unavailable");expect(api.list).not.toHaveBeenCalled();});
- it("does not fall back to preview when the class list API fails",async()=>{api.adminList.mockRejectedValue(Error("Database offline"));await expect(loadTimetable(true)).rejects.toThrow("Database offline");});
- it("student uses only the authorized session content even when syllabus access is forbidden",async()=>{api.classes.mockResolvedValue([{id:"class1"}]);api.classDetail.mockResolvedValue({id:"class1",code:"HSK3-01",syllabusId:"s1",sessions:[{id:"session1",classId:"class1",sessionNo:1,topic:"Bài của lớp v1",studentTasks:"Bài học viên",studentMaterials:[{materialTitle:"Slide học viên",materialLink:"https://example.com/slide"}],startAt:"2026-11-06T08:00:00",endAt:"2026-11-06T10:00:00"}]});api.detail.mockResolvedValue(syllabus);const result=await loadTimetable(false);expect(api.list).not.toHaveBeenCalled();expect(result.sessions[0]).toMatchObject({title:"Bài của lớp v1",date:"2026-11-06",startTime:"08:00",classCode:"HSK3-01"});expect(result.sessions[0].teacherTasks).toBeUndefined();expect(result.sessions[0].modules).toHaveLength(1);expect(api.detail).not.toHaveBeenCalled();});
+ it("loads the authorized timetable and progress for only the selected class",async()=>{
+  api.classes.mockResolvedValue([{id:"class1"},{id:"class2"}]);
+  api.classDetail.mockResolvedValue({id:"class1",code:"HSK3-01",syllabusId:"s1",sessions:[{id:"session1",classId:"class1",sessionNo:1,topic:"Bài của lớp v1",studentTasks:"Bài học viên",studentMaterials:[{materialTitle:"Slide học viên",materialLink:"https://example.com/slide"}],startAt:"2026-11-06T08:00:00",endAt:"2026-11-06T10:00:00"}]});
+  api.progress.mockResolvedValue({sessions:[{sessionId:"session1",homeworkProgress:0}]});
+  const items=await loadTimetableClasses();
+  expect(items.map(item=>item.id)).toEqual(["class1","class2"]);
+  const result=await loadTimetable(["class1"]);
+  expect(api.classDetail).toHaveBeenCalledExactlyOnceWith("class1");
+  expect(api.progress).toHaveBeenCalledExactlyOnceWith("class1");
+  expect(result.sessions[0]).toMatchObject({title:"Bài của lớp v1",date:"2026-11-06",startTime:"08:00",classCode:"HSK3-01"});
+  expect(result.sessions[0].teacherTasks).toBeUndefined();
+  expect(result.sessions[0].modules).toHaveLength(1);
+  const detail=await loadSessionStudy(result.sessions[0],false);
+  expect(detail.progress).toBe(0);
+  expect(api.sessionProgress).not.toHaveBeenCalled();
+  expect(api.detail).not.toHaveBeenCalled();
+ });
  it("joins by scheduleItemId before session index",()=>{const data={...syllabus,schedule:[...syllabus.schedule!,{id:"schedule-2",topic:"Đúng theo ID"}]};const session=classSession({id:"c"},{id:"x",classId:"c",sessionNo:1,scheduleItemId:"schedule-2"},data);expect(session.title).toBe("Đúng theo ID");});
  it("never invents dates or personal progress from syllabus metadata",()=>{const session=syllabusSessions(syllabus,true)[0];expect(getSessionState(session)).toBe("unscheduled");expect(sessionProgress(session)).toBeNull();expect(session.score).toBeUndefined();expect(session.attendance).toBeUndefined();});
  it("keeps resource errors visible and only admin requests draft resources",async()=>{api.resources.mockRejectedValue(Error("Published content failed"));const session=syllabusSessions(syllabus,false)[0];const result=await loadSessionModules(session,false);expect(api.draft).not.toHaveBeenCalled();expect(result.warnings).toEqual(["Published content failed"]);expect(result.modules[0].title).toBe("Slide học viên");});
@@ -95,10 +108,10 @@ it("keeps learner class summaries and progress separate across classes and accou
  api.classDetail.mockImplementation(async(id:string)=>({id,code:id,syllabusId:"s1",teacher:{fullName:"Teacher "+id},schedulePatterns:[{dayOfWeek:"MONDAY",startTime:"08:00",endTime:"10:00"}],myAttendanceSummary:{totalRecorded:1,attendanceRate:id==="a"?50:100},sessions:[{id:id+"-session",classId:id,sessionNo:1}]}));
  api.detail.mockResolvedValue(syllabus);
  api.progress.mockImplementation(async(id:string)=>({personalProgress:id==="a"?20:80,averageScore:id==="a"?30:90,homeworkDiligence:10,sessions:[{sessionId:id+"-session",homeworkProgress:id==="a"?25:100}]}));
- const first=await loadTimetable(false);
+ const first=await loadTimetable((await loadTimetableClasses()).map(item=>item.id));
  expect(first.classes?.map(c=>[c.id,c.personalProgress,c.averageScore])).toEqual([["a",20,30],["b",80,90]]);
  expect(first.sessions.map(s=>[s.classId,s.homeworkProgress])).toEqual([["a",25],["b",100]]);
- const second=await loadTimetable(false);
+ const second=await loadTimetable((await loadTimetableClasses()).map(item=>item.id));
  expect(second.classes?.map(c=>c.id)).toEqual(["c"]);expect(second.sessions.map(s=>s.classId)).toEqual(["c"]);
  expect(api.list).not.toHaveBeenCalled();expect(api.draft).not.toHaveBeenCalled();
 });

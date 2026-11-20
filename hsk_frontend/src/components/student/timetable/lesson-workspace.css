@@ -1,6 +1,8 @@
 
-.student-preview:has(.hsk-lesson-workspace) .student-page-content{padding:0 0 60px}
-.student-preview:has(.hsk-lesson-workspace) .student-dashboard-container{max-width:none!important;padding:0}
+@media (width < 992px) {.student-preview:has(.hsk-lesson-workspace) .student-page-content{padding:0 0 60px}}
+
+@media (width < 992px) {.student-preview:has(.hsk-lesson-workspace) .student-dashboard-container{max-width:none!important;padding:0}}
+
 .hsk-lesson-workspace{background:#f8f9fc;min-height:100vh}
 .hsk-lesson-workspace .ochp-header{background:linear-gradient(100deg,#6b0708,#b5090b);color:white;padding:26px 0}
 .hsk-lesson-workspace .ochp-header__inner{max-width:1360px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:32px;margin:auto}

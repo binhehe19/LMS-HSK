@@ -1,6 +1,29 @@
-import {describe,it,expect,vi} from "vitest";
-import {render,screen,fireEvent,cleanup} from "@testing-library/react";
+import { expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import TimetableToolbar from "@/components/student/timetable/timetable-toolbar";
-describe("timetable controls",()=>{
- for(const isAdmin of [false,true])it(`exposes every production control for ${isAdmin?"admin":"student"}`,()=>{cleanup();const onMonth=vi.fn(),onToday=vi.fn(),onCourse=vi.fn(),onScope=vi.fn(),onView=vi.fn();render(<TimetableToolbar month="11/2026" course="ALL" courses={[{id:"mine",label:"GT2"}]} isAdmin={isAdmin} wholeCourse={false} view="calendar" onMonth={onMonth} onToday={onToday} onCourse={onCourse} onScope={onScope} onView={onView}/>);expect(screen.getByText("Tháng 11/2026")).toBeTruthy();fireEvent.click(screen.getByRole("button",{name:"Tháng trước"}));fireEvent.click(screen.getByRole("button",{name:"Tháng sau"}));expect(onMonth.mock.calls).toEqual([[-1],[1]]);fireEvent.click(screen.getByRole("button",{name:"Buổi học hôm nay"}));expect(onToday).toHaveBeenCalledOnce();fireEvent.change(screen.getByRole("combobox"),{target:{value:"mine"}});expect(onCourse).toHaveBeenCalledWith("mine");fireEvent.click(screen.getByRole("button",{name:"Xem toàn bộ khóa học"}));expect(onScope).toHaveBeenCalledOnce();fireEvent.click(screen.getByRole("button",{name:"Dạng danh sách"}));expect(onView).toHaveBeenCalledWith("list");expect(screen.getByRole("button",{name:"Dạng thẻ"}).getAttribute("aria-pressed")).toBe("true");});
+
+it("switches scope and view independently and exposes the date and refresh actions", () => {
+  const onMonth = vi.fn();
+  const onToday = vi.fn();
+  const onScope = vi.fn();
+  const onView = vi.fn();
+  const onReload = vi.fn();
+  const props = { month: "11/2026", view: "calendar" as const, onMonth, onToday, onScope, onView, onReload };
+  const { rerender } = render(<TimetableToolbar {...props} wholeCourse={false} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Tháng trước" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tháng sau" }));
+  expect(onMonth.mock.calls).toEqual([[-1], [1]]);
+  fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }));
+  expect(onToday).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại lịch" }));
+  expect(onReload).toHaveBeenCalledOnce();
+  expect(screen.getByRole("radio", { name: "Dạng thẻ" })).toBeChecked();
+  fireEvent.click(screen.getByRole("radio", { name: "Dạng danh sách" }));
+  expect(onView).toHaveBeenCalledWith("list");
+  fireEvent.click(screen.getByRole("radio", { name: "Toàn khóa" }));
+  expect(onScope).toHaveBeenCalledWith(true);
+
+  rerender(<TimetableToolbar {...props} wholeCourse />);
+  expect(screen.queryByRole("button", { name: "Tháng sau" })).not.toBeInTheDocument();
 });

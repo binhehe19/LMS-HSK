@@ -3,6 +3,7 @@
 import {fileUrl} from "@/lib/api/storage-client";
 import {matchingAnswers,optionLabel} from "@/lib/assessment/answer-codec";
 import {safeResourceUrl} from "./lesson-source";
+import { StudentContentState, StudentFetchError } from "../student-content-state";
 import ResultAudio from "./result-audio";
 import {resultRecord as obj,resultTotals,type SessionResultData} from "./session-result-source";
 import "./session-result.css";
@@ -36,11 +37,21 @@ function QuestionResult({row,index}:{row:Record<string,unknown>;index:number}){
  {feedback && <p className="session-result-feedback"><strong>Nhận xét của giáo viên:</strong> {feedback}</p>}
  </article>;
 }
-export default function SessionResultView({data,onBack}:{data:SessionResultData;onBack:()=>void}){
+export default function SessionResultView({data,onBack,onRetry}:{data:SessionResultData;onBack:()=>void;onRetry?:()=>void}){
  const totals=resultTotals(data.sections);const labels:Record<string,string>={LISTENING:"Phần nghe",READING:"Phần đọc",WRITING:"Phần viết",SPEAKING:"Phần nói",PRONUNCIATION:"Phần nói"};
  return <main className="session-result-page"><header><button type="button" className="session-result-back-icon" aria-label="Quay lại thời khóa biểu" onClick={onBack}>‹</button><strong>{data.title}</strong><p className="session-result-muted">Đã chấm {totals.graded} bài{totals.graded<data.sections.length?` · ${data.sections.length-totals.graded} bài đang chờ chấm`:""}</p></header>
- {data.warnings.length>0 && <div className="session-result-warning" role="alert">{data.warnings.map((w,i)=><p key={i}>{w}</p>)}</div>}
- <section className="session-result-overview"><div className="session-result-stat-grid"><div className="session-result-stat"><i className="fa-regular fa-rectangle-list" aria-hidden="true"/><strong>{totals.count}</strong><span>Số câu hỏi đã làm</span></div><div className="session-result-stat is-score"><i className="fa-regular fa-star" aria-hidden="true"/><strong>{totals.scored?`${totals.earned}/${totals.total}`:"—"}</strong><span>Số điểm đạt được</span></div></div>{totals.graded===data.sections.length && totals.total>0?<span className="session-result-badge">{totals.earned/totals.total>=.8?"♧ Tốt!":"Đã có kết quả chấm bài"}</span>:<span className="session-result-badge is-pending">{data.sections.length?"Đang chờ chấm bài":"Chưa có bài nộp"}</span>}</section>
+ {data.warnings.length>0 && (
+   <StudentFetchError title={data.sections.length ? "Một phần kết quả chưa tải được" : "Không tải được kết quả bài làm"}
+     description={data.warnings.join("\n")} className="session-result-warning" onRetry={onRetry} mobileRetryClassName="d-none"
+     mobileContent={data.warnings.map((warning,index)=><p key={index}>{warning}</p>)} />
+ )}
+ {!data.sections.length && !data.warnings.length && (
+   <StudentContentState kind="empty" className="d-none d-lg-grid">
+     <h2>Chưa có bài nộp</h2>
+     <p>Kết quả sẽ hiển thị sau khi bạn nộp bài.</p>
+   </StudentContentState>
+ )}
+ <section className={`session-result-overview${data.sections.length ? "" : " d-lg-none"}`}><div className="session-result-stat-grid"><div className="session-result-stat"><i className="fa-regular fa-rectangle-list" aria-hidden="true"/><strong>{totals.count}</strong><span>Số câu hỏi đã làm</span></div><div className="session-result-stat is-score"><i className="fa-regular fa-star" aria-hidden="true"/><strong>{totals.scored?`${totals.earned}/${totals.total}`:"—"}</strong><span>Số điểm đạt được</span></div></div>{totals.graded===data.sections.length && totals.total>0?<span className="session-result-badge">{totals.earned/totals.total>=.8?"♧ Tốt!":"Đã có kết quả chấm bài"}</span>:<span className="session-result-badge is-pending">{data.sections.length?"Đang chờ chấm bài":"Chưa có bài nộp"}</span>}</section>
  {data.sections.map(section=>{const questions=rows(section.data.questions).sort((a,b)=>Number(a.displayOrder ?? 0)-Number(b.displayOrder ?? 0));const layout=obj(section.data.layout),meta=obj(layout.meta);const audio=mediaUrl(meta.audio) || safeResourceUrl(typeof meta.audioUrl==="string"?meta.audioUrl:undefined) || fileUrl(typeof meta.audioFileId==="string"?meta.audioFileId:undefined);return <section className="session-result-section" key={section.id}><div className="session-result-section-head"><span className="session-result-skill">{labels[section.skill] || "Bài tập"}</span><strong>{section.title}</strong><span className={`session-result-section-score ${num(section.data.earnedPoints)===null?"is-pending":Number(section.data.earnedPoints)/Number(section.data.totalPoints)>=.8?"":"is-low"}`}>{num(section.data.earnedPoints) ?? "—"}/{num(section.data.totalPoints) ?? "—"} điểm</span></div>{(audio || typeof meta.readingPassage==="string") && <div className="session-result-paper"><p className="session-result-muted">Ngữ liệu bài</p>{audio && <ResultAudio url={audio}/ >}{typeof meta.readingPassage==="string" && <p>{text(meta.readingPassage)}</p>}</div>}<div className="session-result-paper"><h2>♧ Chi tiết câu hỏi</h2>{questions.length?questions.map((q,i)=><QuestionResult row={q} index={i} key={String(q.questionId || i)}/>):<p>Chưa có dữ liệu câu hỏi.</p>}</div></section>;})}
  <button type="button" className="session-result-back" onClick={onBack}>‹　Quay lại</button></main>;
 }

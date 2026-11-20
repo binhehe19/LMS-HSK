@@ -60,7 +60,7 @@ export default function StudentCourses() {
   const detailData = detail.state.kind === "ok" ? toDetailData(detail.state.data) : null;
 
   return (
-    <StudentShell fullWidth>
+    <StudentShell layout="wide">
       <div className="hb-course">
         <div className="hb-course__container">
           <CourseHero

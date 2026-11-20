@@ -2,15 +2,18 @@
 import { useStudentIdentity, useStudentData } from "../student-data";
 import { useRouter } from "next/navigation";
 import StudentNotifications from "../student-notifications";
+import NativeModal from "../native-modal";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { UI_CONTROL_RADIUS } from "@/theme/brand-tokens";
 import ProfileCard from "../profile-card";
 import "../student-pages.css";
 import "../student-pages-overrides.css";
 import Image from "./image";
 import ActivityLogCard from "./activity-log-card";
+import { TimetableClassMenu, type TimetableClassSelection } from "../timetable/timetable-class-menu";
 import { Link, dashboardPath, PreviewActionContext, all_routes } from "./preview-navigation";
 import "./student-dashboard.css";
 import "./preview-layout.css";
@@ -24,25 +27,19 @@ const sidebar = [
   ["Hồ Sơ Của Tôi", "isax isax-user-edit", all_routes.studentProfile],
 ];
 
-function PreviewDialog({ title, onClose }: { title: string; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => { ref.current?.showModal(); }, []);
-  return (
-    <dialog ref={ref} className="student-preview-modal" aria-labelledby="preview-action-title" onCancel={onClose} onClick={(event) => {
-      if (event.target === event.currentTarget) {
-        const bounds = event.currentTarget.getBoundingClientRect();
-        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose();
-      }
-    }}>
-      <h2 id="preview-action-title">{title}</h2>
-      <p>Chức năng này sẽ được kết nối khi triển khai màn hình tương ứng.</p>
-      <button autoFocus className="btn btn-danger rounded-pill px-4" onClick={onClose}>Đóng</button>
-    </dialog>
-  );
-}
-
-export default function StudentShell({ children, profileHeader = false, fullWidth = false }: { children: ReactNode; profileHeader?: boolean; fullWidth?: boolean }) {
+export default function StudentShell({ children, profileHeader = false, layout = "sidebar", spacing, timetableSelection }: {
+  children: ReactNode;
+  profileHeader?: boolean;
+  layout?: "sidebar" | "wide" | "bleed";
+  spacing?: "lesson" | "game";
+  timetableSelection?: TimetableClassSelection;
+}) {
   const pathname = usePathname();
+  const practiceActive = pathname === all_routes.studentQuiz;
+  const lessonActive = pathname.startsWith("/learning-path/online-course/homework/");
+  const resultActive = pathname.startsWith("/quiz-session/");
+  const timetableActive = pathname === all_routes.studentTimetable || lessonActive;
+  const dictionaryActive = pathname === all_routes.vocabulary || pathname.startsWith(`${all_routes.vocabulary}/`);
   const identity = useStudentIdentity();
   const { history } = useStudentData();
   const router = useRouter();
@@ -50,26 +47,35 @@ export default function StudentShell({ children, profileHeader = false, fullWidt
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <PreviewActionContext.Provider value={setAction}>
-      <div className="student-dashboard-wrapper student-preview">
+      <div className="student-dashboard-wrapper student-preview" data-layout={layout} data-spacing={spacing} data-timetable={pathname === all_routes.studentTimetable ? "" : undefined} style={{ "--student-ui-radius": `${UI_CONTROL_RADIUS}px` } as CSSProperties}>
         <header className="student-topbar">
           <Link to={dashboardPath} aria-label="Học Bá - Bảng điều khiển"><Image src="assets/hocba/hocbadentrang.png" className="student-brand" alt="Học Bá" /></Link>
           <button className="student-menu-toggle" aria-label="Mở menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><i aria-hidden="true" className="fa-solid fa-bars" /></button>
           <nav className={menuOpen ? "student-topnav is-open" : "student-topnav"} aria-label="Điều hướng chính">
             <Link to={dashboardPath} className={pathname === dashboardPath ? "is-active" : ""} aria-current={pathname === dashboardPath ? "page" : undefined}>Bảng điều khiển</Link>
             <Link to={all_routes.studentCourses} className={pathname === all_routes.studentCourses ? "is-active" : ""} aria-current={pathname === all_routes.studentCourses ? "page" : undefined}>Khóa học</Link>
-            <Link to={all_routes.studentTimetable} className={(pathname === all_routes.studentTimetable || pathname.startsWith("/learning-path/online-course/homework/")) ? "is-active" : ""} aria-current={(pathname === all_routes.studentTimetable || pathname.startsWith("/learning-path/online-course/homework/")) ? "page" : undefined}>Thời khóa biểu</Link>
-            <Link to={all_routes.studentQuiz}>Luyện tập⌄</Link>
-            <Link to={all_routes.vocabulary} className={pathname.startsWith(all_routes.vocabulary) ? "is-active" : ""} aria-current={pathname === all_routes.vocabulary ? "page" : undefined}>Từ điển</Link>
+            <div className={`student-timetable-nav ${timetableActive ? "is-active" : resultActive ? "is-active-desktop" : ""}`}>
+              {!timetableSelection && <Link to={all_routes.studentTimetable} aria-current={pathname === all_routes.studentTimetable ? "page" : lessonActive || resultActive ? "location" : undefined}>Thời khóa biểu</Link>}
+              <TimetableClassMenu userId={identity.user?.id} selection={timetableSelection && {
+                ...timetableSelection,
+                onSelect: id => { timetableSelection.onSelect(id); setMenuOpen(false); },
+              }} onNavigate={id => {
+                setMenuOpen(false);
+                router.push(`${all_routes.studentTimetable}?classId=${encodeURIComponent(id)}`);
+              }} />
+            </div>
+            <Link to={all_routes.studentQuiz} className={practiceActive ? "is-active-desktop" : undefined} aria-current={practiceActive ? "page" : undefined}>Luyện tập<span className="d-lg-none" aria-hidden="true">⌄</span></Link>
+            <Link to={all_routes.vocabulary} className={dictionaryActive ? "is-active" : undefined} aria-current={pathname === all_routes.vocabulary ? "page" : dictionaryActive ? "location" : undefined}>Từ điển</Link>
           </nav>
           <div className="student-topbar-account">
             <StudentNotifications />
-            <Link className="student-account" to={all_routes.studentProfile}><Image src={identity.avatarUrl} alt="" /><span>{identity.name}</span></Link>
+            <Link className="student-account" to={all_routes.studentProfile} aria-current={pathname === all_routes.studentProfile ? "page" : undefined}><Image src={identity.avatarUrl} alt="" /><span>{identity.name}</span></Link>
           </div>
         </header>
         <main className="student-page-content">
-          <div className="container-fluid student-dashboard-container" style={{ maxWidth: 1600 }}>
+          <div className="container-fluid student-dashboard-container">
             {profileHeader && <ProfileCard />}
-            {fullWidth ? children : <div className="row student-preview-row">
+            {layout !== "sidebar" ? children : <div className="row student-preview-row">
               <aside className="col-lg-3 student-sidebar-col">
                 <div className="student-sidebar-sticky-wrapper">
                   <nav className="modern-sidebar" aria-label="Bảng điều khiển học sinh">
@@ -91,7 +97,10 @@ export default function StudentShell({ children, profileHeader = false, fullWidt
             </div>}
           </div>
         </main>
-        {action && <PreviewDialog title={action} onClose={() => setAction("")} />}
+        <NativeModal show={!!action} title={action} onHide={() => setAction("")} className="student-preview-modal">
+          <p>Chức năng này sẽ được kết nối khi triển khai màn hình tương ứng.</p>
+          <button autoFocus type="button" className="btn btn-danger rounded-pill px-4" onClick={() => setAction("")}>Đóng</button>
+        </NativeModal>
       </div>
     </PreviewActionContext.Provider>
   );

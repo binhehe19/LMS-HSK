@@ -1,14 +1,16 @@
 "use client";
 
 import { Button, Empty } from "antd";
+import type { ReactNode } from "react";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
 
-export function FetchErrorNotice({ title = "Không thể tải dữ liệu", description, onRetry, testId = "fetch-notice", className = "" }: {
+export function FetchErrorNotice({ title = "Không thể tải dữ liệu", description, onRetry, testId = "fetch-notice", className = "", children }: {
   title?: string;
   description?: string;
   onRetry?: () => void;
   testId?: string;
   className?: string;
+  children?: ReactNode;
 }) {
   const detail = description?.trim();
   return (
@@ -19,7 +21,12 @@ export function FetchErrorNotice({ title = "Không thể tải dữ liệu", des
           <div className="small text-muted mt-1">{detail && !/^internal server error$/i.test(detail) ? detail : "Hãy thử tải lại dữ liệu."}</div>
         </>
       )}>
-        {onRetry && <Button onClick={onRetry} icon={<i className="isax isax-refresh" aria-hidden="true" />}>Thử lại</Button>}
+        {(onRetry || children) && (
+          <>
+            {onRetry && <Button onClick={onRetry} icon={<i className="isax isax-refresh" aria-hidden="true" />}>Thử lại</Button>}
+            {children}
+          </>
+        )}
       </Empty>
     </div>
   );

@@ -2,15 +2,13 @@ import { sessionStudySummary } from "./session-study-summary";
 import { assessmentSkill } from "./assessment-skill";
 import dayjs from "dayjs";
 import { fileUrl } from "@/lib/api/storage-client";
-import { getClass, listAllClasses, listClassSessions } from "@/lib/api/lms-class-client";
-import { getSyllabus } from "@/lib/api/lms-syllabus-client";
 import { studentApi, type StudentClass, type StudentSession, type TimetableAttemptHistory } from "@/lib/api/student-client";
 import { listScheduleResources } from "@/lib/api/syllabus-schedule-resources-client";
 import type { SyllabusDetailResponse, SyllabusScheduleItem } from "@/types/lms";
 import type { TimetableModule, TimetableSession, TimetableAttempt } from "./timetable-data";
 
 export interface TimetableClass extends StudentClass { personalProgress?: number | null; homeworkDiligence?: number | null; averageScore?: number | null; }
-export interface TimetableData { classes?: TimetableClass[]; sessions: TimetableSession[]; warnings: string[]; syllabusCount: number; }
+export interface TimetableData { classes: TimetableClass[]; sessions: TimetableSession[]; warnings: string[]; }
 const text=(value: unknown): string => typeof value === "string" ? value : "";
 const object=(value: unknown): Record<string,unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string,unknown> : {};
 export function plainText(value: unknown): string { return text(value).replace(/<[^>]*>/g," ").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim(); }
@@ -42,39 +40,30 @@ export function classSession(course: StudentClass,session: StudentSession,syllab
  const end=session.endAt && dayjs(session.endAt).isValid()?dayjs(session.endAt):null;
  return {id:session.id,syllabusId:course.syllabusId,scheduleItemId:item?.id || session.scheduleItemId,classId:course.id,classCode:course.code || "",courseName:syllabus?.name || course.syllabusName || course.code || course.id,teacher:session.teacherName || session.teacher?.fullName || course.teacher?.fullName || "",sessionNo:session.sessionNo ?? 0,title:plainText(item?.topic || session.topic)||`Buổi ${session.sessionNo ?? ""}`,topic:plainText(item?.topic || session.topic),content:plainText(item?.content || session.content),studentTasks:plainText(item?.studentTasks || session.studentTasks),date:start?.format("YYYY-MM-DD") || "",startTime:start?.format("HH:mm") || "",endTime:end?.format("HH:mm") || "",status:session.status === "CANCELLED"?"cancelled":session.status === "DONE" || session.status === "COMPLETED"?"done":"upcoming",access:"full",meetingUrl:session.meetingLink || course.meetingLink,attendance:session.myAttendanceStatus === "PRESENT"?"present":session.myAttendanceStatus === "ABSENT"?"absent":undefined,modules:scheduleModules(item || {...session,id:session.scheduleItemId || session.id},false)};
 }
-export async function loadAdminTimetableClass(classId:string):Promise<StudentClass> {
- const [course,sessions]=await Promise.all([getClass(classId),listClassSessions(classId)]);
- return {...course,schedulePatterns:course.schedulePatterns?.map(p=>({dayOfWeek:String(p.dayOfWeek ?? ""),startTime:p.startTime ?? "",endTime:p.endTime ?? ""})),sessions:sessions.map(s=>({...s,classId})),totalSessions:sessions.filter(s=>s.status!=="CANCELLED").length,completedSessions:sessions.filter(s=>["DONE","COMPLETED"].includes(s.status ?? "")).length};
+export async function loadTimetableClasses() {
+ const classes=await studentApi.classes();
+ return [...new Map(classes.map(course=>[course.id,course])).values()];
 }
-export async function loadTimetable(isAdmin: boolean): Promise<TimetableData> {
+export async function loadTimetable(classIds: string[]): Promise<TimetableData> {
  const warnings:string[]=[];
  const courses:StudentClass[]=[];
- if(isAdmin){
-  const listing=await listAllClasses();
-  if(listing.truncated)warnings.push("Danh sách lớp còn trang chưa tải hết. Hãy thu hẹp bộ lọc hoặc tải lại.");
-  const classes=[...new Map(listing.items.map(c=>[c.id,c])).values()];
-  const results=await mapLimited(classes,course=>loadAdminTimetableClass(course.id));
-  results.forEach((result,index)=>{if(result.status === "fulfilled")courses.push(result.value);else warnings.push(`Lớp ${classes[index]?.code || classes[index]?.id}: ${errorText(result.reason)}`);});
- }else{
-  const classes=await studentApi.classes();
-  const details=await mapLimited(classes,course=>studentApi.classDetail(course.id));
-  details.forEach((result,index)=>{if(result.status === "fulfilled")courses.push(result.value);else warnings.push(`Lớp ${classes[index].code || classes[index].id}: ${errorText(result.reason)}`);});
- }
- const ids=[...new Set((isAdmin?courses:[]).map(course=>course.syllabusId).filter((id):id is string=>!!id))];
- const syllabuses=new Map<string,SyllabusDetailResponse>();const results=await mapLimited(ids,getSyllabus);
- results.forEach((result,index)=>{if(result.status === "fulfilled")syllabuses.set(ids[index],result.value);else warnings.push(`Giáo trình ${ids[index]}: ${errorText(result.reason)}`);});
- const progressResults=await mapLimited(courses,course=>isAdmin?Promise.resolve(null):studentApi.progress(course.id));
+ const details=await mapLimited(classIds,id=>studentApi.classDetail(id));
+ details.forEach((result,index)=>{if(result.status === "fulfilled")courses.push(result.value);else warnings.push(`Lớp ${classIds[index]}: ${errorText(result.reason)}`);});
+ if(classIds.length && !courses.length)throw Error(warnings.join("\n"));
+ const progressResults=await mapLimited(courses,course=>studentApi.progress(course.id));
  const sessions:TimetableSession[]=[];
  courses.forEach((course,index)=>{const result=progressResults[index];const metrics=result.status === "fulfilled"?result.value:null;
   if(result.status === "rejected")warnings.push(`Tiến độ lớp ${course.code || course.id}: ${errorText(result.reason)}`);
-  for(const item of course.sessions ?? []){const session=classSession(course,item,course.syllabusId?syllabuses.get(course.syllabusId):undefined);if(isAdmin){const schedule=syllabuses.get(course.syllabusId || "")?.schedule?.find(row=>row.id===session.scheduleItemId);session.modules=schedule?scheduleModules(schedule,true):[];session.teacherTasks=plainText(schedule?.teacherTasks);}const metric=metrics?.sessions?.find(entry=>entry.sessionId === item.id);
+  const sessionMetrics=new Map(metrics?.sessions?.map(entry=>[entry.sessionId,entry]));
+  for(const item of course.sessions ?? []){const session=classSession(course,item);const metric=sessionMetrics.get(item.id);
    if(metrics){session.classPersonalProgress=metrics.personalProgress;session.classHomeworkDiligence=metrics.homeworkDiligence;session.classAverageScore=metrics.averageScore;}
    if(metric){session.homeworkProgress=metric.homeworkProgress;session.personalProgress=metric.personalProgress;}
    sessions.push(session);
   }
  });
- return {sessions,warnings,syllabusCount:syllabuses.size,classes:courses.map((course,index)=>{const result=progressResults[index];return {...course,...(result.status === "fulfilled" && result.value?{personalProgress:result.value.personalProgress,homeworkDiligence:result.value.homeworkDiligence,averageScore:result.value.averageScore}:{})};})};
+ return {sessions,warnings,classes:courses.map((course,index)=>{const result=progressResults[index];return {...course,...(result.status === "fulfilled" && result.value?{personalProgress:result.value.personalProgress,homeworkDiligence:result.value.homeworkDiligence,averageScore:result.value.averageScore}:{})};})};
 }
+
 export function publishedModules(payload: Record<string,unknown>): TimetableModule[] {
  const labels:Record<string,[string,string]>={slide:["Slide","tailieu"],material:["Tài liệu","tailieu"],grammar:["Ngữ pháp","nguphap"],vocabulary:["Từ vựng","doc"],quiz:["Quick Test","detap"],grammarQuiz:["Bài tập ngữ pháp","nguphap"],vocabularyQuiz:["Bài tập từ vựng","doc"]};
  return Object.entries(labels).flatMap(([key,[label,icon]])=>{const resources=object(payload[key]).freeResources;if(!Array.isArray(resources))return [];return resources.map((raw,index)=>{const entry=object(raw);const content=object(entry.resourceContent);return {id:text(entry.id)||`${key}-${index}`,...classifyModule(assessmentSkill({skill:entry.skill,subType:entry.subType,content}),plainText(entry.resourceTitle || content.title || content.word || content.name || content.fileName)||label),icon:assessmentSkill({skill:entry.skill,subType:entry.subType,content}) ? classifyModule(assessmentSkill({skill:entry.skill,subType:entry.subType,content}),"").icon : icon,group:key,publication:"PUBLISHED" as const,topicTitle:text(entry.topicTitle)||undefined,topicOrder:typeof entry.topicOrder === "number"?entry.topicOrder:undefined,resourceId:text(entry.learningResourceId),packageVersionId:text(entry.contentPackageVersionId),subType:text(entry.subType || content.subType),skill:assessmentSkill({skill:entry.skill,subType:entry.subType,content}),kind:(key === "slide" || key === "material"?"material":"practice") as TimetableModule["kind"],progress:null,description:plainText(content.description || content.content),content:entry.resourceContent,resourceType:text(entry.resourceType),url:text(content.url || content.fileUrl || content.link)||fileUrl(text(content.fileId))||undefined};});});
@@ -107,7 +96,7 @@ export async function loadSessionStudy(session:TimetableSession,isAdmin:boolean)
  const resources=await loadSessionModules(session,isAdmin);const warnings=[...resources.warnings];const attempts:TimetableAttempt[]=[];
 
  let progress=session.homeworkProgress ?? null;
- if(!isAdmin)try{const response=await studentApi.sessionProgress(session.classId,session.id);progress=response.homeworkProgress;}catch(error){progress=null;warnings.push(`Tiến độ buổi học: ${errorText(error)}`);}
+ if(!isAdmin && session.homeworkProgress === undefined)try{const response=await studentApi.sessionProgress(session.classId,session.id);progress=response.homeworkProgress;}catch(error){progress=null;warnings.push(`Tiến độ buổi học: ${errorText(error)}`);}
  const assessments=resources.modules.filter(module=>module.resourceType === "ASSESSMENT" && module.resourceId);
  const unique=[...new Map(assessments.map(module=>[module.resourceId!,module])).values()];
  const results=await mapLimited(unique,module=>{

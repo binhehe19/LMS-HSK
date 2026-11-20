@@ -1,28 +1,43 @@
 /* Bridges production Bootstrap markup to the existing StudentShell and Ant Design dialogs. */
-.student-preview:has(.hsk-timetable) .student-page-content{padding:0 0 64px}
-.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding:0}
+@media (width < 992px) {.student-preview:has(.hsk-timetable) .student-page-content{padding:0 0 64px}}
+
+@media (width < 992px) {.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding:0}}
+
+.student-dashboard-wrapper[data-timetable]{--timetable-width:1360px;--timetable-gutter:16px}
 .hsk-timetable{color:#263238;background:#f8f9fc;min-height:100vh}
 .hsk-timetable .tkb-hero{padding:82px 0 30px}
-.hsk-timetable .tkb-hero__inner{max-width:1360px}
 .hsk-timetable .tkb-hero__mascot-owl{right:20px;bottom:0;width:180px;max-height:220px;object-fit:contain}
 .hsk-timetable .tkb-hero__title{color:white}
 .hsk-timetable .tkb-hero__greeting{display:table;border-radius:28px;background:#a30b0d;padding:8px 22px;font-size:21px;font-weight:700;margin:16px 0}
 .hsk-timetable .tkb-hero__chips{margin-top:10px;flex-wrap:wrap}
 .hsk-timetable .tkb-hero__chip{gap:8px}
-.hsk-timetable-body{max-width:1360px;margin:auto;padding:0 16px}
+.hsk-timetable-body{max-width:var(--timetable-width);margin:auto;padding-inline:var(--timetable-gutter)}
 .tkb-preview-data{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;margin:12px 0;color:#7b5015;background:#fff9ec;border:1px solid #f1e3c5;border-radius:10px;font-size:12px}
 .tkb-preview-data button{border:0;background:none;color:#9c1116;text-decoration:underline;white-space:nowrap}
 .hsk-timetable .tkb-navbar{flex-wrap:wrap;gap:12px}
-.hsk-timetable .tkb-navbar__course-filter{display:flex;align-items:center;gap:6px}
-.hsk-timetable .tkb-navbar__course-select{max-width:240px}
+.hsk-timetable :is(.tkb-toolbar-options,.tkb-toolbar-month-actions){display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.hsk-timetable .tkb-toolbar-options .ant-segmented{background:#f0f2f5}
 .hsk-timetable .tkb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
-.hsk-timetable .tkb-card{height:100%;position:relative;overflow:hidden}
+.hsk-timetable .tkb-card{height:100%;position:relative;overflow:hidden;opacity:1;border:1px solid #dce1e9;transition:border-color .18s ease,box-shadow .18s ease}
+.hsk-timetable .tkb-card__head{background:#fce4e5}
+.hsk-timetable .tkb-card__status--done{color:#166534}
+.hsk-timetable .tkb-card:is(:hover,:focus-within){
+ border-color:var(--brand-primary-hover);
+ box-shadow:0 0 0 1px var(--brand-primary-hover),0 8px 20px rgb(19 25 39 / 16%);
+ transform:none;
+}
+.hsk-timetable .tkb-card::after{display:none}
 .tkb-open-session{width:100%;padding:0;border:0;background:none;text-align:left;color:inherit;display:block}
 .tkb-open-session>.tkb-card__info{padding:20px 22px 6px;min-height:118px}
 .hsk-timetable .tkb-card__body{padding:12px 22px 24px;display:block}
 .hsk-timetable .tkb-card__body>.tkb-card__cta{width:100%;max-width:none}
+.hsk-timetable .tkb-card__body--actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hsk-timetable .tkb-card__body--actions>.tkb-card__cta{padding:8px 6px;gap:6px;line-height:1.3;text-align:center}
+.hsk-timetable .tkb-card__cta--review{background:#eaf5ed;color:#17603b;transition:background-color .15s ease}
+.hsk-timetable .tkb-card__cta--review:is(:hover,:focus-visible){background:#d8eddf;color:#124a2e;box-shadow:none;filter:none}
+.hsk-timetable .tkb-card__cta--materials{background:var(--brand-surface,#fef2f2);color:var(--brand-primary,#b00d0e)}
 .hsk-timetable .tkb-card__hw-badge{position:absolute;right:20px;bottom:76px;color:#55b98a}
-.hsk-timetable .tkb-list .tkb-card{display:grid;grid-template-columns:1fr 230px;align-items:center;gap:20px}
+.hsk-timetable .tkb-list .tkb-card{display:grid;grid-template-columns:minmax(0,1fr) clamp(230px,28%,330px);align-items:center;gap:20px}
 .hsk-timetable .tkb-list .tkb-open-session{display:grid;grid-template-columns:235px 1fr;align-items:center}
 .hsk-timetable .tkb-list .tkb-card__head{height:100%;gap:12px}
 .hsk-timetable .tkb-list .tkb-card__hw-badge{display:none}
@@ -33,9 +48,8 @@
 .tkb-empty h2{font-size:22px}
 .tkb-empty>button{margin:20px auto 0}
 .hsk-timetable-modal .ant-modal-content{padding:0;overflow:hidden;border-radius:20px}
-.hsk-timetable-modal .ant-modal-header{margin:0;padding:0}
+.hsk-timetable-modal .ant-modal-header{flex-shrink:0}
 .hsk-session-modal-body{padding:24px;background:#f8f9fa;max-height:70vh;overflow:auto}
-.hsk-timetable-modal .tkb-session-modal__header{padding:22px 26px;background:white}
 .hsk-timetable-modal .tkb-session-modal__top{display:flex;justify-content:space-between;align-items:center}
 .hsk-timetable-modal .tkb-session-modal__session{display:flex;gap:12px;align-items:center}
 .hsk-timetable-modal .tkb-session-modal__close{border:0;background:#fff0f1;border-radius:50%;font-size:28px;line-height:32px;width:34px;color:#ba1318}
@@ -55,7 +69,7 @@
 .hsk-timetable .tkb-hero-ring{position:relative;flex-shrink:0}
 .hsk-timetable .tkb-glass-card__standard-progress .tkb-hero-ring{color:#b5090b}
 @media(max-width:1100px){.hsk-timetable .tkb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hsk-timetable .tkb-list .tkb-open-session{grid-template-columns:190px 1fr}.hsk-timetable .tkb-list .tkb-card{grid-template-columns:1fr 180px}}
-@media(max-width:767px){.hsk-timetable .tkb-hero{padding:44px 12px 24px}.hsk-timetable .tkb-hero__title{font-size:32px}.hsk-timetable .tkb-grid{grid-template-columns:1fr}.hsk-timetable .tkb-navbar__switch{flex-wrap:wrap}.hsk-timetable .tkb-navbar__month{font-size:21px}.hsk-timetable .tkb-list .tkb-card,.hsk-timetable .tkb-list .tkb-open-session{display:block}.hsk-timetable .tkb-list .tkb-card__body{padding-top:0}.hsk-timetable-modal .tkb-practice__grid{grid-template-columns:1fr}.hsk-timetable-modal .tkb-session-modal__info{align-items:stretch;flex-direction:column}.hsk-timetable-modal .tkb-practice__summary{grid-template-columns:1fr}.tkb-preview-data{align-items:flex-start;flex-direction:column}.hsk-session-modal-body{padding:16px}.hsk-timetable .tkb-navbar__course-select{max-width:190px}}
+@media(max-width:767px){.hsk-timetable .tkb-hero{padding:44px 12px 24px}.hsk-timetable .tkb-hero__title{font-size:32px}.hsk-timetable .tkb-grid{grid-template-columns:1fr}.hsk-timetable .tkb-navbar__month{font-size:21px}.hsk-timetable .tkb-list .tkb-card,.hsk-timetable .tkb-list .tkb-open-session{display:block}.hsk-timetable .tkb-list .tkb-card__body{padding-top:0}.hsk-timetable-modal .tkb-practice__grid{grid-template-columns:1fr}.hsk-timetable-modal .tkb-session-modal__info{align-items:stretch;flex-direction:column}.hsk-timetable-modal .tkb-practice__summary{grid-template-columns:1fr}.tkb-preview-data{align-items:flex-start;flex-direction:column}.hsk-session-modal-body{padding:16px}}
 @media(prefers-reduced-motion:reduce){.hsk-timetable *{animation:none!important;scroll-behavior:auto!important}}
 
 .hsk-timetable .tkb-glass-card__standard-progress .tkb-hero-ring span{color:#b5090b;font-weight:800}
@@ -99,11 +113,245 @@
 .hsk-timetable .tkb-list .tkb-card__info{min-width:0;overflow-wrap:anywhere}
 @media(min-width:768px){.hsk-timetable .tkb-list .tkb-card__head{height:auto;min-height:100%;align-content:center}}
 
-.hsk-timetable-modal .tkb-module-card__state.is-complete{color:#14c566;font-weight:700}
-.hsk-timetable-modal .tkb-module-card__pill--view{color:#14c566;font-weight:750}
 
-.hsk-timetable .tkb-attendance{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff}.hsk-timetable .tkb-attendance>span{font-size:10px;font-weight:700}.hsk-timetable .tkb-navbar__course-filter>i{color:#b00d0e;font-size:12px}.hsk-timetable .tkb-navbar__scope{white-space:nowrap}.hsk-timetable .tkb-navbar__left{flex-wrap:wrap;gap:16px}
+.hsk-timetable .tkb-attendance{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff}.hsk-timetable .tkb-attendance>span{font-size:10px;font-weight:700}.hsk-timetable .tkb-navbar__left{flex-wrap:wrap;gap:16px}
 
-@media(max-width:575px){.hsk-timetable .tkb-navbar__switch{width:100%;flex-wrap:nowrap}.hsk-timetable .tkb-navbar__course-filter{flex:1;min-width:0;gap:2px}.hsk-timetable .tkb-navbar__course-select{width:100%;min-width:0;max-width:none;padding-left:0}.hsk-timetable .tkb-navbar__scope{font-size:10px;padding:8px 6px}.hsk-timetable .tkb-navbar__view{flex-shrink:0}}
 
-.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-page-content{padding-top:0}.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding-left:0;padding-right:0}.hsk-timetable .tkb-hero{width:100%;margin-left:0;margin-right:0}.hsk-timetable .tkb-hero__inner{max-width:1360px}
+@media (width < 992px) {.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-page-content{padding-top:0}.student-dashboard-wrapper.student-preview:has(.hsk-timetable) .student-dashboard-container{max-width:none!important;padding-left:0;padding-right:0}}
+.hsk-timetable .tkb-hero{width:100%;margin-inline:0}
+.hsk-timetable .tkb-hero,
+.student-dashboard-wrapper.student-preview[data-timetable] > .student-topbar{
+ background:linear-gradient(90deg,#6b0708,var(--brand-primary));
+}
+.student-dashboard-wrapper.student-preview[data-timetable] > .student-topbar{
+ position:sticky;
+ top:0;
+ z-index:1020;
+ padding-inline:max(var(--timetable-gutter), calc((100% - var(--timetable-width)) / 2 + var(--timetable-gutter)));
+}
+@media (max-width:767px){
+ .student-dashboard-wrapper.student-preview[data-timetable] .student-topnav.is-open{
+  background:var(--brand-primary);
+  padding-inline:var(--timetable-gutter);
+ }
+}
+
+.hsk-timetable-modal {
+ --session-gutter: clamp(16px, 3vw, 32px);
+ --session-text: #233044;
+ --session-muted: #52627a;
+ --session-border: #dce3eb;
+ --session-surface: #f5f7fa;
+ --session-icon: #edf1f6;
+ --session-focus: #405e83;
+}
+
+.hsk-timetable-modal .ant-modal .ant-modal-content {
+ display: flex;
+ flex-direction: column;
+ max-height: calc(100dvh - 32px);
+ padding: 0;
+ border-radius: 16px;
+}
+
+.hsk-timetable-modal .ant-modal-body { min-height: 0; overflow-y: auto; }
+.hsk-timetable-modal .ant-modal .ant-modal-close {
+ top: 16px;
+ inset-inline-end: var(--session-gutter);
+ width: 36px;
+ height: 36px;
+ color: var(--session-muted);
+ background: var(--session-surface);
+ border-radius: 10px;
+}
+
+.hsk-timetable-modal .ant-modal .ant-modal-close:is(:hover, :focus-visible) {
+ color: var(--session-text);
+ background: var(--session-icon);
+}
+
+.hsk-timetable-modal .tkb-session-modal__header {
+ padding: 20px var(--session-gutter);
+ background: #F6E8ED;
+ color: var(--session-text);
+ border: 1px solid #DEC4CF;
+ border-radius: 16px 16px 0 0;
+}
+
+.hsk-timetable-modal :is(.tkb-session-modal__session, .tkb-session-modal__title) {
+ padding-inline-end: 48px;
+}
+
+.hsk-timetable-modal .tkb-session-modal__session-no {
+ color: var(--brand-primary-hover, #860707);
+ font-size: 14px;
+ line-height: 20px;
+}
+
+.hsk-timetable-modal .tkb-card__status { height: auto; min-height: 26px; }
+.hsk-timetable-modal .tkb-card__status--today { background: var(--session-icon); color: var(--session-text); }
+.hsk-timetable-modal .tkb-card__status--done { color: #166534; }
+
+.hsk-timetable-modal .tkb-session-modal__title {
+ display: block;
+ margin: 10px 0 0;
+ color: inherit;
+ font-size: clamp(18px, 1.6vw, 22px);
+ line-height: 1.35;
+ overflow-wrap: anywhere;
+}
+
+.tkb-session-class {
+ display: grid;
+ gap: 8px;
+ min-width: 0;
+ margin-top: 14px;
+ color: var(--session-muted);
+ font-size: 13px;
+ line-height: 1.5;
+ overflow-wrap: anywhere;
+}
+
+.hsk-timetable-modal .tkb-session-modal__meta {
+ justify-content: flex-start;
+ gap: 8px 20px;
+ padding: 0;
+}
+
+.hsk-timetable-modal .tkb-session-modal__meta-item {
+ flex-wrap: wrap;
+ white-space: normal;
+ color: inherit;
+ font-weight: 600;
+}
+
+.hsk-timetable-modal .tkb-session-modal__meta-item i { color: inherit; font-size: 13px; }
+
+.hsk-timetable-modal .hsk-session-modal-body {
+ display: grid;
+ gap: 22px;
+ padding: 22px var(--session-gutter) 26px;
+ max-height: none;
+ overflow: visible;
+ background: var(--session-surface);
+}
+
+.hsk-timetable-modal .hsk-session-modal-body > p { margin: 0; }
+
+.tkb-session-section-title {
+ margin: 0 0 10px;
+ color: var(--session-text);
+ font-size: 16px;
+ font-weight: 700;
+ line-height: 22px;
+}
+
+.hsk-timetable-modal .tkb-practice__summary { gap: 12px; margin: 0; }
+.hsk-timetable-modal .tkb-practice__summary-half {
+ justify-content: flex-start;
+ gap: 12px;
+ min-height: 76px;
+ padding: 12px 14px;
+ border: 1px solid var(--session-border);
+ border-radius: 12px;
+ box-shadow: none;
+}
+
+.hsk-timetable-modal .tkb-practice__summary-body { display: grid; justify-items: start; gap: 6px; }
+.hsk-timetable-modal .tkb-practice__summary-title { color: var(--session-text); }
+.hsk-timetable-modal .tkb-practice__ring { color: #3e7665; }
+.hsk-timetable-modal .tkb-practice__ring span { color: var(--session-text); font-size: 16px; }
+
+.hsk-timetable-modal :is(.hsk-mentor-score, .tkb-summary-slides-icon, .tkb-summary-action-icon, .tkb-module-card__icon) {
+ display: grid;
+ place-items: center;
+ flex-shrink: 0;
+ width: 42px;
+ min-width: 42px;
+ height: 42px;
+ padding: 0;
+ border-radius: 10px;
+ background: var(--card-icon-bg, var(--session-icon));
+ color: var(--card-accent, var(--session-muted));
+ font-size: 18px;
+}
+
+.hsk-timetable-modal .hsk-mentor-score { --card-icon-bg: #f1edf8; --card-accent: #654681; width: 54px; min-width: 54px; height: 54px; border-radius: 50%; font-size: 15px; overflow-wrap: anywhere; }
+.tkb-summary-slides-icon img { width: 26px; height: 26px; }
+.hsk-timetable-modal .tkb-summary-slides-icon { --card-icon-bg: #fff1dd; }
+.hsk-timetable-modal .tkb-summary-session-action { --card-icon-bg: #e5f3ec; --card-accent: #28624f; }
+.hsk-timetable-modal .tkb-summary-slides { text-decoration: none; }
+.tkb-summary-slides-action { color: #845021; font-size: 12px; font-weight: 600; }
+.hsk-timetable-modal .tkb-summary-session-action { height: auto; text-align: left; white-space: normal; }
+
+.tkb-activity-groups { display: grid; gap: 20px; }
+.tkb-activity-groups > section {
+ --card-icon-bg: #faece6;
+ --card-accent: #984827;
+}
+
+.tkb-activity-groups > section + section {
+ --card-icon-bg: #e8effb;
+ --card-accent: #305684;
+}
+
+.hsk-timetable-modal .tkb-activity-groups .tkb-session-section-title {
+ color: var(--card-accent);
+}
+
+.hsk-timetable-modal .tkb-activity-groups > section + section .tkb-module-card__icon img {
+ filter: grayscale(1) sepia(1) saturate(2) hue-rotate(167deg) brightness(.9);
+}
+.tkb-activity-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.hsk-timetable-modal .tkb-activity-cards .tkb-module-card {
+ min-height: 64px;
+ padding: 10px 12px;
+ border-color: var(--session-border);
+ border-radius: 12px;
+ text-decoration: none;
+}
+
+.hsk-timetable-modal .tkb-activity-cards .tkb-module-card__top { align-items: center; gap: 10px; }
+.hsk-timetable-modal .tkb-module-card__title { display: block; color: var(--session-text); overflow-wrap: anywhere; }
+
+.hsk-timetable-modal :is(.tkb-module-card__arrow, .tkb-summary-session-action > .fa-chevron-right) {
+ margin-inline-start: auto;
+ flex-shrink: 0;
+ color: var(--card-accent, var(--session-muted));
+ font-size: 12px;
+}
+
+.hsk-timetable-modal :is(.tkb-activity-cards .tkb-module-card, .tkb-summary-slides, .tkb-summary-session-action):hover {
+ border-color: #a2b2c5;
+ background: #f8fafc;
+ transform: none;
+}
+
+.hsk-timetable-modal :is(.tkb-activity-cards .tkb-module-card, .tkb-summary-slides, .tkb-summary-session-action, .ant-modal-close):focus-visible {
+ outline: 2px solid var(--session-focus);
+ outline-offset: 2px;
+}
+
+@media (min-width: 900px) {
+ .hsk-timetable-modal .tkb-practice__summary {
+  position: relative;
+  column-gap: 41px;
+ }
+ .hsk-timetable-modal .tkb-practice__summary::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(50% - .5px);
+  width: 1px;
+  background: var(--session-border);
+ }
+ .tkb-activity-groups { grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); column-gap: 20px; }
+ .tkb-activity-groups::before { content: ""; grid-column: 2; grid-row: 1; background: var(--session-border); }
+ .tkb-activity-groups > section:first-child { grid-column: 1; grid-row: 1; }
+ .tkb-activity-groups > section:last-child { grid-column: 3; grid-row: 1; }
+}
+
+@media (max-width: 479px) {
+ .tkb-activity-cards { grid-template-columns: 1fr; }
+}

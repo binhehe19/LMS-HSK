@@ -6,7 +6,11 @@ export class TimetableReadCache {
  peek<T>(key:string):T|null{return (this.entries.get(key)?.data as T | undefined) ?? null;}
  fresh(key:string,ttl:number){const e=this.entries.get(key);return !!e && e.updatedAt>0 && Date.now()-e.updatedAt<ttl;}
  subscribe(key:string,fn:()=>void){const set=this.listeners.get(key) ?? new Set();set.add(fn);this.listeners.set(key,set);return ()=>{set.delete(fn);if(!set.size)this.listeners.delete(key);};}
- invalidate(key?:string){for(const k of key?[key]:this.entries.keys()){const e=this.entries.get(k);if(e)this.entries.set(k,{data:e.data,updatedAt:0});for(const fn of this.listeners.get(k) ?? [])fn();}}
+ invalidate(target?:string|((key:string)=>boolean)){
+  const keys=typeof target==="string"?[target]:[...this.entries.keys()].filter(target ?? (()=>true));
+  for(const key of keys){const entry=this.entries.get(key);if(entry)this.entries.set(key,{data:entry.data,updatedAt:0});}
+  for(const key of keys)for(const fn of this.listeners.get(key) ?? [])fn();
+ }
  clear(){this.entries.clear();}
  read<T>(key:string,load:()=>Promise<T>,ttl:number):Promise<T>{
   const old=this.entries.get(key);

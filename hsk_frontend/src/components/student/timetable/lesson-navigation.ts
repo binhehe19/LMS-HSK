@@ -6,11 +6,14 @@ export const LESSON_ACTIVITIES = [
  { key: "speaking", label: "Phần Nói", shortLabel: "Nói", chinese: "口语", icon: "noi", type: "SPEAKING" },
 ] as const;
 export type LessonActivity = typeof LESSON_ACTIVITIES[number]["key"];
+type LessonMaterialTab = "grammar" | "vocabulary" | "flashcards" | "handwriting";
 export function lessonActivity(value: string | null): typeof LESSON_ACTIVITIES[number] {
  return LESSON_ACTIVITIES.find(item=>item.key === value || item.type === value) ?? LESSON_ACTIVITIES[0];
 }
-export function lessonHref(input: { scheduleId: string; sessionId: string; title: string; sessionNo: number; className: string; returnUrl: string; syllabusId?: string; classId?: string }, activity: LessonActivity): string {
- const query=new URLSearchParams({tab:activity,moduleType:lessonActivity(activity).type,sessionId:input.sessionId,sessionTitle:input.title,sessionNo:String(input.sessionNo),className:input.className,returnUrl:input.returnUrl});
+export function lessonHref(input: { scheduleId: string; sessionId: string; title: string; sessionNo: number; className: string; returnUrl: string; syllabusId?: string; classId?: string }, tab: LessonActivity | LessonMaterialTab): string {
+ const query=new URLSearchParams({tab,sessionId:input.sessionId,sessionTitle:input.title,sessionNo:String(input.sessionNo),className:input.className,returnUrl:input.returnUrl});
+ const activity=LESSON_ACTIVITIES.find(item=>item.key===tab);
+ if(activity)query.set("moduleType",activity.type);
  if(input.syllabusId)query.set("syllabusId",input.syllabusId);
  if(input.classId)query.set("classId",input.classId);
  return `/learning-path/online-course/homework/${encodeURIComponent(input.scheduleId)}?${query}`;
