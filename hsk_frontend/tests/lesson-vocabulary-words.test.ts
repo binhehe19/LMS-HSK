@@ -37,6 +37,12 @@ describe("vocabularyWords: đọc nội dung từ vựng ZH ở màn học của
     expect(word.audio).toContain("aud-1");
   });
 
+  it("flashcard dùng nghĩa đầu của phiên âm chính và một ví dụ đi kèm", () => {
+    const [word] = vocabularyWords([vocab(zh)], "flashcards");
+    expect(word).toMatchObject({ pinyin: "nǐ hǎo", meaning: "xin chào" });
+    expect(word.examples).toEqual([{ cn: "你好吗？", pinyin: "nǐ hǎo ma?", vi: "bạn khỏe không?" }]);
+  });
+
   it("không có phiên âm chính đánh dấu thì lấy phiên âm đầu; nghĩa tiếng Việt trống thì dùng nghĩa tiếng Anh", () => {
     const [word] = vocabularyWords([vocab({ word: "好", pinyins: [{ pinyin: "hǎo", meanings: [{ meaningEn: "good" }] }] })]);
     expect(word).toMatchObject({ pinyin: "hǎo", meaning: "good", pos: "", examples: [] });
