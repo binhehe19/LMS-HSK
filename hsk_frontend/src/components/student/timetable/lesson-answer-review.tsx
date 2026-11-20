@@ -1,4 +1,5 @@
 import {fileUrl} from "@/lib/api/storage-client";
+import {matchingAnswers,optionLabel} from "@/lib/assessment/answer-codec";
 import {record} from "./lesson-assessment-source";
 function answerText(question:Record<string,unknown>):string {
  let value:Record<string,unknown>={};try{value=record(typeof question.answerJson === "string"?JSON.parse(question.answerJson):question.answerJson);}catch{return "Chưa tải được đáp án";}
@@ -10,7 +11,9 @@ function answerText(question:Record<string,unknown>):string {
   const option=options.find((raw,i)=>(record(raw).optionIndex ?? i)===value.selectedOptionIndex);
   return typeof record(option).content === "string"?String(record(option).content):`Lựa chọn ${value.selectedOptionIndex+1}`;
  }
- for(const key of ["blankAnswers","matchingAnswers"]){const fields=record(value[key]);if(Object.keys(fields).length)return Object.values(fields).map(String).join("; ");}
+ const blanks=record(value.blankAnswers);if(Object.keys(blanks).length)return Object.values(blanks).map(String).join("; ");
+ // Câu nối lưu optionIndex: đổi ra nhãn lựa chọn.
+ const matched=Object.values(matchingAnswers(value));if(matched.length)return matched.map(index=>optionLabel(question.options,index) || `Lựa chọn ${index+1}`).join("; ");
  if(Array.isArray(value.selectedOptionIndexes)){const options=Array.isArray(question.options)?question.options:[];return value.selectedOptionIndexes.map(index=>{const option=options.find((raw,i)=>(record(raw).optionIndex ?? i)===index);return String(record(option).content || `Lựa chọn ${Number(index)+1}`);}).join("; ");}
  return "Chưa có đáp án hiển thị";
 }
@@ -22,7 +25,7 @@ export function resultDraft(question:Record<string,unknown>,id:string):{answers:
   const options=Array.isArray(question.options)?question.options:[];const i=options.findIndex((v,i)=>(record(v).optionIndex ?? i)===value.selectedOptionIndex);if(i>=0)selected[id]=String(i);
  }
  for(const [field,parts,indexKey] of [["blankAnswers",question.blanks,"blankIndex"],["matchingAnswers",question.matchingPairs,"pairIndex"]] as const){
-  if(Array.isArray(parts))parts.forEach((raw,i)=>{const text=record(value[field])[String(record(raw)[indexKey] ?? i)];if(typeof text === "string")answers[id+":"+i]=text;});
+  if(Array.isArray(parts))parts.forEach((raw,i)=>{const text=record(value[field])[String(record(raw)[indexKey] ?? i)];if(typeof text === "string" || typeof text === "number")answers[id+":"+i]=String(text);});
  }
  if(Array.isArray(value.selectedOptionIndexes)){
   const options=Array.isArray(question.options)?question.options:[];selected[id]=JSON.stringify(options.flatMap((v,i)=>value.selectedOptionIndexes instanceof Array && value.selectedOptionIndexes.includes(record(v).optionIndex ?? i)?[i]:[]));

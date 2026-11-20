@@ -1,6 +1,6 @@
 // Mã hoá/giải mã đáp án của học viên theo định dạng bộ chấm của backend (QuestionAutoGrader):
 //   trắc nghiệm -> {"selectedOptionIndex": n}          chọn nhiều   -> {"selectedOptionIndexes": [n, ...]}
-//   câu nối     -> {"matchingAnswers": {"<pairIndex>": "<nội dung lựa chọn>"}}
+//   câu nối     -> {"matchingAnswers": {"<pairIndex>": <optionIndex của lựa chọn>}}  (chấm theo chỉ số: hai lựa chọn trùng chữ vẫn phân biệt)
 //   câu điền    -> {"blankAnswers": {"<blankIndex>": "<chữ nhập>"}}
 //   xếp câu     -> {"chunkOrder": [chỉ số trong sentenceChunks, ...]}      tự luận -> {"text": "..."}
 // Chuỗi rỗng = chưa trả lời. Backend ghi đè đáp án theo CÂU nên luôn mã hoá đủ mọi ý đã có của câu.
@@ -35,8 +35,30 @@ export const encodeChoice = (value: number | null): string => (value === null ? 
 
 export const encodeMultiple = (values: number[]): string => (values.length ? JSON.stringify({ selectedOptionIndexes: [...values].sort((a, b) => a - b) }) : "");
 
-/** Câu nối/câu điền: bỏ ý để trống; không còn ý nào thì là chưa trả lời. */
-export function encodeKeyed(field: "matchingAnswers" | "blankAnswers", values: Record<string, string>): string {
+/** Câu nối: dòng -> optionIndex đã chọn; bỏ dòng chưa chọn; không còn dòng nào thì là chưa trả lời. */
+export function encodeMatching(values: Record<string, number | null | undefined>): string {
+  const filled = Object.entries(values).filter((entry): entry is [string, number] => Number.isInteger(entry[1]));
+  return filled.length ? JSON.stringify({ matchingAnswers: Object.fromEntries(filled) }) : "";
+}
+
+/** Câu nối: dòng -> optionIndex đã chọn (giá trị không phải số bị bỏ). Nhận cả chuỗi JSON lẫn đối tượng đã parse. */
+export function matchingAnswers(answer: string | Obj | null | undefined): Record<string, number> {
+  const value = obj((typeof answer === "string" || answer == null ? parseAnswer(answer as string | null) : answer).matchingAnswers);
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, number] => Number.isInteger(entry[1])));
+}
+
+/** Nhãn của lựa chọn có optionIndex = value: nội dung chữ, rỗng thì chữ cái theo vị trí (A, B…); không tìm thấy thì "". */
+export function optionLabel(options: unknown, value: number | null | undefined): string {
+  if (!Number.isInteger(value)) return "";
+  const list = Array.isArray(options) ? options : [];
+  const index = list.findIndex((option, i) => optionValue(option, i) === value);
+  if (index < 0) return "";
+  const content = obj(list[index]).content;
+  return typeof content === "string" && content.trim() ? content : String.fromCharCode(65 + index);
+}
+
+/** Câu điền: bỏ ý để trống; không còn ý nào thì là chưa trả lời. */
+export function encodeKeyed(field: "blankAnswers", values: Record<string, string>): string {
   const filled = Object.entries(values).filter(([, text]) => text.trim() !== "");
   return filled.length ? JSON.stringify({ [field]: Object.fromEntries(filled) }) : "";
 }
@@ -65,7 +87,7 @@ export const selectedMultiple = (json: string | undefined): number[] => {
   return Array.isArray(value) ? value.filter((v): v is number => Number.isInteger(v)) : [];
 };
 
-export function keyedAnswers(json: string | undefined, field: "matchingAnswers" | "blankAnswers"): Record<string, string> {
+export function keyedAnswers(json: string | undefined, field: "blankAnswers"): Record<string, string> {
   const value = obj(parseAnswer(json)[field]);
   return Object.fromEntries(Object.entries(value).map(([key, text]) => [key, typeof text === "string" ? text : ""]));
 }

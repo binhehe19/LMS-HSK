@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { AnswerFields } from "@/components/student/timetable/lesson-answer-fields";
-import { encodeChoice, encodeChunks, encodeKeyed, encodeMultiple, encodeText, isAnswered, keyedAnswers, partKey, parseAnswer } from "@/lib/assessment/answer-codec";
+import { AnswerFields, shuffledOrder } from "@/components/student/timetable/lesson-answer-fields";
+import { encodeChoice, encodeChunks, encodeKeyed, encodeMatching, encodeMultiple, encodeText, isAnswered, keyedAnswers, matchingAnswers, optionLabel, partKey, parseAnswer } from "@/lib/assessment/answer-codec";
 
 describe("answer-codec — định dạng đáp án của backend", () => {
   it("mã hoá từng loại câu đúng khoá backend, chuỗi rỗng khi chưa trả lời", () => {
@@ -16,8 +16,12 @@ describe("answer-codec — định dạng đáp án của backend", () => {
 
   it("câu nối/câu điền: bỏ ý để trống, không còn ý nào thì là chưa trả lời; giữ ý khác khi sửa một ý", () => {
     expect(encodeKeyed("blankAnswers", { "0": "đi", "1": "  " })).toBe('{"blankAnswers":{"0":"đi"}}');
-    expect(encodeKeyed("matchingAnswers", { "0": "" })).toBe("");
-    expect(keyedAnswers('{"matchingAnswers":{"1":"b"}}', "matchingAnswers")).toEqual({ "1": "b" });
+    expect(encodeMatching({ "0": null })).toBe("");
+    expect(encodeMatching({ "0": 2, "1": null })).toBe('{"matchingAnswers":{"0":2}}');
+    expect(matchingAnswers('{"matchingAnswers":{"1":3,"2":"chữ cũ"}}')).toEqual({ "1": 3 });
+    expect(keyedAnswers('{"blankAnswers":{"1":"b"}}', "blankAnswers")).toEqual({ "1": "b" });
+    expect(optionLabel([{ optionIndex: 5, content: "" }, { optionIndex: 7, content: "C." }], 5)).toBe("A");
+    expect(optionLabel([{ optionIndex: 5, content: "" }, { optionIndex: 7, content: "C." }], 7)).toBe("C.");
     expect(isAnswered("")).toBe(false);
     expect(isAnswered('{"text":"a"}')).toBe(true);
   });
@@ -50,12 +54,27 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
     expect(onChange).toHaveBeenLastCalledWith("");
   });
 
-  it("câu nối: chọn đáp án cho một dòng giữ nguyên dòng khác, không khoá đáp án dùng lại", () => {
-    const question = { questionType: "MATCHING", options: [{ content: "a" }, { content: "b" }], matchingPairs: [{ pairIndex: 0, prompt: "1" }, { pairIndex: 1, prompt: "2" }] };
-    const onChange = setup(question, '{"matchingAnswers":{"0":"a"}}');
+  it("câu nối: gửi optionIndex của lựa chọn; chọn một dòng giữ nguyên dòng khác, không khoá đáp án dùng lại", () => {
+    const question = { questionType: "MATCHING", options: [{ optionIndex: 0, content: "a" }, { optionIndex: 1, content: "b" }], matchingPairs: [{ pairIndex: 0, prompt: "1" }, { pairIndex: 1, prompt: "2" }] };
+    const onChange = setup(question, '{"matchingAnswers":{"0":0}}');
     const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[1], { target: { value: "a" } });
-    expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":"a","1":"a"}}');
+    fireEvent.change(selects[1], { target: { value: "0" } });
+    expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":0,"1":0}}');
+    fireEvent.change(selects[0], { target: { value: "" } });
+    expect(onChange).toHaveBeenLastCalledWith("");
+  });
+
+  it("câu nối hai tranh cùng nhãn 'A': mỗi tranh là một lựa chọn riêng, gửi đúng chỉ số của tranh đã chọn", () => {
+    const question = {
+      questionId: "q-same",
+      questionType: "MATCHING",
+      options: [{ optionIndex: 0, content: "A", mediaUrl: "/api/storage/file/cat" }, { optionIndex: 1, content: "A", mediaUrl: "/api/storage/file/dog" }],
+      matchingPairs: [{ pairIndex: 0, prompt: "狗" }],
+    };
+    const onChange = setup(question);
+    expect(screen.getAllByRole("option", { name: "A" })).toHaveLength(2);
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "1" } });
+    expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":1}}');
   });
 
   it("câu điền: {{n}} thành ô nhập, ô thứ n ghi vào blankIndex n-1", () => {
@@ -71,6 +90,38 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
     expect(onChange).toHaveBeenLastCalledWith('{"chunkOrder":[1,0]}');
     fireEvent.click(screen.getByTitle("Bấm để bỏ mảnh này"));
     expect(onChange).toHaveBeenLastCalledWith("");
+  });
+
+  it("trắc nghiệm có ảnh lựa chọn: hiện ảnh storage, bỏ đường dẫn không an toàn; nhãn trùng chữ cái của ô không in lại", () => {
+    setup({ questionType: "MULTIPLE_CHOICE", options: [{ optionIndex: 0, content: "A", mediaUrl: "/api/storage/file/img1" }, { optionIndex: 1, content: "B", mediaUrl: "javascript:alert(1)" }] });
+    expect(screen.getByAltText("Đáp án A")).toHaveAttribute("src", "/api/storage/file/img1");
+    expect(screen.queryByAltText("Đáp án B")).not.toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "A Đáp án A" })).toBeInTheDocument();
+  });
+
+  it("câu nối có ảnh: bảng tranh dùng nhãn của lựa chọn (C., E), ảnh vế trái; giá trị gửi là optionIndex", () => {
+    const question = {
+      questionId: "q-img",
+      questionType: "MATCHING",
+      options: [{ optionIndex: 0, content: "C.", mediaUrl: "/api/storage/file/cat" }, { optionIndex: 1, content: "E", mediaUrl: "/api/storage/file/dog" }],
+      matchingPairs: [{ pairIndex: 0, prompt: "猫", promptMediaUrl: "/api/storage/file/left" }],
+    };
+    const onChange = setup(question);
+    expect(screen.getByRole("list", { name: "Các lựa chọn" })).toBeInTheDocument();
+    expect(screen.getByAltText("Lựa chọn C.")).toHaveAttribute("src", "/api/storage/file/cat");
+    expect(screen.getByAltText("Dòng 1")).toHaveAttribute("src", "/api/storage/file/left");
+    expect(screen.queryByRole("option", { name: /^A\. / })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "0" } });
+    expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":0}}');
+  });
+
+  it("xếp câu: mảnh hiện theo thứ tự trộn cố định (không theo thứ tự lưu), cùng câu luôn cùng thứ tự", () => {
+    const chunks = ["我", "是", "学", "生", "了", "吗"].map((content) => ({ content }));
+    setup({ questionId: "q-chunks", questionType: "SENTENCE_BUILDER", sentenceChunks: chunks });
+    const shown = screen.getAllByRole("button").map((b) => b.textContent).filter((t) => t !== "Làm lại");
+    expect(shown).not.toEqual(chunks.map((c) => c.content));
+    expect([...shown].sort()).toEqual(chunks.map((c) => c.content).sort());
+    expect(shuffledOrder(6, "q-chunks:chunks")).toEqual(shuffledOrder(6, "q-chunks:chunks"));
   });
 
   it("tự luận: gõ gửi {text}, hiện số từ và số từ tối thiểu", () => {

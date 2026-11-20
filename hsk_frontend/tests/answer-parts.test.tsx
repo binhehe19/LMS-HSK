@@ -14,9 +14,9 @@ const matching = {
   questionType: "MATCHING",
   questionText: "Nối",
   options: [{ optionIndex: 0, content: "a" }, { optionIndex: 1, content: "b" }],
-  matchingPairs: [{ pairIndex: 0, prompt: "1", answer: "a" }, { pairIndex: 2, prompt: "2", answer: "b" }],
+  matchingPairs: [{ pairIndex: 0, prompt: "1", answer: "a", answerOptionIndex: 0 }, { pairIndex: 2, prompt: "2", answer: "b", answerOptionIndex: 1 }],
 };
-const matchingAnswer = '{"matchingAnswers":{"0":"a"}}';
+const matchingAnswer = '{"matchingAnswers":{"0":0}}';
 const parts = [{ index: 0, correct: true }, { index: 2, correct: false }];
 
 describe("answerLines — dấu đúng/sai từng dòng theo parts của backend", () => {

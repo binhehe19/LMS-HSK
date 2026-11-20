@@ -33,6 +33,8 @@ export function questionTypeMeta(type: string | undefined | null): QuizQuestionT
 export interface QuizOptionInput {
   text: string;
   isCorrect: boolean;
+  /** Ảnh của lựa chọn (chưa có ô sửa; giữ từ câu gốc). Lựa chọn có ảnh được giữ dù chữ rỗng. */
+  mediaUrl?: string;
 }
 export interface QuizBlankInput {
   answer: string;
@@ -42,6 +44,9 @@ export interface QuizBlankInput {
 export interface QuizPairInput {
   left: string;
   right: string;
+  /** Ảnh vế trái / vế phải (chưa có ô sửa; giữ từ câu gốc). Vế có ảnh được coi là đã có nội dung dù chữ rỗng. */
+  leftMediaUrl?: string;
+  rightMediaUrl?: string;
 }
 
 /** Giá trị form soạn câu hỏi: giữ mọi phần theo loại để đổi loại qua lại không mất dữ liệu đã gõ. */
@@ -110,21 +115,22 @@ export function questionToInput(q: QuizQuestion): QuizQuestionInput {
     explanation: q.explanation ?? "",
     imageFileId: q.imageFileId || undefined,
     audioFileId: q.audioFileId || undefined,
-    options: q.options && q.options.length > 0 ? q.options.map((o) => ({ text: o.text ?? "", isCorrect: Boolean(o.isCorrect) })) : base.options,
+    options: q.options && q.options.length > 0 ? q.options.map((o) => ({ text: o.text ?? "", isCorrect: Boolean(o.isCorrect), mediaUrl: o.mediaUrl })) : base.options,
     correctAnswer: typeof q.correctAnswer === "boolean" ? q.correctAnswer : null,
     fillBlankMode: q.fillBlankMode ?? "TYPE",
     blanks: q.blanks && q.blanks.length > 0 ? [...q.blanks].sort((a, b) => a.index - b.index).map((b) => ({ answer: b.answer ?? "", acceptable: (b.acceptable ?? []).join(", ") })) : base.blanks,
     choices: q.choices && q.choices.length > 0 ? [...q.choices] : base.choices,
-    pairs: q.pairs && q.pairs.length > 0 ? q.pairs.map((p) => ({ left: p.left ?? "", right: p.right ?? "" })) : base.pairs,
+    pairs: q.pairs && q.pairs.length > 0 ? q.pairs.map((p) => ({ left: p.left ?? "", right: p.right ?? "", leftMediaUrl: p.leftMediaUrl, rightMediaUrl: p.rightMediaUrl })) : base.pairs,
     referenceAnswer: q.referenceAnswer ?? "",
     index: q.index,
   };
 }
 
-const filledOptions = (v: QuizQuestionInput) => v.options.filter((o) => o.text.trim());
+// Lựa chọn/vế nối có ảnh là đã có nội dung dù chữ rỗng (đề chọn tranh); backend chấm theo chỉ số nên không cần chữ.
+const filledOptions = (v: QuizQuestionInput) => v.options.filter((o) => o.text.trim() || o.mediaUrl);
 const filledBlanks = (v: QuizQuestionInput) => v.blanks.filter((b) => b.answer.trim());
 const filledChoices = (v: QuizQuestionInput) => v.choices.map((c) => c.trim()).filter(Boolean);
-const filledPairs = (v: QuizQuestionInput) => v.pairs.filter((p) => p.left.trim() && p.right.trim());
+const filledPairs = (v: QuizQuestionInput) => v.pairs.filter((p) => (p.left.trim() || p.leftMediaUrl) && (p.right.trim() || p.rightMediaUrl));
 
 /** Thông điệp lỗi (nguyên văn bản cũ khi có) hoặc null khi hợp lệ. */
 export function validateQuestionInput(v: QuizQuestionInput): string | null {
@@ -186,7 +192,7 @@ export function normalizeQuestionInput(v: QuizQuestionInput): QuizQuestionBody {
   };
   switch (v.type) {
     case "MULTIPLE_CHOICE":
-      body.options = filledOptions(v).map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }));
+      body.options = filledOptions(v).map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect, mediaUrl: o.mediaUrl }));
       break;
     case "TRUE_FALSE":
       body.correctAnswer = v.correctAnswer === true;
@@ -197,7 +203,7 @@ export function normalizeQuestionInput(v: QuizQuestionInput): QuizQuestionBody {
       if (v.fillBlankMode === "SELECT") body.choices = filledChoices(v);
       break;
     case "MATCHING_PAIRS":
-      body.pairs = filledPairs(v).map((p) => ({ left: p.left.trim(), right: p.right.trim() }));
+      body.pairs = filledPairs(v).map((p) => ({ left: p.left.trim(), right: p.right.trim(), leftMediaUrl: p.leftMediaUrl, rightMediaUrl: p.rightMediaUrl }));
       break;
     case "SHORT_ANSWER":
       body.gradingMode = "MANUAL";

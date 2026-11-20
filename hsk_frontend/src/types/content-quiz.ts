@@ -41,6 +41,8 @@ export type QuizGradingMode = "AUTO" | "MANUAL" | "AI_ASSIST";
 export interface QuizQuestionOption {
   text: string;
   isCorrect: boolean;
+  /** Ảnh của lựa chọn (đường dẫn storage). */
+  mediaUrl?: string;
 }
 
 export interface QuizQuestionBlank {
@@ -54,6 +56,9 @@ export interface QuizQuestionBlank {
 export interface QuizQuestionPair {
   left: string;
   right: string;
+  /** Ảnh vế trái (promptMediaUrl) và ảnh vế phải (ảnh của lựa chọn đúng). */
+  leftMediaUrl?: string;
+  rightMediaUrl?: string;
 }
 
 /** Thân POST/PUT của một câu hỏi: trường chung + trường theo loại (chỉ gửi trường của loại đang chọn). */

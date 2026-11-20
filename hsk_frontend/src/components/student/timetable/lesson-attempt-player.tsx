@@ -4,7 +4,7 @@ import type { AssessmentAttemptResponse } from "@/lib/api/assessment-attempt-cli
 import { isAnswered } from "@/lib/assessment/answer-codec";
 import { AnswerFields } from "./lesson-answer-fields";
 import { LessonAudio } from "./lesson-audio";
-import { LessonSection, sectionOfQuestion } from "./lesson-section";
+import { LessonSection, imagesOf, sectionOfQuestion } from "./lesson-section";
 import { plainText } from "./timetable-source";
 import { useAssessmentAttemptSession } from "./use-assessment-attempt-session";
 
@@ -22,6 +22,7 @@ const TYPE_LABEL: Record<string, string> = {
   AUDIO_RESPONSE: "Ghi âm",
   FILE_UPLOAD: "Nộp tệp",
 };
+const DIFFICULTY_LABEL: Record<string, string> = { EASY: "Dễ", MEDIUM: "Trung bình", HARD: "Khó" };
 
 export interface StageProps {
   title: string;
@@ -61,6 +62,11 @@ export function QuestionStage({ title, content, questions, answers, onAnswer, sk
   const type = typeof q.questionType === "string" ? q.questionType : "";
   const prompt = typeof q.questionText === "string" ? q.questionText.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, " ") : "";
   const questionAudio = list(q.media).map(obj).find((m) => m.kind === "audio");
+  const questionImages = imagesOf(q.files);
+  const hint = typeof q.translationHint === "string" ? plainText(q.translationHint) : "";
+  const meta = obj(obj(obj(content).layout).meta);
+  const instruction = typeof meta.instruction === "string" ? plainText(meta.instruction) : "";
+  const difficulty = typeof meta.difficulty === "string" ? DIFFICULTY_LABEL[meta.difficulty] : undefined;
 
   return (
     <div className={`hsk-exercise is-${skill}`}>
@@ -76,12 +82,23 @@ export function QuestionStage({ title, content, questions, answers, onAnswer, sk
               Câu {questions.length ? index + 1 : 0}/{questions.length}
             </span>
             <span>{TYPE_LABEL[type] ?? "Bài tập"}</span>
+            {difficulty && <span>Độ khó: {difficulty}</span>}
           </div>
+          {instruction && <p className="hsk-exercise-instruction">{instruction}</p>}
           {current && (
             <>
-              <LessonSection section={sectionOfQuestion(content, id)} showAudio={skill === "listening" || skill === "speaking"} />
+              <LessonSection section={sectionOfQuestion(content, id)} />
               {type !== "FILL_IN_BLANK" && <p className="hsk-exercise-prompt">{plainText(prompt)}</p>}
-              {(skill === "listening" || skill === "speaking") && questionAudio && <LessonAudio url={typeof questionAudio.url === "string" ? questionAudio.url : undefined} />}
+              {questionImages.map((image, i) => (
+                // eslint-disable-next-line @next/next/no-img-element -- ảnh storage nội bộ, kích thước không biết trước
+                <img key={i} className="hsk-question-image" src={image.src} alt={image.alt} />
+              ))}
+              {questionAudio && <LessonAudio url={typeof questionAudio.url === "string" ? questionAudio.url : undefined} />}
+              {hint && (
+                <p className="hsk-exercise-hint">
+                  <i className="isax isax-lamp-on" aria-hidden="true" /> {hint}
+                </p>
+              )}
               <AnswerFields key={id} question={q} value={answers[id] ?? ""} disabled={disabled} onChange={(json) => onAnswer(id, json)} onBusyChange={setBusy} />
               {note}
             </>

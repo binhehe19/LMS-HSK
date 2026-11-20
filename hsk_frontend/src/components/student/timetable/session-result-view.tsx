@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import {fileUrl} from "@/lib/api/storage-client";
+import {matchingAnswers,optionLabel} from "@/lib/assessment/answer-codec";
 import {safeResourceUrl} from "./lesson-source";
 import ResultAudio from "./result-audio";
 import {resultRecord as obj,resultTotals,type SessionResultData} from "./session-result-source";
@@ -9,6 +10,8 @@ const text=(v:unknown)=>typeof v==="string"?v.replace(/<br\s*\/?\s*>/gi,"\n").re
 const num=(v:unknown)=>typeof v==="number"?v:null;
 function answer(value:unknown){try{return obj(typeof value==="string"?JSON.parse(value):value);}catch{return {};}}
 const rows=(v:unknown)=>Array.isArray(v)?v.map(obj):[];
+// Câu nối lưu optionIndex học viên chọn: hiện nhãn lựa chọn đó.
+const matchingLabel=(options:unknown,value:number|undefined)=>value===undefined?"Chưa trả lời":text(optionLabel(options,value))||`Lựa chọn ${value+1}`;
 function mediaUrl(v:unknown){const m=obj(v);return safeResourceUrl(typeof m.url==="string"?m.url:undefined) || fileUrl(typeof m.fileId==="string"?m.fileId:undefined);}
 function QuestionResult({row,index}:{row:Record<string,unknown>;index:number}){
  const q=obj(row.question),a=answer(row.answerJson),options=rows(q.options),pairs=rows(q.matchingPairs),blanks=rows(q.blanks);
@@ -24,7 +27,7 @@ function QuestionResult({row,index}:{row:Record<string,unknown>;index:number}){
  <p className="session-result-muted">Các đáp án:</p>
  {options.length>0 && options.map((o,i)=>{const chosen=selected.includes(o.optionIndex ?? i),known=typeof o.correct==="boolean" && graded,correct=known && o.correct===true;
  return <div key={i} className={`session-result-option ${correct?"is-correct":chosen && known?"is-wrong":""}`}><span>{correct?"✓ ":chosen && known?"✕ ":""}{text(o.content)}</span>{chosen && <em>(Đáp án của bạn)</em>}</div>;})}
- {pairs.length>0 && <><p className="session-result-muted">Đáp án đúng:</p>{pairs.map((p,i)=><div className={`session-result-pair ${graded && typeof p.answer==="string"?"is-correct":""}`} key={i}><span>{text(p.prompt)}</span><span>›</span><span>{graded?text(p.answer)||"Chưa có dữ liệu":"Chưa công bố"}</span></div>)}<p className="session-result-muted">Bạn đã nối:</p>{pairs.map((p,i)=>{const correct=part(Number(p.pairIndex ?? i));return <div className={`session-result-pair ${correct===true?"is-correct":correct===false?"is-wrong":""}`} key={i}><span>{text(p.prompt)}</span><span>›</span><span>{String(obj(a.matchingAnswers)[String(p.pairIndex ?? i)] ?? "Chưa trả lời")}</span></div>;})}</>}
+ {pairs.length>0 && <><p className="session-result-muted">Đáp án đúng:</p>{pairs.map((p,i)=><div className={`session-result-pair ${graded && num(p.answerOptionIndex)!==null?"is-correct":""}`} key={i}><span>{text(p.prompt)}</span><span>›</span><span>{graded?text(optionLabel(q.options,num(p.answerOptionIndex)))||"Chưa có dữ liệu":"Chưa công bố"}</span></div>)}<p className="session-result-muted">Bạn đã nối:</p>{pairs.map((p,i)=>{const correct=part(Number(p.pairIndex ?? i));return <div className={`session-result-pair ${correct===true?"is-correct":correct===false?"is-wrong":""}`} key={i}><span>{text(p.prompt)}</span><span>›</span><span>{matchingLabel(q.options,matchingAnswers(a)[String(p.pairIndex ?? i)])}</span></div>;})}</>}
  {blanks.length>0 && blanks.map((blank,i)=>{const correct=part(Number(blank.blankIndex ?? i));return <div key={i}><div className={`session-result-option ${correct===true?"is-correct":correct===false?"is-wrong":""}`}>Bài làm của bạn: {String(obj(a.blankAnswers)[String(blank.blankIndex ?? i)] ?? "Chưa trả lời")}</div>{graded && <div className="session-result-option is-correct">Đáp án đúng: {text(blank.correctAnswer) || "Chưa có dữ liệu"}</div>}</div>;})}
  {!options.length && !pairs.length && !blanks.length && !audio && !files.length && <><div className="session-result-option">Bài làm của bạn: {prose || "Chưa có dữ liệu câu trả lời"}</div>{graded && q.correctSentence!=null && <div className="session-result-option is-correct">Đáp án đúng: {text(q.correctSentence)}</div>}</>}
  {audio && <><p className="session-result-muted">Câu trả lời của bạn:</p><ResultAudio url={audio}/></>}

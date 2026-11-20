@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fromBackendQuestion, mergeLayout, partCount, toBackendQuestion } from "@/lib/api/lms-quiz-client";
 import { sectionOfQuestion, sectionParagraphs } from "@/components/student/timetable/lesson-section";
+import { normalizeQuestionInput, questionToInput } from "@/lib/content/quiz-question";
 
 // Lưu một câu qua HSK không được làm mất field mà HSK không có ô sửa (soạn ở IELTS).
 const roundTrip = (backend: Record<string, unknown>, edit: (q: ReturnType<typeof fromBackendQuestion>) => void = () => {}) => {
@@ -20,10 +21,31 @@ describe("lms-quiz-client — dịch câu hỏi HSK <-> backend", () => {
     const matching = {
       questionId: "m1", questionType: "MATCHING", questionText: "Nối", points: 4,
       options: [{ optionIndex: 0, content: "a" }, { optionIndex: 1, content: "b" }, { optionIndex: 2, content: "c" }],
-      matchingPairs: [{ pairIndex: 0, prompt: "1", answer: "a", explanation: "e-a" }, { pairIndex: 1, prompt: "2", answer: "b", explanation: "e-b" }, { pairIndex: 2, prompt: "3", answer: "c", explanation: "e-c" }],
+      matchingPairs: [
+        { pairIndex: 0, prompt: "1", answer: "a", answerOptionIndex: 0, explanation: "e-a" },
+        { pairIndex: 1, prompt: "2", answer: "b", answerOptionIndex: 1, explanation: "e-b" },
+        { pairIndex: 2, prompt: "3", answer: "c", answerOptionIndex: 2, explanation: "e-c" },
+      ],
     };
     const out = roundTrip(matching, (q) => { q.pairs = q.pairs!.filter((p) => p.left !== "2"); });
-    expect((out.matchingPairs as { prompt: string; explanation: string; pairIndex: number }[]).map((p) => [p.pairIndex, p.prompt, p.explanation])).toEqual([[0, "1", "e-a"], [1, "3", "e-c"]]);
+    const pairs = out.matchingPairs as { prompt: string; explanation: string; pairIndex: number; answerOptionIndex: number }[];
+    expect(pairs.map((p) => [p.pairIndex, p.prompt, p.explanation, p.answerOptionIndex])).toEqual([[0, "1", "e-a", 0], [1, "3", "e-c", 1]]);
+    expect(out.options).toEqual([{ optionIndex: 0, content: "a" }, { optionIndex: 1, content: "c" }]);
+  });
+
+  it("nối cặp: vế phải trùng chữ khác ảnh là hai lựa chọn; trùng cả chữ lẫn ảnh dùng chung một lựa chọn", () => {
+    const matching = {
+      questionId: "m3", questionType: "MATCHING", questionText: "Nối", points: 3,
+      options: [{ optionIndex: 0, content: "A", mediaUrl: "/api/storage/file/cat" }, { optionIndex: 1, content: "A", mediaUrl: "/api/storage/file/dog" }],
+      matchingPairs: [
+        { pairIndex: 0, prompt: "猫", answerOptionIndex: 0 },
+        { pairIndex: 1, prompt: "狗", answerOptionIndex: 1 },
+        { pairIndex: 2, prompt: "小猫", answerOptionIndex: 0 },
+      ],
+    };
+    const out = roundTrip(matching);
+    expect(out.options).toEqual([{ optionIndex: 0, content: "A", mediaUrl: "/api/storage/file/cat" }, { optionIndex: 1, content: "A", mediaUrl: "/api/storage/file/dog" }]);
+    expect((out.matchingPairs as { answerOptionIndex: number }[]).map((p) => p.answerOptionIndex)).toEqual([0, 1, 0]);
   });
 
   it("điền chỗ trống: gợi ý từng chỗ trống được giữ, {{n}} khớp số đáp án", () => {
@@ -54,6 +76,30 @@ describe("lms-quiz-client — dịch câu hỏi HSK <-> backend", () => {
     expect(roundTrip(multi)).toEqual(multi);
     const upload = { questionId: "u1", questionType: "FILE_UPLOAD", questionText: "Nộp", points: 3, maxFiles: 2, acceptedMimeTypes: ["application/pdf"] };
     expect(roundTrip(upload)).toEqual(upload);
+  });
+
+  it("dữ liệu chuyển từ LMS 1.0: sửa câu không làm mất ảnh lựa chọn/dòng nối", () => {
+    const mc = {
+      questionId: "c1", questionType: "MULTIPLE_CHOICE", questionText: "Chọn hình", points: 1,
+      options: [{ optionIndex: 0, content: "A", correct: true, mediaUrl: "/api/storage/file/a" }, { optionIndex: 1, content: "B", correct: false, mediaUrl: "/api/storage/file/b" }],
+    };
+    const outMc = roundTrip(mc, (q) => { q.prompt = "Chọn hình đúng"; q.options = [q.options![1], q.options![0]]; });
+    expect(outMc.options).toEqual([
+      { optionIndex: 0, content: "B", correct: false, mediaUrl: "/api/storage/file/b" },
+      { optionIndex: 1, content: "A", correct: true, mediaUrl: "/api/storage/file/a" },
+    ]);
+
+    const matching = {
+      questionId: "m2", questionType: "MATCHING", questionText: "Nối", points: 2,
+      options: [{ optionIndex: 0, content: "", mediaUrl: "/api/storage/file/cat" }],
+      matchingPairs: [{ pairIndex: 0, prompt: "", promptMediaUrl: "/api/storage/file/l", answerOptionIndex: 0 }],
+    };
+    // Vế chỉ có ảnh (chữ rỗng) vẫn được form giữ lại khi lưu.
+    const q = fromBackendQuestion("quiz", 0, matching as Parameters<typeof fromBackendQuestion>[2]);
+    expect(normalizeQuestionInput(questionToInput(q)).pairs).toEqual([{ left: "", right: "", leftMediaUrl: "/api/storage/file/l", rightMediaUrl: "/api/storage/file/cat" }]);
+    const outMatch = roundTrip(matching, (x) => { x.prompt = "Nối lại"; });
+    expect(outMatch.options).toEqual([{ optionIndex: 0, content: "", mediaUrl: "/api/storage/file/cat" }]);
+    expect(outMatch.matchingPairs).toEqual([{ pairIndex: 0, prompt: "", answer: "", promptMediaUrl: "/api/storage/file/l", answerOptionIndex: 0 }]);
   });
 
   it("audio: đổi tệp thì thay audio, giữ video; bỏ audio thì chỉ còn video", () => {

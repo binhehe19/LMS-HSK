@@ -1,6 +1,7 @@
 // Đáp án của học viên thành từng dòng có dấu đúng/sai theo `parts[]` của backend (đúng/sai từng dòng của câu nối và từng chỗ trống của câu điền,
 // tính ở backend theo đáp án hệ thống). Không có `parts` (câu loại khác, hoặc câu chưa có điểm) thì trả các dòng chữ như `formatStudentAnswer`, không dấu.
 import type { ResultQuestionContent } from "@/lib/api/assessment-attempt-client";
+import { optionLabel } from "@/lib/assessment/answer-codec";
 import { formatStudentAnswer } from "@/lib/assessment/result-format";
 
 export interface AnswerPart {
@@ -15,7 +16,7 @@ export interface AnswerLine {
   correct?: boolean;
 }
 
-function parse(answerJson: string | null): { matchingAnswers?: Record<string, string>; blankAnswers?: Record<string, string> } {
+function parse(answerJson: string | null): { matchingAnswers?: Record<string, number>; blankAnswers?: Record<string, string> } {
   try {
     return (answerJson ? JSON.parse(answerJson) : null) ?? {};
   } catch {
@@ -30,7 +31,7 @@ export function answerLines(q: ResultQuestionContent, answerJson: string | null,
   const answer = parse(answerJson);
   const markOf = (index: number) => parts.find((part) => part.index === index)?.correct;
   if (q.questionType === "MATCHING") {
-    return (q.matchingPairs ?? []).map((pair) => ({ text: `${pair.prompt} → ${answer.matchingAnswers?.[pair.pairIndex] || EMPTY}`, correct: markOf(pair.pairIndex) }));
+    return (q.matchingPairs ?? []).map((pair) => ({ text: `${pair.prompt} → ${optionLabel(q.options, answer.matchingAnswers?.[pair.pairIndex]) || EMPTY}`, correct: markOf(pair.pairIndex) }));
   }
   if (q.questionType === "FILL_IN_BLANK") {
     return (q.blanks ?? []).map((blank) => ({ text: `${blank.blankIndex + 1}. ${answer.blankAnswers?.[blank.blankIndex] || EMPTY}`, correct: markOf(blank.blankIndex) }));

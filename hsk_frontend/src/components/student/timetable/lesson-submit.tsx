@@ -13,7 +13,8 @@ export function serializeLessonAnswer(item:DraftQuestion,answers:Record<string,s
   value=choice === undefined?{}:q.questionType === "MULTIPLE_SELECT"?{selectedOptionIndexes:selectedChoices(choice).map(i=>typeof record(options[i]).optionIndex === "number"?record(options[i]).optionIndex:i)}:{selectedOptionIndex:index};
  }else if(q.questionType === "FILL_IN_BLANK" || q.questionType === "MATCHING"){
   const matching=q.questionType === "MATCHING";const fields=matching?q.matchingPairs:q.blanks;
-  value={[matching?"matchingAnswers":"blankAnswers"]:Object.fromEntries((Array.isArray(fields)?fields:[]).map((raw,i)=>{const part=record(raw);return [String(part[matching?"pairIndex":"blankIndex"] ?? i),answers[item.id+":"+i] || ""];}))};
+  // Câu nối gửi optionIndex (số) đã chọn của từng dòng; câu điền gửi chữ.
+  value={[matching?"matchingAnswers":"blankAnswers"]:Object.fromEntries((Array.isArray(fields)?fields:[]).map((raw,i)=>{const part=record(raw);const given=answers[item.id+":"+i] || "";return [String(part[matching?"pairIndex":"blankIndex"] ?? i),matching?(given === "" ? null : Number(given)):given];}))};
  }else if(q.questionType === "ESSAY")value={text:answers[item.id] || ""};
  else if(["AUDIO_RESPONSE","FILE_UPLOAD","SENTENCE_BUILDER"].includes(String(q.questionType))){
   const saved=record(JSON.parse(answers[item.id] || "{}"));

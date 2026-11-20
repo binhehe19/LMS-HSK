@@ -9,14 +9,18 @@ import {
   encodeChunks,
   encodeFiles,
   encodeKeyed,
+  encodeMatching,
   encodeMultiple,
   encodeText,
   keyedAnswers,
+  matchingAnswers,
+  optionLabel,
   optionValue,
   partKey,
   selectedChoice,
   selectedMultiple,
 } from "@/lib/assessment/answer-codec";
+import { safeResourceUrl } from "./lesson-source";
 import { plainText } from "./timetable-source";
 import { LessonAudioAnswer } from "./lesson-audio-answer";
 import { LessonFileAnswer } from "./lesson-file-answer";
@@ -38,6 +42,36 @@ export interface AnswerFieldsProps {
 }
 
 const numberOf = (value: unknown): number | undefined => (typeof value === "number" ? value : undefined);
+const letter = (i: number) => String.fromCharCode(65 + i);
+const imageOf = (value: unknown): string | null => safeResourceUrl(typeof value === "string" ? value : undefined);
+
+/**
+ * Thứ tự trộn cố định theo `seed` (id câu): như LMS 1.0 luôn trộn mảnh ghép câu và vế nối, để thứ tự lưu không lộ đáp án;
+ * cùng một câu luôn ra cùng thứ tự nên không nhảy khi màn vẽ lại. Chỉ đổi thứ tự hiển thị, giá trị trả lời giữ nguyên.
+ */
+export function shuffledOrder(count: number, seed: string): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  const next = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const order = Array.from({ length: count }, (_, i) => i);
+  for (let i = count - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
+function OptionImage({ url, alt }: { url: unknown; alt: string }) {
+  const src = imageOf(url);
+  // eslint-disable-next-line @next/next/no-img-element -- ảnh storage nội bộ, kích thước không biết trước
+  return src ? <img className="hsk-answer-image" src={src} alt={alt} /> : null;
+}
+
+/** Chữ của lựa chọn, bỏ trống khi chữ chỉ là nhãn trùng chữ cái của ô ("A", "A.") để không hiện "A … A" (đề chọn tranh của LMS 1.0). */
+function optionText(option: unknown, i: number): string {
+  const text = str(obj(option).content);
+  return /^[A-Z]\.?$/.test(text.trim()) && text.trim()[0] === letter(i) ? "" : text;
+}
 
 function Choice({ question, value, onChange, disabled }: AnswerFieldsProps) {
   const options = list(question.options);
@@ -48,8 +82,9 @@ function Choice({ question, value, onChange, disabled }: AnswerFieldsProps) {
         const v = optionValue(option, i);
         return (
           <button type="button" key={i} role="radio" aria-checked={picked === v} disabled={disabled} className={picked === v ? "is-selected" : ""} onClick={() => onChange(encodeChoice(v))}>
-            <span>{String.fromCharCode(65 + i)}</span>
-            {str(obj(option).content)}
+            <span>{letter(i)}</span>
+            <OptionImage url={obj(option).mediaUrl} alt={`Đáp án ${letter(i)}`} />
+            {optionText(option, i)}
           </button>
         );
       })}
@@ -66,8 +101,9 @@ function Multiple({ question, value, onChange, disabled }: AnswerFieldsProps) {
         const v = optionValue(option, i);
         return (
           <button type="button" key={i} role="checkbox" aria-checked={picked.includes(v)} disabled={disabled} className={picked.includes(v) ? "is-selected" : ""} onClick={() => toggle(v)}>
-            <span>{String.fromCharCode(65 + i)}</span>
-            {str(obj(option).content)}
+            <span>{letter(i)}</span>
+            <OptionImage url={obj(option).mediaUrl} alt={`Đáp án ${letter(i)}`} />
+            {optionText(option, i)}
           </button>
         );
       })}
@@ -76,20 +112,41 @@ function Multiple({ question, value, onChange, disabled }: AnswerFieldsProps) {
 }
 
 function Matching({ question, value, onChange, disabled }: AnswerFieldsProps) {
-  const given = keyedAnswers(value, "matchingAnswers");
-  const choices = list(question.options).map((option) => str(obj(option).content));
+  const given = matchingAnswers(value);
+  const options = list(question.options);
+  // Giá trị gửi là optionIndex (chấm theo chỉ số); nhãn là chữ của lựa chọn, rỗng thì chữ cái theo vị trí lưu.
+  const all = options.map((option, i) => ({ value: optionValue(option, i), label: plainText(optionLabel(options, optionValue(option, i))), mediaUrl: obj(option).mediaUrl }));
+  const choices = shuffledOrder(all.length, `${String(question.questionId ?? "")}:choices`).map((i) => all[i]);
+  const withImages = choices.some((choice) => imageOf(choice.mediaUrl));
   return (
     <div className="lesson-matching-fields">
+      {withImages && (
+        <ol className="lesson-matching-choices" aria-label="Các lựa chọn">
+          {choices.map((choice) => (
+            <li key={choice.value}>
+              <strong>{choice.label}</strong>
+              <OptionImage url={choice.mediaUrl} alt={`Lựa chọn ${choice.label}`} />
+            </li>
+          ))}
+        </ol>
+      )}
       {list(question.matchingPairs).map((pair, i) => {
         const key = partKey(pair, i, "pairIndex");
         return (
           <label key={key}>
-            <span>{str(obj(pair).prompt)}</span>
-            <select value={given[key] ?? ""} disabled={disabled} onChange={(e) => onChange(encodeKeyed("matchingAnswers", { ...given, [key]: e.target.value }))}>
+            <span>
+              <OptionImage url={obj(pair).promptMediaUrl} alt={`Dòng ${i + 1}`} />
+              {str(obj(pair).prompt)}
+            </span>
+            <select
+              value={given[key] === undefined ? "" : String(given[key])}
+              disabled={disabled}
+              onChange={(e) => onChange(encodeMatching({ ...given, [key]: e.target.value === "" ? null : Number(e.target.value) }))}
+            >
               <option value="">Chọn đáp án</option>
-              {choices.map((choice, j) => (
-                <option key={j} value={choice}>
-                  {choice}
+              {choices.map((choice) => (
+                <option key={choice.value} value={String(choice.value)}>
+                  {choice.label}
                 </option>
               ))}
             </select>
@@ -120,7 +177,7 @@ function Blanks({ question, value, onChange, disabled }: AnswerFieldsProps) {
 function Chunks({ question, value, onChange, disabled }: AnswerFieldsProps) {
   const chunks = list(question.sentenceChunks).map((chunk) => str(obj(chunk).content));
   const order = chunkOrder(value);
-  const unused = chunks.map((_, i) => i).filter((i) => !order.includes(i));
+  const unused = shuffledOrder(chunks.length, `${String(question.questionId ?? "")}:chunks`).filter((i) => !order.includes(i));
   return (
     <div className="lesson-sentence-builder">
       <div aria-label="Các mảnh câu">

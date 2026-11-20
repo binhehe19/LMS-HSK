@@ -8,6 +8,14 @@ const obj = (value: unknown): Obj => (value && typeof value === "object" && !Arr
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const isImage = (file: Obj) => /^image\//i.test(String(file.mimeType ?? "")) || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(String(file.name ?? ""));
 
+/** Ảnh trong danh sách tệp [{url, name, mimeType}] (của phần hoặc của câu), chỉ giữ đường dẫn an toàn. */
+export function imagesOf(files: unknown): { src: string; alt: string }[] {
+  return list(files).map(obj).filter(isImage).flatMap((file) => {
+    const src = safeResourceUrl(typeof file.url === "string" ? file.url : undefined);
+    return src ? [{ src, alt: typeof file.name === "string" ? file.name : "Hình minh hoạ" }] : [];
+  });
+}
+
 /** Phần của bài làm chứa câu `questionId` (layout v2): mỗi câu thuộc đúng một phần. */
 export function sectionOfQuestion(content: unknown, questionId: unknown): Obj | null {
   if (typeof questionId !== "string") return null;
@@ -18,15 +26,12 @@ export function sectionOfQuestion(content: unknown, questionId: unknown): Obj | 
 /** Văn bản chung của phần thành các đoạn thuần (HTML bị bỏ thẻ, không render HTML): xuống dòng ở </p> và <br>. */
 export const sectionParagraphs = (html: unknown): string[] => (typeof html === "string" ? html.split(/<\/p>|<br\s*\/?>/i).map(plainText).filter(Boolean) : []);
 
-/** Đoạn đọc, ảnh và audio dùng chung của phần, hiện phía trên câu hỏi. Audio chỉ hiện cho bài nghe/nói (`showAudio`). */
-export function LessonSection({ section, showAudio }: { section: Obj | null; showAudio: boolean }) {
+/** Đoạn đọc, ảnh và audio dùng chung của phần, hiện phía trên câu hỏi (audio ở mọi kỹ năng, như LMS 1.0). */
+export function LessonSection({ section }: { section: Obj | null }) {
   if (!section) return null;
   const paragraphs = sectionParagraphs(section.content);
-  const images = list(section.files).map(obj).filter(isImage).flatMap((file) => {
-    const src = safeResourceUrl(typeof file.url === "string" ? file.url : undefined);
-    return src ? [{ src, alt: typeof file.name === "string" ? file.name : "Hình minh hoạ" }] : [];
-  });
-  const audios = showAudio ? list(section.media).map(obj).filter((m) => m.kind === "audio") : [];
+  const images = imagesOf(section.files);
+  const audios = list(section.media).map(obj).filter((m) => m.kind === "audio");
   if (!paragraphs.length && !images.length && !audios.length) return null;
   return (
     <div className="hsk-section-context">

@@ -11,8 +11,9 @@
 //    passingScore, audioFileId, passageText, passageImageFileId) → nhét vào `layout.meta` (JSON tự do, backend "chỉ lưu và trả lại", không đụng tới).
 //  - Câu hỏi: type đổi tên để khớp ExerciseQuestionType (SHORT_ANSWER→ESSAY, MATCHING_PAIRS→MATCHING, còn lại giữ tên); TRUE_FALSE là trắc
 //    nghiệm có variant "TRUE_FALSE" với 2 options cố định "Đúng"/"Sai" (đọc lại theo option nào correct=true); nối cặp có danh sách lựa chọn
-//    chung (các vế phải); câu mẫu điền chỗ trống đổi {blank}/___ thành {{n}} khi gửi và ngược lại khi đọc; audio là media[] với đường dẫn storage. Field câu hỏi KHÔNG có chỗ lưu (imageFileId, difficulty, fillBlankMode, choices, gradingMode, referenceAnswer) →
-//    TẠM BỎ QUA, không gửi lên, không đọc lại, cho tới khi có quyết định thêm field thật ở backend. questionId do frontend tự sinh
+//    chung (các vế phải); câu mẫu điền chỗ trống đổi {blank}/___ thành {{n}} khi gửi và ngược lại khi đọc; audio là media[] với đường dẫn storage. Ảnh lựa chọn/dòng nối (mediaUrl, promptMediaUrl,
+//    answerMediaUrl) chưa có ô sửa nên được giữ nguyên từ câu gốc. Field câu hỏi KHÔNG có chỗ lưu (imageFileId, difficulty, fillBlankMode, choices,
+//    gradingMode) → bỏ qua, không gửi lên, không đọc lại (2.0 không lưu các field này). questionId do frontend tự sinh
 //    (crypto.randomUUID) khi tạo câu hỏi mới, giữ cố định qua các lần sửa (đúng tinh thần "ULID ổn định" của backend).
 //  - Package→Folder→StudySet→QuizItem→Câu hỏi rút gọn còn Package→resource (QuizItem) — câu hỏi nằm trong content của resource, không phải một
 //    cấp URL riêng. sessionNo cố định = 1. Gói của Kho là học phần tự do (không có syllabusId).
@@ -56,8 +57,24 @@ interface BackendOptionItem {
 interface BackendMatchingPairItem {
   pairIndex?: number;
   prompt?: string;
+  /** Bản chữ của đáp án (chỉ để đọc); đáp án thật là answerOptionIndex. */
   answer?: string;
+  /** optionIndex của lựa chọn đúng trong options. */
+  answerOptionIndex?: number;
   [key: string]: unknown;
+}
+
+const str = (value: unknown): string | undefined => (typeof value === "string" && value ? value : undefined);
+
+/** Lựa chọn đúng của một dòng nối (theo answerOptionIndex). */
+function optionOf(q: BackendQuizQuestion | undefined, pair: BackendMatchingPairItem | undefined): BackendOptionItem | undefined {
+  if (!q || pair?.answerOptionIndex === undefined) return undefined;
+  return q.options?.find((o, i) => (o.optionIndex ?? i) === pair.answerOptionIndex);
+}
+
+/** Chữ vế phải của một dòng nối: chữ của lựa chọn đúng, thiếu thì bản chữ `answer`. */
+function rightOf(q: BackendQuizQuestion | undefined, pair: BackendMatchingPairItem): string {
+  return optionOf(q, pair)?.content ?? pair.answer ?? "";
 }
 interface BackendBlankItem {
   blankIndex?: number;
@@ -253,7 +270,13 @@ export function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
   else if (base.variant === TRUE_FALSE_VARIANT) base.variant = undefined;
   switch (q.type) {
     case "MULTIPLE_CHOICE":
-      base.options = (q.options ?? []).map((o, i) => ({ optionIndex: i, content: o.text, correct: o.isCorrect }));
+      base.options = (q.options ?? []).map((o, i, all) => ({
+        ...carry(kept?.options, i, all.length, (old) => old.content === o.text),
+        optionIndex: i,
+        content: o.text,
+        correct: o.isCorrect,
+        mediaUrl: o.mediaUrl,
+      }));
       break;
     case "TRUE_FALSE":
       base.options = [
@@ -274,14 +297,27 @@ export function toBackendQuestion(q: QuizQuestion): BackendQuizQuestion {
     }
     case "MATCHING_PAIRS": {
       const pairs = q.pairs ?? [];
-      // Danh sách lựa chọn chung là các vế phải (không trùng); mỗi dòng chọn một trong số đó.
-      const choices = [...new Set(pairs.map((p) => p.right))];
-      base.options = choices.map((content, optionIndex) => ({ optionIndex, content }));
+      // Lựa chọn chung = các vế phải khác nhau theo (chữ, ảnh); dòng trỏ tới lựa chọn bằng chỉ số (answerOptionIndex), backend chấm theo chỉ số.
+      // Hai vế phải cùng chữ nhưng khác ảnh là HAI lựa chọn, không gộp theo chữ.
+      const oldPairs = pairs.map((p, i) => carry(kept?.matchingPairs, i, pairs.length, (o) => o.prompt === p.left && rightOf(kept, o) === p.right));
+      const options: BackendOptionItem[] = [];
+      const keys: string[] = [];
+      const answerIndexes = pairs.map((p, i) => {
+        const key = JSON.stringify([p.right, p.rightMediaUrl ?? null]);
+        if (!keys.includes(key)) {
+          keys.push(key);
+          options.push({ ...optionOf(kept, oldPairs[i]), optionIndex: options.length, content: p.right, mediaUrl: p.rightMediaUrl });
+        }
+        return keys.indexOf(key);
+      });
+      base.options = options;
       base.matchingPairs = pairs.map((p, i) => ({
-        ...carry(kept?.matchingPairs, i, pairs.length, (o) => o.prompt === p.left && o.answer === p.right),
+        ...oldPairs[i],
         pairIndex: i,
         prompt: p.left,
+        promptMediaUrl: p.leftMediaUrl,
         answer: p.right,
+        answerOptionIndex: answerIndexes[i],
       }));
       break;
     }
@@ -311,7 +347,7 @@ export function fromBackendQuestion(quizId: string, index: number, bq: BackendQu
   };
   switch (type) {
     case "MULTIPLE_CHOICE":
-      base.options = (bq.options ?? []).map((o) => ({ text: o.content ?? "", isCorrect: Boolean(o.correct) }));
+      base.options = (bq.options ?? []).map((o) => ({ text: o.content ?? "", isCorrect: Boolean(o.correct), mediaUrl: str(o.mediaUrl) }));
       break;
     case "TRUE_FALSE":
       base.correctAnswer = (bq.options ?? []).find((o) => o.correct)?.optionIndex === 0;
@@ -320,7 +356,12 @@ export function fromBackendQuestion(quizId: string, index: number, bq: BackendQu
       base.blanks = (bq.blanks ?? []).map((b, i) => ({ index: b.blankIndex ?? i, answer: b.correctAnswer ?? "", acceptable: b.acceptedAnswers }));
       break;
     case "MATCHING_PAIRS":
-      base.pairs = (bq.matchingPairs ?? []).map((p) => ({ left: p.prompt ?? "", right: p.answer ?? "" }));
+      base.pairs = (bq.matchingPairs ?? []).map((p) => ({
+        left: p.prompt ?? "",
+        right: rightOf(bq, p),
+        leftMediaUrl: str(p.promptMediaUrl),
+        rightMediaUrl: str(optionOf(bq, p)?.mediaUrl),
+      }));
       break;
     case "SHORT_ANSWER":
       base.referenceAnswer = bq.referenceText || undefined;

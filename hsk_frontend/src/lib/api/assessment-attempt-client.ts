@@ -169,7 +169,8 @@ export interface ResultQuestionContent {
   questionText: string;
   explanation?: string;
   options?: { optionIndex: number; content: string; correct?: boolean }[];
-  matchingPairs?: { pairIndex: number; prompt: string; answer?: string }[];
+  /** answerOptionIndex: optionIndex của lựa chọn đúng (chỉ có sau khi nộp); `answer` chỉ là bản chữ để đọc. */
+  matchingPairs?: { pairIndex: number; prompt: string; answer?: string; answerOptionIndex?: number }[];
   blanks?: { blankIndex: number; hint?: string; correctAnswer?: string; acceptedAnswers?: string[] }[];
   sentenceChunks?: { content: string; correctPosition?: number; distractor?: boolean }[];
 }
