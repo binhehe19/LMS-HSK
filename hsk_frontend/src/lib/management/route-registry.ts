@@ -54,12 +54,7 @@ export const MIGRATED_ROUTES: readonly string[] = [
   "/learning-path/lesson-materials/manage",
   // M5 — W1-C: sao kê
   "/admin/statements",
-  // M5 — W2-E: luyện viết (Hán tự) + luyện phát âm trên nền content-tree
-  "/hanzi/manage",
-  "/hanzi/manage/select-type",
-  "/hanzi/manage/create-package",
-  "/hanzi/create",
-  "/hanzi/edit/:id",
+  // M5 — W2-E: luyện phát âm trên nền content-tree
   "/pronunciation/manage",
   "/pronunciation/manage/select-type",
   // M5 — W2-B: bài tập (quiz + câu hỏi) và ngữ pháp trên nền content-tree; từ điển (màn riêng)
@@ -80,8 +75,7 @@ export const RENAMED_ROUTES: Readonly<Record<string, string>> = {
 };
 
 /**
- * Route của HSK cũ thuộc chức năng ĐÃ GỠ khỏi hệ thống (quyết định chủ dự án, 2026-11-14): quản lý giảng viên, khoá học trực tuyến,
- * kho lưu trữ đa phương tiện, phân công công việc, gói thành viên. Không phục vụ và không hiện trang "đang chuyển đổi": trả 404.
+ * Route của HSK cũ thuộc chức năng đã gỡ. Không phục vụ và không hiện trang "đang chuyển đổi": trả 404.
  */
 export const REMOVED_ROUTES: readonly string[] = [
   "/admin/teacher-management",
@@ -91,6 +85,13 @@ export const REMOVED_ROUTES: readonly string[] = [
   "/admin/tickets",
   "/instructor/instructor-tickets",
   "/admin/membership-management",
+  "/admin/hanzi/manage",
+  "/teacher-manager/hanzi/manage",
+  "/hanzi/manage",
+  "/hanzi/manage/select-type",
+  "/hanzi/manage/create-package",
+  "/hanzi/create",
+  "/hanzi/edit/:id",
 ];
 
 export interface UiRoleDecision {
@@ -152,7 +153,7 @@ export function classifyRoute(
 ): ManagementRoute {
   const base = { path: fact.path, oldComponent: fact.component, oldGuard: fact.guard, oldRoles: fact.roles };
   if (REMOVED_ROUTES.includes(fact.path)) {
-    return { ...base, status: "OUT_OF_SCOPE", allowedRoles: [], roleSource: "none", reason: "Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14)" };
+    return { ...base, status: "OUT_OF_SCOPE", allowedRoles: [], roleSource: "none", reason: "Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án" };
   }
   if (fact.underConstruction) {
     return { ...base, status: "OUT_OF_SCOPE", allowedRoles: [], roleSource: "none", reason: "HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật)" };

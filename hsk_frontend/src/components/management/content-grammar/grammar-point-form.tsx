@@ -4,18 +4,24 @@
 // ghi chú). Thuần: nhận/trả giá trị qua props (ContentItemFormProps). Khác bản cũ có chủ đích: cấp HSK là ô chọn 1–9 thay cho ô số; bỏ hẳn field
 // "Bộ đề bài tập liên kết (id)" (chưa từng có chỗ lưu ở backend, xem lms-grammar-client.ts — field chết, không chỉ ẩn trên form).
 import type { ChangeEvent } from "react";
+import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { HSK_LEVEL_OPTIONS } from "@/lib/content/grammar-point";
 import type { ContentItemFormProps } from "@/types/content";
-import type { GrammarPoint, GrammarPointInput } from "@/types/content-grammar";
+import type { GrammarPoint, GrammarPointInput, GrammarRichTextField } from "@/types/content-grammar";
 
 const LABEL = "form-label small fw-700 text-muted mb-1";
 
-export function GrammarPointForm({ value, onChange, disabled, idPrefix }: ContentItemFormProps<GrammarPoint>) {
+export function GrammarPointForm({ value, onChange, disabled, idPrefix, readOnly }: ContentItemFormProps<GrammarPoint> & { readOnly?: boolean }) {
   const id = (field: string) => `${idPrefix}-${field}`;
-  const set = (field: keyof GrammarPointInput) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => onChange({ ...value, [field]: e.target.value });
+  const set = (field: keyof GrammarPointInput) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange({ ...value, [field]: e.target.value });
+
+  const richField = (field: GrammarRichTextField, label: string, placeholder?: string) => (
+    <RichTextEditor label={label} text={value[field] ?? ""} html={value.richText?.[field]} placeholder={placeholder} readOnly={readOnly} disabled={disabled}
+      onChange={(text, html) => onChange({ ...value, [field]: text, richText: { ...value.richText, [field]: html } })} />
+  );
 
   return (
-    <div className="row g-3" data-testid="grammar-point-form">
+    <div className="row g-2" data-testid="grammar-point-form">
       <div className="col-md-8">
         <label className={LABEL} htmlFor={id("title")}>
           Điểm ngữ pháp <span className="text-danger">*</span>
@@ -46,41 +52,41 @@ export function GrammarPointForm({ value, onChange, disabled, idPrefix }: Conten
         </label>
         <input id={id("generalDefinition")} type="text" className="form-control" placeholder="Một câu tóm tắt..." value={value.generalDefinition ?? ""} onChange={set("generalDefinition")} disabled={disabled} />
       </div>
-      <div className="col-12">
-        <label className={LABEL} htmlFor={id("structure")}>
+      <div className="col-md-6">
+        <div className={LABEL}>
           Cấu trúc <span className="text-danger">*</span>
-        </label>
-        <textarea id={id("structure")} className="form-control" rows={2} placeholder="VD: A + 是 + B" value={value.structure ?? ""} onChange={set("structure")} disabled={disabled} />
+        </div>
+        {richField("structure", "Cấu trúc", "VD: A + 是 + B")}
       </div>
-      <div className="col-12">
-        <label className={LABEL} htmlFor={id("explanation")}>
+      <div className="col-md-6">
+        <div className={LABEL}>
           Giải thích <span className="text-danger">*</span>
-        </label>
-        <textarea id={id("explanation")} className="form-control" rows={3} placeholder="Cách dùng, lưu ý..." value={value.explanation ?? ""} onChange={set("explanation")} disabled={disabled} />
+        </div>
+        {richField("explanation", "Giải thích", "Cách dùng, lưu ý…")}
       </div>
-      <div className="col-12">
-        <label className={`${LABEL} fw-bold`} htmlFor={id("exampleSentenceZh")}>
+      <div className="col-md-4">
+        <div className={`${LABEL} fw-bold`}>
           Ví dụ chính (Tiếng Trung)
-        </label>
-        <textarea id={id("exampleSentenceZh")} className="form-control" rows={2} placeholder="我是学生。" value={value.exampleSentenceZh ?? ""} onChange={set("exampleSentenceZh")} disabled={disabled} />
+        </div>
+        {richField("exampleSentenceZh", "Ví dụ chính (Tiếng Trung)", "我是学生。")}
       </div>
-      <div className="col-md-6">
-        <label className={`${LABEL} fw-bold`} htmlFor={id("exampleSentencePinyin")}>
+      <div className="col-md-4">
+        <div className={`${LABEL} fw-bold`}>
           Phiên âm (Pinyin)
-        </label>
-        <textarea id={id("exampleSentencePinyin")} className="form-control" rows={2} placeholder="Wǒ shì xuésheng." value={value.exampleSentencePinyin ?? ""} onChange={set("exampleSentencePinyin")} disabled={disabled} />
+        </div>
+        {richField("exampleSentencePinyin", "Phiên âm (Pinyin)", "Wǒ shì xuésheng.")}
       </div>
-      <div className="col-md-6">
-        <label className={`${LABEL} fw-bold`} htmlFor={id("exampleSentenceVi")}>
+      <div className="col-md-4">
+        <div className={`${LABEL} fw-bold`}>
           Dịch nghĩa (Tiếng Việt)
-        </label>
-        <textarea id={id("exampleSentenceVi")} className="form-control" rows={2} placeholder="Tôi là học sinh." value={value.exampleSentenceVi ?? ""} onChange={set("exampleSentenceVi")} disabled={disabled} />
+        </div>
+        {richField("exampleSentenceVi", "Dịch nghĩa (Tiếng Việt)", "Tôi là học sinh.")}
       </div>
       <div className="col-12">
-        <label className={LABEL} htmlFor={id("note")}>
+        <div className={LABEL}>
           Ghi chú
-        </label>
-        <textarea id={id("note")} className="form-control" rows={2} value={value.note ?? ""} onChange={set("note")} disabled={disabled} />
+        </div>
+        {richField("note", "Ghi chú")}
       </div>
     </div>
   );

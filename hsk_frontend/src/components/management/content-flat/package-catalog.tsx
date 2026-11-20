@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useKeyedFetch, type FetchState } from "@/components/management/notifications/use-keyed-fetch";
 import { FetchErrorNotice, FetchStateNotice } from "@/components/shared/fetch-state-notice";
 import { listSyllabuses } from "@/lib/api/lms-syllabus-client";
@@ -13,6 +13,7 @@ import { PackagePreviewModal } from "./package-preview-modal";
 import styles from "./content-catalog.module.css";
 
 const UNBOUND_SYLLABUS = "unbound";
+const SEARCH_DELAY_MS = 400;
 
 export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpenReadOnly, onRetry, ...actions }: PackageCatalogActions & {
   heading: string;
@@ -24,22 +25,38 @@ export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpe
   onRetry: () => void;
 }) {
   const [filters, setFilters] = useState<PackageFilters>({ keyword: "" });
+  const [appliedKeyword, setAppliedKeyword] = useState("");
   const [page, setPage] = useState(1);
   const [size, setSize] = useState<number>(DEFAULT_CATALOG_PAGE_SIZE);
   const [preview, setPreview] = useState<ContentPackage>();
   const syllabuses = useKeyedFetch(packages.some(pkg => pkg.syllabusId) ? "catalog-syllabuses" : null, listSyllabuses);
-  const syllabusesById = new Map((syllabuses.state.kind === "ok" ? syllabuses.state.data : []).map(s => [s.id, s]));
-  const syllabusName = (id: string) => {
+  const syllabusData = syllabuses.state.kind === "ok" ? syllabuses.state.data : null;
+  const syllabusesById = useMemo(() => new Map(syllabusData?.map(s => [s.id, s])), [syllabusData]);
+  const syllabusName = useCallback((id: string) => {
     const entry = syllabusesById.get(id);
     return entry?.name || entry?.code || id;
-  };
-  const matches = filterByKeyword(packages, filters.keyword, pkg => [
+  }, [syllabusesById]);
+
+  const { keyword, status, syllabus, level } = filters;
+  const query = keyword.trim();
+  const searching = query !== appliedKeyword;
+  useEffect(() => {
+    if (!searching) return;
+    const timer = window.setTimeout(() => {
+      setAppliedKeyword(query);
+      setPage(1);
+    }, SEARCH_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [query, searching]);
+
+  const matches = useMemo(() => filterByKeyword(packages, appliedKeyword, pkg => [
     pkg.name, pkg.id, pkg.description, pkg.syllabusId ? syllabusName(pkg.syllabusId) : null,
   ]).filter(pkg =>
-    (!filters.status || filters.status === (isPublished(pkg) ? "PUBLISHED" : "DRAFT")) &&
-    (!filters.syllabus || filters.syllabus === (pkg.syllabusId ?? UNBOUND_SYLLABUS)) &&
-    (!filters.level || filters.level === pkg.level),
-  );
+    (!status || status === (isPublished(pkg) ? "PUBLISHED" : "DRAFT")) &&
+    (!syllabus || syllabus === (pkg.syllabusId ?? UNBOUND_SYLLABUS)) &&
+    (!level || level === pkg.level),
+  ), [packages, appliedKeyword, syllabusName, status, syllabus, level]);
+  const loading = state.kind === "loading";
   const syllabusIds = [...new Set(packages.flatMap(pkg => pkg.syllabusId ? [pkg.syllabusId] : []))];
   const levels = [...new Set(packages.flatMap(pkg => pkg.level ? [pkg.level] : []))].sort();
 
@@ -49,7 +66,11 @@ export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpe
         heading={heading}
         icon={icon}
         filters={filters}
-        onFilters={next => { setFilters(next); setPage(1); }}
+        onFilters={next => {
+          setFilters(next);
+          if (!next.keyword.trim()) setAppliedKeyword("");
+          if (!next.keyword.trim() || next.status !== status || next.syllabus !== syllabus || next.level !== level) setPage(1);
+        }}
         syllabuses={[
           { value: UNBOUND_SYLLABUS, label: "Học phần tự do" },
           ...syllabusIds.map(id => ({ value: id, label: syllabusName(id), code: syllabusesById.get(id)?.code })),
@@ -57,10 +78,10 @@ export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpe
         levels={levels}
         onCreate={onCreate}
         onReload={onRetry}
-        loading={state.kind === "loading"}
+        loading={loading}
         busy={actions.busy}
       />
-      <section className={styles.panel} aria-label={`Danh sách học phần ${heading.toLowerCase()}`}>
+      <section className={styles.panel} aria-label={`Danh sách học phần ${heading.toLowerCase()}`} aria-busy={loading || searching}>
         {state.kind === "waiting" ? (
           <div className="p-3"><FetchStateNotice state={state} waitingText="Chưa kết nối được API học phần." onRetry={onRetry} testId="content-packages-notice" /></div>
         ) : (
@@ -72,7 +93,7 @@ export function PackageCatalog({ heading, icon, state, packages, onCreate, onOpe
             page={clampPage(page, matches.length, size)}
             size={size}
             onPageChange={(next, nextSize) => { setPage(next); setSize(nextSize); }}
-            loading={state.kind === "loading"}
+            loading={loading || searching}
             syllabusName={syllabusName}
             onPreview={onOpenReadOnly ?? setPreview}
           />

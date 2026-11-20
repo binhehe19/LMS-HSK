@@ -23,38 +23,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(125deg, #B00D0E 0%, #860707 60%, #6f0010 100%);
+  flex-wrap: wrap;
+  gap: 14px;
   border-radius: 16px;
   box-shadow: 0 16px 35px rgba(176, 13, 14, 0.22);
   color: #fff;
   padding: 22px 26px;
   margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
 }
-.acm-hero::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -40%;
-  width: 28%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
-  transform: skewX(-16deg);
-  animation: acmShine 4s ease-in-out infinite;
-}
-.acm-hero-content { position: relative; z-index: 1; }
-.acm-hero-badge {
-  display: inline-block;
-  background: rgba(255,255,255,0.16);
-  border: 1px solid rgba(255,255,255,0.32);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  margin-bottom: 8px;
+.acm-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .acm-hero-title {
   font-size: 26px;
@@ -69,45 +49,13 @@
   margin: 0;
 }
 .acm-hero-icon {
-  font-size: 72px;
-  opacity: 0.14;
-  position: absolute;
-  right: 26px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* ── Stat cards ── */
-.acm-stat-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: #fff;
-  border: 1px solid var(--acm-border);
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(27, 8, 12, 0.05);
-}
-.acm-stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.acm-stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--acm-text-dark);
-}
-.acm-stat-label {
-  font-size: 12px;
-  color: var(--acm-text-muted);
-  font-weight: 600;
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 15%);
+  font-size: 27px;
 }
 
 /* ── Filter card ── */
@@ -188,22 +136,6 @@
 .acm-class-link:hover {
   color: var(--acm-red-dark);
   text-decoration: underline;
-}
-
-/* Avatar */
-.acm-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #B00D0E, #7b0012);
-  color: #fff;
-  font-weight: 800;
-  font-size: 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  text-transform: uppercase;
 }
 
 /* Status badge */
@@ -317,15 +249,4 @@
 .acm-sticky-footer .ant-pagination-next:hover .ant-pagination-item-link {
   color: var(--acm-red) !important;
   border-color: var(--acm-red) !important;
-}
-
-/* ── Shine animation ── */
-@keyframes acmShine {
-  0%   { left: -42%; }
-  100% { left: 130%; }
-}
-
-@media (max-width: 768px) {
-  .acm-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .acm-hero-icon { display: none; }
 }

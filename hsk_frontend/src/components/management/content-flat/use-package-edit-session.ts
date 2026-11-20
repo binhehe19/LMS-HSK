@@ -9,7 +9,8 @@ export const PACKAGE_IDLE_MS = 5 * 60_000;
 const LOCK_TTL_MS = 60_000;
 
 type Api = ReturnType<typeof packageEditSessionClient>;
-type Draft = Awaited<ReturnType<Api["draft"]>>;
+export type PackageEditDraft = Awaited<ReturnType<Api["draft"]>>;
+type Draft = PackageEditDraft;
 type Lease = {
   packageId: string;
   api: Api;
@@ -24,6 +25,7 @@ export function usePackageEditSession(packageId: string | null) {
   const [state, setState] = useState<State>();
   const [attempt, setAttempt] = useState(0);
   const current = useRef<Lease | null>(null);
+  const closing = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
     if (!packageId) return;
@@ -31,27 +33,34 @@ export function usePackageEditSession(packageId: string | null) {
     current.current = lease;
     let timer: number | undefined;
     const report = (status: Status, message?: string) => {
-      if (current.current === lease) setState({ packageId, status, draft: lease.draft, message });
+      if (current.current === lease) setState(previous => ({ packageId, status, draft: lease.draft ?? (previous?.packageId === packageId ? previous.draft : undefined), message }));
     };
+    let releaseRequest: Promise<unknown> | undefined;
+    let acquired = false;
     const release = () => {
       lease.expiresAt = 0;
-      void Promise.resolve(lease.flight).catch(() => {}).then(() => lease.api.release()).catch(() => {});
+      releaseRequest ??= Promise.resolve(lease.flight).catch(() => {}).then(() => {
+        if (acquired) return lease.api.release();
+      }).catch(() => {});
+      closing.current = releaseRequest;
     };
     const onPageHide = () => {
       if (lease.flight) release();
       else {
         lease.expiresAt = 0;
-        lease.api.releaseOnUnload();
+        if (acquired) lease.api.releaseOnUnload();
+        acquired = false;
       }
       report("lost");
       current.current = null;
     };
 
     report("checking");
-    lease.flight = Promise.resolve().then(async () => {
+    lease.flight = closing.current.then(async () => {
       if (current.current !== lease) return; // Strict Mode may dispose of the effect before the request starts.
       const started = Date.now();
       const result = await lease.api.acquire();
+      acquired = result.acquired;
       if (current.current !== lease) return;
       if (!result.acquired) { report("denied"); return; }
       lease.expiresAt = started + LOCK_TTL_MS;
@@ -83,11 +92,22 @@ export function usePackageEditSession(packageId: string | null) {
     const lease = current.current;
     return !!lease && lease.packageId === packageId && !!lease.draft && lease.expiresAt > Date.now();
   }, [packageId]);
+  const write = async <T,>(action: () => Promise<T>): Promise<T> => {
+    const lease = current.current;
+    if (lease?.flight) await lease.flight.catch(() => {});
+    if (!lease || current.current !== lease || !hasLock() || lease.flight) {
+      throw new Error("Phiên chỉnh sửa chưa sẵn sàng. Vui lòng thử lại.");
+    }
+    const flight = Promise.resolve().then(action).finally(() => { lease.flight = undefined; });
+    lease.flight = flight;
+    return flight;
+  };
   const run = async (
     fields?: PackageDraftFields,
     afterSave?: () => Promise<unknown>,
     finish?: "publish" | "discard",
     automatic = false,
+    onFieldsSaved?: () => void,
   ): Promise<boolean> => {
     const lease = current.current;
     if (!lease || !hasLock() || (automatic && lease.flight)) return false;
@@ -105,6 +125,7 @@ export function usePackageEditSession(packageId: string | null) {
       }
       lease.expiresAt = started + LOCK_TTL_MS;
       if (fields && !result.saved) throw new Error("Máy chủ chưa xác nhận lưu bản nháp.");
+      if (fields) onFieldsSaved?.();
       await afterSave?.();
       if (current.current !== lease || !hasLock()) return false;
       if (finish === "publish") await lease.api.publish(versionId);
@@ -127,6 +148,7 @@ export function usePackageEditSession(packageId: string | null) {
     message: active?.message,
     retry: () => setAttempt(previous => previous + 1),
     hasLock,
+    write,
     run,
   };
 }

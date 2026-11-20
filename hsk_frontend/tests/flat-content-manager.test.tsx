@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 import { Provider } from "react-redux";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FLASHCARD_CONFIG } from "@/components/management/content-flashcard/flashcard-config";
+import { FLASHCARD_CONFIG, VOCAB_SET_CONFIG } from "@/components/management/content-flashcard/flashcard-config";
 import { FlatContentManager } from "@/components/management/content-flat/flat-content-manager";
 import type { FlatContentClient } from "@/components/management/content-flat/use-flat-content";
 import { ManagementShell } from "@/components/management/management-shell";
@@ -16,6 +16,7 @@ import { confirmAction } from "@/components/shared/confirm-action";
 import { resetContentAccessCache } from "@/hooks/use-content-access";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import * as client from "@/lib/api/lms-content-client";
+import { searchVocabularies } from "@/lib/api/lms-dictionary-client";
 import { getUnreadCount } from "@/lib/api/notification-client";
 import { getTickets } from "@/lib/api/ticket-client";
 import { makeStore } from "@/redux/store";
@@ -41,8 +42,9 @@ const FLASHCARD_FLAT_CONFIG = {
   ...FLASHCARD_CONFIG,
   packageTypes: [{ value: "VOCABULARY", label: "Flashcard", description: "Gói thẻ ghi nhớ từ vựng HSK", icon: "isax isax-cards", color: "#B10019", gradient: "linear-gradient(135deg, #B10019 0%, #7A0012 100%)" }],
 };
-function FlashcardManagePageContent() {
-  return <FlatContentManager config={FLASHCARD_FLAT_CONFIG} client={FLASHCARD_CLIENT} />;
+function FlashcardManagePageContent({ withDictionary = false }: { withDictionary?: boolean }) {
+  const config = withDictionary ? { ...FLASHCARD_FLAT_CONFIG, ItemPicker: VOCAB_SET_CONFIG.ItemPicker } : FLASHCARD_FLAT_CONFIG;
+  return <FlatContentManager config={config} client={FLASHCARD_CLIENT} />;
 }
 // Router giả CÓ trạng thái: push/replace đổi URL và báo cho useSearchParams (vị trí trong URL: chỉ còn ?packageId=, không Folder/StudySet).
 const nav = vi.hoisted(() => {
@@ -85,9 +87,11 @@ vi.mock("@/lib/api/package-edit-session-client", () => ({
     acquire: async () => ({ acquired: true }),
     draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
     heartbeat: async () => ({ acquired: true, saved: true }),
+    publish: async () => undefined,
     release: async () => undefined,
   }),
 }));
+vi.mock("@/lib/api/lms-dictionary-client", () => ({ searchVocabularies: vi.fn() }));
 vi.mock("@/lib/api/lms-content-client", () => ({
   listFlashcardPackages: vi.fn(),
   createFlashcardPackage: vi.fn(),
@@ -97,6 +101,7 @@ vi.mock("@/lib/api/lms-content-client", () => ({
   unpublishFlashcardPackage: vi.fn(),
   listPackageItems: vi.fn(),
   createFlashcardItem: vi.fn(),
+  addDictionaryWordsToPackage: vi.fn(),
   updateFlashcardItem: vi.fn(),
   deleteFlashcardItem: vi.fn(),
 }));
@@ -125,6 +130,8 @@ beforeEach(() => {
   vi.mocked(client.publishFlashcardPackage).mockResolvedValue(undefined);
   vi.mocked(client.unpublishFlashcardPackage).mockResolvedValue(undefined);
   vi.mocked(client.createFlashcardItem).mockResolvedValue(card(3));
+  vi.mocked(client.addDictionaryWordsToPackage).mockResolvedValue({ added: 1, failed: [] });
+  vi.mocked(searchVocabularies).mockResolvedValue({ items: [{ id: "dict-1", hanzi: "你好", isSingleVocab: false, pinyins: [] }], page: 0, size: 10, totalPages: 1, totalElements: 1 });
   vi.mocked(client.updateFlashcardItem).mockResolvedValue(card(1));
   vi.mocked(client.deleteFlashcardItem).mockResolvedValue(undefined);
   for (const fn of [toast.success, toast.error, toast.info]) vi.mocked(fn).mockClear();
@@ -132,11 +139,11 @@ beforeEach(() => {
   nav.set("/flashcard/manage");
 });
 
-function renderPage(user = adminUser, area: ManagementArea = "admin") {
+function renderPage(user = adminUser, area: ManagementArea = "admin", withDictionary = false) {
   render(
     <Provider store={makeStore({ status: "authenticated", user })}>
       <ManagementShell area={area}>
-        <FlashcardManagePageContent />
+        <FlashcardManagePageContent withDictionary={withDictionary} />
       </ManagementShell>
     </Provider>,
   );
@@ -221,8 +228,8 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     const rows = within(screen.getByRole("list", { name: "Học liệu trong buổi" })).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("词1");
     await userEvent.click(screen.getByRole("button", { name: /Quay lại/ }));
-    await userEvent.click(await screen.findByRole("button", { name: "Lưu nháp và thoát" }));
     await waitFor(() => expect(nav.push.at(-1)).toBe("/flashcard/manage"));
+    expect(screen.queryByRole("dialog", { name: "Rời màn soạn học phần?" })).not.toBeInTheDocument();
   });
 
   it("vào thẳng URL có packageId (reload) => hiện cấp mục; packageId không tồn tại => khối 'Không tìm thấy' + Quay lại về gốc", async () => {
@@ -230,7 +237,7 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     renderPage();
     await screen.findAllByText("词1");
     expect(client.listFlashcardPackages).toHaveBeenCalledTimes(1);
-    expect(client.listPackageItems).toHaveBeenCalledWith("p1");
+    expect(client.listPackageItems).toHaveBeenCalledWith("p1", 1);
     act(() => nav.set("/flashcard/manage?packageId=khong-co"));
     const missing = await screen.findByTestId("flat-content-missing");
     await userEvent.click(within(missing).getByRole("button", { name: "Quay lại" }));
@@ -241,7 +248,7 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     nav.set("/flashcard/manage?packageId=p1");
     renderPage();
     await screen.findAllByText("词1");
-    await userEvent.click(screen.getByRole("button", { name: "Thêm thẻ" }));
+    await userEvent.click(screen.getByRole("button", { name: "Thêm học liệu" }));
     const modal = antModal();
     expect(within(modal).getByTestId("flashcard-card-form")).toBeInTheDocument();
     expect(within(modal).getAllByTestId("storage-not-configured")).toHaveLength(2); // kho lưu trữ chưa cấu hình trong test
@@ -262,9 +269,23 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
         "p1",
         expect.objectContaining({ term: "你好", meaning: "xin chào", pinyin: "nǐ hǎo", examplePinyin: "nǐ hǎo ma", customFields: [{ label: "Từ đồng nghĩa", value: "您好" }], index: 2 }),
         false,
+        1,
       ),
     );
     expect(toast.success).toHaveBeenCalledWith("Đã thêm thẻ mới");
+    await waitFor(() => expect(client.listPackageItems).toHaveBeenCalledTimes(2));
+  });
+
+  it("thêm học liệu từ Từ điển vào buổi đang chọn và làm mới danh sách buổi đó", async () => {
+    nav.set("/flashcard/manage?packageId=p1");
+    renderPage(adminUser, "admin", true);
+    await screen.findAllByText("词1");
+    await userEvent.click(screen.getByRole("button", { name: "Thêm học liệu" }));
+    const modal = await screen.findByRole("dialog", { name: /Thêm từ từ Từ điển/ });
+    await userEvent.click(await within(modal).findByTestId("dict-picker-row"));
+    await userEvent.click(modalOk(modal, "Thêm 1 từ vào bộ"));
+    await waitFor(() => expect(client.addDictionaryWordsToPackage).toHaveBeenCalledWith("p1", [{ id: "dict-1", label: "你好" }], false, 1));
+    expect(toast.success).toHaveBeenCalledWith("Đã thêm 1 từ vào bộ");
     await waitFor(() => expect(client.listPackageItems).toHaveBeenCalledTimes(2));
   });
 

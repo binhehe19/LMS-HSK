@@ -49,6 +49,7 @@ interface GrammarContent {
   structure?: string;
   explanation?: string;
   usageNote?: string;
+  richText?: GrammarPoint["richText"];
   /** Cấp HSK dạng chuỗi "1".."9". */
   hskLevel?: string;
   examples?: GrammarExampleItem[];
@@ -86,6 +87,7 @@ function toGrammarContent(input: GrammarPointInput): GrammarContent {
     structure: input.structure || undefined,
     explanation: input.explanation || undefined,
     usageNote: input.note || undefined,
+    richText: input.richText,
     hskLevel: input.hskLevel || undefined,
     examples: example ? [example] : undefined,
   };
@@ -103,6 +105,7 @@ function fromGrammarContent(id: string, index: number, content: GrammarContent |
     structure: content?.structure || undefined,
     explanation: content?.explanation || undefined,
     note: content?.usageNote || undefined,
+    richText: content?.richText,
     hskLevel: content?.hskLevel || undefined,
     exampleSentenceZh: example?.sentenceZh || undefined,
     exampleSentencePinyin: example?.pinyin || undefined,

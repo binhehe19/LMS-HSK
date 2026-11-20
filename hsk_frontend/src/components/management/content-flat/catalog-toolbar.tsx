@@ -11,7 +11,7 @@ export function CatalogToolbar({ label, heading, icon, description, actions, onR
   description: string;
   actions?: ReactNode;
   onReload: () => void;
-  onClearFilters?: () => void;
+  onClearFilters: () => void;
   loading: boolean;
   children: ReactNode;
 }) {
@@ -34,14 +34,12 @@ export function CatalogToolbar({ label, heading, icon, description, actions, onR
       </div>
       <div className={`${styles.bar} ${styles.filters}`}>
         {children}
-        {onClearFilters && (
-          <Button
-            aria-label="Xóa bộ lọc"
-            title="Xóa bộ lọc"
-            icon={<i className="isax isax-eraser-1" aria-hidden="true" />}
-            onClick={onClearFilters}
-          />
-        )}
+        <Button
+          aria-label="Xóa bộ lọc"
+          title="Xóa bộ lọc"
+          icon={<i className="isax isax-eraser-1" aria-hidden="true" />}
+          onClick={onClearFilters}
+        />
       </div>
     </section>
   );

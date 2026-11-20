@@ -60,7 +60,7 @@ describe("hộp chọn từ trong Từ điển", () => {
     await userEvent.click(rows[0]);
     await userEvent.click(rows[2]);
     await userEvent.click(screen.getByRole("button", { name: "Thêm 2 từ vào bộ" }));
-    await waitFor(() => expect(addDictionaryWordsToPackage).toHaveBeenCalledWith("p1", [{ id: "w1", label: "你好" }, { id: "w3", label: "谢谢" }], false));
+    await waitFor(() => expect(addDictionaryWordsToPackage).toHaveBeenCalledWith("p1", [{ id: "w1", label: "你好" }, { id: "w3", label: "谢谢" }], false, 1));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã thêm 2 từ vào bộ"));
     expect(onAdded).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);

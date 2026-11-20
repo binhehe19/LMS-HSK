@@ -171,15 +171,16 @@ const scheduleRows = () => screen.getAllByTestId("schedule-row");
 const moduleTexts = (row: HTMLElement) => within(row).queryAllByTestId("module-item").map((el) => el.firstElementChild?.textContent);
 
 describe("chế độ danh sách (?view trống) — dữ liệu thật từ backend chung", () => {
-  it("Admin: tải danh sách MỘT lần, 8 cột, 3 dòng, ngày định dạng; không gọi chi tiết; tiêu đề trang của bản cũ", async () => {
+  it("Admin: tải danh sách một lần, hiển thị bảng giáo trình và phân trang theo mẫu học phần", async () => {
     renderPage();
     await screen.findByText("Giáo trình HSK 1");
     expect(listSyllabuses).toHaveBeenCalledTimes(1);
     expect(getSyllabus).not.toHaveBeenCalled();
-    expect([...document.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["Tên giáo trình", "Mã", "Cấp độ", "Loại", "Tác giả", "Phiên bản mới nhất", "Ngày tạo", "Thao tác"]);
+    expect([...document.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["STT", "Tên giáo trình", "Mã", "Cấp độ", "Loại", "Tác giả", "Phiên bản mới nhất", "Ngày tạo", "Thao tác"]);
     expect(screen.getAllByText("15/01/2026")).toHaveLength(3);
-    expect(screen.getByText("Quản lý Syllabus")).toBeInTheDocument();
-    expect(screen.getByText("Quản lý dữ liệu syllabus hiện có")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Giáo trình", level: 1 })).toBeInTheDocument();
+    expect(screen.getByText("20 / trang")).toBeInTheDocument();
+    expect(screen.getByText("3 bản ghi")).toBeInTheDocument();
     expect(screen.queryByText("Chế độ Xem duy nhất")).toBeNull(); // Admin luôn có quyền
   });
 
@@ -198,16 +199,17 @@ describe("chế độ danh sách (?view trống) — dữ liệu thật từ bac
   it("bấm 'Xem chi tiết' => push ?view=<id> (quay lại của trình duyệt về danh sách) và chuyển sang chế độ chi tiết", async () => {
     renderPage();
     await screen.findByText("Giáo trình HSK 2");
-    await userEvent.click(screen.getByLabelText("Xem chi tiết Giáo trình HSK 2"));
+    await userEvent.click(screen.getByLabelText("Thao tác Giáo trình HSK 2"));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Xem chi tiết" }));
     expect(nav.push).toEqual([`${PATH}?view=syl-2`]);
     await screen.findByTestId("syllabus-title");
     expect(getSyllabus).toHaveBeenCalledWith("syl-2");
   });
 
-  it("rỗng thật => 'Chưa có syllabus', không khối lỗi", async () => {
+  it("rỗng thật => 'Chưa có giáo trình', không khối lỗi", async () => {
     vi.mocked(listSyllabuses).mockResolvedValue([]);
     renderPage();
-    expect(await screen.findByText("Chưa có syllabus")).toBeInTheDocument();
+    expect(await screen.findByText("Chưa có giáo trình")).toBeInTheDocument();
     expect(screen.queryByTestId("syllabus-notice")).toBeNull();
   });
 

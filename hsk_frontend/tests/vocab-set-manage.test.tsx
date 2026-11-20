@@ -1,5 +1,5 @@
 // Mount the real vocabulary workspace and inject the server's lock decision.
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useSyncExternalStore } from "react";
 import { Provider } from "react-redux";
@@ -153,6 +153,46 @@ describe("biến thể Bộ từ vựng (/vocab-set/manage)", () => {
     expect(await screen.findByRole("dialog", { name: "Bộ từ 12" })).toBeInTheDocument();
     expect(packageLinks).toHaveBeenCalledWith("p12");
     expect(editApi.acquire).not.toHaveBeenCalled();
+  });
+
+  it("chờ người dùng ngừng gõ, hiển thị spinner và xóa bộ lọc ngay khi bấm cục tẩy", async () => {
+    nav.set("/vocab-set/manage");
+    vi.mocked(client.listFlashcardPackages).mockResolvedValue([pkg(1), pkg(2)]);
+    renderPage();
+    const catalog = screen.getByRole("region", { name: "Danh sách học phần từ vựng" });
+    await within(catalog).findByRole("button", { name: "Gói 1" });
+    const search = screen.getByRole("textbox", { name: "Tìm học phần" });
+    const clear = screen.getByRole("button", { name: "Xóa bộ lọc" });
+    expect(clear).toBeVisible();
+    expect(clear.querySelector(".isax-eraser-1")).toBeInTheDocument();
+
+    vi.useFakeTimers();
+    try {
+      fireEvent.change(search, { target: { value: "Gói 1" } });
+      expect(catalog).toHaveAttribute("aria-busy", "true");
+      act(() => vi.advanceTimersByTime(300));
+      expect(catalog.querySelector(".ant-spin-spinning")).toBeInTheDocument();
+      fireEvent.change(search, { target: { value: "Gói 2" } });
+      act(() => vi.advanceTimersByTime(399));
+      expect(within(catalog).getByRole("button", { name: "Gói 1" })).toBeInTheDocument();
+      expect(catalog).toHaveAttribute("aria-busy", "true");
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(catalog).toHaveAttribute("aria-busy", "false");
+      expect(within(catalog).queryByRole("button", { name: "Gói 1" })).not.toBeInTheDocument();
+      expect(within(catalog).getByRole("button", { name: "Gói 2" })).toBeInTheDocument();
+
+      fireEvent.change(search, { target: { value: "Gói 1" } });
+      fireEvent.click(clear);
+      expect(search).toHaveValue("");
+      expect(catalog).toHaveAttribute("aria-busy", "false");
+      expect(within(catalog).getByRole("button", { name: "Gói 1" })).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(400));
+      expect(within(catalog).getByRole("button", { name: "Gói 2" })).toBeInTheDocument();
+      expect(client.listFlashcardPackages).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("mở bản nháp dưới khóa phiên và tải từ vựng theo buổi", async () => {

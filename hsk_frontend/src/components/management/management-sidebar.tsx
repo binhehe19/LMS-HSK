@@ -22,7 +22,7 @@ import { getNavTargetStatus } from "@/lib/management/route-registry";
 import { formatUnreadBadge } from "@/lib/notifications/unread-badge";
 
 // Chuông thông báo, tìm kiếm, nút thu gọn, hồ sơ, cài đặt và đăng xuất nằm ở ManagementHeader; sidebar chỉ còn thương hiệu + menu. `unread` do khung truyền xuống (huy hiệu menu).
-export function ManagementSidebar({ area, unread }: { area: ManagementArea; unread: UnreadCountState }) {
+export function ManagementSidebar({ area, unread, onNavigate }: { area: ManagementArea; unread: UnreadCountState; onNavigate?: (href: string) => void }) {
   const config = MANAGEMENT_AREAS[area];
   const pathname = usePathname();
   const { collapsed } = useSidebarCollapse();
@@ -83,7 +83,7 @@ export function ManagementSidebar({ area, unread }: { area: ManagementArea; unre
     return isExternal ? (
       <a href={menu.href} target="_blank" rel="noopener noreferrer" {...linkProps}>{content}</a>
     ) : (
-      <Link href={menu.href || "#"} prefetch={false} {...linkProps}>{content}</Link>
+      <Link href={menu.href || "#"} prefetch={false} onNavigate={onNavigate ? event => { event.preventDefault(); onNavigate(menu.href); } : undefined} {...linkProps}>{content}</Link>
     );
   };
 

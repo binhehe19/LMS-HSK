@@ -57,11 +57,20 @@ vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote:
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/components/shared/confirm-action", () => ({ confirmAction: vi.fn() }));
+vi.mock("@/components/shared/rich-text-editor", () => ({
+  RichTextEditor: ({ label, text, onChange }: { label: string; text: string; onChange: (text: string, html?: string) => void }) => (
+    <textarea aria-label={label} value={text} onChange={event => {
+      const value = event.target.value;
+      onChange(value, value ? `<p><strong>${value}</strong></p>` : undefined);
+    }} />
+  ),
+}));
 vi.mock("@/lib/api/package-edit-session-client", () => ({
   packageEditSessionClient: (id: string) => ({
     acquire: async () => ({ acquired: true }),
     draft: async () => ({ id: `draft-${id}`, title: `Gói ${id.slice(1)}` }),
     heartbeat: async () => ({ acquired: true, saved: true }),
+    publish: async () => undefined,
     release: async () => undefined,
   }),
 }));
@@ -153,7 +162,7 @@ it("sao chép điểm đã xuất bản từ kho vào buổi đang soạn", asyn
   const copy = vi.spyOn(packageClient, "importPackageResources").mockResolvedValue({ added: 1, failed: [] });
   try {
     renderPage();
-    await userEvent.click(await screen.findByRole("button", { name: "Từ kho / học phần khác" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Chọn học liệu có sẵn" }));
     expect(screen.getByRole("tab", { name: "Từ kho ngữ pháp" })).toHaveAttribute("aria-selected", "true");
     await userEvent.click(await screen.findByRole("checkbox", { name: content.title }));
     await userEvent.click(screen.getByRole("button", { name: "Sao chép 1 mục" }));
@@ -175,12 +184,20 @@ const antModal = () => document.querySelector(".ant-modal") as HTMLElement;
 
 describe("cấp gói (Admin)", () => {
   it("tải gói qua listGrammarPackages; huy hiệu Published/Draft; chỉ 1 loại Ngữ pháp", async () => {
+    vi.mocked(client.listGrammarPackages).mockResolvedValueOnce([
+      packageClient.toContentPackage({ id: "p1", type: "GRAMMAR", draftVersionId: "d1", draftVersion: { title: "Gói 1" } }),
+      packageClient.toContentPackage({ id: "p2", type: "GRAMMAR", publishedVersionId: "v2", publishedVersion: { title: "Gói 2", version: 2 }, draftVersionId: "d2" }),
+      packageClient.toContentPackage({ id: "p3", type: "GRAMMAR", publishedVersionId: "v3", publishedVersion: { title: "Gói 3", version: 1 } }),
+    ]);
     renderPage();
     await screen.findByText("Gói 1");
     expect(client.listGrammarPackages).toHaveBeenCalledWith();
-    expect(packageRows()).toHaveLength(2);
+    expect(packageRows()).toHaveLength(3);
     expect(within(packageRows()[0]).getByText("Chưa xuất bản")).toBeInTheDocument();
+    expect(within(packageRows()[0]).getByRole("img", { name: "Có bản nháp" })).toBeInTheDocument();
     expect(within(packageRows()[1]).getByText("v2")).toBeInTheDocument();
+    expect(within(packageRows()[1]).getByRole("img", { name: "Có bản nháp" })).toBeInTheDocument();
+    expect(within(packageRows()[2]).queryByRole("img", { name: "Có bản nháp" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tạo học phần" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Ngữ pháp" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Học phần ngữ pháp" })).toBeInTheDocument();
@@ -222,7 +239,7 @@ describe("cấp gói (Admin)", () => {
 });
 
 describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
-  it("chọn Chỉnh sửa từ bảng và quay lại danh sách sau khi lưu nháp", async () => {
+  it("chọn Chỉnh sửa từ bảng và quay lại danh sách sau khi xuất bản", async () => {
     renderPage();
     await screen.findByText("Gói 1");
     await choosePackageAction("Gói 1", "Chỉnh sửa");
@@ -230,8 +247,10 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     await screen.findAllByText("Điểm 1");
     expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1", 1);
     expect(screen.getByDisplayValue("Gói 1")).toBeInTheDocument();
+    await userEvent.type(screen.getByRole("textbox", { name: "Mô tả" }), "Nội dung mới");
     await userEvent.click(screen.getByRole("button", { name: "Quay lại" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Lưu nháp và thoát" }));
+    const leave = await screen.findByRole("dialog", { name: "Rời màn soạn học phần?" });
+    await userEvent.click(within(leave).getByRole("button", { name: "Lưu & Xuất bản" }));
     await waitFor(() => expect(nav.push.at(-1)).toBe("/grammar/manage"));
   });
 
@@ -239,7 +258,7 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     nav.set("/grammar/manage?packageId=p1");
     renderPage();
     await screen.findAllByText("Điểm 1");
-    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1");
+    expect(client.listPackageGrammarPoints).toHaveBeenCalledWith("p1", 1);
     act(() => nav.set("/grammar/manage?packageId=khong-co"));
     const missing = await screen.findByTestId("flat-content-missing");
     await userEvent.click(within(missing).getByRole("button", { name: "Quay lại" }));
@@ -250,7 +269,7 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     nav.set("/grammar/manage?packageId=p1");
     renderPage();
     await screen.findAllByText("Điểm 1");
-    await userEvent.click(screen.getByRole("button", { name: "Thêm điểm ngữ pháp" }));
+    await userEvent.click(screen.getByRole("button", { name: "Thêm học liệu" }));
     const modal = antModal();
     expect(within(modal).getByTestId("grammar-point-form")).toBeInTheDocument();
     await userEvent.click(modalOk(modal, "Thêm điểm ngữ pháp"));
@@ -263,8 +282,12 @@ describe("cấp mục qua URL (?packageId=, không Folder/StudySet)", () => {
     await waitFor(() =>
       expect(client.createGrammarItem).toHaveBeenCalledWith(
         "p1",
-        expect.objectContaining({ title: "Câu với 把", category: "Câu xử trí", structure: "A + 把 + B + V", explanation: "Dùng để nhấn mạnh...", index: 2 }),
+        expect.objectContaining({
+          title: "Câu với 把", category: "Câu xử trí", structure: "A + 把 + B + V", explanation: "Dùng để nhấn mạnh...", index: 2,
+          richText: { structure: "<p><strong>A + 把 + B + V</strong></p>", explanation: "<p><strong>Dùng để nhấn mạnh...</strong></p>" },
+        }),
         false,
+        1,
       ),
     );
     expect(toast.success).toHaveBeenCalledWith("Đã thêm điểm ngữ pháp mới");

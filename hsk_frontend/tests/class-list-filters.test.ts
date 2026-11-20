@@ -2,7 +2,6 @@
 import { describe, expect, it } from "vitest";
 import { classCourseKey, classDisplayName, matchesClassTime, parseClassDate } from "@/lib/class-list/class-list-filters";
 import {
-  CLASS_LIST_PAGE_SIZE,
   EMPTY_FILTERS,
   classOptions,
   courseOptions,
@@ -110,10 +109,9 @@ describe("class-list-model", () => {
     expect(filterClasses(classes, { ...EMPTY_FILTERS, timeMode: "EXACT", exactDate: "2026-09-28" }, now).map((c) => c.classId)).toEqual(["a"]);
   });
 
-  it("todayInputValue yyyy-mm-dd theo giờ địa phương; lessonHref mã hoá tham số; kích thước trang 10", () => {
+  it("todayInputValue yyyy-mm-dd theo giờ địa phương; lessonHref mã hoá tham số", () => {
     expect(todayInputValue(new Date(2026, 0, 5, 23, 59))).toBe("2026-01-05");
     expect(lessonHref({ classId: "a b/1", courseId: "c&1" })).toBe("/instructor/list-class/list-lesson?classId=a%20b%2F1&courseId=c%261");
     expect(lessonHref({ classId: "x" })).toBe("/instructor/list-class/list-lesson?classId=x&courseId=");
-    expect(CLASS_LIST_PAGE_SIZE).toBe(10);
   });
 });

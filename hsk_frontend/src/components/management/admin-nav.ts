@@ -44,7 +44,6 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
       children: [
         { title: "Học phần từ vựng", icon: "isax isax-layer", href: "/vocab-set/manage", activePrefix: "/vocab-set" },
         { title: "Từ điển", icon: "ti ti-database", href: "/vocabulary/manage", activePrefix: "/vocabulary" },
-        { title: "Luyện viết", icon: "isax isax-pen-add", href: "/hanzi/manage", activePrefix: "/hanzi" },
         { title: "Luyện phát âm", icon: "isax isax-microphone", href: "/pronunciation/manage", activePrefix: "/pronunciation" },
       ],
     },

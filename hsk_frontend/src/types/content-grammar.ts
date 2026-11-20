@@ -3,6 +3,8 @@
 // khác bản cũ có chủ đích: `grammarIndex` → `index` (dùng chung nền content-tree), `exampleCount` bỏ (không hiển thị). Xem docs/api-requirements/content-tree.md.
 import type { ContentItemBase, ContentItemInput } from "@/types/content";
 
+export type GrammarRichTextField = "structure" | "explanation" | "note" | "exampleSentenceZh" | "exampleSentencePinyin" | "exampleSentenceVi";
+
 export interface GrammarPoint extends ContentItemBase {
   /** Tên điểm ngữ pháp, vd "Câu với 是". */
   title: string;
@@ -19,6 +21,7 @@ export interface GrammarPoint extends ContentItemBase {
   exampleSentenceZh?: string;
   exampleSentencePinyin?: string;
   exampleSentenceVi?: string;
+  richText?: Partial<Record<GrammarRichTextField, string>>;
 }
 
 export type GrammarPointInput = ContentItemInput<GrammarPoint>;

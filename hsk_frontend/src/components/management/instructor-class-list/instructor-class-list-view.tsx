@@ -1,199 +1,130 @@
 "use client";
 
-import { FetchErrorNotice } from "@/components/shared/fetch-state-notice";
-
-// Port của LMS_Frontend/src/features/instructor/class-management/class-list-page.tsx (cùng DOM, class, style nội tuyến và chữ).
-// View thuần: không gọi API, nhận dữ liệu và bộ lọc qua props (container: instructor-class-list-page-content.tsx). Chỉ ĐỌC — bản cũ không có thao tác ghi.
-//
-// Khác bản cũ có chủ đích: (1) dịch vụ chưa cấu hình / gọi lỗi => dòng thông báo trong bảng (kèm "Thử lại" khi lỗi) thay vì "Chưa có lớp được phân công"
-// (sẽ nói sai rằng giảng viên không có lớp); (2) trạng thái đầu là "đang tải" ngay (bản cũ có một khung hình "Chưa có lớp được phân công" trước khi tải);
-// (3) liên kết mã lớp dùng next/link (không tải lại trang, prefetch tắt); (4) thêm aria-label cho vòng tròn chữ cái đầu và nhãn trạng thái chấm bài.
-import { Pagination } from "antd";
+import { Table, type TableColumnsType } from "antd";
 import Link from "next/link";
-import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { ClassListState } from "@/components/management/class-management/use-admin-classes";
+import { FetchErrorNotice } from "@/components/shared/fetch-state-notice";
+import { CatalogPagination } from "@/components/management/content-flat/catalog-pagination";
+import { CatalogToolbar } from "@/components/management/content-flat/catalog-toolbar";
+import styles from "@/components/management/content-flat/content-catalog.module.css";
+import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { TimeFilterMode } from "@/lib/class-list/class-list-filters";
-import { CLASS_LIST_PAGE_SIZE, display, initials, lessonHref, type ClassListFilters } from "@/lib/class-list/class-list-model";
+import { display, initials, lessonHref, type ClassListFilters } from "@/lib/class-list/class-list-model";
 import type { GradingClassResponse } from "@/types/grading";
 
 interface InstructorClassListViewProps {
   state: ClassListState;
-  /** Toàn bộ lớp đã tải (để biết "Chưa có lớp" khác "Không có lớp phù hợp bộ lọc"). */
   total: number;
   filters: ClassListFilters;
   courseOptions: [string, string][];
   classOptions: { id: string; label: string; code: string }[];
-  /** Lớp đã lọc + sắp xếp (toàn bộ, chưa cắt trang). */
   filtered: GradingClassResponse[];
   page: number;
+  size: number;
   onCourseChange: (course: string) => void;
   onClassChange: (classId: string) => void;
   onTimeModeChange: (mode: TimeFilterMode) => void;
   onExactDateChange: (date: string) => void;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number, size: number) => void;
+  onClearFilters: () => void;
   onRetry: () => void;
 }
 
 export function InstructorClassListView({
-  state,
-  total,
-  filters,
-  courseOptions,
-  classOptions,
-  filtered,
-  page,
-  onCourseChange,
-  onClassChange,
-  onTimeModeChange,
-  onExactDateChange,
-  onPageChange,
-  onRetry,
+  state, total, filters, courseOptions, classOptions, filtered, page, size,
+  onCourseChange, onClassChange, onTimeModeChange, onExactDateChange, onPageChange, onClearFilters, onRetry,
 }: InstructorClassListViewProps) {
   const loading = state.kind === "loading";
-  const paged = filtered.slice((page - 1) * CLASS_LIST_PAGE_SIZE, page * CLASS_LIST_PAGE_SIZE);
+  const offset = (page - 1) * size;
+  const filterClass = `form-select form-select-sm w-auto ${styles.filter}`;
+  const columns: TableColumnsType<GradingClassResponse> = [
+    { title: "STT", key: "number", width: 64, align: "center", render: (_, __, index) => <span className={styles.rowNumber}>{offset + index + 1}</span> },
+    {
+      title: "Mã lớp", key: "code", width: 110,
+      render: (_, cls) => <Link href={lessonHref(cls)} prefetch={false} className={styles.name}>{display(cls.classCode)}</Link>,
+    },
+    { title: "Khóa học", key: "course", render: (_, cls) => display(cls.courseName) },
+    {
+      title: "Giáo viên", key: "teacher", width: 210,
+      render: (_, cls) => (
+        <div className="d-flex align-items-center gap-2">
+          <span className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold flex-shrink-0" style={{ width: 28, height: 28, fontSize: 11 }}>
+            {initials(cls.teacherName)}
+          </span>
+          <div className="text-truncate">
+            <div title={cls.teacherName} className="fw-medium text-truncate">{display(cls.teacherName)}</div>
+            <div title={cls.teacherEmail} className="small text-muted text-truncate">{display(cls.teacherEmail)}</div>
+          </div>
+        </div>
+      ),
+    },
+    { title: "Ngày bắt đầu", key: "start", width: 116, render: (_, cls) => display(cls.startDate) },
+    { title: "Ngày kết thúc dự kiến", key: "end", width: 133, render: (_, cls) => display(cls.endDate) },
+    { title: "Số học viên", key: "students", width: 100, align: "center", render: (_, cls) => display(cls.studentCount) },
+    {
+      title: "Bài chưa chấm", key: "pending", width: 115, align: "center",
+      render: (_, cls) => cls.hasPendingGrading
+        ? <span className="cm-dot-badge" role="img" aria-label="Có bài chưa chấm">*</span>
+        : <span className="badge bg-light text-muted" role="img" aria-label="Không có bài chưa chấm">✓</span>,
+    },
+  ];
 
   return (
     <ManagementPageFrame>
-      <div className="card mb-3">
-        <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-md-4">
-              <label className="form-label text-primary fw-medium" htmlFor="grading-course-filter">
-                Khóa học
-              </label>
-              <select id="grading-course-filter" className="form-select" value={filters.course} onChange={(e) => onCourseChange(e.target.value)}>
-                <option value="">Tất cả khóa học</option>
-                {courseOptions.map(([key, name]) => (
-                  <option key={key} value={key}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-primary fw-medium" htmlFor="grading-class-filter">
-                Mã lớp
-              </label>
-              <select id="grading-class-filter" className="form-select" value={filters.classId} onChange={(e) => onClassChange(e.target.value)}>
-                <option value="">Tất cả lớp</option>
-                {classOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.code && c.code !== c.label ? `${c.label} (${c.code})` : c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-primary fw-medium" htmlFor="grading-time-filter">
-                Thời gian
-              </label>
-              <select id="grading-time-filter" className="form-select" value={filters.timeMode} onChange={(e) => onTimeModeChange(e.target.value as TimeFilterMode)}>
-                <option value="">Mọi thời gian</option>
-                <option value="EXACT">Ngày chính xác</option>
-                <option value="TODAY">Hôm nay</option>
-                <option value="TOMORROW">Ngày mai</option>
-                <option value="YESTERDAY">Hôm qua</option>
-                <option value="PAST_7_DAYS">Trong 7 ngày qua</option>
-                <option value="NEXT_7_DAYS">Trong 7 ngày tới</option>
-              </select>
-              {filters.timeMode === "EXACT" && (
-                <input type="date" className="form-control mt-2" aria-label="Chọn ngày chính xác" value={filters.exactDate} onChange={(e) => onExactDateChange(e.target.value)} />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-header bg-light fw-bold">Danh sách lớp học ({filtered.length})</div>
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="cm-table table align-middle mb-0" style={{ minWidth: 900 }}>
-              <thead className="table-light">
-                <tr>
-                  <th>STT</th>
-                  <th>Mã lớp</th>
-                  <th>Khóa học</th>
-                  <th>Giáo viên</th>
-                  <th>Ngày bắt đầu</th>
-                  <th>Ngày kết thúc dự kiến</th>
-                  <th className="text-center">Số học viên</th>
-                  <th className="text-center">Bài chưa chấm</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paged.map((c, i) => (
-                  <tr key={c.classId} data-testid="class-row">
-                    <td>{(page - 1) * CLASS_LIST_PAGE_SIZE + i + 1}</td>
-                    <td>
-                      <Link href={lessonHref(c)} prefetch={false} className="text-primary fw-semibold">
-                        {display(c.classCode)}
-                      </Link>
-                    </td>
-                    <td>{display(c.courseName)}</td>
-                    <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <span
-                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold flex-shrink-0"
-                          style={{ width: 36, height: 36, fontSize: 12 }}
-                        >
-                          {initials(c.teacherName)}
-                        </span>
-                        <div className="text-truncate" style={{ maxWidth: 180 }}>
-                          <div className="fw-medium text-truncate">{display(c.teacherName)}</div>
-                          <div className="small text-muted text-truncate">{display(c.teacherEmail)}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{display(c.startDate)}</td>
-                    <td>{display(c.endDate)}</td>
-                    <td className="text-center">{display(c.studentCount)}</td>
-                    <td className="text-center">
-                      {c.hasPendingGrading ? (
-                        <span className="cm-dot-badge" role="img" aria-label="Có bài chưa chấm">
-                          *
-                        </span>
-                      ) : (
-                        <span className="badge bg-light text-muted" role="img" aria-label="Không có bài chưa chấm">
-                          ✓
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {(state.kind === "not-integrated" || state.kind === "error") && (
-                  <tr>
-                    <td colSpan={8} className="p-3">
-                      {state.kind === "error" ? (
-                        <FetchErrorNotice title="Không thể tải danh sách lớp học" description={state.message} onRetry={onRetry} testId="class-list-notice" />
-                      ) : (
-                        <div className="alert alert-warning mb-0" role="status" data-testid="class-list-notice" data-kind={state.kind}>
-                          Danh sách lớp chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị.
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                )}
-                {state.kind === "ok" && filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="text-center text-muted py-4">
-                      {total ? "Không có lớp phù hợp bộ lọc" : "Chưa có lớp được phân công"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {loading && (
-            <div className="text-center py-4">
-              <span className="spinner-border text-primary" />
-            </div>
+      <div className={`${styles.catalog} p-3`}>
+        <CatalogToolbar
+          label="Bộ lọc chấm bài"
+          heading="Chấm bài"
+          icon="isax-edit-2"
+          description="Chọn lớp để xem các buổi học và bài cần chấm."
+          onReload={onRetry}
+          onClearFilters={onClearFilters}
+          loading={loading}
+        >
+          <select aria-label="Khóa học" className={filterClass} value={filters.course} onChange={e => onCourseChange(e.target.value)}>
+            <option value="">Tất cả khóa học</option>
+            {courseOptions.map(([key, name]) => <option key={key} value={key}>{name}</option>)}
+          </select>
+          <select aria-label="Mã lớp" className={filterClass} value={filters.classId} onChange={e => onClassChange(e.target.value)}>
+            <option value="">Tất cả lớp</option>
+            {classOptions.map(cls => <option key={cls.id} value={cls.id}>{cls.code && cls.code !== cls.label ? `${cls.label} (${cls.code})` : cls.label}</option>)}
+          </select>
+          <select aria-label="Thời gian" className={filterClass} value={filters.timeMode} onChange={e => onTimeModeChange(e.target.value as TimeFilterMode)}>
+            <option value="">Mọi thời gian</option>
+            <option value="EXACT">Ngày chính xác</option>
+            <option value="TODAY">Hôm nay</option>
+            <option value="TOMORROW">Ngày mai</option>
+            <option value="YESTERDAY">Hôm qua</option>
+            <option value="PAST_7_DAYS">Trong 7 ngày qua</option>
+            <option value="NEXT_7_DAYS">Trong 7 ngày tới</option>
+          </select>
+          {filters.timeMode === "EXACT" && (
+            <input type="date" className={`form-control form-control-sm w-auto ${styles.filter}`} aria-label="Chọn ngày chính xác" value={filters.exactDate} onChange={e => onExactDateChange(e.target.value)} />
           )}
-          <div className="cm-sticky-footer d-flex align-items-center justify-content-between">
-            <span className="text-muted small">Tổng số {filtered.length}</span>
-            <Pagination current={page} pageSize={CLASS_LIST_PAGE_SIZE} total={filtered.length} showSizeChanger={false} onChange={onPageChange} />
-          </div>
-        </div>
+        </CatalogToolbar>
+
+        <section className={styles.panel} aria-label="Danh sách lớp học">
+          {state.kind === "not-integrated" ? (
+            <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="class-list-notice" data-kind={state.kind}>
+              <span>Danh sách lớp chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị.</span>
+            </div>
+          ) : (
+            <Table
+              className={styles.table}
+              rowKey="classId"
+              columns={columns}
+              dataSource={state.kind === "error" ? [] : filtered.slice(offset, offset + size)}
+              onRow={() => ({ className: "align-middle", "data-testid": "class-row" })}
+              loading={loading}
+              pagination={false}
+              scroll={{ x: 920 }}
+              locale={{ emptyText: state.kind === "error"
+                ? <FetchErrorNotice title="Không thể tải danh sách lớp học" description={state.message} onRetry={onRetry} testId="class-list-notice" />
+                : loading ? null : total ? "Không có lớp phù hợp bộ lọc" : "Chưa có lớp được phân công" }}
+            />
+          )}
+          {state.kind !== "error" && <CatalogPagination page={page} size={size} total={filtered.length} onChange={onPageChange} showQuickJumper={false} />}
+        </section>
       </div>
     </ManagementPageFrame>
   );

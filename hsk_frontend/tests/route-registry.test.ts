@@ -128,7 +128,12 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
   });
 
   it("chức năng đã gỡ (REMOVED_ROUTES): vẫn có trong registry nhưng OUT_OF_SCOPE, không role nào, không được phục vụ (404, không placeholder)", () => {
-    expect([...REMOVED_ROUTES].sort()).toEqual(["/admin/membership-management", "/admin/teacher-management", "/admin/tickets", "/instructor/instructor-tickets", "/instructor/manage-storage", "/learning-path/online-course/leads", "/learning-path/online-course/manage"]);
+    expect([...REMOVED_ROUTES].sort()).toEqual([
+      "/admin/hanzi/manage", "/admin/membership-management", "/admin/teacher-management", "/admin/tickets",
+      "/hanzi/create", "/hanzi/edit/:id", "/hanzi/manage", "/hanzi/manage/create-package", "/hanzi/manage/select-type",
+      "/instructor/instructor-tickets", "/instructor/manage-storage", "/learning-path/online-course/leads", "/learning-path/online-course/manage",
+      "/teacher-manager/hanzi/manage",
+    ]);
     for (const url of REMOVED_ROUTES) {
       expect(findRoute(url)?.status, url).toBe("OUT_OF_SCOPE");
       expect(findRoute(url)?.allowedRoles, url).toEqual([]);
@@ -136,10 +141,11 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
       expect(MIGRATED_ROUTES, url).not.toContain(url);
     }
     expect(getServedRoute("/online-course/manage")).toBeNull();
+    expect(getServedRoute("/hanzi/edit/123")).toBeNull();
   });
 
   it("route dùng chung có guard rõ ràng: các trang */manage cho ADMIN + TEACHER + MENTOR", () => {
-    for (const url of ["/hanzi/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
+    for (const url of ["/pronunciation/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
       expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
     }
   });
@@ -252,15 +258,15 @@ describe("registry khớp với App Router thực tế", () => {
     "/learning-path/online-course/homework/:scheduleId":"src/app/(student)/learning-path/online-course/homework/[scheduleId]/page.tsx",
     "/quiz-session/:attemptId/result":"src/app/(student)/quiz-session/[attemptId]/result/page.tsx",
   };
-  const STANDALONE_PAGES = ["/demo", "/dev-auth/callback", ...STUDENT_PAGES, ...Object.keys(STUDENT_DICTIONARY_PAGES), ...Object.keys(STUDENT_LESSON_PAGES)];
+  const STANDALONE_PAGES = ["/", "/demo", "/dev-auth/callback", ...STUDENT_PAGES, ...Object.keys(STUDENT_DICTIONARY_PAGES), ...Object.keys(STUDENT_LESSON_PAGES)];
   const realPages = pages.filter((p) => !p.url.includes("[...slug]") && !STANDALONE_PAGES.includes(p.url));
 
   it("có đúng MỘT trang động phục vụ placeholder, nằm trong nhóm (management)", () => {
     expect(placeholderPage.map((p) => p.file)).toEqual(["src/app/(management)/[...slug]/page.tsx"]);
   });
 
-  it("trang độc lập gồm /demo, /dev-auth/callback, các màn học sinh, bài học, kết quả và Từ điển học viên, ngoài nhóm quản lý", () => {
-    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file).sort()).toEqual(["src/app/demo/page.tsx", "src/app/dev-auth/callback/page.tsx", ...STUDENT_PAGES.map((url) => `src/app/(student)${url}/page.tsx`), ...Object.values(STUDENT_DICTIONARY_PAGES), ...Object.values(STUDENT_LESSON_PAGES)].sort());
+  it("trang chủ, trang demo, callback và các màn học viên nằm ngoài nhóm quản lý", () => {
+    expect(pages.filter((p) => STANDALONE_PAGES.includes(p.url)).map((p) => p.file).sort()).toEqual(["src/app/page.tsx", "src/app/demo/page.tsx", "src/app/dev-auth/callback/page.tsx", ...STUDENT_PAGES.map((url) => `src/app/(student)${url}/page.tsx`), ...Object.values(STUDENT_DICTIONARY_PAGES), ...Object.values(STUDENT_LESSON_PAGES)].sort());
   });
 
   it("tập trang thật (page.tsx) chính là MIGRATED_ROUTES, trừ các route đã RENAMED_ROUTES sang URL mới — không thiếu, không thừa", () => {
@@ -301,19 +307,18 @@ describe("navigation khớp với registry", () => {
   });
 
   // Sau M5: KHÔNG còn mục menu nào là placeholder (NOT_MIGRATED); chỉ còn UNKNOWN "Yêu cầu hỗ trợ" (HSK cũ không PrivateRoute, chờ D-UI-1) và liên kết ngoài.
-  it("Admin: 15 liên kết = 13 MIGRATED + 1 UNKNOWN + 1 EXTERNAL", () => {
-    expect(count(admin)).toEqual({ MIGRATED: 13, UNKNOWN: 1, EXTERNAL: 1 });
+  it("Admin: 14 liên kết = 12 MIGRATED + 1 UNKNOWN + 1 EXTERNAL", () => {
+    expect(count(admin)).toEqual({ MIGRATED: 12, UNKNOWN: 1, EXTERNAL: 1 });
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(admin.filter((m) => getNavTargetStatus(m.href) === "EXTERNAL").map((m) => m.title)).toEqual(["Người dùng"]);
   });
 
-  it("Giảng viên: 11 mục = 10 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ) — không mục nào NOT_MIGRATED", () => {
-    expect(count(teacher)).toEqual({ MIGRATED: 10, UNKNOWN: 1 });
+  it("Giảng viên: 10 mục = 9 MIGRATED + 1 UNKNOWN (Yêu cầu hỗ trợ)", () => {
+    expect(count(teacher)).toEqual({ MIGRATED: 9, UNKNOWN: 1 });
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "UNKNOWN").map((m) => m.title)).toEqual(["Yêu cầu hỗ trợ"]);
     expect(teacher.filter((m) => getNavTargetStatus(m.href) === "MIGRATED").map((m) => m.title)).toEqual([
       "Tổng quan",
       "Thông báo của tôi",
-      "Quản lý Luyện viết (Hán tự)",
       "Quản lý Luyện Phát âm",
       "Quản lý Ngữ pháp",
       "Quản lý Từ vựng",

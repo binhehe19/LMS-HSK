@@ -3,8 +3,6 @@
 import { classCourseKey, classDisplayName, matchesClassTime, type TimeFilterMode } from "@/lib/class-list/class-list-filters";
 import type { GradingClassResponse } from "@/types/grading";
 
-export const CLASS_LIST_PAGE_SIZE = 10;
-
 const vietnameseCollator = new Intl.Collator("vi", { sensitivity: "base", numeric: true });
 
 /** Ô trống hiện "-" (gạch ngang ASCII như bản cũ; màn Admin dùng "—"). */

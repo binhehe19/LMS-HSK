@@ -14,6 +14,7 @@ export interface GradingClassResponse {
   teacherName?: string;
   teacherEmail?: string;
   scheduleDays?: string;
+  scheduleSlots?: { day?: string; startTime?: string; endTime?: string }[];
   startTime?: string;
   duration?: number | string;
   actualEndDate?: string;

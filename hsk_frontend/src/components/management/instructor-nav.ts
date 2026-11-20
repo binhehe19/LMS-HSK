@@ -2,7 +2,7 @@
 // Thứ tự, nhãn, icon, đích và activePrefix khớp NGUYÊN VĂN kết quả của InstructorSidebar (LMS_Frontend) cho ROLE_TEACHER:
 // tests/fixtures/instructor-nav.golden.json được sinh bằng cách chạy lại đúng logic lọc/đổi nhãn/map route của bản cũ
 // trên dữ liệu menu cũ (ẩn "Bảng thống kê", "Sao kê", "Quản lý Tài liệu học tập", các mục Học viên/Khóa học trực tuyến/Đăng ký...;
-// thêm "Thông báo của tôi" sau "Tổng quan"). Test golden so khớp từng mục.
+// thêm "Thông báo của tôi" sau "Tổng quan"). Menu hiện tại bỏ Luyện viết. Test golden so khớp từng mục.
 // ROLE_MENTOR dùng chung menu này vì selectIsTeacher của HSK cũ coi MENTOR là TEACHER (bằng chứng từ code cũ; ngữ nghĩa với Auth
 // chung CHƯA xác minh). Teacher-manager và Collaborator KHÔNG có menu ở đây: quyền của họ chưa xác minh (UNKNOWN).
 import type { NavItem } from "@/components/management/management-nav";
@@ -29,12 +29,6 @@ export function buildInstructorNav(): NavItem[] {
     },
     {
       header: "HỆ THỐNG ÔN LUYỆN",
-      title: "Quản lý Luyện viết (Hán tự)",
-      icon: "isax isax-pen-add",
-      href: "/hanzi/manage",
-      activePrefix: "/hanzi",
-    },
-    {
       title: "Quản lý Luyện Phát âm",
       icon: "isax isax-microphone",
       href: "/pronunciation/manage",

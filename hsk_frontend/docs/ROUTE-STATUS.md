@@ -7,24 +7,24 @@ Dữ kiện HSK cũ: LMS_Frontend/src/routes/router.link.tsx @ 72292b7 (xem `doc
 
 | Trạng thái | Số route | Ý nghĩa |
 |---|---|---|
-| MIGRATED | 34 | Đã có trang thật |
-| NOT_MIGRATED | 34 | Role xác định được (PrivateRoute HSK cũ, hoặc quyết định giao diện của chủ dự án); hiện trang "Chức năng đang được chuyển đổi" ở đúng URL cũ |
-| UNKNOWN | 49 | Không đủ bằng chứng để phục vụ (không có PrivateRoute và chưa có quyết định, hoặc chỉ dành cho role chưa xác minh); trả 404 |
-| OUT_OF_SCOPE | 31 | HSK cũ chỉ hiện "đang xây dựng"; trả 404 |
+| MIGRATED | 29 | Đã có trang thật |
+| NOT_MIGRATED | 33 | Role xác định được (PrivateRoute HSK cũ, hoặc quyết định giao diện của chủ dự án); hiện trang "Chức năng đang được chuyển đổi" ở đúng URL cũ |
+| UNKNOWN | 48 | Không đủ bằng chứng để phục vụ (không có PrivateRoute và chưa có quyết định, hoặc chỉ dành cho role chưa xác minh); trả 404 |
+| OUT_OF_SCOPE | 38 | HSK cũ chỉ hiện "đang xây dựng" hoặc chức năng đã gỡ; trả 404 |
 
-**Các route UNKNOWN chia thành nhóm không chồng lấn** (mỗi route đúng một nhóm, tổng = 49; không đổi UNKNOWN để cho số liệu khớp):
+**Các route UNKNOWN chia thành nhóm không chồng lấn** (mỗi route đúng một nhóm, tổng = 48; không đổi UNKNOWN để cho số liệu khớp):
 
 | Nhóm | Số route |
 |---|---|
 | HSK cũ không bọc PrivateRoute và chưa có quyết định của chủ dự án | 17 |
-| PrivateRoute chỉ cho role chưa xác minh (Teacher-manager, Collaborator) | 32 |
+| PrivateRoute chỉ cho role chưa xác minh (Teacher-manager, Collaborator) | 31 |
 | PrivateRoute chỉ yêu cầu đăng nhập, không xác lập role | 0 |
-| **Tổng** | **49** |
+| **Tổng** | **48** |
 
 Role app mới hỗ trợ: ADMIN, TEACHER, MENTOR. "Role app mới enforce" = role HSK cũ cho phép ∩ role hỗ trợ; Teacher-manager và Collaborator chưa xác minh nên
 không được cấp dù HSK cũ có liệt kê. "Quyết định chủ dự án (giao diện)" chỉ là phạm vi hiển thị của frontend mới, **không phải xác nhận quyền từ backend**.
 
-## MIGRATED (34)
+## MIGRATED (29)
 
 | Route | Component HSK cũ | Guard cũ | Role cũ (nguyên văn) | Trạng thái | Role app mới enforce | Nguồn quyền | Căn cứ |
 |---|---|---|---|---|---|---|---|
@@ -50,11 +50,6 @@ không được cấp dù HSK cũ có liệt kê. "Quyết định chủ dự á
 | `/flashcard/manage-learning-path` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/flashcard/manage-learning` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/vocab-set/manage` | ManageVocabularySet | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/hanzi/create` | HanziCreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/hanzi/manage/create-package` | HanziCreatePackage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/hanzi/manage` | ManageHanzi | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/hanzi/manage/select-type` | HanziSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/hanzi/edit/:id` | HanziCreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/vocabulary/manage` | ManageVocabulary | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/learning-path/syllabus/manage` | SyllabusManagementPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/learning-path/lesson-materials/manage` | LessonMaterialManagementPage | roles | ADMIN, TEACHER_MANAGER | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN, TEACHER_MANAGER |
@@ -63,7 +58,7 @@ không được cấp dù HSK cũ có liệt kê. "Quyết định chủ dự á
 | `/quiz/manage` | ManageQuiz | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/grammar/manage` | ManageGrammar | roles | TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER |
 
-## NOT_MIGRATED (34)
+## NOT_MIGRATED (33)
 
 Phục vụ trang placeholder dùng chung. Khi chuyển xong: tạo `page.tsx` ở đúng URL + thêm vào `MIGRATED_ROUTES`.
 
@@ -73,7 +68,6 @@ Phục vụ trang placeholder dùng chung. Khi chuyển xong: tạo `page.tsx` �
 | `/admin/learning-path/manage` | LPManageLearningPath | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/syllabus/manage` | SyllabusManagementPage | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/flashcard/manage` | ManageFlashcard | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/hanzi/manage` | ManageHanzi | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/vocabulary/manage` | ManageVocabulary | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/online-course/manage` | OnlineCourseManagementPage | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/online-course/leads` | OnlineCourseLeadManagementPage | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
@@ -104,7 +98,7 @@ Phục vụ trang placeholder dùng chung. Khi chuyển xong: tạo `page.tsx` �
 | `/kanji-origin/manage/select-type` | KanjiOriginSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 | `/ai-practice/manage` | ManageAiPractice | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 
-## UNKNOWN (49)
+## UNKNOWN (48)
 
 KHÔNG được phục vụ. Cần bằng chứng/quyết định của chủ dự án (`UI_ROLE_DECISIONS`) để chuyển sang NOT_MIGRATED.
 
@@ -133,7 +127,6 @@ KHÔNG được phục vụ. Cần bằng chứng/quyết định của chủ d�
 | `/teacher-manager/learning-path/manage` | LPManageLearningPath | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
 | `/teacher-manager/syllabus/manage` | SyllabusManagementPage | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
 | `/teacher-manager/flashcard/manage` | ManageFlashcard | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
-| `/teacher-manager/hanzi/manage` | ManageHanzi | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
 | `/teacher-manager/vocabulary/manage` | ManageVocabulary | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
 | `/teacher-manager/online-course/manage` | OnlineCourseManagementPage | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
 | `/teacher-manager/online-course/leads` | OnlineCourseLeadManagementPage | roles | TEACHER_MANAGER | **UNKNOWN** | — | — | Chỉ dành cho role chưa xác minh (TEACHER_MANAGER) |
@@ -160,7 +153,7 @@ KHÔNG được phục vụ. Cần bằng chứng/quyết định của chủ d�
 | `/instructor/instructor-quiz-questions` | InstructorQuizQuestions | none | — | **UNKNOWN** | — | — | HSK cũ không bọc PrivateRoute: không có guard ở tầng route, quyền chưa được xác lập |
 | `/instructor/instructor-settings` | InstructorProfileSettings | none | — | **UNKNOWN** | — | — | HSK cũ không bọc PrivateRoute: không có guard ở tầng route, quyền chưa được xác lập |
 
-## OUT_OF_SCOPE (31)
+## OUT_OF_SCOPE (38)
 
 KHÔNG được phục vụ.
 
@@ -174,7 +167,9 @@ KHÔNG được phục vụ.
 | `/teacher-manager/students-list` | UnderConstructionContent | roles | TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/teacher-manager/students-details` | UnderConstructionContent | roles | TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/teacher-manager/messages` | UnderConstructionContent | roles | TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
-| `/admin/membership-management` | MembershipManagement | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
+| `/teacher-manager/hanzi/manage` | ManageHanzi | roles | TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/admin/membership-management` | MembershipManagement | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/admin/hanzi/manage` | ManageHanzi | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/admin/courses` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/courses-grid` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/announcements` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
@@ -182,18 +177,23 @@ KHÔNG được phục vụ.
 | `/admin/students-grid` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/students-list` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/students-details` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
-| `/admin/teacher-management` | TeacherManagementPage | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
+| `/admin/teacher-management` | TeacherManagementPage | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/admin/messages` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
-| `/admin/tickets` | TeacherManagerTickets | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
+| `/admin/tickets` | TeacherManagerTickets | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/instructor/instructor-course` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/instructor-announcements` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/instructor-assignment` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/students` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/student-list` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/instructor-message` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
-| `/instructor/instructor-tickets` | InstructorTickets | roles | TEACHER, MENTOR, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
+| `/instructor/instructor-tickets` | InstructorTickets | roles | TEACHER, MENTOR, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/instructor/instructor-course-grid` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/instructor/students-details` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
-| `/instructor/manage-storage` | ManageStorage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
-| `/learning-path/online-course/manage` | OnlineCourseManagementPage | roles | ADMIN, TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
-| `/learning-path/online-course/leads` | OnlineCourseLeadManagementPage | roles | ADMIN, TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống (quyết định chủ dự án, 2026-11-14) |
+| `/instructor/manage-storage` | ManageStorage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/hanzi/create` | HanziCreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/hanzi/manage/create-package` | HanziCreatePackage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/hanzi/manage` | ManageHanzi | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/hanzi/manage/select-type` | HanziSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/hanzi/edit/:id` | HanziCreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/learning-path/online-course/manage` | OnlineCourseManagementPage | roles | ADMIN, TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/learning-path/online-course/leads` | OnlineCourseLeadManagementPage | roles | ADMIN, TEACHER_MANAGER | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |

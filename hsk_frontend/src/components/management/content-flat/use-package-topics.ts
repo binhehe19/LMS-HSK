@@ -10,8 +10,8 @@ import type { PackageTopicState, PackageTopicsClient } from "@/lib/api/package-t
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import type { FlatTopic, FlatTopicUi } from "@/types/content";
 
-export function usePackageTopics(api: PackageTopicsClient | undefined, packageId: string | null, key: string, demo: boolean, onWritten?: () => void, canMutate?: () => boolean) {
-  const fetch = useKeyedFetch<PackageTopicState>(packageId && api ? `${key}:topics:${packageId}` : null, () => (api as PackageTopicsClient).list(packageId ?? ""));
+export function usePackageTopics(api: PackageTopicsClient | undefined, packageId: string | null, key: string, demo: boolean, onWritten?: () => void, canMutate?: () => boolean, write?: (action: () => Promise<void>) => Promise<void>) {
+  const fetch = useKeyedFetch<PackageTopicState>(packageId && api ? `${key}:topics:${packageId}` : null, () => (api as PackageTopicsClient).list(packageId ?? ""), { keepDataOnReload: !!write });
   const data = fetch.state.kind === "ok" ? fetch.state.data : null;
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
@@ -30,7 +30,7 @@ export function usePackageTopics(api: PackageTopicsClient | undefined, packageId
       lock.current = true;
       setBusy(true);
       try {
-        await work();
+        await (write ? write(work) : work());
       } catch (error) {
         toast.error(writeErrorMessage(error, fallback));
         return false;
@@ -63,7 +63,7 @@ export function usePackageTopics(api: PackageTopicsClient | undefined, packageId
         void mutate("Không thể chuyển chủ đề", () => api.assign(packageId, itemId, target ? ref(target) : null, demo));
       },
     };
-  }, [api, packageId, data, demo, reload, onWritten, canMutate]);
+  }, [api, packageId, data, demo, reload, onWritten, canMutate, write]);
 
-  return { data, topicUi, busy };
+  return { data, topicUi, busy, reload };
 }

@@ -24,9 +24,11 @@ it("đọc kho ngữ pháp HSK đã xuất bản theo trang, từ khóa và cấ
 });
 
 it("tạo điểm trong kho dưới dạng bản nháp và không gắn vào học phần", async () => {
-  await saveGrammarLibraryDraft(input, null, false);
+  const richText = { explanation: "<p><strong>Diễn tả mức độ tăng</strong></p>" };
+  await saveGrammarLibraryDraft({ ...input, richText }, null, false);
   expect(api.post).toHaveBeenCalledExactlyOnceWith("/learning-resources", expect.objectContaining({
     type: "GRAMMAR", subType: "ZH", inLibrary: true, publishImmediately: false,
+    content: expect.objectContaining({ explanation: input.explanation, richText }),
   }));
 });
 
@@ -67,10 +69,11 @@ it("sửa ngữ pháp: nội dung gửi lên cũng có hskLevel và pinyin", asy
 });
 
 it("đọc ngữ pháp: hskLevel và pinyin từ nội dung của máy chủ hiện lại trên form", async () => {
+  const richText = { exampleSentencePinyin: "<p><em>wǒ</em></p>" };
   api.get.mockImplementation(async (url: string) => url.endsWith("/resources")
     ? [{ id: "l1", learningResourceId: "r1", learningResourceVersionId: "rv1", displayOrder: 0, resourceContent: {
-      title: "越来越", hskLevel: "2", usageNote: "ghi chú", examples: [{ exampleIndex: 0, sentenceZh: "我", pinyin: "wǒ", translationVi: "tôi" }] } }]
+      title: "越来越", hskLevel: "2", usageNote: "ghi chú", richText, examples: [{ exampleIndex: 0, sentenceZh: "我", pinyin: "wǒ", translationVi: "tôi" }] } }]
     : { id: "p1", draftVersionId: "d1", publishedVersionId: null });
   const [point] = await listPackageGrammarPoints("p1");
-  expect(point).toMatchObject({ id: "r1", title: "越来越", hskLevel: "2", note: "ghi chú", exampleSentenceZh: "我", exampleSentencePinyin: "wǒ", exampleSentenceVi: "tôi" });
+  expect(point).toMatchObject({ id: "r1", title: "越来越", hskLevel: "2", note: "ghi chú", exampleSentenceZh: "我", exampleSentencePinyin: "wǒ", exampleSentenceVi: "tôi", richText });
 });

@@ -12,7 +12,7 @@ const MAX_RESULTS = 8;
 const fold = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase();
 
-export function ManagementHeaderSearch({ items }: { items: NavItem[] }) {
+export function ManagementHeaderSearch({ items, onNavigate }: { items: NavItem[]; onNavigate?: (href: string) => void }) {
   const router = useRouter();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -44,6 +44,7 @@ export function ManagementHeaderSearch({ items }: { items: NavItem[] }) {
     setOpen(false);
     setQuery("");
     if (item.href.startsWith("http://") || item.href.startsWith("https://")) window.open(item.href, "_blank", "noopener,noreferrer");
+    else if (onNavigate) onNavigate(item.href);
     else router.push(item.href);
   };
 

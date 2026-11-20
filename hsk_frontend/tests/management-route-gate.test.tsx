@@ -35,9 +35,9 @@ async function visit(url: string, roles: string[]): Promise<Outcome> {
     </Provider>,
   );
   await waitFor(() => expect(screen.queryByTestId("protected") ?? screen.queryByTestId("auth-forbidden")).not.toBeNull());
-  if (screen.queryByTestId("protected") === null) return "forbidden";
-  // Khung (sidebar) do trang dựng; khu vực do gate chọn theo role: phụ đề thương hiệu khác nhau giữa hai sidebar.
-  return document.querySelector(".brand-subtitle")?.textContent === "LMS · Admin" ? "page-admin" : "page-instructor";
+  const content = screen.queryByTestId("protected");
+  if (!content) return "forbidden";
+  return content.closest(".management-frame-admin") ? "page-admin" : "page-instructor";
 }
 
 const ALL_ROLES: Record<string, string[]> = {
@@ -60,9 +60,9 @@ const MATRIX: [url: string, allowed: string[]][] = [
   ["/instructor/list-class", ["ADMIN", "TEACHER", "MENTOR"]], // luồng chấm bài: thêm ADMIN theo quyết định chủ dự án (UI_ROLE_GRANTS)
   ["/instructor/list-class/grading", ["ADMIN", "TEACHER", "MENTOR"]],
   ["/instructor/list-class/lesson-detail", ["TEACHER", "MENTOR"]], // phần còn lại của /instructor/list-class: Admin KHÔNG vào
-  ["/hanzi/manage", ["ADMIN", "TEACHER", "MENTOR"]], // dùng chung, guard liệt kê đủ
+  ["/pronunciation/manage", ["ADMIN", "TEACHER", "MENTOR"]], // dùng chung, guard liệt kê đủ
   ["/learning-path/syllabus/manage", ["ADMIN", "TEACHER", "MENTOR"]],
-  ["/hanzi/edit/42", ["ADMIN", "TEACHER", "MENTOR"]], // route có tham số
+  ["/sets/42/edit", ["ADMIN", "TEACHER", "MENTOR"]], // route có tham số
   ["/instructor/welcome", ["TEACHER", "MENTOR"]], // HSK cũ không có PrivateRoute; quyết định giao diện của chủ dự án (M3B.2), KHÔNG Admin
   ["/instructor/instructor-notifications", ["TEACHER", "MENTOR"]], // như trên
 ];
@@ -75,13 +75,13 @@ describe.each(MATRIX)("%s", (url, allowed) => {
 });
 
 describe("sidebar theo ROLE (không theo tiền tố URL) trên route dùng chung", () => {
-  it("/hanzi/manage: ADMIN → menu Admin; TEACHER và MENTOR → menu Giảng viên", async () => {
-    expect(await visit("/hanzi/manage", ["ROLE_ADMIN"])).toBe("page-admin");
+  it("/pronunciation/manage: ADMIN → menu Admin; TEACHER và MENTOR → menu Giảng viên", async () => {
+    expect(await visit("/pronunciation/manage", ["ROLE_ADMIN"])).toBe("page-admin");
     expect(screen.getByText("LMS · Admin")).toBeInTheDocument();
   });
 
   it("TEACHER", async () => {
-    expect(await visit("/hanzi/manage", ["ROLE_TEACHER"])).toBe("page-instructor");
+    expect(await visit("/pronunciation/manage", ["ROLE_TEACHER"])).toBe("page-instructor");
     expect(screen.getByText("LMS · Quản lý")).toBeInTheDocument();
   });
 
@@ -90,7 +90,7 @@ describe("sidebar theo ROLE (không theo tiền tố URL) trên route dùng chun
   });
 
   it("người có cả ADMIN và TEACHER: menu Admin ưu tiên (như InstructorSidebar cũ); /instructor/list-class vẫn do guard route quyết định", async () => {
-    expect(await visit("/hanzi/manage", ["ROLE_TEACHER", "ROLE_ADMIN"])).toBe("page-admin");
+    expect(await visit("/pronunciation/manage", ["ROLE_TEACHER", "ROLE_ADMIN"])).toBe("page-admin");
   });
 
   it("ADMIN vào được /instructor/list-class nhưng KHÔNG vào được /instructor/list-class/lesson-detail (không cấp quyền theo tiền tố /instructor)", async () => {
@@ -106,6 +106,7 @@ describe("route không được phục vụ: không yêu cầu đăng nhập, kh
     "/instructor/instructor-dashboard",
     "/teacher-manager/dashboard", // UNKNOWN: role chưa xác minh
     "/admin/courses", // OUT_OF_SCOPE
+    "/hanzi/manage",
     "/admin/tickets", // chức năng đã gỡ (REMOVED_ROUTES)
     "/instructor/manage-storage",
     "/admin/teacher-management",

@@ -11,7 +11,7 @@ const back = vi.fn();
 vi.mock("next/navigation", async () => {
   // notFound giữ nguyên hành vi thật của Next (ném lỗi NEXT_HTTP_ERROR_FALLBACK;404); chỉ giả router/pathname.
   const actual = await vi.importActual<typeof import("next/navigation")>("next/navigation");
-  return { ...actual, usePathname: () => "/hanzi/manage", useRouter: () => ({ push: vi.fn(), back }) };
+  return { ...actual, usePathname: () => "/pronunciation/manage", useRouter: () => ({ push: vi.fn(), back }) };
 });
 
 beforeEach(() => {
@@ -31,13 +31,13 @@ function renderPlaceholder(pathname: string, roles: string[], area: "admin" | "i
 
 describe("MigrationPlaceholder", () => {
   it("nằm trong khung quản lý (sidebar giữ nguyên), nêu rõ chức năng đang chuyển đổi và tên mục menu", () => {
-    renderPlaceholder("/hanzi/manage", ["ROLE_ADMIN"], "admin");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_ADMIN"], "admin");
     expect(screen.getByText("Chức năng đang được chuyển đổi")).toBeInTheDocument();
-    expect(screen.getByTestId("migration-placeholder")).toHaveTextContent("Quản lý Luyện viết (Hán tự)");
-    expect(screen.getByTestId("migration-placeholder")).toHaveAttribute("data-route", "/hanzi/manage");
+    expect(screen.getByTestId("migration-placeholder")).toHaveTextContent("Luyện phát âm");
+    expect(screen.getByTestId("migration-placeholder")).toHaveAttribute("data-route", "/pronunciation/manage");
     expect(document.querySelector(".management-sidebar-column .sidebar-menu")).not.toBeNull();
     // Mục menu của route này vẫn hiện (không mất menu).
-    expect(screen.getAllByText("Quản lý Luyện viết (Hán tự)").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Luyện phát âm").length).toBeGreaterThan(1);
   });
 
   it("Admin: có liên kết về màn hình đã chuyển đầu tiên của menu Admin (Overview, M5)", () => {
@@ -49,14 +49,14 @@ describe("MigrationPlaceholder", () => {
   });
 
   it("Teacher: có liên kết về màn đã chuyển (Tổng quan)", () => {
-    renderPlaceholder("/hanzi/manage", ["ROLE_TEACHER"], "instructor");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_TEACHER"], "instructor");
     const link = screen.getByTestId("placeholder-home-link");
     expect(link).toHaveAttribute("href", "/instructor/welcome");
     expect(link).toHaveTextContent("Tổng quan");
   });
 
   it("vai trò không có màn đã chuyển nào: KHÔNG có liên kết giả; nói rõ điều đó", () => {
-    renderPlaceholder("/hanzi/manage", ["ROLE_TEACHER_MANAGER"], "instructor");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_TEACHER_MANAGER"], "instructor");
     expect(screen.queryByTestId("placeholder-home-link")).toBeNull();
     expect(screen.getByTestId("placeholder-no-home")).toHaveTextContent("chưa có màn hình quản lý nào đã chuyển");
   });
@@ -69,11 +69,11 @@ describe("MigrationPlaceholder", () => {
   it("nút 'Quay lại trang trước' chỉ có khi có trang trước (Navigation API), và gọi router.back", () => {
     const setNavigation = (value: unknown) => Object.defineProperty(window, "navigation", { configurable: true, value });
     setNavigation({ canGoBack: false });
-    renderPlaceholder("/hanzi/manage", ["ROLE_ADMIN"], "admin");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_ADMIN"], "admin");
     expect(screen.queryByTestId("placeholder-back")).toBeNull();
     cleanup();
     setNavigation({ canGoBack: true });
-    renderPlaceholder("/hanzi/manage", ["ROLE_ADMIN"], "admin");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_ADMIN"], "admin");
     screen.getByTestId("placeholder-back").click();
     expect(back).toHaveBeenCalledTimes(1);
     setNavigation(undefined);
@@ -83,11 +83,11 @@ describe("MigrationPlaceholder", () => {
     Object.defineProperty(window, "navigation", { configurable: true, value: undefined });
     const original = Object.getOwnPropertyDescriptor(window.history, "length");
     Object.defineProperty(window.history, "length", { configurable: true, value: 1 });
-    renderPlaceholder("/hanzi/manage", ["ROLE_ADMIN"], "admin");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_ADMIN"], "admin");
     expect(screen.queryByTestId("placeholder-back")).toBeNull();
     cleanup();
     Object.defineProperty(window.history, "length", { configurable: true, value: 3 });
-    renderPlaceholder("/hanzi/manage", ["ROLE_ADMIN"], "admin");
+    renderPlaceholder("/pronunciation/manage", ["ROLE_ADMIN"], "admin");
     expect(screen.getByTestId("placeholder-back")).toBeInTheDocument();
     if (original) Object.defineProperty(window.history, "length", original);
   });
@@ -106,6 +106,7 @@ describe("trang động [...slug]: chỉ NOT_MIGRATED mới có placeholder, cò
   );
 
   it.each([
+    [["hanzi", "manage"]],
     [["random"]],
     [["admin", "does-not-exist"]],
     [["admin"]],

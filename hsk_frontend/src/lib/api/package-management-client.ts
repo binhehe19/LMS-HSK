@@ -33,7 +33,7 @@ export interface PackageLink {
   sessionNo: number;
   displayOrder: number;
 }
-export type PackageResourceSource = Pick<PackageLink, "id" | "learningResourceId" | "resourceType" | "resourceTitle" | "resourceContent" | "subType" | "skill"> & { sessionNo?: number };
+export type PackageResourceSource = Pick<PackageLink, "id" | "learningResourceId" | "resourceType" | "resourceTitle" | "resourceContent" | "subType" | "skill"> & { sessionNo?: number; fromDictionary?: true };
 export const packageTitle = (p: ManagedPackage) => p.draftVersion?.title || p.publishedVersion?.title || p.id;
 
 export function toContentPackage(pkg: ManagedPackage): ContentPackage {
@@ -49,6 +49,7 @@ export function toContentPackage(pkg: ManagedPackage): ContentPackage {
     level: version?.level,
     topic: version?.topic,
     publishedVersion: pkg.publishedVersion?.version,
+    hasDraft: !!pkg.draftVersionId,
     publishStatus: pkg.publishedVersionId ? "PUBLISHED" : "DRAFT",
     createdAt: pkg.createdAt,
     updatedAt: pkg.updatedAt,
@@ -96,13 +97,14 @@ export async function attachPackageToSyllabus(packageId: string, syllabusId: str
   assertWriteEnabled("content", demo);
   return lmsClient.put<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}/syllabus`, await syllabusBinding(syllabusId));
 }
-export async function packageLinks(packageId: string): Promise<PackageLink[]> {
+export async function packageLinks(packageId: string, activeVersionId?: string): Promise<PackageLink[]> {
+  if (activeVersionId) return lmsClient.get<PackageLink[]>(`/content-packages/versions/${encodeURIComponent(activeVersionId)}/resources`);
   const pkg = await lmsClient.get<ManagedPackage>(`/content-packages/${encodeURIComponent(packageId)}`);
   const versionId = pkg.draftVersionId ?? pkg.publishedVersionId;
   return versionId ? lmsClient.get<PackageLink[]>(`/content-packages/versions/${encodeURIComponent(versionId)}/resources`) : [];
 }
 
-/** Copy the version shown in the source package, not the resource's latest draft. */
+/** Copy the pinned version from a source package, or the published resource from the dictionary. */
 export async function importPackageResources(packageId: string, rows: PackageResourceSource[], sessionNo: number, demo: boolean) {
   assertWriteEnabled("content", demo);
   if (!Number.isInteger(sessionNo) || sessionNo < 1) throw new Error("Buổi học không hợp lệ.");
@@ -116,8 +118,18 @@ export async function importPackageResources(packageId: string, rows: PackageRes
     let createdId: string | undefined;
     try {
       if (row.resourceType !== pkg.type) throw new Error("Loại học liệu không khớp học phần đích.");
+      let content = row.resourceContent;
+      if (row.fromDictionary) {
+        const source = await lmsClient.get<{ type: string; subType: string; inLibrary: boolean; publishedVersionId: string | null; content: unknown }>(
+          `/learning-resources/${encodeURIComponent(row.learningResourceId)}`,
+        );
+        if (source.type !== "VOCABULARY" || source.subType !== "ZH" || !source.inLibrary || !source.publishedVersionId || !source.content) {
+          throw new Error("Từ không còn khả dụng trong Từ điển.");
+        }
+        content = source.content;
+      }
       const created = await lmsClient.post<{ id: string; publishedVersionId?: string; draftVersionId?: string }>("/learning-resources", {
-        type: row.resourceType, content: row.resourceContent, subType: row.subType, skill: row.skill,
+        type: row.resourceType, content, subType: row.subType, skill: row.skill,
         sourceResourceId: row.learningResourceId, inLibrary: false, publishImmediately: true,
       });
       createdId = created.id;

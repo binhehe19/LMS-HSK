@@ -2,7 +2,8 @@
 
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
-import { adminPalette, adminTheme } from "./admin-theme";
+import { adminPalette } from "./admin-theme";
+import { desktopTheme } from "@/theme/brand-tokens";
 import type { ReactNode } from "react";
 import { useManagementArea } from "@/components/management/management-area-context";
 import { ManagementHeader } from "@/components/management/management-header";
@@ -21,10 +22,12 @@ import { useUnreadCount } from "@/components/management/notifications/use-unread
 export function ManagementPageFrame({
   contentClassName,
   rowClassName,
+  onNavigate,
   children,
 }: {
   contentClassName?: string;
   rowClassName?: string;
+  onNavigate?: (href: string) => void;
   children: ReactNode;
 }) {
   const area = useManagementArea();
@@ -35,12 +38,12 @@ export function ManagementPageFrame({
     <div className={`content${isAdmin ? " management-frame-admin" : ""}${contentClassName ? ` ${contentClassName}` : ""}`} style={isAdmin ? adminPalette : undefined}>
       <div className="container">
         <div className={`row${rowClassName ? ` ${rowClassName}` : ""}`}>
-          <ManagementSidebar area={area} unread={unread} />
-          <ManagementHeader area={area} unread={unread} />
+          <ManagementSidebar area={area} unread={unread} onNavigate={onNavigate} />
+          <ManagementHeader area={area} unread={unread} onNavigate={onNavigate} />
           <div className="col-lg-9 management-main-column">{children}</div>
         </div>
       </div>
     </div>
   );
-  return isAdmin ? <ConfigProvider locale={viVN} theme={adminTheme}>{frame}</ConfigProvider> : frame;
+  return isAdmin ? <ConfigProvider locale={viVN} theme={desktopTheme}>{frame}</ConfigProvider> : frame;
 }

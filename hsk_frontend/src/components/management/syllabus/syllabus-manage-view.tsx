@@ -50,22 +50,32 @@ export interface SyllabusManageViewProps {
 }
 
 export function SyllabusManageView(p: SyllabusManageViewProps) {
-  const viewOnly = !p.isAdmin;
+  const viewOnlyNotice = !p.isAdmin && (
+    <Alert
+      message="Chế độ Xem duy nhất"
+      description="Module ôn luyện theo buổi chỉ Admin thao tác được (Thêm, Sắp xếp, Xóa). Các phần khác của Syllabus bạn vẫn xem được bình thường."
+      type="warning"
+      showIcon
+      className="rounded-3 shadow-sm border-warning mb-0"
+      data-testid="view-only-alert"
+    />
+  );
+
+  if (p.mode === "list") {
+    return (
+      <ManagementPageFrame>
+        <SyllabusListTable state={p.listState} keyword={p.keyword} filtered={p.filtered} onKeywordChange={p.onKeywordChange} onOpen={p.onOpen} onRetry={p.onRetryList} notice={viewOnlyNotice} />
+      </ManagementPageFrame>
+    );
+  }
 
   return (
     <ManagementPageFrame>
       <div className="manage-lp-container syllabus-management-page">
         <div className="card border-0 shadow-sm mb-4">
-          {viewOnly && (
+          {viewOnlyNotice && (
             <div className="px-3 pt-3">
-              <Alert
-                message="Chế độ Xem duy nhất"
-                description="Module ôn luyện theo buổi chỉ Admin thao tác được (Thêm, Sắp xếp, Xóa). Các phần khác của Syllabus bạn vẫn xem được bình thường."
-                type="warning"
-                showIcon
-                className="rounded-3 shadow-sm border-warning mb-0"
-                data-testid="view-only-alert"
-              />
+              {viewOnlyNotice}
             </div>
           )}
           <PageHeader icon="isax-book-saved" title="Quản lý Syllabus" subtitle="Quản lý dữ liệu syllabus hiện có" />
@@ -73,8 +83,6 @@ export function SyllabusManageView(p: SyllabusManageViewProps) {
 
         <div className="card border-0 shadow-sm overflow-hidden">
           <div className="syllabus-management-container">
-            {p.mode === "list" && <SyllabusListTable state={p.listState} keyword={p.keyword} filtered={p.filtered} onKeywordChange={p.onKeywordChange} onOpen={p.onOpen} onRetry={p.onRetryList} />}
-
             {p.mode === "invalid-id" && (
               <div className="p-3">
                 <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status" data-testid="syllabus-notice" data-kind="invalid-id">

@@ -17,7 +17,7 @@ import type { ManagementArea } from "@/lib/management/area";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { signout } from "@/redux/slices/auth-slice";
 
-export function ManagementHeader({ area, unread }: { area: ManagementArea; unread: UnreadCountState }) {
+export function ManagementHeader({ area, unread, onNavigate }: { area: ManagementArea; unread: UnreadCountState; onNavigate?: (href: string) => void }) {
   const config = MANAGEMENT_AREAS[area];
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
@@ -65,7 +65,7 @@ export function ManagementHeader({ area, unread }: { area: ManagementArea; unrea
           <MenuOutlined aria-hidden="true" />
         </button>
 
-        <ManagementHeaderSearch items={navItems} />
+        <ManagementHeaderSearch items={navItems} onNavigate={onNavigate} />
       </div>
 
       <div className="management-header-actions">

@@ -4,7 +4,7 @@
 // (lms-content-client.ts/lms-grammar-client.ts) thay vì content-tree-client.ts (chưa có backend). Generic theo TItem + nhận `client` (bộ hàm CRUD của
 // module đó) làm tham số — mỗi module tự khai báo client riêng theo FlatContentClient<TItem>, hook/manager này dùng chung. Cùng quy ước: vị trí trong
 // URL, lỗi tải là trạng thái của cấp đó, sau mỗi thao tác ghi tải lại từ máy chủ, thao tác ghi qua write gate + khoá chống bấm đúp.
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useKeyedFetch } from "@/components/management/notifications/use-keyed-fetch";
@@ -17,6 +17,7 @@ import { FLAT_ROOT_LOCATION, flatPackageLocation, flatHref, flatLevel, readFlatL
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import { usePackageTopics } from "@/components/management/content-flat/use-package-topics";
 import { usePackageEditSession } from "./use-package-edit-session";
+import type { PackageSaveProgress } from "./use-package-draft";
 import type { PackageDraftFields } from "@/lib/api/package-edit-session-client";
 import { packageTopicsForSession } from "@/lib/api/package-topics-client";
 import type { PackageTopicsClient } from "@/lib/api/package-topics-client";
@@ -58,18 +59,45 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
   const { labels } = config;
 
   const { packageId } = location;
-  const [sessionNo, setSessionNo] = useState(1);
+  const [selection, setSelection] = useState<{ packageId: string | null; sessionNo: number }>();
+  const sessionNo = selection && selection.packageId === packageId ? selection.sessionNo : 1;
+  const setSessionNo = (sessionNo: number) => setSelection({ packageId, sessionNo });
   const sessionTopics = useMemo(() => client.topics ? packageTopicsForSession(sessionNo) : undefined, [client.topics, sessionNo]);
   const packages = useKeyedFetch<ContentPackage[]>(`${config.key}:packages`, () => expectList(client.listPackages(), labels.package.toLowerCase()));
   const packageList = packages.state.kind === "ok" ? packages.state.data : (packages.lastData ?? []);
   const selectedPackage = packageId ? (packageList.find((p) => p.id === packageId) ?? null) : null;
   const edit = usePackageEditSession(canWrite ? selectedPackage?.id ?? null : null);
-  const visiblePackageId = !edit.status || edit.status === "ready" ? selectedPackage?.id ?? null : null;
+  const visiblePackageId = !edit.status || edit.draft ? selectedPackage?.id ?? null : null;
   const viewKey = `${config.key}:${sessionNo}:${edit.draft?.id ?? "read"}`;
-  const items = useKeyedFetch<TItem[]>(visiblePackageId ? `${viewKey}:items:${visiblePackageId}` : null, () => expectList(client.listItems(visiblePackageId ?? "", sessionNo), labels.item.toLowerCase()));
+  const items = useKeyedFetch<TItem[]>(visiblePackageId ? `${viewKey}:items:${visiblePackageId}` : null, () => expectList(client.listItems(visiblePackageId ?? "", sessionNo), labels.item.toLowerCase()), { keepDataOnReload: true });
+  const [revision, setRevision] = useState<{ packageId: string | null; count: number }>();
+  const draftRevision = revision && revision.packageId === packageId ? revision.count : 0;
+  const markDraftChanged = useCallback(() => setRevision(previous => ({
+    packageId,
+    count: previous?.packageId === packageId ? previous.count + 1 : 1,
+  })), [packageId]);
+  const [linksRevision, setLinksRevision] = useState(0);
+  const reloadItems = items.reload;
+  const topics = usePackageTopics(sessionTopics, visiblePackageId, viewKey, demo, markDraftChanged, edit.hasLock, edit.write);
+  const reloadTopics = topics.reload;
+  const onItemsWritten = useCallback((placementChanged = true) => {
+    markDraftChanged();
+    reloadItems();
+    if (placementChanged) {
+      if (sessionTopics) reloadTopics();
+      setLinksRevision(previous => previous + 1);
+    }
+  }, [markDraftChanged, reloadItems, reloadTopics, sessionTopics]);
 
-  // Chủ đề trong gói (nếu module khai báo): tải lỗi thì màn vẫn hiện mục như trước, chỉ không hiện chủ đề.
-  const topics = usePackageTopics(sessionTopics, visiblePackageId, viewKey, demo, items.reload, edit.hasLock);
+  const lastDraft = useRef(edit.draft);
+  useEffect(() => {
+    const previous = lastDraft.current;
+    lastDraft.current = edit.draft;
+    if (previous && previous !== edit.draft && previous.id === edit.draft?.id) {
+      reloadItems();
+      reloadTopics();
+    }
+  }, [edit.draft, reloadItems, reloadTopics]);
 
   // Mục theo thứ tự chủ đề rồi theo thứ tự trong gói; mục chưa phân chủ đề đứng cuối.
   const itemList = useMemo(() => (items.state.kind === "ok" ? sortByTopic(sortByIndex(items.state.data), topics.data) : []), [items.state, topics.data]);
@@ -109,13 +137,14 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     return true;
   };
 
-  const saveWorkspace = async (input: ContentPackageInput, publish = false): Promise<boolean> => {
+  const saveWorkspace = async (input: ContentPackageInput, publish = false, progress?: PackageSaveProgress): Promise<boolean> => {
     if (!selectedPackage || !edit.hasLock() || (publish && !canPublish)) return false;
     const syllabusId = input.syllabusId;
-    const bind = syllabusId && syllabusId !== selectedPackage.syllabusId
+    const bind = syllabusId
       ? async () => {
           try {
             await attachPackageToSyllabus(selectedPackage.id, syllabusId, demo);
+            progress?.syllabusSaved(syllabusId);
           } catch (error) {
             throw new Error(`Đã lưu bản nháp. ${writeErrorMessage(error, "Không đổi được giáo trình.")}`);
           }
@@ -123,12 +152,10 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
       : undefined;
     const result = await run(
       publish ? "Không xuất bản được học phần." : "Không lưu được bản nháp.",
-      () => edit.run({ title: input.name.trim(), description: input.description ?? "", sessionCount: input.sessionCount ?? 1 }, bind, publish ? "publish" : undefined),
+      () => edit.run({ title: input.name.trim(), description: input.description ?? "", sessionCount: input.sessionCount ?? 1 }, bind, publish ? "publish" : undefined, false, progress?.fieldsSaved),
     );
-    packages.reload();
     if (!result) return false;
     toast.success(publish ? "Đã lưu và xuất bản học phần." : "Đã lưu bản nháp.");
-    if (publish) go(FLAT_ROOT_LOCATION);
     return true;
   };
 
@@ -137,8 +164,6 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     const result = await run("Không hủy được bản nháp.", () => edit.run(undefined, undefined, "discard"));
     if (!result) return false;
     toast.success("Đã hủy bản nháp.");
-    packages.reload();
-    go(FLAT_ROOT_LOCATION);
     return true;
   };
 
@@ -146,7 +171,7 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
 
   const copyPackage = async (source: ContentPackage, syllabusId: string): Promise<boolean> => {
     if (!edit.hasLock()) return false;
-    const copy = await run("Không thể tạo bản sao học phần.", () => copyPackageToSyllabus(source.id, syllabusId, demo));
+    const copy = await run("Không thể tạo bản sao học phần.", () => edit.write(() => copyPackageToSyllabus(source.id, syllabusId, demo)));
     if (!copy) return false;
     packages.reload();
     go(flatPackageLocation(copy.id));
@@ -184,20 +209,20 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     if (!packageId || !edit.hasLock()) return false;
     const body = config.normalizeItemInput(input);
     const result = editing
-      ? await run(`Cập nhật ${labels.item.toLowerCase()} thất bại`, () => client.updateItem(packageId, editing.id, body, demo))
-      : await run(`Không thể thêm ${labels.item.toLowerCase()}`, () => client.createItem(packageId, { ...body, index: itemList.length }, demo, sessionNo));
+      ? await run(`Cập nhật ${labels.item.toLowerCase()} thất bại`, () => edit.write(() => client.updateItem(packageId, editing.id, body, demo)))
+      : await run(`Không thể thêm ${labels.item.toLowerCase()}`, () => edit.write(() => client.createItem(packageId, { ...body, index: itemList.length }, demo, sessionNo)));
     if (!result) return false;
     toast.success(editing ? `Cập nhật ${labels.item.toLowerCase()} thành công!` : `Đã thêm ${labels.item.toLowerCase()} mới`);
-    items.reload();
+    onItemsWritten(!editing);
     return true;
   };
 
   const removeItem = async (item: TItem): Promise<boolean> => {
     if (!packageId || !edit.hasLock()) return false;
-    const result = await run(`Xóa ${labels.item.toLowerCase()} thất bại`, () => client.deleteItem(packageId, item.id, demo));
+    const result = await run(`Xóa ${labels.item.toLowerCase()} thất bại`, () => edit.write(() => client.deleteItem(packageId, item.id, demo)));
     if (result === null) return false;
     toast.success(`Đã xóa ${labels.item.toLowerCase()} "${config.itemSummary(item)}"`);
-    items.reload();
+    onItemsWritten();
     return true;
   };
 
@@ -214,6 +239,10 @@ export function useFlatContent<TItem extends ContentItemBase>(config: ContentMod
     canPublish,
     edit,
     heartbeat,
+    draftRevision,
+    linksRevision,
+    markDraftChanged,
+    onItemsWritten,
     busy: busy || topics.busy,
     packages: { state: packages.state, list: packageList, reload: packages.reload },
     items: { state: items.state, list: itemList, reload: items.reload },

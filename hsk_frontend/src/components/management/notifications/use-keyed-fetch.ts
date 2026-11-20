@@ -17,7 +17,7 @@ type Settled<T> = { token: string } & ({ kind: "ok"; data: T } | { kind: "waitin
  * `lastData` = kết quả thành công gần nhất (kể cả của khoá trước) để giữ ổn định các phần không thuộc danh sách khi đang tải trang khác (vd. thanh phân trang không biến mất).
  * `reload()` tải lại cùng khoá. Lỗi/thiếu cấu hình được phân loại; việc báo toast do hàm `load` của người gọi quyết định.
  */
-export function useKeyedFetch<T>(key: string | null, load: () => Promise<T>): { state: FetchState<T>; reload: () => void; lastData: T | null } {
+export function useKeyedFetch<T>(key: string | null, load: () => Promise<T>, { keepDataOnReload = false } = {}): { state: FetchState<T>; reload: () => void; lastData: T | null } {
   const [tick, setTick] = useState(0);
   const [settled, setSettled] = useState<Settled<T> | null>(null);
   const [lastData, setLastData] = useState<T | null>(null);
@@ -45,6 +45,8 @@ export function useKeyedFetch<T>(key: string | null, load: () => Promise<T>): { 
   }, [token]);
 
   const reload = useCallback(() => setTick((n) => n + 1), []);
-  const state: FetchState<T> = settled !== null && settled.token === token ? settled : { kind: "loading" };
+  const retained = keepDataOnReload && key !== null && settled?.kind === "ok"
+    && settled.token.slice(0, settled.token.lastIndexOf("#")) === key;
+  const state: FetchState<T> = settled !== null && (settled.token === token || retained) ? settled : { kind: "loading" };
   return { state, reload, lastData };
 }

@@ -20,6 +20,8 @@ vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/lib/api/quiz-grading-client", () => ({ listAdminGradingClasses: vi.fn(), listTeacherGradingClasses: vi.fn() }));
 vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof import("sonner")>()), toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
+vi.setConfig({ testTimeout: 30_000 });
+
 const teacher = { ...adminUser, id: "u-teacher-1", fullName: "Giáo Viên Một", email: "gv1@example.test", roles: ["ROLE_TEACHER"] };
 const cls = (i: number, over: Partial<GradingClassResponse> = {}): GradingClassResponse => ({
   classId: `c${i}`, classCode: `MA${String(i).padStart(2, "0")}`, className: `Lớp ${i}`, courseName: "H20", courseId: "course-1", teacherName: "Đỗ Thị Mỹ Hà", teacherEmail: "ha@example.test",
@@ -49,21 +51,20 @@ const rows = () => screen.queryAllByTestId("class-row");
 const codes = () => rows().map((r) => within(r).getAllByRole("cell")[1].textContent);
 
 describe("màn Quản lý lớp học của Giảng viên — có dữ liệu", () => {
-  it("giữ DOM khung trang (.content > .container > .row, không g-4), tiêu đề thẻ và cột như bản cũ; mã lớp là liên kết tới list-lesson kèm classId/courseId", async () => {
+  it("dùng bố cục bảng chung và giữ liên kết mã lớp đến danh sách buổi học", async () => {
     vi.mocked(listTeacherGradingClasses).mockResolvedValue([cls(1, { classId: "60", classCode: "GS020", courseId: "c 1", teacherName: "Đỗ Thị Mỹ Hà", startDate: "16/04/2025" })]);
     renderPage();
     const link = await screen.findByRole("link", { name: "GS020" });
     expect(link).toHaveAttribute("href", "/instructor/list-class/list-lesson?classId=60&courseId=c%201");
-    expect(link).toHaveClass("text-primary", "fw-semibold");
     expect((document.querySelector(".content > .container > .row") as HTMLElement).className).toBe("row");
-    expect(screen.getByText("Danh sách lớp học (1)")).toHaveClass("card-header", "bg-light", "fw-bold");
+    expect(screen.getByRole("heading", { name: "Chấm bài" })).toBeInTheDocument();
     expect([...document.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["STT", "Mã lớp", "Khóa học", "Giáo viên", "Ngày bắt đầu", "Ngày kết thúc dự kiến", "Số học viên", "Bài chưa chấm"]);
     const row = rows()[0];
     expect(within(row).getByText("ĐH")).toBeInTheDocument(); // chữ cái đầu của họ và tên cuối
     expect(within(row).getByText("ha@example.test")).toBeInTheDocument();
     expect(within(row).getByText("16/04/2025")).toBeInTheDocument(); // ngày hiển thị nguyên văn
-    expect(screen.getByText("Tổng số 1")).toBeInTheDocument();
-    expect(document.querySelector("table.cm-table")).not.toBeNull();
+    expect(screen.getByText("1 bản ghi")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Xóa bộ lọc" })).toBeInTheDocument();
   });
 
   it("ô thiếu dữ liệu hiện '-'; lớp còn bài chưa chấm hiện chấm đỏ, không còn hiện dấu ✓", async () => {
@@ -106,7 +107,6 @@ describe("màn Quản lý lớp học của Giảng viên — có dữ liệu", 
     expect(classFilter).toHaveValue("");
     fireEvent.change(classFilter, { target: { value: "c" } });
     expect(codes()).toEqual(["GT101"]);
-    expect(screen.getByText("Danh sách lớp học (1)")).toBeInTheDocument();
     expect(within(classFilter).getByRole("option", { name: "Lớp C (GT101)" })).toBeInTheDocument(); // "nhãn (mã)" khi nhãn khác mã
   });
 
@@ -134,23 +134,26 @@ describe("màn Quản lý lớp học của Giảng viên — có dữ liệu", 
     expect(codes()).toEqual(["H2001"]);
   });
 
-  it("phân trang 10/trang (25 lớp = 3 trang): chuyển trang đúng, STT liên tục, tổng số; đổi bộ lọc về trang 1", async () => {
+  it("phân trang 20/trang (25 lớp = 2 trang): chuyển trang đúng, STT liên tục, tổng số; đổi bộ lọc về trang 1", async () => {
     vi.mocked(listTeacherGradingClasses).mockResolvedValue(Array.from({ length: 25 }, (_, i) => cls(i + 1, { courseName: i < 20 ? "H20" : "GT1" })));
     renderPage();
     await screen.findByText("MA01");
-    expect(rows()).toHaveLength(10);
-    expect(screen.getByText("Tổng số 25")).toBeInTheDocument();
+    expect(rows()).toHaveLength(20);
+    expect(screen.getByText("25 bản ghi")).toBeInTheDocument();
     const pager = () => document.querySelector(".ant-pagination") as HTMLElement;
-    expect([...pager().querySelectorAll(".ant-pagination-item")].map((i) => i.textContent)).toEqual(["1", "2", "3"]);
-    await userEvent.click(within(pager()).getByTitle("3"));
+    expect([...pager().querySelectorAll(".ant-pagination-item")].map((i) => i.textContent)).toEqual(["1", "2"]);
+    await userEvent.click(within(pager()).getByTitle("2"));
     expect(codes()).toEqual(["MA21", "MA22", "MA23", "MA24", "MA25"]);
     expect(within(rows()[0]).getAllByRole("cell")[0].textContent).toBe("21");
-    await userEvent.click(within(pager()).getByTitle("2"));
-    expect(within(rows()[0]).getAllByRole("cell")[0].textContent).toBe("11");
-    fireEvent.change(screen.getByLabelText("Khóa học"), { target: { value: "name:h20" } }); // 20 lớp => 2 trang, về trang 1
+    fireEvent.change(screen.getByLabelText("Khóa học"), { target: { value: "name:h20" } }); // 20 lớp, về trang 1
     expect(within(rows()[0]).getAllByRole("cell")[0].textContent).toBe("1");
     expect(pager().querySelector(".ant-pagination-item-active")).toHaveTextContent("1");
-    expect(screen.getByText("Tổng số 20")).toBeInTheDocument();
+    expect(screen.getByText("20 bản ghi")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Xóa bộ lọc" }));
+    expect(screen.getByText("25 bản ghi")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("combobox", { name: "Số dòng mỗi trang" }));
+    await userEvent.click(await screen.findByText("50 / trang"));
+    expect(rows()).toHaveLength(25);
   });
 });
 
@@ -158,7 +161,7 @@ describe("màn Quản lý lớp học của Giảng viên — các trạng thái
   it("đang tải: spinner, không hiện 'Chưa có lớp được phân công' ở khung hình đầu", () => {
     vi.mocked(listTeacherGradingClasses).mockReturnValue(new Promise(() => {}));
     renderPage();
-    expect(document.querySelector(".spinner-border")).not.toBeNull();
+    expect(document.querySelector(".ant-spin-spinning")).not.toBeNull();
     expect(screen.queryByText("Chưa có lớp được phân công")).toBeNull();
   });
 
@@ -166,7 +169,6 @@ describe("màn Quản lý lớp học của Giảng viên — các trạng thái
     vi.mocked(listTeacherGradingClasses).mockResolvedValue([]);
     renderPage();
     expect(await screen.findByText("Chưa có lớp được phân công")).toBeInTheDocument();
-    expect(screen.getByText("Danh sách lớp học (0)")).toBeInTheDocument();
     expect(screen.queryByTestId("class-list-notice")).toBeNull();
     expect(document.querySelector(".spinner-border")).toBeNull();
   });

@@ -34,6 +34,7 @@ export function grammarPointToInput(point: GrammarPoint): GrammarPointInput {
     exampleSentenceZh: point.exampleSentenceZh ?? "",
     exampleSentencePinyin: point.exampleSentencePinyin ?? "",
     exampleSentenceVi: point.exampleSentenceVi ?? "",
+    richText: point.richText,
     index: point.index,
   };
 }
@@ -69,6 +70,7 @@ export function normalizeGrammarPointInput(input: GrammarPointInput): GrammarPoi
     exampleSentenceZh: clean(input.exampleSentenceZh),
     exampleSentencePinyin: clean(input.exampleSentencePinyin),
     exampleSentenceVi: clean(input.exampleSentenceVi),
+    richText: input.richText,
     index: input.index,
   };
 }

@@ -26,14 +26,6 @@
     },
     {
       "header": "HỆ THỐNG ÔN LUYỆN",
-      "title": "Quản lý Luyện viết (Hán tự)",
-      "icon": "isax isax-pen-add",
-      "route": "/hanzi/manage",
-      "subRoute": null,
-      "activePrefix": "/hanzi"
-    },
-    {
-      "header": null,
       "title": "Quản lý Luyện Phát âm",
       "icon": "isax isax-microphone",
       "route": "/pronunciation/manage",
@@ -94,10 +86,10 @@
       0
     ],
     "/instructor/list-class": [
-      10
+      9
     ],
     "/instructor/list-class/grading": [
-      10
+      9
     ],
     "/instructor/instructor-notifications": [
       1
@@ -105,32 +97,26 @@
     "/instructor/settings/notifications": [
       1
     ],
-    "/hanzi/manage": [
-      3
-    ],
-    "/hanzi/manage/create": [
-      3
-    ],
     "/vocab-set/manage": [
-      6
+      5
     ],
     "/quiz/manage": [
-      7
+      6
     ],
     "/vocabulary/manage": [
-      8
+      7
     ],
     "/learning-path/syllabus/manage": [
-      9
+      8
     ],
     "/instructor/instructor-support-tickets": [
       2
     ],
     "/pronunciation/manage": [
-      4
+      3
     ],
     "/grammar/manage": [
-      5
+      4
     ],
     "/": [],
     "/instructor": []

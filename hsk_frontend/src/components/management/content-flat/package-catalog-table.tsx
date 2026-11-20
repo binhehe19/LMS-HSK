@@ -1,10 +1,11 @@
 "use client";
 
-import { EllipsisOutlined } from "@ant-design/icons";
-import { Dropdown, Table, Tag, type TableColumnsType } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { Table, Tag, type TableColumnsType } from "antd";
 import { isPublished, paginate } from "@/lib/content/content-tree-model";
 import type { ContentPackage } from "@/types/content";
 import { CatalogPagination } from "./catalog-pagination";
+import { CatalogRowMenu } from "./catalog-row-menu";
 import styles from "./content-catalog.module.css";
 
 export interface PackageCatalogActions {
@@ -35,6 +36,7 @@ export function PackageCatalogTable({ heading, packages, page, size, onPageChang
       title: `Học phần ${heading.toLowerCase()}`, key: "name", width: 340,
       render: (_, pkg) => (
         <>
+          {pkg.hasDraft && <ExclamationCircleOutlined className="me-2 text-warning-emphasis" title="Có bản nháp" aria-label="Có bản nháp" />}
           <button type="button" className={`btn btn-link p-0 text-start ${styles.name}`} onClick={() => onPreview(pkg)}>{pkg.name || pkg.id}</button>
           <small className={styles.summary}>{pkg.syllabusId ? `Giáo trình: ${syllabusName(pkg.syllabusId)}` : "Học phần tự do"}</small>
           {pkg.description && <small className={`${styles.summary} ${styles.ellipsis}`}>{pkg.description}</small>}
@@ -54,16 +56,12 @@ export function PackageCatalogTable({ heading, packages, page, size, onPageChang
     {
       title: <span className="visually-hidden">Thao tác</span>, key: "actions", width: 64, align: "center", fixed: "right",
       render: (_, pkg) => (
-        <Dropdown trigger={["click"]} placement="bottomRight" menu={{ items: [
+        <CatalogRowMenu label={`Thao tác ${pkg.name || pkg.id}`} items={[
           { key: "view", label: "Xem chi tiết", icon: <i className="isax isax-eye" aria-hidden="true" />, onClick: () => onPreview(pkg) },
           onEdit ? { key: "edit", label: "Chỉnh sửa", disabled: busy, icon: <i className="isax isax-edit-2" aria-hidden="true" />, onClick: () => onEdit(pkg) } : null,
           onTogglePublish ? { key: "publish", label: isPublished(pkg) ? "Ngừng xuất bản" : "Xuất bản", disabled: busy, icon: <i className="isax isax-send-2" aria-hidden="true" />, onClick: () => onTogglePublish(pkg) } : null,
           onDelete ? { key: "delete", label: "Xóa", danger: true, disabled: busy, icon: <i className="isax isax-trash" aria-hidden="true" />, onClick: () => onDelete(pkg) } : null,
-        ] }}>
-          <button type="button" className={`btn btn-sm btn-light rounded-3 ${styles.rowMenu}`} aria-label={`Thao tác ${pkg.name || pkg.id}`} aria-haspopup="menu">
-            <EllipsisOutlined aria-hidden="true" />
-          </button>
-        </Dropdown>
+        ]} />
       ),
     },
   ];

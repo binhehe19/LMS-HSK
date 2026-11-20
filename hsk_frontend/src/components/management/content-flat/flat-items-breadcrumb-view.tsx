@@ -119,7 +119,7 @@ export function FlatItemsBreadcrumbView<TItem extends ContentItemBase>({ config,
         <div className={embedded ? styles.emptyResources : "text-center py-5 bg-white rounded-4 shadow-sm border"} data-testid="flat-content-items-empty">
           <i className={embedded ? `isax isax-document-text ${styles.emptyIcon}` : "isax isax-document-text d-block mb-3 text-muted"} style={embedded ? undefined : { opacity: 0.1, fontSize: "80px" }} aria-hidden="true" />
           <h5 className="fw-800 text-dark mb-2">Chưa có {noun} nào</h5>
-          {canWrite && <p className="text-muted mb-0">{embedded ? "Chọn Từ kho hoặc Thêm học liệu để bổ sung cho buổi này." : `Hãy bắt đầu thêm ${noun} mới cho ${labels.package.toLowerCase()} này.`}</p>}
+          {canWrite && <p className="text-muted mb-0">{embedded ? "Chọn học liệu có sẵn hoặc thêm học liệu cho buổi này." : `Hãy bắt đầu thêm ${noun} mới cho ${labels.package.toLowerCase()} này.`}</p>}
         </div>
       ) : (
         <>

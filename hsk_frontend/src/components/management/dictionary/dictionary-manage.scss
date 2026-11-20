@@ -232,49 +232,6 @@
     }
   }
 
-  .vocab-rich-wrapper {
-    position: relative;
-  }
-
-  .vocab-rich-field {
-    --vocab-rich-padding-inline: 10px;
-    position: relative;
-    min-height: 36px;
-    padding: 6px var(--vocab-rich-padding-inline);
-    border: 1px solid var(--admin-neutral, #e2e5e9);
-    border-radius: 8px;
-    background: var(--white, #fff);
-    overflow-wrap: anywhere;
-    line-height: 1.5;
-
-    &:focus-within {
-      outline: 2px solid var(--admin-primary, #b00d0e);
-      outline-offset: -1px;
-    }
-  }
-
-  .vocab-rich-field.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before {
-    inset-inline: var(--vocab-rich-padding-inline);
-    pointer-events: none;
-  }
-
-  .vocab-rich-value {
-    white-space: pre-wrap;
-
-    p,
-    ul,
-    ol {
-      margin-block: 0;
-    }
-  }
-
-  .vocab-rich-loading {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-
   .vocab-structure .ant-segmented-item-label {
     pointer-events: none;
   }

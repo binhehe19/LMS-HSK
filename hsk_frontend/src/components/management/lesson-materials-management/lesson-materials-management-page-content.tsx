@@ -41,7 +41,6 @@ export function LessonMaterialsManagementPageContent() {
 
   return (
     <>
-      {lm.selectedGroup && <div className="d-flex gap-3 p-3"><label>Buổi <input aria-label="Buổi trong học phần" type="number" min={1} value={lm.sessionNo} disabled={lm.busy || importOpen} onChange={e => { const n = Number(e.target.value); if (Number.isInteger(n) && n > 0) lm.setSessionNo(n); }} /></label>{lm.writeEnabled && <button disabled={lm.busy} onClick={() => setImportOpen(true)}>Nhập từ Kho / package khác</button>}</div>}
       {importOpen && lm.selectedGroup && <PackageImportModal packageId={lm.selectedGroup.id} type={lm.selectedGroup.type} sessionNo={lm.sessionNo} demo={lm.demo} onClose={() => setImportOpen(false)} onAdded={lm.retryDetail} />}
       <LessonMaterialsView
         state={lm.state}
@@ -54,6 +53,32 @@ export function LessonMaterialsManagementPageContent() {
         selection={lm.selection}
         selectedGroup={lm.selectedGroup}
         detailState={lm.detailState}
+        sessionNo={lm.sessionNo}
+        detailActions={lm.selectedGroup && (
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <label className="d-flex align-items-center gap-2">
+              Buổi
+              <input
+                className="form-control form-control-sm"
+                style={{ width: 72 }}
+                aria-label="Buổi trong học phần"
+                type="number"
+                min={1}
+                value={lm.sessionNo}
+                disabled={lm.busy || importOpen}
+                onChange={event => {
+                  const number = Number(event.target.value);
+                  if (Number.isInteger(number) && number > 0) lm.setSessionNo(number);
+                }}
+              />
+            </label>
+            {lm.writeEnabled && (
+              <button type="button" className="btn btn-sm btn-outline-primary rounded-pill" disabled={lm.busy} onClick={() => setImportOpen(true)}>
+                Nhập từ Kho / package khác
+              </button>
+            )}
+          </div>
+        )}
         topicUi={lm.topicUi}
         onSelect={(next: MaterialSelection) => lm.select(next)}
         onOpenCreateGroup={() => setModal((prev) => ({ kind: "group", values: { id: null, type: "SLIDE", name: "", description: "" }, key: nextKey(prev) }))}

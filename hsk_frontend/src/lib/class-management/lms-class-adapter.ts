@@ -12,10 +12,16 @@ const DAY_LABEL: Record<string, string> = {
   "1": "2", "2": "3", "3": "4", "4": "5", "5": "6", "6": "7", "7": "CN",
 };
 
+function scheduleDayLabel(day: SchedulePattern["dayOfWeek"]): string | undefined {
+  if (day == null) return undefined;
+  const value = String(day);
+  return DAY_LABEL[value.toUpperCase()] ?? value;
+}
+
 /** "2, 4, 6" như cột Lịch học của HSK cũ; giữ nguyên giá trị lạ để không mất thông tin. */
 export function scheduleDaysLabel(patterns: SchedulePattern[] | undefined): string | undefined {
   if (!patterns?.length) return undefined;
-  const labels = patterns.map((p) => (p.dayOfWeek === undefined || p.dayOfWeek === null ? null : (DAY_LABEL[String(p.dayOfWeek).toUpperCase()] ?? String(p.dayOfWeek)))).filter((x): x is string => x !== null);
+  const labels = patterns.map(p => scheduleDayLabel(p.dayOfWeek)).filter((label): label is string => label !== undefined);
   return labels.length ? [...new Set(labels)].join(", ") : undefined;
 }
 
@@ -42,6 +48,7 @@ export function classSummaryToGradingClass(c: ClassSummaryResponse): GradingClas
     teacherName: c.teacher?.fullName,
     teacherEmail: c.teacher?.email,
     scheduleDays: scheduleDaysLabel(c.schedulePatterns),
+    scheduleSlots: c.schedulePatterns?.map(({ dayOfWeek, startTime, endTime }) => ({ day: scheduleDayLabel(dayOfWeek), startTime, endTime })),
     startTime: first?.startTime,
     duration: durationMinutes(first?.startTime, first?.endTime),
     startDate: c.startDate,

@@ -26,6 +26,7 @@ const LEVELS = HSK_LEVEL_OPTIONS.map(value => ({ value, label: `HSK ${value}` })
 
 export function GrammarLibraryPageContent() {
   const { enabled: canWrite, demo } = useWriteGate("content");
+  const [search, setSearch] = useState("");
   const [keyword, setKeyword] = useState("");
   const [level, setLevel] = useState<string>();
   const [pagination, setPagination] = useState({ page: 1, size: DEFAULT_CATALOG_PAGE_SIZE });
@@ -114,10 +115,17 @@ export function GrammarLibraryPageContent() {
         <CatalogToolbar label="Bộ lọc kho ngữ pháp" heading="Kho ngữ pháp" icon="isax-book-1"
           description="Quản lý các điểm ngữ pháp HSK dùng chung cho học phần."
           loading={loading || busy} onReload={list.reload}
+          onClearFilters={() => {
+            setSearch("");
+            setKeyword("");
+            setLevel(undefined);
+            setPagination({ page: 1, size });
+          }}
           actions={canWrite && <button type="button" disabled={busy} className={`btn btn-light rounded-pill ${styles.createButton}`} onClick={() => setEditor({ entry: null })}>
             <i className="isax isax-add" aria-hidden="true" />Thêm điểm ngữ pháp
           </button>}>
           <Input.Search className={styles.search} allowClear aria-label="Tìm điểm ngữ pháp" placeholder="Tìm điểm ngữ pháp"
+            value={search} onChange={event => setSearch(event.target.value)}
             onSearch={value => { setKeyword(value.trim()); setPagination({ page: 1, size }); }} />
           <Select className={styles.filter} allowClear aria-label="Cấp độ HSK" placeholder="Tất cả cấp độ HSK" value={level} options={LEVELS}
             onChange={value => { setLevel(value); setPagination({ page: 1, size }); }} />
@@ -147,7 +155,7 @@ export function GrammarLibraryPageContent() {
           toast.success("Đã lưu bản nháp điểm ngữ pháp.");
         })} />}
       {viewing && <Modal open title={viewing.point.title} width={720} footer={null} onCancel={() => setViewing(null)}>
-        <GrammarPointForm value={grammarPointToInput(viewing.point)} onChange={() => undefined} disabled idPrefix="grammar-library-view" />
+        <GrammarPointForm value={grammarPointToInput(viewing.point)} onChange={() => undefined} disabled readOnly idPrefix="grammar-library-view" />
       </Modal>}
     </ManagementPageFrame>
   );

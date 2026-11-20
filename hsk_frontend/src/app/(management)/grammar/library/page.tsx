@@ -4,6 +4,7 @@ import { GrammarLibraryPageContent } from "@/components/management/content-gramm
 export default function GrammarLibraryPage() {
   return (
     <Suspense fallback={null}>
+      <link rel="preload" href="/tinymce/tinymce.min.js" as="script" />
       <GrammarLibraryPageContent />
     </Suspense>
   );

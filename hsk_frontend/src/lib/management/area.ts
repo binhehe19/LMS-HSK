@@ -5,7 +5,7 @@ export type ManagementArea = "admin" | "instructor";
 
 /**
  * Chọn khu vực theo role của người dùng, giống InstructorSidebar của HSK cũ (Admin ưu tiên: isAdmin → AdminSidebar).
- * Route dùng chung (vd /hanzi/manage) vì thế hiện menu Admin cho Admin và menu Giảng viên cho Teacher/Mentor.
+ * Route dùng chung (vd /grammar/manage) vì thế hiện menu Admin cho Admin và menu Giảng viên cho Teacher/Mentor.
  * Trả về null nếu không có role nào đã được hỗ trợ (không bao giờ ngầm chọn một khu cho role lạ).
  */
 export function areaForRoles(roles: readonly string[] | undefined | null): ManagementArea | null {

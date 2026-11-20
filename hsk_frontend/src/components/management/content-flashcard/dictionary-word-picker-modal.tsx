@@ -1,6 +1,6 @@
 "use client";
 
-// Hộp chọn TỪ trong Từ điển (`/vocabulary/manage`) để thêm vào bộ từ vựng thay cho nhập tay từng thẻ: tìm theo chữ Hán, pinyin hoặc nghĩa, tick nhiều từ,
+// Hộp chọn TỪ trong Từ điển (`/vocabulary/manage`) để thêm vào bộ từ vựng thay cho nhập tay từng thẻ: tìm theo chữ Hán, pinyin hoặc bộ thủ, tick nhiều từ,
 // mỗi từ thành một bản sao riêng của bộ (xem addDictionaryWordsToPackage). Từ chưa có trong từ điển thì thêm ở màn Từ điển rồi quay lại chọn.
 import { Modal } from "antd";
 import { useState } from "react";
@@ -22,7 +22,7 @@ function summaryOf(word: Vocabulary): { pinyin: string; meaning: string } {
   return { pinyin: primary?.pinyin ?? "", meaning: primary?.meanings?.[0]?.meaning ?? "" };
 }
 
-export function DictionaryWordPickerModal({ open, pkg, items, demo, hasLock, onClose, onAdded, sessionNo = 1 }: ItemPickerProps<FlashcardCard>) {
+export function DictionaryWordPickerModal({ open, pkg, items, demo, hasLock, write, onClose, onAdded, sessionNo = 1 }: ItemPickerProps<FlashcardCard>) {
   const [keyword, setKeyword] = useState("");
   const [applied, setApplied] = useState("");
   const [page, setPage] = useState(0);
@@ -54,7 +54,8 @@ export function DictionaryWordPickerModal({ open, pkg, items, demo, hasLock, onC
     if (!pkg || selected.size === 0 || busy || hasLock?.() === false) return;
     setBusy(true);
     try {
-      const result = await addDictionaryWordsToPackage(pkg.id, Array.from(selected, ([id, label]) => ({ id, label })), demo, sessionNo);
+      const action = () => addDictionaryWordsToPackage(pkg.id, Array.from(selected, ([id, label]) => ({ id, label })), demo, sessionNo);
+      const result = await (write ? write(action) : action());
       if (result.added > 0) toast.success(`Đã thêm ${result.added} từ vào bộ`);
       result.failed.forEach((f) => toast.error(`Không thêm được "${f.label}": ${f.message}`));
       if (result.added > 0) onAdded();
@@ -87,7 +88,7 @@ export function DictionaryWordPickerModal({ open, pkg, items, demo, hasLock, onC
       cancelButtonProps={{ disabled: busy }}
     >
       <div className="d-flex gap-2 mb-3">
-        <input className="form-control" placeholder="Tìm theo chữ Hán, pinyin hoặc nghĩa tiếng Việt..." value={keyword} onChange={(e) => setKeyword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} disabled={busy} aria-label="Tìm từ trong từ điển" />
+        <input className="form-control" placeholder="Tìm Hán tự, Pinyin hoặc bộ thủ" value={keyword} onChange={(e) => setKeyword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} disabled={busy} aria-label="Tìm từ trong từ điển" />
         <button type="button" className="btn btn-outline-primary" onClick={search} disabled={busy}>
           Tìm
         </button>

@@ -34,6 +34,7 @@ export function PackageCatalogToolbar({ heading, icon, filters, onFilters, sylla
       icon={icon}
       description={`Quản lý học phần ${heading.toLowerCase()} theo giáo trình và buổi học.`}
       onReload={onReload}
+      onClearFilters={() => onFilters({ keyword: "" })}
       loading={loading}
       actions={onCreate && <button type="button" className={`btn btn-light rounded-pill ${styles.createButton}`} disabled={busy} onClick={onCreate}><i className="isax isax-add" aria-hidden="true" />Tạo học phần</button>}
     >
@@ -58,7 +59,6 @@ export function PackageCatalogToolbar({ heading, icon, filters, onFilters, sylla
       {levels.length > 0 && (
         <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Trình độ" placeholder="Tất cả trình độ" allowClear value={level} onChange={value => onFilters({ ...filters, level: value })} options={levels.map(value => ({ value, label: value }))} />
       )}
-      {(keyword || status || syllabus || level) && <button type="button" className="btn btn-sm btn-light" onClick={() => onFilters({ keyword: "" })}>Xóa bộ lọc</button>}
     </CatalogToolbar>
   );
 }

@@ -74,3 +74,22 @@ it("releases the lock on pagehide and blocks further draft writes", async () => 
   expect(await result.current.run()).toBe(false);
   expect(api.heartbeat).not.toHaveBeenCalled();
 });
+
+it("waits for an active heartbeat before writing resources and skips background writes during the resource update", async () => {
+  const { result } = renderHook(() => usePackageEditSession("package-1"));
+  await waitFor(() => expect(result.current.status).toBe("ready"));
+  let renew!: (value: { acquired: boolean; saved: boolean }) => void;
+  api.heartbeat.mockReturnValueOnce(new Promise(resolve => { renew = resolve; }));
+  const heartbeat = result.current.run();
+  let finishWrite!: () => void;
+  const action = vi.fn(() => new Promise<void>(resolve => { finishWrite = resolve; }));
+  const writing = result.current.write(action);
+  expect(action).not.toHaveBeenCalled();
+  renew({ acquired: true, saved: false });
+  expect(await heartbeat).toBe(true);
+  await waitFor(() => expect(action).toHaveBeenCalledOnce());
+  expect(await result.current.run(undefined, undefined, undefined, true)).toBe(false);
+  expect(api.heartbeat).toHaveBeenCalledOnce();
+  finishWrite();
+  await writing;
+});

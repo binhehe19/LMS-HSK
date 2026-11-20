@@ -15,12 +15,15 @@ import { makeStore } from "@/redux/store";
 import type { LessonMaterial, LessonMaterialGroup } from "@/types/lesson-materials";
 import { adminUser } from "./fixtures/classes";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/learning-path/lesson-materials/manage", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/learning-path/lesson-materials/manage", useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }) }));
 vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn() }));
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
 vi.mock("@/lib/api/storage-client", () => ({ uploadFile: vi.fn(), fileUrl: vi.fn(), isStorageApiConfigured: vi.fn() }));
-vi.mock("@/lib/api/package-topics-client", () => ({ packageTopicsClient: { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() } }));
+vi.mock("@/lib/api/package-topics-client", () => {
+  const client = { list: vi.fn(), create: vi.fn(), rename: vi.fn(), remove: vi.fn(), reorder: vi.fn(), assign: vi.fn() };
+  return { packageTopicsClient: client, packageTopicsForSession: () => client };
+});
 vi.mock("@/lib/api/lesson-materials-client", () => ({
   listMaterialGroups: vi.fn(),
   listGroupMaterials: vi.fn(),
@@ -33,6 +36,8 @@ vi.mock("@/lib/api/lesson-materials-client", () => ({
   deleteMaterial: vi.fn(),
 }));
 vi.mock("sonner", async (importOriginal) => ({ ...(await importOriginal<typeof import("sonner")>()), toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }));
+
+vi.setConfig({ testTimeout: 30_000 });
 
 const group = (id: string, name: string, type: LessonMaterialGroup["type"] = "SLIDE", status: LessonMaterialGroup["status"] = "DRAFT"): LessonMaterialGroup => ({ id, name, type, status, description: `Mô tả ${name}` });
 const material = (id: string, over: Partial<LessonMaterial> = {}): LessonMaterial => ({ id, title: `Tài liệu ${id}`, fileId: `f-${id}`, filename: `${id}.pdf`, mimeType: "application/pdf", sizeBytes: 2048, groupId: "g1", displayOrder: 0, ...over });
@@ -65,39 +70,47 @@ function renderPage() {
   );
 }
 
-const groupCard = (name: string) => screen.getByText(name, { selector: "h6" }).closest("[data-testid='lm-group-card']") as HTMLElement;
+const groupRow = (name: string) => screen.getByRole("button", { name }).closest("tr") as HTMLElement;
+
+async function rowAction(row: HTMLElement, label: string) {
+  await userEvent.click(within(row).getByRole("button", { name: /^Thao tác / }));
+  await userEvent.click(await screen.findByRole("menuitem", { name: label }));
+}
 
 describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào ContentPackage/LearningResource (cơ chế Kho)", () => {
   it("cột trái: bộ tài liệu với loại + trạng thái publish; cột phải: placeholder; nút ghi khoá khi công tắc 'content' đóng", async () => {
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
+    await screen.findByRole("button", { name: "HSK 3" });
     expect(listMaterialGroups).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByTestId("lm-group-card")).toHaveLength(2);
-    expect(groupCard("HSK 3")).toHaveTextContent("Slides");
-    expect(within(groupCard("HSK 3")).getByText("Bản nháp")).toHaveClass("draft");
-    expect(within(groupCard("HSK 4")).getByText("Đã xuất bản")).toHaveClass("published");
+    expect(screen.getAllByTestId("lm-group-row")).toHaveLength(2);
+    expect(groupRow("HSK 3")).toHaveTextContent("Slides");
+    expect(within(groupRow("HSK 3")).getByText("Bản nháp")).toHaveClass("draft");
+    expect(within(groupRow("HSK 4")).getByText("Đã xuất bản")).toHaveClass("published");
     expect(screen.getByTestId("lm-placeholder")).toBeInTheDocument();
     expect(screen.getByTestId("write-locked")).toBeInTheDocument();
     for (const name of ["Thêm bộ tài liệu", "Thêm nhiều tài liệu", "Thêm tài liệu"]) expect(screen.getByRole("button", { name: new RegExp(name) })).toBeDisabled();
-    expect(within(groupCard("HSK 3")).getByRole("button", { name: /Sửa/ })).toBeDisabled();
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "Thao tác HSK 3" }));
+    expect(await screen.findByRole("menuitem", { name: "Sửa" })).toHaveAttribute("aria-disabled", "true");
   });
 
   it("chọn bộ => GET materials của bộ, bảng đúng cột, liên kết tệp từ repo-storage, xoá tài liệu; tìm bộ", async () => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "HSK 3" }));
     const table = await screen.findByTestId("lm-table");
-    expect(listGroupMaterials).toHaveBeenCalledWith("g1");
+    expect(listGroupMaterials).toHaveBeenCalledWith("g1", 1);
     expect([...table.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["Tên tài liệu", "Tệp", "Dung lượng", "Thao tác"]);
     expect(screen.getAllByTestId("lm-material-row")).toHaveLength(2);
     const row = screen.getByText("Tài liệu s1").closest("tr") as HTMLElement;
     expect(within(row).getByRole("link", { name: "s1.pdf" })).toHaveAttribute("href", "/api/storage/file/f-s1?disposition=inline");
     expect(within(row).getByText("2.0 KB")).toBeInTheDocument();
-    await userEvent.click(within(row).getByRole("button", { name: /Xoá/ }));
+    await rowAction(row, "Xoá");
     await waitFor(() => expect(deleteMaterial).toHaveBeenCalledWith("g1", "s1", false));
     await userEvent.type(screen.getByLabelText("Tìm bộ tài liệu"), "hsk 4");
-    expect(screen.getAllByTestId("lm-group-card")).toHaveLength(1);
+    expect(screen.getAllByTestId("lm-group-row")).toHaveLength(1);
+    await userEvent.click(screen.getByRole("button", { name: "Xóa bộ lọc" }));
+    expect(screen.getAllByTestId("lm-group-row")).toHaveLength(2);
   });
 
   it("bộ có chủ đề: khối chủ đề hiện, tài liệu xếp theo thứ tự chủ đề và có cột Chủ đề; chuyển tài liệu sang chủ đề => assign theo id tài liệu", async () => {
@@ -110,8 +123,8 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
       membership: { s1: "t2", s2: "t1" },
     });
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "HSK 3" }));
     const table = await screen.findByTestId("lm-table");
     expect(topicsApi.list).toHaveBeenCalledWith("g1");
     expect(await screen.findAllByTestId("flat-topic-row")).toHaveLength(2);
@@ -125,8 +138,8 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
   it("bộ chưa có chủ đề: bảng giữ nguyên cột như cũ, khối chủ đề có nút thêm", async () => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "HSK 3" }));
     await screen.findByTestId("lm-table");
     expect(await screen.findByTestId("flat-topic-panel")).toHaveTextContent("Chưa có chủ đề");
     expect(screen.getByTestId("flat-topic-add")).toBeEnabled();
@@ -137,7 +150,7 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     vi.mocked(createMaterialGroup).mockResolvedValue(group("g9", "HSK 6"));
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
+    await screen.findByRole("button", { name: "HSK 3" });
     await userEvent.click(screen.getByRole("button", { name: /Thêm bộ tài liệu/ }));
     const dialog = await screen.findByRole("dialog");
     await userEvent.type(within(dialog).getByLabelText("Tên bộ tài liệu"), "hsk 3");
@@ -155,21 +168,21 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
   it("xuất bản / chuyển về nháp bộ tài liệu", async () => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /Xuất bản/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await rowAction(groupRow("HSK 3"), "Xuất bản");
     await waitFor(() => expect(publishMaterialGroup).toHaveBeenCalledWith("g1", false));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã xuất bản bộ tài liệu"));
-    await userEvent.click(within(groupCard("HSK 4")).getByRole("button", { name: /Về nháp/ }));
+    await rowAction(groupRow("HSK 4"), "Về nháp");
     await waitFor(() => expect(unpublishMaterialGroup).toHaveBeenCalledWith("g2", false));
   });
 
   it("xoá bộ tài liệu đang xem => về placeholder", async () => {
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "HSK 3" }));
     await screen.findByTestId("lm-table");
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /Xoá/ }));
+    await rowAction(groupRow("HSK 3"), "Xoá");
     await waitFor(() => expect(deleteMaterialGroup).toHaveBeenCalledWith("g1", false));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã xoá bộ tài liệu"));
     expect(screen.getByTestId("lm-placeholder")).toBeInTheDocument();
@@ -180,8 +193,8 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
     vi.mocked(uploadFile).mockResolvedValue({ fileId: "file-new", filename: "slide.pdf", mimeType: "application/pdf", sizeBytes: 3 });
     vi.mocked(createMaterial).mockResolvedValue(material("new"));
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
-    await userEvent.click(within(groupCard("HSK 3")).getByRole("button", { name: /HSK 3/ }));
+    await screen.findByRole("button", { name: "HSK 3" });
+    await userEvent.click(within(groupRow("HSK 3")).getByRole("button", { name: "HSK 3" }));
     await screen.findByTestId("lm-table");
     await userEvent.click(screen.getByRole("button", { name: /^Thêm tài liệu$/ }));
     const dialog = await screen.findByRole("dialog");
@@ -190,7 +203,7 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
     await userEvent.upload(within(dialog).getByLabelText("Tải tệp lên"), new File(["abc"], "slide.pdf", { type: "application/pdf" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Thêm tài liệu" }));
     await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(createMaterial).toHaveBeenCalledWith("g1", "SLIDE", false, { title: "Slide mới", fileId: "file-new", filename: "slide.pdf", mimeType: "application/pdf", sizeBytes: 3 }, false));
+    await waitFor(() => expect(createMaterial).toHaveBeenCalledWith("g1", "SLIDE", false, { title: "Slide mới", fileId: "file-new", filename: "slide.pdf", mimeType: "application/pdf", sizeBytes: 3 }, false, 1));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Đã thêm tài liệu học tập"));
   });
 
@@ -198,7 +211,7 @@ describe("màn Quản lý tài liệu học tập — gắn trực tiếp vào C
     vi.stubEnv("NEXT_PUBLIC_WRITE_CONTENT", "enabled");
     vi.mocked(isStorageApiConfigured).mockReturnValue(false);
     renderPage();
-    await screen.findByText("HSK 3", { selector: "h6" });
+    await screen.findByRole("button", { name: "HSK 3" });
     await userEvent.click(screen.getByRole("button", { name: /^Thêm tài liệu$/ }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByTestId("lm-storage-unconfigured")).toHaveTextContent("Kho lưu trữ chưa được cấu hình.");

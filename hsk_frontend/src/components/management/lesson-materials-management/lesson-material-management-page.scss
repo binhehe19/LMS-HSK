@@ -347,6 +347,10 @@
   padding: 4px 8px;
 }
 
+.lesson-material-management__selected-group > td.ant-table-cell {
+  background-color: var(--admin-surface, #fff4f4);
+}
+
 .lesson-material-management__detail-header {
   align-items: center;
   display: flex;

@@ -33,7 +33,7 @@ Dữ kiện HSK cũ: ${OLD_ROUTES_SOURCE} (xem \`docs/OLD-ROUTE-SURVEY.md\`).
 | MIGRATED | ${count("MIGRATED")} | Đã có trang thật |
 | NOT_MIGRATED | ${count("NOT_MIGRATED")} | Role xác định được (PrivateRoute HSK cũ, hoặc quyết định giao diện của chủ dự án); hiện trang "Chức năng đang được chuyển đổi" ở đúng URL cũ |
 | UNKNOWN | ${count("UNKNOWN")} | Không đủ bằng chứng để phục vụ (không có PrivateRoute và chưa có quyết định, hoặc chỉ dành cho role chưa xác minh); trả 404 |
-| OUT_OF_SCOPE | ${count("OUT_OF_SCOPE")} | HSK cũ chỉ hiện "đang xây dựng"; trả 404 |
+| OUT_OF_SCOPE | ${count("OUT_OF_SCOPE")} | HSK cũ chỉ hiện "đang xây dựng" hoặc chức năng đã gỡ; trả 404 |
 
 **Các route UNKNOWN chia thành nhóm không chồng lấn** (mỗi route đúng một nhóm, tổng = ${count("UNKNOWN")}; không đổi UNKNOWN để cho số liệu khớp):
 

@@ -20,6 +20,7 @@ export function ContentItemModal<TItem extends ContentItemBase>({ config, mode, 
   const [value, setValue] = useState<ContentItemInput<TItem>>(initialValue);
   const noun = config.labels.item;
   const isEdit = mode === "edit";
+  const isGrammar = config.module === "GRAMMAR";
   const { ItemForm } = config;
 
   const submit = () => {
@@ -37,7 +38,8 @@ export function ContentItemModal<TItem extends ContentItemBase>({ config, mode, 
       open
       centered
       wrapClassName="content-tree-modal"
-      width={720}
+      width={isGrammar ? 900 : 720}
+      styles={isGrammar ? { body: { maxHeight: "calc(100dvh - 160px)", overflowY: "auto", padding: 4 } } : undefined}
       onCancel={onCancel}
       onOk={submit}
       okText={submitting ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : `Thêm ${noun.toLowerCase()}`}

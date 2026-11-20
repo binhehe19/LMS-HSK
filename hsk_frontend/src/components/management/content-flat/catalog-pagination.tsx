@@ -6,11 +6,11 @@ import styles from "./content-catalog.module.css";
 
 const pageSizes = CATALOG_PAGE_SIZES.map(value => ({ value, label: `${value} / trang` }));
 
-export function CatalogPagination({ page, size, total, onChange, showQuickJumper = true }: {
-  page: number; size: number; total: number; onChange: (page: number, size: number) => void; showQuickJumper?: boolean;
+export function CatalogPagination({ page, size, total, onChange, showQuickJumper = true, className = "" }: {
+  page: number; size: number; total: number; onChange: (page: number, size: number) => void; showQuickJumper?: boolean; className?: string;
 }) {
   return (
-    <div className={styles.footer}>
+    <div className={`${styles.footer} ${className}`}>
       <Select
         aria-label="Số dòng mỗi trang"
         value={size}
