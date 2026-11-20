@@ -8,6 +8,7 @@
 // - `audioUrl`: từ có tệp phát âm thật thì phát tệp đó; tệp lỗi => quay về đọc bằng TTS.
 // - Không giữ isSpeaking/currentUtteranceId (trang này không dùng).
 import { useCallback, useEffect, useRef } from "react";
+import { fetchStoredAudio } from "@/lib/api/storage-client";
 
 type DetectedLang = "zh-cn" | "vi" | "en";
 
@@ -39,7 +40,10 @@ function pickVoice(synth: SpeechSynthesis, detected: DetectedLang): SpeechSynthe
   const lang = (v: SpeechSynthesisVoice) => v.lang.toLowerCase();
   const name = (v: SpeechSynthesisVoice) => v.name.toLowerCase();
   if (detected === "zh-cn") {
-    return voices.find((v) => lang(v).startsWith("zh") || lang(v).includes("cmn") || name(v).includes("chinese") || name(v).includes("mandarin")) ?? null;
+    return voices.find(v => lang(v) === "zh-cn")
+      ?? voices.find(v => (lang(v).startsWith("zh") || lang(v).includes("cmn") || name(v).includes("mandarin"))
+        && !/^zh[-_](hk|mo)/.test(lang(v)) && !name(v).includes("cantonese"))
+      ?? null;
   }
   if (detected === "vi") return voices.find((v) => lang(v).startsWith("vi") || name(v).includes("vietnamese")) ?? null;
   return (
@@ -51,12 +55,15 @@ function pickVoice(synth: SpeechSynthesis, detected: DetectedLang): SpeechSynthe
 
 export interface SpeakOptions {
   rate?: number;
-  /** Tệp phát âm thật của từ (Vocabulary.audioUrl). */
+  language?: DetectedLang;
+  onError?: () => void;
+  /** Tệp phát âm sẵn có. */
   audioUrl?: string;
 }
 
 export function useTextToSpeech(): { speak: (text: string, options?: SpeakOptions) => void; stop: () => void } {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
@@ -66,6 +73,10 @@ export function useTextToSpeech(): { speak: (text: string, options?: SpeakOption
       audio.pause();
       audioRef.current = null;
     }
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     getSynth()?.cancel();
   }, []);
 
@@ -73,45 +84,67 @@ export function useTextToSpeech(): { speak: (text: string, options?: SpeakOption
 
   /** Phát một URL âm thanh; lỗi (tải hỏng / bị chặn tự phát) => onFail MỘT lần. */
   const playUrl = useCallback((url: string, rate: number, onFail: () => void) => {
-    const audio = new Audio(url);
+    const stored = fetchStoredAudio(url);
+    const audio = stored ? new Audio() : new Audio(url);
     audio.playbackRate = rate;
     audioRef.current = audio;
     let failed = false;
     const fail = () => {
-      if (failed) return;
+      if (failed || audioRef.current !== audio) return;
       failed = true;
-      if (audioRef.current === audio) audioRef.current = null;
+      stop();
       onFail();
     };
     audio.onended = () => {
-      if (audioRef.current === audio) audioRef.current = null;
+      if (audioRef.current === audio) stop();
     };
     audio.onerror = fail;
-    audio.play().catch(fail);
-  }, []);
+    if (stored) {
+      void stored.then(blob => {
+        if (audioRef.current !== audio) return;
+        objectUrlRef.current = URL.createObjectURL(blob);
+        audio.src = objectUrlRef.current;
+        return audio.play();
+      }).catch(fail);
+    } else {
+      audio.play().catch(fail);
+    }
+  }, [stop]);
 
   const speak = useCallback(
     (text: string, options?: SpeakOptions) => {
       const trimmed = text?.trim();
-      if (!trimmed) return;
+      if (!trimmed && !options?.audioUrl) return;
       stop();
 
       const rate = options?.rate ?? 1;
-      const detected = detectLanguage(trimmed);
+      const detected = options?.language ?? detectLanguage(trimmed);
       const synth = getSynth();
+      const notifyError = () => options?.onError?.();
+      const reportSpeechError = (event: SpeechSynthesisErrorEvent) => {
+        if (event.error !== "canceled" && event.error !== "interrupted") notifyError();
+      };
 
       // Nhánh cuối, không gọi lại VoiceRSS để tránh vòng lặp khi cả hai đều không đọc được (im lặng còn hơn lặp).
       const speakPlain = () => {
-        if (!synth) return;
+        if (!synth) {
+          notifyError();
+          return;
+        }
         const utterance = new SpeechSynthesisUtterance(trimmed);
         utterance.lang = toSpeechLang(detected);
         utterance.rate = rate;
+        utterance.onerror = reportSpeechError;
         synth.speak(utterance);
       };
 
       const speakWithVoiceRss = () => {
         const key = process.env.NEXT_PUBLIC_TTS_VOICERSS_KEY?.trim();
         if (!key) {
+          if (options?.language && options.onError) {
+            notifyError();
+            return;
+          }
           speakPlain();
           return;
         }
@@ -120,6 +153,10 @@ export function useTextToSpeech(): { speak: (text: string, options?: SpeakOption
       };
 
       const speakWithBrowser = () => {
+        if (!trimmed) {
+          notifyError();
+          return;
+        }
         if (!synth) {
           speakWithVoiceRss();
           return;
@@ -135,6 +172,7 @@ export function useTextToSpeech(): { speak: (text: string, options?: SpeakOption
         utterance.pitch = 1;
         utterance.volume = 1;
         if (voice) utterance.voice = voice;
+        utterance.onerror = reportSpeechError;
         synth.speak(utterance);
       };
 

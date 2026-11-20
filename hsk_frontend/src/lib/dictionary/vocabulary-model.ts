@@ -1,21 +1,21 @@
 // Hàm thuần của màn Từ điển (manage-vocabulary.tsx cũ): tham số URL ↔ tham số tìm kiếm máy chủ, trích pinyin/nghĩa/từ loại để hiển thị, huy hiệu,
 // lượng từ và từ liên quan (chuỗi "个 [gè], 本 [běn]" / JSON [{hanzi, pinyin}]). Không import React/Next.
 import type { Vocabulary, VocabularyMeaning, VocabularyPinyin, VocabularySearchParams } from "@/types/dictionary";
+import { CATALOG_PAGE_SIZES, DEFAULT_CATALOG_PAGE_SIZE } from "@/lib/content/catalog-page-sizes";
 
-export const DICTIONARY_PAGE_SIZE = 10;
 export const HSK_LEVELS = [1, 2, 3, 4, 5, 6];
 
 /** Danh sách loại từ của bộ lọc màn cũ (18 mục, bao gồm 13 mục của form). */
 export const WORD_TYPES = ["Danh từ", "Động từ", "Tính từ", "Trạng từ", "Phó từ", "Đại từ", "Giới từ", "Liên từ", "Thán từ", "Thành ngữ", "Cụm từ", "Trợ từ", "Trợ động từ", "Lượng từ", "Số từ", "Từ tượng thanh", "Tiền tố", "Hậu tố", "Hình dung từ"];
 
-/** Bộ lọc màn hình nằm trong URL (`?keySearch=&hskLevel=&isSingleVocab=&wordType=&radical=&page=`); `page` 1-based (API dùng 0-based). */
+/** Bộ lọc màn hình nằm trong URL (`?keySearch=&hskLevel=&isSingleVocab=&wordType=&page=`); `page` 1-based (API dùng 0-based). */
 export interface DictionaryFilters {
   keySearch: string;
   hskLevel?: number;
   isSingleVocab?: boolean;
   wordType?: string;
-  radical?: string;
   page: number;
+  size?: number;
 }
 
 export const DEFAULT_DICTIONARY_FILTERS: DictionaryFilters = { keySearch: "", page: 1 };
@@ -32,15 +32,15 @@ export function readDictionaryFilters(params: ParamsLike): DictionaryFilters {
   const level = Number(params.get("hskLevel"));
   const single = params.get("isSingleVocab");
   const wordType = trimText(params.get("wordType"));
-  const radical = trimText(params.get("radical"));
   const page = Number(params.get("page"));
+  const size = Number(params.get("size"));
   return {
-    keySearch: trimText(params.get("keySearch")),
+    keySearch: trimText(params.get("keySearch")) || trimText(params.get("radical")),
     hskLevel: HSK_LEVELS.includes(level) ? level : undefined,
     isSingleVocab: single === "true" ? true : single === "false" ? false : undefined,
     wordType: WORD_TYPES.includes(wordType) ? wordType : undefined,
-    radical: radical || undefined,
     page: Number.isInteger(page) && page >= 1 ? page : 1,
+    ...(CATALOG_PAGE_SIZES.includes(size) && size !== DEFAULT_CATALOG_PAGE_SIZE ? { size } : {}),
   };
 }
 
@@ -51,8 +51,8 @@ export function dictionaryQuery(filters: DictionaryFilters): string {
   if (filters.hskLevel !== undefined) q.set("hskLevel", String(filters.hskLevel));
   if (filters.isSingleVocab !== undefined) q.set("isSingleVocab", String(filters.isSingleVocab));
   if (filters.wordType) q.set("wordType", filters.wordType);
-  if (filters.radical) q.set("radical", filters.radical);
   if (filters.page > 1) q.set("page", String(filters.page));
+  if (filters.size && filters.size !== DEFAULT_CATALOG_PAGE_SIZE) q.set("size", String(filters.size));
   const s = q.toString();
   return s ? `?${s}` : "";
 }
@@ -62,8 +62,8 @@ export function dictionaryHref(pathname: string, filters: DictionaryFilters): st
 }
 
 /** Tham số gửi máy chủ (`page` về 0-based). */
-export function toSearchParams(filters: DictionaryFilters, size = DICTIONARY_PAGE_SIZE): VocabularySearchParams {
-  return { keySearch: filters.keySearch, hskLevel: filters.hskLevel, isSingleVocab: filters.isSingleVocab, wordType: filters.wordType, radical: filters.radical, page: Math.max(0, filters.page - 1), size };
+export function toSearchParams(filters: DictionaryFilters, size = filters.size ?? DEFAULT_CATALOG_PAGE_SIZE): VocabularySearchParams {
+  return { keySearch: filters.keySearch, hskLevel: filters.hskLevel, isSingleVocab: filters.isSingleVocab, wordType: filters.wordType, page: Math.max(0, filters.page - 1), size };
 }
 
 /** Chuỗi query của `GET /dictionary/vocabularies/search` — chỉ gửi tham số có giá trị; `keySearch` luôn gửi (bản cũ gửi cả khi rỗng). */
@@ -107,24 +107,17 @@ export function meaningsSummary(vocab: Pick<Vocabulary, "pinyins">): string {
   return allMeanings(vocab).map((m) => m.meaning || m.meaningEn || m.meaningZh).filter(Boolean).join("; ") || "---";
 }
 
-/** Class huy hiệu "HSK n" (getHskBadgeClass của màn cũ). */
-export function hskBadgeClass(level: number | undefined): string {
-  switch (level) {
-    case 1:
-      return "bg-info bg-opacity-10 text-info";
-    case 2:
-      return "bg-success bg-opacity-10 text-success";
-    case 3:
-      return "bg-primary bg-opacity-10 text-primary";
-    case 4:
-      return "bg-warning bg-opacity-10 text-warning";
-    case 5:
-      return "bg-danger bg-opacity-10 text-danger";
-    case 6:
-      return "bg-dark bg-opacity-10 text-dark";
-    default:
-      return "bg-secondary bg-opacity-10 text-secondary";
-  }
+const HSK_BADGE_STYLES: Record<number, { backgroundColor: string; color: string }> = {
+  1: { backgroundColor: "#dceefb", color: "#175586" },
+  2: { backgroundColor: "#dcf3ef", color: "#17645a" },
+  3: { backgroundColor: "#e8f2d9", color: "#416222" },
+  4: { backgroundColor: "#faedce", color: "#735117" },
+  5: { backgroundColor: "#e3e6fa", color: "#414b85" },
+  6: { backgroundColor: "#eee3fa", color: "#654091" },
+};
+
+export function hskBadgeStyle(level: number) {
+  return HSK_BADGE_STYLES[level] ?? { backgroundColor: "#eef0f3", color: "#475467" };
 }
 
 export interface BadgeStyle {

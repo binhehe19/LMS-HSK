@@ -3,7 +3,7 @@ import { DEFAULT_HANZI_DATA_URL_TEMPLATES, loadHanziChar, parseHanziDataUrlTempl
 import { addRecentWord, parseRecentWords, RECENT_VOCAB_MAX, type RecentWord } from "@/lib/dictionary/recent-vocabulary";
 import { buildPracticeQuestions, isAnswerCorrect, normalizePinyinAnswer, parseCompounds, practiceTier, shuffleArray } from "@/lib/dictionary/vocab-practice";
 import { alignPinyin, buildAnalysisNodes, radicalCharacter, selectExamples, selectPrimaryPinyin, splitHighlight, splitWordTypes } from "@/lib/dictionary/vocabulary-detail-model";
-import type { VocabularyMeaning, VocabularyPinyin } from "@/types/dictionary";
+import type { VocabularyExample, VocabularyMeaning, VocabularyPinyin } from "@/types/dictionary";
 
 const identity = <T,>(arr: T[]) => [...arr];
 
@@ -16,11 +16,17 @@ describe("vocabulary-detail-model", () => {
     expect(selectPrimaryPinyin(undefined)).toBeUndefined();
   });
 
-  it("tách từ loại và lọc nghĩa có câu ví dụ", () => {
+  it("tách từ loại và gộp mọi câu ví dụ tiếng Trung của các nghĩa theo thứ tự", () => {
     expect(splitWordTypes({ pinyin: "x", wordTypes: " Động từ, Danh từ ,,", meanings: [] })).toEqual(["Động từ", "Danh từ"]);
     expect(splitWordTypes(undefined)).toEqual([]);
-    const meanings: VocabularyMeaning[] = [{ meaning: "a", exampleSentenceCn: "我" }, { meaning: "b" }, { meaning: "c", exampleSentenceCn: "" }];
-    expect(selectExamples(meanings).map((m) => m.meaning)).toEqual(["a"]);
+    const meanings: VocabularyMeaning[] = [
+      { meaning: "a", examples: [{ zh: "我" }, { zh: "你", vi: "bạn" }] },
+      { meaning: "b" },
+      { meaning: "c", examples: [{ zh: "" }, { pinyin: "chỉ có pinyin" }] },
+      { meaning: "d", examples: [{ zh: "他" }] },
+    ];
+    expect(selectExamples(meanings).map((e) => e.zh)).toEqual(["我", "你", "他"]);
+    expect(selectExamples(undefined)).toEqual([]);
   });
 
   it("lấy ký tự bộ thủ sau khoảng trắng cuối cùng", () => {
@@ -59,7 +65,7 @@ describe("vocabulary-detail-model", () => {
 });
 
 describe("vocab-practice", () => {
-  const examples: VocabularyMeaning[] = Array.from({ length: 7 }, (_, i) => ({ meaning: `m${i}`, exampleSentenceCn: `句${i}`, exampleSentencePinyin: `jù ${i}` }));
+  const examples: VocabularyExample[] = Array.from({ length: 7 }, (_, i) => ({ zh: `句${i}`, pinyin: `jù ${i}` }));
 
   it("parse compounds an toàn", () => {
     expect(parseCompounds("không phải json")).toEqual([]);
@@ -92,7 +98,7 @@ describe("vocab-practice", () => {
   it("không có câu nối khi JSON hỏng hoặc dưới 2 từ ghép dùng được", () => {
     expect(buildPracticeQuestions("山", "{oops", [], identity)).toEqual([]);
     expect(buildPracticeQuestions("山", '[{"hanzi":"山水","sinoVietnamese":"SƠN THỦY"}]', [], identity)).toEqual([]);
-    expect(buildPracticeQuestions("山", undefined, [{ meaning: "x", exampleSentenceCn: "山" }], identity)).toEqual([]);
+    expect(buildPracticeQuestions("山", undefined, [{ zh: "山" }], identity)).toEqual([]);
   });
 
   it("chấm câu nối theo khoá gốc và câu pinyin bỏ hoa thường/khoảng trắng thừa", () => {

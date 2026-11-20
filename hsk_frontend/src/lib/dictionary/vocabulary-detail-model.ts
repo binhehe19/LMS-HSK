@@ -1,7 +1,7 @@
 // Hàm thuần của trang Chi tiết từ vựng học viên (/vocabulary/:id) — tách từ vocabulary-detail.tsx của HSK cũ để test được.
 // Khác bản cũ: mô hình mới không còn trường "legacy flat" (pinyin/wordTypes ở cấp từ) và componentVocabs, nên pinyin/từ loại
 // chỉ lấy từ pinyins[], chữ thành phần lấy từ `components` do backend tra sẵn.
-import type { VocabularyComponent, VocabularyMeaning, VocabularyPinyin } from "@/types/dictionary";
+import type { VocabularyComponent, VocabularyExample, VocabularyMeaning, VocabularyPinyin } from "@/types/dictionary";
 import { RADICAL_MAP } from "@/lib/dictionary/radical-data";
 
 /** Pinyin chính: mục `isPrimary`, không có thì mục đầu tiên (bản cũ bỏ bộ chọn pinyin — bám thiết kế). */
@@ -15,9 +15,9 @@ export function splitWordTypes(pinyin: VocabularyPinyin | undefined): string[] {
   return (pinyin?.wordTypes ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-/** Các nghĩa có câu ví dụ tiếng Trung — mỗi câu là một ví dụ / một lượt hội thoại. */
-export function selectExamples(meanings: VocabularyMeaning[] | undefined): VocabularyMeaning[] {
-  return (meanings ?? []).filter((m) => Boolean(m.exampleSentenceCn));
+/** Mọi câu ví dụ tiếng Trung của các nghĩa, theo thứ tự nghĩa — mỗi câu là một ví dụ / một lượt hội thoại. */
+export function selectExamples(meanings: VocabularyMeaning[] | undefined): VocabularyExample[] {
+  return (meanings ?? []).flatMap((m) => m.examples ?? []).filter((e) => Boolean(e.zh));
 }
 
 /**

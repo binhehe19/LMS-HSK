@@ -11,10 +11,9 @@ beforeEach(() => vi.resetAllMocks());
 const dictionaryContent = {
   word: "你好",
   hskLevel: 1,
-  audioUrl: "/api/storage/file/aud-1?disposition=inline",
   pinyins: [
     { pinyin: "nǐ hǎo (phụ)", isPrimary: false, meanings: [{ meaningVi: "nghĩa phụ" }] },
-    { pinyin: "nǐ hǎo", wordTypes: "Thán từ", isPrimary: true, meanings: [{ meaningVi: "xin chào", exampleSentenceZh: "你好吗？", exampleSentencePinyin: "nǐ hǎo ma?", exampleSentenceVi: "bạn khỏe không?" }, { meaningVi: "nghĩa 2" }] },
+    { pinyin: "nǐ hǎo", audioUrl: "/api/storage/file/aud-1?disposition=inline", wordTypes: "Thán từ", isPrimary: true, meanings: [{ meaningVi: "xin chào", examples: [{ zh: "你好吗？", pinyin: "nǐ hǎo ma?", vi: "bạn khỏe không?" }, { zh: "你好，老师！" }] }, { meaningVi: "nghĩa 2" }] },
   ],
 };
 
@@ -109,6 +108,8 @@ describe("updateFlashcardItem: sửa bản sao từ từ điển không làm m�
     expect(pinyins[0]).toEqual(dictionaryContent.pinyins[0]);
     expect(pinyins[1]).toMatchObject({ pinyin: "nǐ hǎo", isPrimary: true });
     expect(pinyins[1].meanings.map((m) => m.meaningVi)).toEqual(["chào hỏi", "nghĩa 2"]);
+    // Thẻ chỉ thay ví dụ đầu của nghĩa đầu; ví dụ thứ hai thêm ở màn từ điển vẫn còn.
+    expect((pinyins[1].meanings[0] as { examples?: unknown[] }).examples).toEqual([{ zh: "你好吗？", pinyin: "nǐ hǎo ma?", vi: "bạn khỏe không?" }, { zh: "你好，老师！" }]);
     expect(body.content).toMatchObject({ word: "你好", hskLevel: 1 });
     expect(body.content).not.toHaveProperty("commonMeaning");
     expect(card).toMatchObject({ id: "r1", term: "你好", meaning: "chào hỏi" });

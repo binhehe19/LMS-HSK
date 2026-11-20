@@ -1,21 +1,31 @@
 // Giá trị form Thêm/Sửa từ vựng (vocabulary-form-modal.tsx cũ): mỗi pinyin có từ loại, nghĩa, lượng từ, từ ghép, đồng/trái nghĩa riêng.
 // Kiểm tra giữ nguyên thông điệp bản cũ; chuẩn hoá thành VocabularyInput (JSON cho compounds/synonyms/antonyms, "a,b" cho wordTypes).
 import { formatRelatedWords, parseRelatedWords, splitWordTypes, type RelatedWord } from "@/lib/dictionary/vocabulary-model";
-import type { Vocabulary, VocabularyInput, VocabularyStatus } from "@/types/dictionary";
+import type { Vocabulary, VocabularyExample, VocabularyInput, VocabularyStatus } from "@/types/dictionary";
+
+/** Một câu ví dụ trong form; ô trống được bỏ khi gửi. */
+export interface ExampleFormItem extends Pick<VocabularyExample, "zhHtml" | "pinyinHtml" | "viHtml"> {
+  zh: string;
+  pinyin: string;
+  vi: string;
+  en: string;
+}
 
 export interface MeaningFormItem {
   meaning: string;
   meaningEn: string;
   meaningZh: string;
-  exampleSentenceCn: string;
-  exampleSentencePinyin: string;
-  exampleSentenceVi: string;
-  exampleSentenceEn: string;
+  meaningViHtml?: string;
+  meaningZhHtml?: string;
+  /** Loại từ của nghĩa này. */
   exampleWordType: string;
+  /** Các câu ví dụ của nghĩa này. */
+  examples: ExampleFormItem[];
 }
 
 export interface PinyinFormItem {
   pinyin: string;
+  audioUrl?: string;
   sinoVietnamese: string;
   wordTypes: string[];
   isPrimary: boolean;
@@ -33,22 +43,29 @@ export interface VocabularyFormValues {
   status: VocabularyStatus;
   hskLevel: number;
   radical: string;
-  /** Giữ dạng chuỗi để ô nhập số được để trống. */
-  strokeCount: string;
-  strokes: string;
   isSingleVocab: boolean;
   notes: string;
+  notesHtml?: string;
   imageUrl: string;
-  strokeAnimationUrl: string;
   etymologyStory: string;
-  etymologyImage: string;
+  etymologyStoryHtml?: string;
   pinyins: PinyinFormItem[];
 }
 
 export type VocabularyFormTab = "info" | "meaning" | "compounds" | "related" | "details";
 
+export function emptyExample(): ExampleFormItem {
+  return { zh: "", pinyin: "", vi: "", en: "" };
+}
+
 export function emptyMeaning(): MeaningFormItem {
-  return { meaning: "", meaningEn: "", meaningZh: "", exampleSentenceCn: "", exampleSentencePinyin: "", exampleSentenceVi: "", exampleSentenceEn: "", exampleWordType: "" };
+  return { meaning: "", meaningEn: "", meaningZh: "", exampleWordType: "", examples: [emptyExample()] };
+}
+
+/** Ví dụ của máy chủ → ô nhập; nghĩa chưa có ví dụ vẫn hiện một dòng trống để nhập. */
+function examplesToForm(examples: VocabularyExample[] | undefined): ExampleFormItem[] {
+  const list = (examples ?? []).map(e => ({ ...e, zh: e.zh ?? "", pinyin: e.pinyin ?? "", vi: e.vi ?? "", en: e.en ?? "" }));
+  return list.length > 0 ? list : [emptyExample()];
 }
 
 export function emptyPinyin(isPrimary = false): PinyinFormItem {
@@ -56,7 +73,7 @@ export function emptyPinyin(isPrimary = false): PinyinFormItem {
 }
 
 export function emptyVocabularyForm(): VocabularyFormValues {
-  return { hanzi: "", status: "draft", hskLevel: 1, radical: "", strokeCount: "", strokes: "", isSingleVocab: true, notes: "", imageUrl: "", strokeAnimationUrl: "", etymologyStory: "", etymologyImage: "", pinyins: [emptyPinyin(true)] };
+  return { hanzi: "", status: "draft", hskLevel: 1, radical: "", isSingleVocab: true, notes: "", imageUrl: "", etymologyStory: "", pinyins: [emptyPinyin(true)] };
 }
 
 const asStatus = (value: string | undefined): VocabularyStatus => (value?.toLowerCase() === "published" ? "published" : "draft");
@@ -65,6 +82,7 @@ export function vocabularyToForm(vocab: Vocabulary): VocabularyFormValues {
   const pinyins = (vocab.pinyins ?? []).map(
     (p): PinyinFormItem => ({
       pinyin: p.pinyin ?? "",
+      audioUrl: p.audioUrl ?? "",
       sinoVietnamese: p.sinoVietnamese ?? "",
       wordTypes: splitWordTypes(p.wordTypes),
       isPrimary: p.isPrimary ?? false,
@@ -75,7 +93,15 @@ export function vocabularyToForm(vocab: Vocabulary): VocabularyFormValues {
       notes: p.notes ?? "",
       meanings:
         p.meanings && p.meanings.length > 0
-          ? p.meanings.map((m) => ({ meaning: m.meaning ?? "", meaningEn: m.meaningEn ?? "", meaningZh: m.meaningZh ?? "", exampleSentenceCn: m.exampleSentenceCn ?? "", exampleSentencePinyin: m.exampleSentencePinyin ?? "", exampleSentenceVi: m.exampleSentenceVi ?? "", exampleSentenceEn: m.exampleSentenceEn ?? "", exampleWordType: m.exampleWordType ?? "" }))
+          ? p.meanings.map(m => ({
+            meaning: m.meaning ?? "",
+            meaningEn: m.meaningEn ?? "",
+            meaningZh: m.meaningZh ?? "",
+            meaningViHtml: m.meaningViHtml,
+            meaningZhHtml: m.meaningZhHtml,
+            exampleWordType: m.exampleWordType ?? "",
+            examples: examplesToForm(m.examples),
+          }))
           : [emptyMeaning()],
     }),
   );
@@ -85,14 +111,12 @@ export function vocabularyToForm(vocab: Vocabulary): VocabularyFormValues {
     status: asStatus(vocab.status),
     hskLevel: vocab.hskLevel ?? 1,
     radical: vocab.radical ?? "",
-    strokeCount: vocab.strokeCount ? String(vocab.strokeCount) : "",
-    strokes: vocab.strokes ?? "",
     isSingleVocab: vocab.isSingleVocab ?? true,
     notes: vocab.notes ?? "",
+    notesHtml: vocab.notesHtml,
     imageUrl: vocab.imageUrl ?? "",
-    strokeAnimationUrl: vocab.strokeAnimationUrl ?? "",
     etymologyStory: vocab.etymologyStory ?? "",
-    etymologyImage: vocab.etymologyImage ?? "",
+    etymologyStoryHtml: vocab.etymologyStoryHtml,
     pinyins: pinyins.length > 0 ? pinyins : [emptyPinyin(true)],
   };
 }
@@ -109,7 +133,6 @@ export function validateVocabularyForm(values: VocabularyFormValues): Vocabulary
   if (!values.pinyins.some((p) => p.isPrimary)) return { message: "Phải có ít nhất một pinyin được đặt làm chính!", tab: "info" };
   if (values.pinyins.some((p) => !p.pinyin.trim())) return { message: "Vui lòng nhập đầy đủ phiên âm cho tất cả pinyin!", tab: "info" };
   if (values.pinyins.some((p) => p.meanings.length === 0 || p.meanings.some((m) => !m.meaning.trim() && !m.meaningEn.trim() && !m.meaningZh.trim()))) return { message: "Vui lòng nhập đầy đủ các nghĩa!", tab: "meaning" };
-  if (values.strokeCount.trim() !== "" && !(Number.isInteger(Number(values.strokeCount)) && Number(values.strokeCount) > 0)) return { message: "Số nét phải lớn hơn 0!", tab: "info" };
   return null;
 }
 
@@ -124,17 +147,16 @@ export function buildVocabularyPayload(values: VocabularyFormValues): Vocabulary
     hanzi: values.hanzi.trim(),
     hskLevel: values.hskLevel,
     imageUrl: clean(values.imageUrl),
-    strokeAnimationUrl: clean(values.strokeAnimationUrl),
     etymologyStory: clean(values.etymologyStory),
-    etymologyImage: clean(values.etymologyImage),
+    etymologyStoryHtml: values.etymologyStoryHtml,
     radical: clean(values.radical),
-    strokeCount: values.strokeCount.trim() ? Number(values.strokeCount) : undefined,
-    strokes: clean(values.strokes),
     isSingleVocab: values.isSingleVocab,
     notes: clean(values.notes),
+    notesHtml: values.notesHtml,
     status: values.status,
     pinyins: values.pinyins.map((p) => ({
       pinyin: p.pinyin.trim(),
+      audioUrl: clean(p.audioUrl ?? ""),
       sinoVietnamese: clean(p.sinoVietnamese),
       wordTypes: p.wordTypes.length > 0 ? p.wordTypes.join(",") : undefined,
       isPrimary: p.isPrimary,
@@ -143,16 +165,21 @@ export function buildVocabularyPayload(values: VocabularyFormValues): Vocabulary
       synonyms: formatRelatedWords(p.synonyms, "pinyin"),
       antonyms: formatRelatedWords(p.antonyms, "pinyin"),
       notes: clean(p.notes),
-      meanings: p.meanings.map((m) => ({
-        meaning: m.meaning.trim(),
-        meaningEn: clean(m.meaningEn),
-        meaningZh: clean(m.meaningZh),
-        exampleSentenceCn: clean(m.exampleSentenceCn),
-        exampleSentencePinyin: clean(m.exampleSentencePinyin),
-        exampleSentenceVi: clean(m.exampleSentenceVi),
-        exampleSentenceEn: clean(m.exampleSentenceEn),
-        exampleWordType: clean(m.exampleWordType),
-      })),
+      meanings: p.meanings.map((m) => {
+        // Dòng ví dụ trống hoàn toàn bị bỏ; không còn ví dụ nào thì không gửi khóa examples.
+        const examples = m.examples
+          .map(e => ({ ...e, zh: clean(e.zh), pinyin: clean(e.pinyin), vi: clean(e.vi), en: clean(e.en) }))
+          .filter((e) => e.zh || e.pinyin || e.vi || e.en);
+        return {
+          meaning: m.meaning.trim(),
+          meaningEn: clean(m.meaningEn),
+          meaningZh: clean(m.meaningZh),
+          meaningViHtml: m.meaningViHtml,
+          meaningZhHtml: m.meaningZhHtml,
+          exampleWordType: clean(m.exampleWordType),
+          examples: examples.length > 0 ? examples : undefined,
+        };
+      }),
     })),
   };
 }

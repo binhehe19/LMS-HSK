@@ -5,6 +5,7 @@ import { DictionaryManagePageContent } from "@/components/management/dictionary/
 export default function VocabularyManagePage() {
   return (
     <Suspense fallback={null}>
+      <link rel="preload" href="/tinymce/tinymce.min.js" as="script" />
       <DictionaryManagePageContent />
     </Suspense>
   );

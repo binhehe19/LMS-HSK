@@ -1,7 +1,7 @@
 // Dựng bộ câu hỏi popup "Luyện tập từ vựng" (vocab-practice-modal.tsx của HSK cũ) từ dữ liệu thật của từ: câu nối từ ghép ↔ Hán Việt
 // (từ JSON `compounds` của pinyin chính) + câu viết pinyin cho từng câu ví dụ. Giữ nguyên quy tắc của bản cũ (2–3 từ ghép, tối đa 5 câu
 // ví dụ, so pinyin bỏ hoa thường/khoảng trắng thừa). Hàm xáo trộn truyền vào được để test ổn định.
-import type { VocabularyMeaning } from "@/types/dictionary";
+import type { VocabularyExample } from "@/types/dictionary";
 
 export interface MatchQuestion {
   kind: "match";
@@ -53,7 +53,7 @@ export function shuffleArray<T>(arr: T[], random: () => number = Math.random): T
 export function buildPracticeQuestions(
   hanzi: string,
   compounds: string | undefined,
-  examples: VocabularyMeaning[],
+  examples: VocabularyExample[],
   shuffle: <T>(arr: T[]) => T[] = shuffleArray,
 ): PracticeQuestion[] {
   const list: PracticeQuestion[] = [];
@@ -69,14 +69,14 @@ export function buildPracticeQuestions(
   }
 
   examples
-    .filter((e) => e.exampleSentenceCn && e.exampleSentencePinyin)
+    .filter((e) => e.zh && e.pinyin)
     .slice(0, 5)
     .forEach((e) => {
       list.push({
         kind: "pinyin",
         prompt: "Viết lại toàn bộ Pinyin (có thanh điệu) cho cả câu.",
-        cn: e.exampleSentenceCn ?? "",
-        answer: e.exampleSentencePinyin ?? "",
+        cn: e.zh ?? "",
+        answer: e.pinyin ?? "",
       });
     });
 

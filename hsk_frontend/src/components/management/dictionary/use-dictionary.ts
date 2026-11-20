@@ -8,6 +8,7 @@ import { useContentAccess } from "@/hooks/use-content-access";
 import { useWriteGate } from "@/hooks/use-write-gate";
 import { ApiError } from "@/lib/api/api-client";
 import { createVocabulary, deleteVocabulary, getVocabulary, searchVocabularies, updateVocabulary } from "@/lib/api/lms-dictionary-client";
+import { syncPublishedToPackages } from "@/lib/api/library-sync-client";
 import { writeErrorMessage } from "@/lib/content/content-tree-validate";
 import { buildVocabularyPayload, validateVocabularyForm, type VocabularyFormValues } from "@/lib/dictionary/vocabulary-form";
 import { type DictionaryFilters, dictionaryHref, dictionaryQuery, readDictionaryFilters, toSearchParams } from "@/lib/dictionary/vocabulary-model";
@@ -74,9 +75,17 @@ export function useDictionary() {
       return false;
     }
     const payload = buildVocabularyPayload(values);
+    const published = payload.status === "published";
+    // Chỉ sửa + xuất bản mới đẩy xuống học phần (từ mới chưa có bản sao; bản nháp không đồng bộ).
+    const syncing = published && editing !== null;
+    const toastId = syncing ? toast.loading("Đang lưu…") : undefined;
     const result = editing ? await run("Cập nhật thất bại", () => updateVocabulary(editing.id, payload, demo)) : await run("Thêm thất bại", () => createVocabulary(payload, demo));
-    if (!result) return false;
-    toast.success(editing ? "Cập nhật thành công!" : "Thêm mới thành công!");
+    if (!result) {
+      if (toastId !== undefined) toast.dismiss(toastId);
+      return false;
+    }
+    if (editing && toastId !== undefined) void syncPublishedToPackages(String(editing.id), toastId, "Đã xuất bản từ vựng.");
+    else toast.success(published ? "Đã xuất bản từ vựng." : "Đã lưu bản nháp.");
     if (!editing && filters.page !== 1) setFilters({ ...filters, page: 1 }, "replace");
     else list.reload();
     return true;
@@ -98,7 +107,6 @@ export function useDictionary() {
     state: list.state,
     /** Trang đang hiển thị: kết quả mới nhất hoặc kết quả trước đó trong lúc tải lại. */
     page,
-    refreshing: list.state.kind === "loading" && list.lastData !== null,
     reload: list.reload,
     access,
     writeEnabled,

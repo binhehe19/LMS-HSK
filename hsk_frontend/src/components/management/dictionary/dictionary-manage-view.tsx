@@ -1,34 +1,37 @@
 "use client";
 
-// Màn Từ điển — port manage-vocabulary.tsx của HSK cũ: PageHeader "Danh sách từ vựng" + nút Thêm, khối bộ lọc (tìm kiếm, HSK, cấu trúc từ, loại từ,
-// bộ thủ), bảng có dòng mở rộng, phân trang phía máy chủ, modal xem nét viết. View thuần: nhận state qua props, không gọi API.
-//
-// Khác bản cũ có chủ đích: (1) bộ lọc trong URL, ô tìm kiếm gõ xong 500ms mới áp (router.replace) như debounce cũ; (2) RadicalFilterPanel (bảng 214 bộ
-// thủ) rút gọn thành ô nhập bộ thủ; (3) phân trang antd Pagination thay cho ul.pagination tự vẽ; (4) nút "Tải Template" (link Google Sheets) và
-// "Import từ Excel" (bất đồng bộ, poll job) chưa chuyển — mục Import hiện toast; (5) lỗi tải/chưa cấu hình là khối trạng thái, không phải alert + Thử lại;
-// (6) nút ghi ẩn khi không có quyền ticket DICTIONARY hoặc công tắc ghi đóng (WriteLockedNotice).
-import { Alert, Modal, Pagination } from "antd";
+import { Alert, Button, Empty, Input, Select, Table, Tag, type TableColumnsType } from "antd";
 import { useEffect, useState } from "react";
+import { CatalogPagination } from "@/components/management/content-flat/catalog-pagination";
+import { CatalogRowMenu } from "@/components/management/content-flat/catalog-row-menu";
+import { CatalogToolbar } from "@/components/management/content-flat/catalog-toolbar";
+import styles from "@/components/management/content-flat/content-catalog.module.css";
+import { DictionaryWordTypeTag } from "@/components/management/dictionary/dictionary-word-type-tag";import type { FilterNavigation } from "@/components/management/dictionary/use-dictionary";
 import { VocabularyRowDetails } from "@/components/management/dictionary/vocabulary-row-details";
 import { ManagementPageFrame } from "@/components/management/management-page-frame";
 import type { FetchState } from "@/components/management/notifications/use-keyed-fetch";
-import { AssetImage } from "@/components/shared/asset-image";
 import { FetchStateNotice, WriteLockedNotice } from "@/components/shared/fetch-state-notice";
-import { PageHeader } from "@/components/shared/page-header";
 import type { ContentAccess } from "@/hooks/use-content-access";
-import type { FilterNavigation } from "@/components/management/dictionary/use-dictionary";
-import { DICTIONARY_PAGE_SIZE, type DictionaryFilters, HSK_LEVELS, hskBadgeClass, meaningsSummary, primaryPinyin, WORD_TYPES, wordTypeBadgeStyle, wordTypesOf } from "@/lib/dictionary/vocabulary-model";
-import type { Vocabulary, VocabularyPage } from "@/types/dictionary";
+import { DEFAULT_CATALOG_PAGE_SIZE } from "@/lib/content/catalog-page-sizes";
+import { DEFAULT_DICTIONARY_FILTERS, HSK_LEVELS, WORD_TYPES, hskBadgeStyle, meaningsSummary, primaryPinyin, wordTypesOf, type DictionaryFilters } from "@/lib/dictionary/vocabulary-model";
+import type { Vocabulary, VocabularyPage, VocabularyPinyin } from "@/types/dictionary";
 
 const SEARCH_DEBOUNCE_MS = 500;
-const TH_STYLE = { backgroundColor: "#f8fafc" } as const;
-const FILTER_LABEL = "form-label fw-bold text-dark small text-uppercase";
+
+interface DictionaryRow {
+  key: string;
+  vocab: Vocabulary;
+  pinyin?: VocabularyPinyin;
+  number: number;
+  rowSpan: number;
+}
+
+const sharedCell = ({ rowSpan }: DictionaryRow) => ({ rowSpan });
 
 export interface DictionaryManageViewProps {
   filters: DictionaryFilters;
   state: FetchState<VocabularyPage>;
   page: VocabularyPage | null;
-  refreshing: boolean;
   access: ContentAccess;
   writeEnabled: boolean;
   canWrite: boolean;
@@ -36,276 +39,215 @@ export interface DictionaryManageViewProps {
   onFiltersChange: (next: DictionaryFilters, navigation?: FilterNavigation) => void;
   onCreate: () => void;
   onImport: () => void;
+  onView: (vocab: Vocabulary) => void;
   onEdit: (vocab: Vocabulary) => void;
   onDelete: (vocab: Vocabulary) => void;
   onRetry: () => void;
 }
 
-export function DictionaryManageView({ filters, state, page, refreshing, access, writeEnabled, canWrite, busy, onFiltersChange, onCreate, onImport, onEdit, onDelete, onRetry }: DictionaryManageViewProps) {
-  // Ô tìm kiếm: giá trị đang gõ gắn với keySearch của URL lúc bắt đầu gõ; URL đổi từ nơi khác (back) => hiện lại giá trị của URL, không ghi đè.
+export function DictionaryManageView({ filters, state, page, access, writeEnabled, canWrite, busy, onFiltersChange, onCreate, onImport, onView, onEdit, onDelete, onRetry }: DictionaryManageViewProps) {
+  // Khi quay lại bằng lịch sử trình duyệt, đọc từ khóa từ URL thay vì áp lại nội dung đang gõ.
   const [draft, setDraft] = useState<{ text: string; base: string } | null>(null);
   const keyword = draft && draft.base === filters.keySearch ? draft.text : filters.keySearch;
+  const size = filters.size ?? DEFAULT_CATALOG_PAGE_SIZE;
+  const [expanded, setExpanded] = useState<readonly React.Key[]>([]);
+
   useEffect(() => {
     if (keyword === filters.keySearch) return;
     const timer = window.setTimeout(() => onFiltersChange({ ...filters, keySearch: keyword, page: 1 }, "replace"), SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [keyword, filters, onFiltersChange]);
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [strokeModal, setStrokeModal] = useState<Vocabulary | null>(null);
-  const toggleRow = (id: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
   const change = (patch: Partial<DictionaryFilters>) => onFiltersChange({ ...filters, ...patch, page: 1 });
-  const notice = state.kind === "waiting" || state.kind === "error";
-  const items = page?.items ?? [];
+  const loading = state.kind === "loading";
+  const loadError = state.kind === "error" ? (
+    <div role="alert" data-testid="dictionary-notice" data-kind="error" className="py-2">
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={(
+          <>
+            <div className="fw-semibold text-dark">Không thể tải danh sách từ vựng</div>
+            <div className="small text-muted mt-1">
+              {page
+                ? "Bảng đang hiển thị kết quả từ lần tải thành công gần nhất. Hãy thử lại để cập nhật."
+                : "Hãy thử tải lại danh sách với bộ lọc hiện tại."}
+            </div>
+          </>
+        )}
+      >
+        <Button onClick={onRetry} icon={<i className="isax isax-refresh" aria-hidden="true" />}>Thử lại</Button>
+      </Empty>
+    </div>
+  ) : null;
   const readOnly = access.status !== "loading" && !access.canManage;
+  const toggleDetails = (id: string) => setExpanded(keys =>
+    keys.includes(id) ? keys.filter(key => key !== id) : [...keys, id]);
+
+  const pageOffset = (page?.page ?? 0) * (page?.size || size);
+  const rows: DictionaryRow[] = (page?.items ?? []).flatMap((vocab, index) => {
+    const primary = primaryPinyin(vocab);
+    const readings = [primary, ...(vocab.pinyins ?? []).filter(pinyin => pinyin !== primary)];
+    return readings.map((pinyin, readingIndex) => ({
+      // Gắn chi tiết vào dòng Pinyin cuối để các ô gộp kết thúc trước phần mở rộng.
+      key: readingIndex === readings.length - 1 ? vocab.id : `${vocab.id}:${readingIndex}`,
+      vocab,
+      pinyin,
+      number: pageOffset + index + 1,
+      rowSpan: readingIndex === 0 ? readings.length : 0,
+    }));
+  });
+
+  const columns: TableColumnsType<DictionaryRow> = [
+    {
+      title: "STT", key: "number", width: 62, align: "center", onCell: sharedCell,
+      render: (_, { number }) => <span className={styles.rowNumber}>{number}</span>,
+    },
+    {
+      title: "Hán tự", key: "hanzi", width: 125, onCell: sharedCell,
+      render: (_, { vocab }) => <span lang="zh" className={`${styles.name} ${styles.selectableName}`}>{vocab.hanzi}</span>,
+    },
+    {
+      title: "Pinyin", key: "pinyin", width: 125,
+      render: (_, { pinyin }) => pinyin?.pinyin || "—",
+    },
+    {
+      title: "Bộ thủ", key: "radical", width: 95, onCell: sharedCell,
+      render: (_, { vocab }) => vocab.radical || "—",
+    },
+    {
+      title: "Cấp độ", key: "hsk", width: 92, onCell: sharedCell,
+      render: (_, { vocab }) => vocab.hskLevel ? <Tag bordered={false} style={hskBadgeStyle(vocab.hskLevel)}>HSK {vocab.hskLevel}</Tag> : "—",
+    },
+    {
+      title: "Loại", key: "types", width: 160,
+      render: (_, { vocab, pinyin, rowSpan }) => (
+        <>
+          {rowSpan > 0 && <div className="mb-1"><Tag>{vocab.isSingleVocab ? "Từ đơn" : "Từ ghép"}</Tag></div>}
+          <div className="d-flex flex-wrap gap-1">
+            {wordTypesOf({ pinyins: pinyin ? [pinyin] : [] }).map(type => <DictionaryWordTypeTag key={type} type={type} />)}
+          </div>
+        </>
+      ),
+    },
+    {
+      title: "Nghĩa chính", key: "meanings",
+      render: (_, { pinyin }) => {
+        const summary = meaningsSummary({ pinyins: pinyin ? [pinyin] : [] });
+        return <span className={styles.ellipsis} title={summary}>{summary}</span>;
+      },
+    },
+    {
+      title: <span className="visually-hidden">Thao tác</span>, key: "actions", width: 64, onCell: sharedCell, align: "center", fixed: "right",
+      render: (_, { vocab }) => (
+        <CatalogRowMenu label={`Thao tác ${vocab.hanzi}`} items={[
+          {
+            key: "view",
+            label: "Xem chi tiết",
+            icon: <i className="isax isax-eye" aria-hidden="true" />,
+            disabled: busy,
+            onClick: () => onView(vocab),
+          },
+          canWrite ? { key: "edit", label: "Chỉnh sửa", icon: <i className="isax isax-edit-2" aria-hidden="true" />, disabled: busy, onClick: () => onEdit(vocab) } : null,
+          canWrite ? { key: "delete", label: "Xóa", icon: <i className="isax isax-trash" aria-hidden="true" />, disabled: busy, danger: true, onClick: () => onDelete(vocab) } : null,
+        ]} />
+      ),
+    },
+  ];
 
   return (
-    <ManagementPageFrame contentClassName="manage-vocabulary-page dictionary-manage-page">
-      {readOnly && (
-        <div className="mb-4">
-          <Alert message="Chế độ Xem duy nhất" description="Bạn hiện không có Ticket được cấp cho Module này. Bạn vẫn có thể xem các nội dung nhưng không thể Thêm, Sửa hoặc Xóa." type="warning" showIcon className="rounded-3 border-warning bg-soft-warning shadow-sm" data-testid="content-readonly-alert" />
-        </div>
-      )}
-      {access.canManage && !writeEnabled && (
-        <div className="mb-4">
-          <WriteLockedNotice what="Thêm/Sửa/Xóa từ vựng" />
-        </div>
-      )}
-      <div className="card border-0" style={{ borderRadius: "1rem", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" }} data-testid="dictionary-manage">
-        <PageHeader
+    <ManagementPageFrame contentClassName="dictionary-manage-page">
+      <div className={`${styles.catalog} p-3`} data-testid="dictionary-manage">
+        {readOnly && (
+          <Alert message="Chế độ Xem duy nhất" description="Bạn hiện không có Ticket được cấp cho Module này. Bạn vẫn có thể xem các nội dung nhưng không thể Thêm, Sửa hoặc Xóa." type="warning" showIcon data-testid="content-readonly-alert" />
+        )}
+        {access.canManage && !writeEnabled && <WriteLockedNotice what="Thêm/Sửa/Xóa từ vựng" />}
+        <CatalogToolbar
+          label="Bộ lọc từ điển"
+          heading="Từ điển"
           icon="isax-book-1"
-          title="Danh sách từ vựng"
-          subtitle="Quản lý toàn bộ kho từ vựng tiếng Trung"
-          actions={
-            canWrite ? (
-              <div className="d-flex align-items-center gap-2">
-                <button type="button" className="btn btn-primary shadow-sm px-4 rounded-3 fw-medium" style={{ height: 42, fontSize: 14 }} onClick={onCreate} disabled={busy}>
-                  <i className="isax isax-add-circle me-1" /> Thêm từ mới
-                </button>
-                <button type="button" className="btn btn-outline-success shadow-sm px-3 rounded-3 fw-medium" style={{ height: 42, fontSize: 14 }} onClick={onImport} disabled={busy} title="Import từ Excel (chưa chuyển sang bản mới)">
-                  <i className="isax isax-import me-1" /> Import từ Excel
-                </button>
-              </div>
-            ) : undefined
-          }
-        />
-        <div className="card-body p-4">
-          <div className="bg-light p-4 mb-4" style={{ borderRadius: "0.75rem" }}>
-            <div className="row g-3">
-              <div className="col-lg-4">
-                <label className={FILTER_LABEL} htmlFor="dictionary-search">
-                  Tìm kiếm
-                </label>
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0 ps-3">
-                    <i className="isax isax-search-normal-1 text-muted" />
-                  </span>
-                  <input id="dictionary-search" type="text" className="form-control border-start-0 py-2" placeholder="Nhập Hán tự, Pinyin, hoặc Nghĩa..." value={keyword} onChange={(e) => setDraft({ text: e.target.value, base: filters.keySearch })} />
-                </div>
-              </div>
-              <div className="col-lg-2">
-                <label className={FILTER_LABEL} htmlFor="dictionary-hsk">
-                  Cấp độ HSK
-                </label>
-                <select id="dictionary-hsk" className="form-select py-2" value={filters.hskLevel ?? ""} onChange={(e) => change({ hskLevel: e.target.value ? Number(e.target.value) : undefined })}>
-                  <option value="">Tất cả</option>
-                  {HSK_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      HSK {level}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-lg-2">
-                <label className={FILTER_LABEL} htmlFor="dictionary-single">
-                  Cấu trúc từ
-                </label>
-                <select id="dictionary-single" className="form-select py-2" value={filters.isSingleVocab === undefined ? "" : String(filters.isSingleVocab)} onChange={(e) => change({ isSingleVocab: e.target.value === "" ? undefined : e.target.value === "true" })}>
-                  <option value="">Tất cả</option>
-                  <option value="true">Từ đơn</option>
-                  <option value="false">Từ ghép</option>
-                </select>
-              </div>
-              <div className="col-lg-2">
-                <label className={FILTER_LABEL} htmlFor="dictionary-word-type">
-                  Loại từ
-                </label>
-                <select id="dictionary-word-type" className="form-select py-2" value={filters.wordType ?? ""} onChange={(e) => change({ wordType: e.target.value || undefined })}>
-                  <option value="">Tất cả</option>
-                  {WORD_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-lg-2">
-                <label className={FILTER_LABEL} htmlFor="dictionary-radical">
-                  Bộ thủ
-                </label>
-                <input id="dictionary-radical" type="text" className="form-control py-2" placeholder="VD: 口" maxLength={4} value={filters.radical ?? ""} onChange={(e) => change({ radical: e.target.value.trim() || undefined })} />
-              </div>
-            </div>
-          </div>
-
-          {state.kind === "loading" && !page ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status" />
-              <p className="mt-2 text-muted">Đang tải dữ liệu...</p>
-            </div>
-          ) : notice && !page ? (
-            <FetchStateNotice state={state} waitingText="Từ điển chưa được kết nối API (WAITING FOR BACKEND). Chưa có dữ liệu để hiển thị." onRetry={onRetry} testId="dictionary-notice" />
-          ) : (
+          description="Quản lý kho từ vựng tiếng Trung dùng chung cho các học phần."
+          onReload={onRetry}
+          onClearFilters={() => {
+            setDraft(null);
+            onFiltersChange({ ...DEFAULT_DICTIONARY_FILTERS, size: filters.size });
+          }}
+          loading={loading}
+          actions={canWrite && (
             <>
-              {notice && <FetchStateNotice state={state} waitingText="Từ điển chưa được kết nối API (WAITING FOR BACKEND)." onRetry={onRetry} testId="dictionary-notice" className="mb-3" />}
-              <div className="table-responsive bg-white shadow-sm p-3 mb-4" style={{ borderRadius: "1rem", border: "1px solid rgba(0,0,0,0.05)", opacity: refreshing ? 0.6 : 1 }} aria-busy={refreshing}>
-                <table className="table table-hover align-middle mb-0" data-testid="dictionary-table">
-                  <thead className="table-light">
-                    <tr className="text-uppercase small text-muted">
-                      <th scope="col" className="ps-3 border-0 rounded-start" style={{ width: 40, ...TH_STYLE }} />
-                      <th scope="col" className="border-0" style={TH_STYLE}>Hán tự</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Pinyin</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Cấp độ</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Bộ</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Số nét</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Nét bút</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Loại</th>
-                      <th scope="col" className="border-0" style={TH_STYLE}>Nghĩa chính</th>
-                      <th scope="col" className="text-end pe-3 border-0 rounded-end" style={TH_STYLE}>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody className="border-top-0">
-                    {items.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="text-center py-5 text-muted bg-white" data-testid="dictionary-empty">
-                          <div className="mb-3">
-                            <i className="isax isax-search-status fs-1" style={{ opacity: 0.15 }} />
-                          </div>
-                          <div className="fw-500 mb-1">Không tìm thấy từ vựng nào</div>
-                          <p className="small mb-0 opacity-75">Thử điều chỉnh lại bộ lọc hoặc từ khóa tìm kiếm</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      items.map((vocab) => {
-                        const isExpanded = expanded.has(vocab.id);
-                        const types = wordTypesOf(vocab);
-                        const summary = meaningsSummary(vocab);
-                        return [
-                          <tr key={vocab.id} onClick={() => toggleRow(vocab.id)} style={{ cursor: "pointer", transition: "all 0.2s" }} className={isExpanded ? "bg-light" : "hover-up"} data-testid="dictionary-row" aria-expanded={isExpanded}>
-                            <td className="ps-4">
-                              <div className={`d-flex align-items-center justify-content-center rounded-circle ${isExpanded ? "bg-primary text-white" : "bg-light text-muted"}`} style={{ width: 28, height: 28 }}>
-                                <i className={`isax isax-arrow-${isExpanded ? "down" : "right"}-1`} style={{ fontSize: 14 }} />
-                              </div>
-                            </td>
-                            <td>
-                              <span className="fw-700 text-dark" style={{ fontSize: 16 }}>
-                                {vocab.hanzi}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="fw-500" style={{ color: "#e53e3e" }}>
-                                {primaryPinyin(vocab)?.pinyin ?? "---"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`badge ${hskBadgeClass(vocab.hskLevel)} px-3 py-2 border`} style={{ fontSize: 12, borderRadius: 8 }}>
-                                HSK {vocab.hskLevel ?? "?"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="text-muted" style={{ fontSize: 14 }}>
-                                {vocab.radical || "---"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="text-muted" style={{ fontSize: 14 }}>
-                                {vocab.strokeCount || "---"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="text-muted" style={{ fontSize: 14 }}>
-                                {vocab.strokes || "---"}
-                              </span>
-                            </td>
-                            <td>
-                              {types.length > 0 ? (
-                                <div className="d-flex flex-wrap gap-1">
-                                  {types.map((type) => {
-                                    const style = wordTypeBadgeStyle(type);
-                                    return (
-                                      <span key={type} className="badge" style={{ backgroundColor: style.bg, color: style.color, border: style.border, padding: "4px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12 }}>
-                                        {type}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              ) : (
-                                <span className="text-muted small">---</span>
-                              )}
-                              <div className="small text-muted mt-1" style={{ fontSize: "0.75rem" }}>
-                                {vocab.isSingleVocab ? "Từ đơn" : "Từ ghép"}
-                              </div>
-                            </td>
-                            <td className="text-muted text-truncate" style={{ maxWidth: 200, fontSize: 14 }} title={summary}>
-                              {summary}
-                            </td>
-                            <td className="text-end pe-4">
-                              {canWrite && (
-                                <>
-                                  <button type="button" className="btn btn-sm btn-light text-primary me-2 shadow-sm border-0 rounded-circle" style={{ width: 32, height: 32 }} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${vocab.hanzi}`} disabled={busy} onClick={(e) => { e.stopPropagation(); onEdit(vocab); }}>
-                                    <i className="isax isax-edit-2" />
-                                  </button>
-                                  <button type="button" className="btn btn-sm btn-light text-danger shadow-sm border-0 rounded-circle" style={{ width: 32, height: 32 }} title="Xóa" aria-label={`Xóa ${vocab.hanzi}`} disabled={busy} onClick={(e) => { e.stopPropagation(); onDelete(vocab); }}>
-                                    <i className="isax isax-trash" />
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>,
-                          isExpanded ? (
-                            <tr key={`${vocab.id}-details`} className="bg-light">
-                              <td colSpan={10} className="p-0 border-0">
-                                <VocabularyRowDetails vocab={vocab} onShowStrokes={setStrokeModal} />
-                              </td>
-                            </tr>
-                          ) : null,
-                        ];
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {page && page.totalElements > 0 && (
-                <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top flex-wrap gap-2" data-testid="dictionary-pagination">
-                  <small className="text-muted">
-                    Hiển thị {page.page * page.size + 1}-{Math.min((page.page + 1) * page.size, page.totalElements)} / {page.totalElements} từ vựng
-                  </small>
-                  {page.totalPages > 1 && <Pagination current={filters.page} pageSize={page.size || DICTIONARY_PAGE_SIZE} total={page.totalElements} showSizeChanger={false} onChange={(next) => onFiltersChange({ ...filters, page: next })} />}
-                </div>
-              )}
+              <button type="button" className="btn btn-light rounded-pill" disabled={busy} onClick={onCreate}>
+                <i className="isax isax-add" aria-hidden="true" />Thêm từ mới
+              </button>
+              <button type="button" className={`btn rounded-pill ${styles.bannerRefresh}`} disabled={busy} onClick={onImport} title="Import từ Excel (chưa chuyển sang bản mới)">
+                <i className="isax isax-import" aria-hidden="true" />Import từ Excel
+              </button>
             </>
           )}
-        </div>
+        >
+          <Input className={styles.search} aria-label="Tìm kiếm" placeholder="Tìm Hán tự, Pinyin hoặc bộ thủ" value={keyword} onChange={event => setDraft({ text: event.target.value, base: filters.keySearch })} allowClear prefix={<i className="isax isax-search-normal-1" aria-hidden="true" />} />
+          <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Cấp độ HSK" placeholder="Tất cả cấp độ" allowClear value={filters.hskLevel} options={HSK_LEVELS.map(value => ({ value, label: `HSK ${value}` }))} onChange={hskLevel => change({ hskLevel })} />
+          <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Cấu trúc từ" placeholder="Tất cả cấu trúc" allowClear value={filters.isSingleVocab?.toString()} options={[{ value: "true", label: "Từ đơn" }, { value: "false", label: "Từ ghép" }]} onChange={value => change({ isSingleVocab: value === undefined ? undefined : value === "true" })} />
+          <Select className={styles.filter} popupClassName="package-select-popup" aria-label="Loại từ" placeholder="Tất cả loại từ" showSearch optionFilterProp="label" allowClear value={filters.wordType} options={WORD_TYPES.map(value => ({ value, label: value }))} onChange={wordType => change({ wordType })} />
+        </CatalogToolbar>
+
+        {state.kind === "waiting" && (
+          <FetchStateNotice state={state} waitingText="Từ điển chưa được kết nối API (WAITING FOR BACKEND)." testId="dictionary-notice" />
+        )}
+        {(state.kind !== "waiting" || page) && (
+          <section className={styles.panel} aria-label="Danh sách từ vựng">
+              {page && loadError}
+              <Table
+                data-testid="dictionary-table"
+                className={styles.table}
+                rowKey="key"
+                columns={columns}
+                dataSource={rows}
+                onRow={({ vocab, rowSpan }) => ({
+                  className: "dictionary-expandable-row",
+                  tabIndex: rowSpan > 0 ? 0 : undefined,
+                  "aria-expanded": expanded.includes(vocab.id),
+                  onClick: event => {
+                    const selection = window.getSelection();
+                    if (selection && !selection.isCollapsed && event.currentTarget.contains(selection.anchorNode)) return;
+                    toggleDetails(vocab.id);
+                  },
+                  onKeyDown: event => {
+                    if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+                    event.preventDefault();
+                    toggleDetails(vocab.id);
+                  },
+                })}
+                pagination={false}
+                loading={loading}
+                scroll={{ x: 870 }}
+                locale={{ emptyText: (!page && loadError) || <span data-testid="dictionary-empty">Không tìm thấy từ vựng nào</span> }}
+                expandable={{
+                  showExpandColumn: false,
+                  expandedRowKeys: expanded,
+                  rowExpandable: ({ key, vocab }) => key === vocab.id,
+                  expandedRowRender: ({ vocab }, _index, _indent, isExpanded) => isExpanded && (
+                    <div className="vocabulary-inline-details p-3 bg-white">
+                      <VocabularyRowDetails
+                        vocab={vocab}
+                        onView={onView}
+                        onEdit={canWrite ? () => onEdit(vocab) : undefined}
+                        busy={busy}
+                      />
+                    </div>
+                  ),
+                }}
+              />
+              {page && (
+                <CatalogPagination
+                  page={filters.page}
+                  size={size}
+                  total={page.totalElements}
+                  onChange={(nextPage, nextSize) => onFiltersChange({ ...filters, page: nextPage, size: nextSize })}
+                />
+              )}
+          </section>
+        )}
       </div>
 
-      <Modal open={strokeModal !== null} onCancel={() => setStrokeModal(null)} footer={null} centered width={400} title={strokeModal ? `Cách viết từ: ${strokeModal.hanzi}` : ""}>
-        {strokeModal?.strokeAnimationUrl && (
-          <div className="text-center">
-            <div className="bg-light p-3 rounded-4 d-flex align-items-center justify-content-center" style={{ minHeight: 220 }}>
-              <AssetImage src={strokeModal.strokeAnimationUrl} alt="Ảnh động nét viết" className="img-fluid rounded" style={{ maxHeight: 200, width: "auto" }} />
-            </div>
-            <p className="text-muted small mt-4 mb-0">Ảnh động hiển thị quy trình viết các nét của Hán tự.</p>
-          </div>
-        )}
-      </Modal>
     </ManagementPageFrame>
   );
 }

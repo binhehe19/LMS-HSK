@@ -49,9 +49,9 @@ function makeDetail(overrides: Partial<VocabularyDetail> = {}): VocabularyDetail
           { hanzi: "山水诗", sinoVietnamese: "SƠN THỦY THI" },
         ]),
         meanings: [
-          { id: "m1", meaning: "phong cảnh", exampleSentenceCn: "这里的山水很美。", exampleSentencePinyin: "zhè lǐ de shān shuǐ hěn měi", exampleSentenceVi: "Phong cảnh ở đây rất đẹp." },
-          { id: "m2", meaning: "tranh sơn thủy", exampleSentenceCn: "他喜欢画山水。", exampleSentencePinyin: "tā xǐ huan huà shān shuǐ" },
-          { id: "m3", meaning: "thơ", exampleSentenceCn: "山水诗很有名。" },
+          { id: "m1", meaning: "phong cảnh", examples: [{ zh: "这里的山水很美。", pinyin: "zhè lǐ de shān shuǐ hěn měi", vi: "Phong cảnh ở đây rất đẹp." }] },
+          { id: "m2", meaning: "tranh sơn thủy", examples: [{ zh: "他喜欢画山水。", pinyin: "tā xǐ huan huà shān shuǐ" }] },
+          { id: "m3", meaning: "thơ", examples: [{ zh: "山水诗很有名。" }] },
           { id: "m4", meaning: "không có ví dụ" },
         ],
       },
@@ -191,7 +191,9 @@ describe("VocabularyDetailPageContent — dữ liệu", () => {
     }
     vi.stubGlobal("Audio", FakeAudio);
     try {
-      await renderLoaded(makeDetail({ audioUrl: "https://cdn.test/shanshui.mp3" }));
+      const detail = makeDetail();
+      detail.pinyins = detail.pinyins?.map(pinyin => ({ ...pinyin, audioUrl: "https://cdn.test/shanshui.mp3" }));
+      await renderLoaded(detail);
       fireEvent.click(screen.getByRole("button", { name: "Nghe phát âm" }));
       expect(played).toEqual(["https://cdn.test/shanshui.mp3"]);
     } finally {
@@ -203,7 +205,7 @@ describe("VocabularyDetailPageContent — dữ liệu", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     try {
-      await renderLoaded(makeDetail({ hanzi: "山", components: [], etymologyImage: "https://cdn.test/shan.png" }));
+      await renderLoaded(makeDetail({ hanzi: "山", components: [], imageUrl: "https://cdn.test/shan.png" }));
       expect(screen.getByRole("img", { name: "山" })).toHaveAttribute("src", "https://cdn.test/shan.png");
       expect(fetchMock).not.toHaveBeenCalled();
     } finally {

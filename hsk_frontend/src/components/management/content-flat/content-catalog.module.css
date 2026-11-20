@@ -150,7 +150,8 @@
 }
 
 .table .name { color: var(--admin-primary, #b00d0e); font-weight: 700; text-decoration: none; white-space: normal; }
-.table .name:hover { text-decoration: underline; }
+.table .name:not(.selectableName):hover { text-decoration: underline; }
+.selectableName { cursor: text; user-select: text; }
 .summary { display: block; color: var(--bs-secondary-color, #667085); overflow-wrap: anywhere; }
 .ellipsis { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .rowNumber {

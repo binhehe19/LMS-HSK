@@ -28,17 +28,18 @@ Quyền giao diện (quy tắc HSK cũ `useTicketAccess(TicketModule.DICTIONARY)
 | 5 | `DELETE /dictionary/vocabularies/{id}` | Xoá (sau `confirmAction`) | — | 200/204 |
 
 ```ts
-interface VocabularyMeaning { id?: number; meaning: string; exampleSentenceCn?; exampleSentenceVi?; exampleSentenceEn?; exampleSentencePinyin?; exampleWordType?; definitionCn? }
-interface VocabularyPinyin  { id?: number; pinyin: string; sinoVietnamese?; wordTypes?: string /* "Động từ,Danh từ" */; isPrimary?: boolean; measureWord?: string /* "个 [gè], 本 [běn]" */;
+interface VocabularyExample { zh?: string; pinyin?: string; vi?: string; en?: string }   // một câu ví dụ; ô trống không gửi
+interface VocabularyMeaning { id?: number; meaning: string; exampleWordType? /* loại từ của nghĩa */; examples?: VocabularyExample[] /* một nghĩa có nhiều ví dụ */; definitionCn? }
+interface VocabularyPinyin  { id?: number; pinyin: string; audioUrl?: string; sinoVietnamese?; wordTypes?: string /* "Động từ,Danh từ" */; isPrimary?: boolean; measureWord?: string /* "个 [gè], 本 [běn]" */;
                               compounds?: string /* JSON [{hanzi, sinoVietnamese?}] */; synonyms?: string /* JSON [{hanzi, pinyin?}] */; antonyms?: string /* JSON */; notes?; meanings: VocabularyMeaning[] }
-interface Vocabulary        { id: number; hanzi: string; hskLevel?: 1|2|3|4|5|6; audioUrl?; imageUrl?; strokeAnimationUrl?; etymologyStory?; etymologyImage?; radical?; strokeCount?; strokes?;
+interface Vocabulary        { id: number; hanzi: string; hskLevel?: number; imageUrl?; etymologyStory?; radical?;
                               isSingleVocab: boolean; notes?; status?: "draft"|"published"; pinyins?: VocabularyPinyin[]; createdAt?; updatedAt? }
 type  VocabularyInput     = Omit<Vocabulary, "id"|"createdAt"|"updatedAt"> & { pinyins: VocabularyPinyin[] }   // CreateVocabularyRequest = UpdateVocabularyRequest của bản cũ
 interface VocabularyPage    { items: Vocabulary[]; totalElements: number; totalPages: number; page: number; size: number }
 ```
 
 Frontend kiểm tra trước khi gửi (thông điệp của bản cũ): Hán tự bắt buộc; ≥ 1 pinyin, mỗi pinyin có phiên âm, **đúng một** pinyin `isPrimary`; mỗi pinyin ≥ 1 nghĩa không rỗng;
-`strokeCount` nếu có phải > 0. Trường rỗng **không gửi** (bị cắt khỏi JSON); `compounds/synonyms/antonyms` không gửi khi danh sách rỗng.
+Số nét và thứ tự nét không lưu trong từ vựng (lấy từ dữ liệu Hanzi Writer lúc hiển thị). Trường rỗng **không gửi** (bị cắt khỏi JSON); `compounds/synonyms/antonyms` không gửi khi danh sách rỗng.
 
 ### Mã lỗi mong đợi
 

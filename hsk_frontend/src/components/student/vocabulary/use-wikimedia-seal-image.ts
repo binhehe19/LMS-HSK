@@ -3,7 +3,7 @@
 // Ảnh chữ triện (seal script) từ Wikimedia Commons khi từ chưa có ảnh — logic tìm ảnh của useWikimediaImage ở HSK cũ.
 // Khác bản cũ: CHỈ hiển thị. Không tải ảnh về rồi upload lên kho lưu trữ, không gọi sync-etymology (bản cũ ghi ngầm vào DB từ máy học viên).
 // Mặc định TẮT: chỉ bật khi NEXT_PUBLIC_DICTIONARY_WIKIMEDIA_FALLBACK=enabled (gọi ra dịch vụ bên ngoài từ trình duyệt học viên),
-// và chỉ chạy cho từ đơn chưa có imageUrl/etymologyImage.
+// và chỉ chạy cho từ đơn chưa có imageUrl.
 import { useEffect, useState } from "react";
 
 export function isWikimediaFallbackEnabled(): boolean {

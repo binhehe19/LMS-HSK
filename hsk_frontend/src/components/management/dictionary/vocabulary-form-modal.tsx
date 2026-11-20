@@ -2,21 +2,26 @@
 
 // Modal Thêm/Sửa từ vựng — port vocabulary-form-modal.tsx (+ measure-word-manager.tsx, related-words-manager.tsx) của HSK cũ lên antd Modal, giữ 5 tab:
 // Thông tin | Nghĩa & Ví dụ | Từ ghép | Lượng từ & liên quan | Media & Chi tiết; mỗi pinyin có từ loại/nghĩa/lượng từ/từ ghép/đồng-trái nghĩa riêng.
-// Không gọi API: `onSubmit(values)` do container xử lý; kiểm tra bằng lib/dictionary/vocabulary-form.ts và nhảy về tab có lỗi như bản cũ.
-// Khác bản cũ có chủ đích: ô "thêm" của lượng từ/từ liên quan dùng state React (bản cũ document.getElementById); media chỉ nhận URL (upload qua
-// MediaUploadService chưa chuyển); danh sách từ loại dùng chung 19 mục của bộ lọc màn cũ.
-import { Modal } from "antd";
+// Lưu từ qua `onSubmit(values)` do container xử lý; tệp phát âm dùng kho lưu trữ chung.
+import { Button, Modal, Segmented, Select } from "antd";
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
-import { emptyMeaning, emptyPinyin, type MeaningFormItem, type PinyinFormItem, removePinyin, setPrimaryPinyin, validateVocabularyForm, type VocabularyFormTab, type VocabularyFormValues } from "@/lib/dictionary/vocabulary-form";
-import { formatMeasureWords, HSK_LEVELS, type MeasureWord, parseMeasureWords, type RelatedWord, WORD_TYPES } from "@/lib/dictionary/vocabulary-model";
+import { ContentAudioPreview, ContentFileField, ContentImagePreview } from "@/components/management/content-tree/content-file-field";
+import { HanziStructureSvg } from "./hanzi-structure-svg";
+import { fileUrl } from "@/lib/api/storage-client";
+import { RichTextEditor } from "@/components/shared/rich-text-editor";
+import { confirmAction } from "@/components/shared/confirm-action";
+import { emptyExample, emptyMeaning, emptyPinyin, type ExampleFormItem, type MeaningFormItem, type PinyinFormItem, removePinyin, setPrimaryPinyin, validateVocabularyForm, type VocabularyFormTab, type VocabularyFormValues } from "@/lib/dictionary/vocabulary-form";
+import { formatMeasureWords, HSK_LEVELS, parseMeasureWords, type RelatedWord, WORD_TYPES } from "@/lib/dictionary/vocabulary-model";
+import type { VocabularyStatus } from "@/types/dictionary";
 
 export interface VocabularyFormModalProps {
-  mode: "create" | "edit";
+  mode: "create" | "edit" | "view";
   initialValues: VocabularyFormValues;
-  submitting: boolean;
+  submitting?: boolean;
   onCancel: () => void;
-  onSubmit: (values: VocabularyFormValues) => void;
+  onSubmit?: (values: VocabularyFormValues) => void;
 }
 
 const TABS: { key: VocabularyFormTab; label: string }[] = [
@@ -29,29 +34,29 @@ const TABS: { key: VocabularyFormTab; label: string }[] = [
 const LABEL = "form-label fw-bold text-dark small";
 const HANZI_STYLE = { fontFamily: '"Noto Sans SC", sans-serif', fontSize: 16 } as const;
 
-function PinyinSelector({ pinyins, activeIdx, onSelect, onAdd, onRemove, disabled }: { pinyins: PinyinFormItem[]; activeIdx: number; onSelect: (i: number) => void; onAdd: () => void; onRemove: (i: number) => void; disabled?: boolean }) {
+function PinyinSelector({ pinyins, activeIdx, onSelect, onAdd, onRemove, disabled, readOnly }: { pinyins: PinyinFormItem[]; activeIdx: number; onSelect: (i: number) => void; onAdd: () => void; onRemove: (i: number) => void; disabled?: boolean; readOnly?: boolean }) {
   return (
-    <div className="d-flex align-items-center gap-2 flex-wrap mb-3" data-testid="pinyin-selector">
+    <div className="vocab-pinyin-selector d-flex align-items-center flex-wrap mb-3" data-testid="pinyin-selector">
       {pinyins.map((p, idx) => (
         <div key={idx} className="position-relative">
-          <button type="button" className={`btn btn-sm rounded-2 px-3 py-2 fw-bold d-flex align-items-center gap-2 ${activeIdx === idx ? "btn-primary shadow-sm" : "bg-light text-dark border-0"}`} onClick={() => onSelect(idx)} style={{ fontSize: 14, minWidth: 100 }} disabled={disabled} aria-pressed={activeIdx === idx}>
-            <span style={HANZI_STYLE}>{p.pinyin || `Pinyin ${idx + 1}`}</span>
+          <button type="button" className={`btn btn-sm rounded-2 px-3 fw-semibold d-flex align-items-center gap-2 vocab-compact-button ${activeIdx === idx ? "btn-primary" : "btn-light border"}`} onClick={() => onSelect(idx)} disabled={disabled} aria-pressed={activeIdx === idx}>
+            <span className="vocab-pinyin-text">{p.pinyin || `Pinyin ${idx + 1}`}</span>
             {p.isPrimary && (
               <span style={{ fontSize: 16, color: "#fbbf24" }} title="Pinyin chính">
                 ★
               </span>
             )}
           </button>
-          {pinyins.length > 1 && (
-            <button type="button" className="btn btn-sm p-0 text-danger border-0 position-absolute" style={{ right: -8, top: -8, fontSize: 18, lineHeight: 1, width: 24, height: 24, background: "#e5e7eb", borderRadius: "50%" }} title="Xóa pinyin này" aria-label={`Xóa pinyin ${idx + 1}`} onClick={() => onRemove(idx)} disabled={disabled}>
+          {!readOnly && pinyins.length > 1 && (
+            <button type="button" className="btn btn-light border rounded-circle text-danger vocab-pinyin-remove" title="Xóa pinyin này" aria-label={`Xóa pinyin ${idx + 1}`} onClick={() => onRemove(idx)} disabled={disabled}>
               ×
             </button>
           )}
         </div>
       ))}
-      <button type="button" className="btn btn-sm btn-outline-primary rounded-2 px-3 py-2" style={{ fontSize: 13, fontWeight: 600 }} onClick={onAdd} disabled={disabled}>
+      {!readOnly && <button type="button" className="btn btn-sm btn-outline-primary rounded-2 px-3 vocab-compact-button" onClick={onAdd} disabled={disabled}>
         <i className="isax isax-add me-1" /> Thêm pinyin
-      </button>
+      </button>}
     </div>
   );
 }
@@ -60,200 +65,221 @@ interface RelatedWordsEditorProps {
   idPrefix: string;
   title: string;
   icon: string;
-  tone: "info" | "success" | "danger";
   hanziPlaceholder: string;
-  extraPlaceholder: string;
+  extraLabel: "Tiếng Việt" | "Hán Việt" | "Pinyin";
   emptyText: string;
   words: RelatedWord[];
-  onChange: (words: RelatedWord[]) => void;
+  onChange?: (words: RelatedWord[]) => void;
   disabled?: boolean;
 }
 
-/** Khối thêm/xoá từ ghép, đồng nghĩa, trái nghĩa (hanzi + ô phụ: Hán Việt hoặc pinyin). */
-function RelatedWordsEditor({ idPrefix, title, icon, tone, hanziPlaceholder, extraPlaceholder, emptyText, words, onChange, disabled }: RelatedWordsEditorProps) {
+function RelatedWordsEditor({ idPrefix, title, icon, hanziPlaceholder, extraLabel, emptyText, words, onChange, disabled }: RelatedWordsEditorProps) {
   const [hanzi, setHanzi] = useState("");
   const [extra, setExtra] = useState("");
-  const add = () => {
-    if (!hanzi.trim()) return;
+  const [draft, setDraft] = useState<(RelatedWord & { index: number }) | null>(null);
+
+  const addWord = () => {
+    if (!onChange || disabled || !hanzi.trim()) return;
     onChange([...words, { hanzi: hanzi.trim(), extra: extra.trim() }]);
     setHanzi("");
     setExtra("");
   };
-  return (
-    <div className="card border-0 shadow-sm" style={{ borderRadius: "1rem" }} data-testid={`related-${idPrefix}`}>
-      <div className={`card-header bg-${tone} bg-opacity-10 border-bottom py-3 px-4`}>
-        <h6 className="mb-0 fw-bold text-dark">
-          <i className={`isax ${icon} me-2`} /> {title}
-          <span className={`badge bg-${tone} rounded-pill ms-2`}>{words.length}</span>
-        </h6>
-      </div>
-      <div className="card-body p-3">
-        <div className="row g-2 mb-3">
-          <div className="col-md-5">
-            <input type="text" className="form-control form-control-sm" placeholder={hanziPlaceholder} aria-label={`${title}: Hán tự`} style={HANZI_STYLE} value={hanzi} onChange={(e) => setHanzi(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} disabled={disabled} />
-          </div>
-          <div className="col-md-4">
-            <input type="text" className="form-control form-control-sm" placeholder={extraPlaceholder} aria-label={`${title}: ${extraPlaceholder}`} value={extra} onChange={(e) => setExtra(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} disabled={disabled} />
-          </div>
-          <div className="col-md-3">
-            <button type="button" className={`btn btn-sm btn-${tone} w-100 rounded-pill`} onClick={add} disabled={disabled || !hanzi.trim()}>
-              <i className="isax isax-add me-1" /> Thêm
-            </button>
-          </div>
-        </div>
-        {words.length === 0 ? (
-          <div className="text-center py-3 text-muted">
-            <small>{emptyText}</small>
-          </div>
-        ) : (
-          <div className="d-flex flex-wrap gap-2">
-            {words.map((word, i) => (
-              <span key={`${word.hanzi}-${i}`} className={`badge bg-light text-dark border border-${tone} px-3 py-2 d-inline-flex align-items-center`}>
-                <span style={{ ...HANZI_STYLE, fontSize: 14, fontWeight: 500 }}>{word.hanzi}</span>
-                {word.extra && <span className="ms-1 text-muted">[{word.extra}]</span>}
-                <button type="button" className="btn-close ms-2" style={{ width: 14, height: 14 }} aria-label={`Xóa ${word.hanzi}`} onClick={() => onChange(words.filter((_, idx) => idx !== i))} disabled={disabled} />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Lượng từ của một pinyin: chuỗi "个 [gè], 本 [běn]" như máy chủ lưu (measure-word-manager.tsx cũ). */
-function MeasureWordsEditor({ value, onChange, disabled }: { value: string; onChange: (next: string) => void; disabled?: boolean }) {
-  const [hanzi, setHanzi] = useState("");
-  const [pinyin, setPinyin] = useState("");
-  const words: MeasureWord[] = parseMeasureWords(value);
-  const add = () => {
-    if (!hanzi.trim()) return;
-    onChange(formatMeasureWords([...words, { hanzi: hanzi.trim(), pinyin: pinyin.trim() }]));
-    setHanzi("");
-    setPinyin("");
+  const saveWord = () => {
+    if (!onChange || disabled || !draft?.hanzi.trim()) return;
+    const word = { hanzi: draft.hanzi.trim(), extra: draft.extra.trim() };
+    onChange(words.map((current, index) => index === draft.index ? word : current));
+    setDraft(null);
+  };
+  const removeWord = async (index: number) => {
+    if (!onChange || disabled) return;
+    const confirmed = await confirmAction({
+      title: `Xóa ${words[index].hanzi}?`,
+      content: "Thay đổi có hiệu lực khi bạn lưu từ vựng.",
+      okText: "Xóa",
+      danger: true,
+    });
+    if (!confirmed) return;
+    onChange(words.filter((_, current) => current !== index));
+    if (draft?.index === index) setDraft(null);
+    else if (draft && draft.index > index) setDraft({ ...draft, index: draft.index - 1 });
   };
   return (
-    <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: "1rem" }} data-testid="measure-words">
-      <div className="card-header bg-warning bg-opacity-10 border-bottom py-3 px-4">
-        <h6 className="mb-0 fw-bold text-dark">
-          <i className="isax isax-box me-2" /> Lượng từ (Measure)
-          <span className="badge bg-warning rounded-pill ms-2" style={{ color: "#92400e" }}>
-            {words.length}
-          </span>
-        </h6>
-      </div>
-      <div className="card-body p-3">
-        <div className="row g-2 mb-3">
-          <div className="col-md-3">
-            <input type="text" className="form-control form-control-sm" placeholder="Hán tự (VD: 个)" aria-label="Lượng từ: Hán tự" style={HANZI_STYLE} value={hanzi} onChange={(e) => setHanzi(e.target.value)} disabled={disabled} />
-          </div>
-          <div className="col-md-3">
-            <input type="text" className="form-control form-control-sm" placeholder="Pinyin (VD: gè)" aria-label="Lượng từ: Pinyin" value={pinyin} onChange={(e) => setPinyin(e.target.value)} disabled={disabled} />
-          </div>
-          <div className="col-md-6">
-            <button type="button" className="btn btn-sm btn-warning w-100 rounded-pill" onClick={add} disabled={disabled || !hanzi.trim()}>
-              <i className="isax isax-add me-1" /> Thêm Lượng từ
-            </button>
-          </div>
-        </div>
-        {words.length === 0 ? (
-          <div className="text-center py-2 text-muted">
-            <small>Chưa có lượng từ</small>
-          </div>
-        ) : (
-          <div className="d-flex flex-wrap gap-2">
-            {words.map((w, i) => (
-              <span key={`${w.hanzi}-${i}`} className="badge rounded-2 px-3 py-2 d-inline-flex align-items-center" style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", fontSize: 13 }}>
-                <span style={{ ...HANZI_STYLE, fontSize: 14, fontWeight: 500 }}>{w.hanzi}</span>
-                {w.pinyin && (
-                  <span className="ms-1 text-muted" style={{ fontSize: 11 }}>
-                    [{w.pinyin}]
-                  </span>
-                )}
-                <button type="button" className="btn-close ms-2" style={{ width: 14, height: 14 }} aria-label={`Xóa lượng từ ${w.hanzi}`} onClick={() => onChange(formatMeasureWords(words.filter((_, idx) => idx !== i)))} disabled={disabled} />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <section className="vocab-detail-section" data-testid={`related-${idPrefix}`}>
+      <h6 className="vocab-section-title">
+        <i className={`isax ${icon}`} aria-hidden="true" /> {title}
+        <span className="vocab-section-count">{words.length}</span>
+      </h6>
+      {onChange && (
+        <form className="vocab-words-add" onSubmit={event => { event.preventDefault(); addWord(); }}>
+          <label className="vocab-word-field">
+            <span className={LABEL}><Image src="/flags/cn.svg" alt="" width={18} height={12} /> Hán tự</span>
+            <input type="text" className="form-control" placeholder={hanziPlaceholder} lang="zh" value={hanzi} onChange={event => setHanzi(event.target.value)} disabled={disabled} />
+          </label>
+          <label className="vocab-word-field">
+            <span className={LABEL}><Image src={extraLabel === "Pinyin" ? "/flags/cn.svg" : "/flags/vn.svg"} alt="" width={18} height={12} /> {extraLabel}</span>
+            <input type="text" className="form-control" value={extra} onChange={event => setExtra(event.target.value)} disabled={disabled} />
+          </label>
+          <Button htmlType="submit" icon={<i className="isax isax-add" aria-hidden="true" />} disabled={disabled || !hanzi.trim()}>Thêm</Button>
+        </form>
+      )}
+      {words.length === 0 ? (
+        <div className="vocab-section-empty">{emptyText}</div>
+      ) : (
+        <ul className="vocab-word-list">
+          {words.map((word, i) => (
+            <li key={`${word.hanzi}-${i}`} className={`vocab-word-row${draft?.index === i ? " is-editing" : ""}`}>
+              {draft?.index === i ? (
+                <form className="vocab-word-row-edit" aria-label={`Sửa ${word.hanzi}`} onSubmit={event => { event.preventDefault(); saveWord(); }}>
+                  <div className="vocab-word-text">
+                    <input type="text" lang="zh" className="form-control form-control-sm" aria-label="Hán tự" value={draft.hanzi}
+                      autoFocus onChange={event => setDraft({ ...draft, hanzi: event.target.value })} disabled={disabled} />
+                    <input type="text" className="form-control form-control-sm" aria-label={extraLabel} value={draft.extra}
+                      onChange={event => setDraft({ ...draft, extra: event.target.value })} disabled={disabled} />
+                  </div>
+                  <div className="d-flex align-items-center gap-1">
+                    <Button type="text" size="small" htmlType="submit" title="Cập nhật" aria-label="Cập nhật" disabled={disabled || !draft.hanzi.trim()}
+                      icon={<i className="isax isax-tick-circle text-primary" aria-hidden="true" />} />
+                    <Button type="text" size="small" title="Hủy sửa" aria-label="Hủy sửa" onClick={() => setDraft(null)}
+                      icon={<i className="isax isax-close-circle" aria-hidden="true" />} />
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="vocab-word-text">
+                    <span lang="zh" style={HANZI_STYLE}>{word.hanzi}</span>
+                    {word.extra && <span className="small text-muted">{word.extra}</span>}
+                  </div>
+                  {onChange && (
+                    <div className="d-flex align-items-center gap-1">
+                      <Button type="text" size="small" title="Sửa" aria-label={`Sửa ${word.hanzi}`} icon={<i className="isax isax-edit" aria-hidden="true" />} onClick={() => setDraft({ ...word, index: i })} disabled={disabled} />
+                      <Button type="text" size="small" danger title="Xóa" aria-label={`Xóa ${word.hanzi}`} icon={<i className="isax isax-trash" aria-hidden="true" />} onClick={() => void removeWord(i)} disabled={disabled} />
+                    </div>
+                  )}
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
-const MEANING_EXAMPLE_FIELDS: { field: keyof MeaningFormItem; label: string; placeholder: string }[] = [
-  { field: "exampleSentenceCn", label: "Câu ví dụ (Hán tự)", placeholder: "Hán tự..." },
-  { field: "exampleSentencePinyin", label: "Phiên âm", placeholder: "Pinyin..." },
-  { field: "exampleSentenceVi", label: "Dịch nghĩa (Việt)", placeholder: "Nghĩa tiếng Việt..." },
-  { field: "exampleSentenceEn", label: "Dịch nghĩa (Anh)", placeholder: "Nghĩa tiếng Anh..." },
-];
+const EXAMPLE_FIELDS = [
+  { field: "zh", label: "Tiếng Hán", placeholder: "Nhập câu ví dụ…", flag: "cn" },
+  { field: "pinyin", label: "Pinyin của câu ví dụ", placeholder: "Phiên âm cả câu (không bắt buộc)" },
+  { field: "vi", label: "Tiếng Việt", placeholder: "Nhập bản dịch…", flag: "vn" },
+] as const;
 
-export function VocabularyFormModal({ mode, initialValues, submitting, onCancel, onSubmit }: VocabularyFormModalProps) {
+export function VocabularyFormModal({ mode, initialValues, submitting = false, onCancel, onSubmit }: VocabularyFormModalProps) {
   const [values, setValues] = useState<VocabularyFormValues>(initialValues);
   const [tab, setTab] = useState<VocabularyFormTab>("info");
   const [activeIdx, setActiveIdx] = useState(0);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [saveAction, setSaveAction] = useState<VocabularyStatus>();
   const isEdit = mode === "edit";
+  const isView = mode === "view";
+  const locked = isView || submitting;
   const pinyins = values.pinyins;
+  const totalMeanings = pinyins.reduce((total, pinyin) => total + pinyin.meanings.length, 0);
   const curIdx = Math.min(activeIdx, pinyins.length - 1);
   const cur = pinyins[curIdx];
 
   const patch = (next: Partial<VocabularyFormValues>) => setValues((v) => ({ ...v, ...next }));
   const patchPinyin = (idx: number, next: Partial<PinyinFormItem>) => setValues((v) => ({ ...v, pinyins: v.pinyins.map((p, i) => (i === idx ? { ...p, ...next } : p)) }));
   const patchMeaning = (meaningIdx: number, next: Partial<MeaningFormItem>) => patchPinyin(curIdx, { meanings: cur.meanings.map((m, i) => (i === meaningIdx ? { ...m, ...next } : m)) });
+  const patchExample = (meaningIdx: number, exampleIdx: number, next: Partial<ExampleFormItem>) => patchMeaning(meaningIdx, { examples: cur.meanings[meaningIdx].examples.map((e, i) => (i === exampleIdx ? { ...e, ...next } : e)) });
+  const addExample = (meaningIdx: number) => patchMeaning(meaningIdx, { examples: [...cur.meanings[meaningIdx].examples, emptyExample()] });
+  const dropExample = async (meaningIdx: number, exampleIdx: number) => {
+    const confirmed = await confirmAction({
+      title: `Xóa ví dụ ${exampleIdx + 1} của nghĩa ${meaningIdx + 1}?`,
+      content: "Thay đổi có hiệu lực khi bạn lưu từ vựng.",
+      okText: "Xóa ví dụ",
+      danger: true,
+    });
+    if (confirmed) patchMeaning(meaningIdx, { examples: cur.meanings[meaningIdx].examples.filter((_, i) => i !== exampleIdx) });
+  };
 
   const addPinyin = () => {
     patch({ pinyins: [...pinyins, emptyPinyin()] });
     setActiveIdx(pinyins.length);
   };
-  const dropPinyin = (idx: number) => {
+  const dropPinyin = async (idx: number) => {
     if (pinyins.length <= 1) {
       toast.error("Phải có ít nhất một pinyin!");
       return;
     }
+    const name = pinyins[idx].pinyin || `Pinyin ${idx + 1}`;
+    const confirmed = await confirmAction({
+      title: `Xóa ${name}?`,
+      content: "Nghĩa, ví dụ và học liệu gắn với cách đọc này sẽ bị xóa khỏi form.",
+      okText: "Xóa Pinyin",
+      cancelText: "Hủy",
+      danger: true,
+    });
+    if (!confirmed) return;
     patch({ pinyins: removePinyin(pinyins, idx) });
-    setActiveIdx((i) => Math.min(i, pinyins.length - 2));
+    setActiveIdx(i => Math.min(i > idx ? i - 1 : i, pinyins.length - 2));
   };
-  const dropMeaning = (idx: number) => {
+  const dropMeaning = async (idx: number) => {
     if (cur.meanings.length <= 1) {
       toast.error("Phải có ít nhất một nghĩa!");
       return;
     }
-    patchPinyin(curIdx, { meanings: cur.meanings.filter((_, i) => i !== idx) });
+    const confirmed = await confirmAction({
+      title: `Xóa nghĩa ${idx + 1}?`,
+      content: "Các ví dụ thuộc nghĩa này cũng sẽ bị xóa khi bạn lưu từ vựng.",
+      okText: "Xóa nghĩa",
+      danger: true,
+    });
+    if (confirmed) patchPinyin(curIdx, { meanings: cur.meanings.filter((_, i) => i !== idx) });
   };
-  const toggleWordType = (type: string) => patchPinyin(curIdx, { wordTypes: cur.wordTypes.includes(type) ? cur.wordTypes.filter((t) => t !== type) : [...cur.wordTypes, type] });
 
-  const submit = () => {
+  const submit = (status: VocabularyStatus) => {
+    if (locked || uploadingFile || !onSubmit) return;
     const invalid = validateVocabularyForm(values);
     if (invalid) {
       toast.error(invalid.message);
       setTab(invalid.tab);
       return;
     }
-    onSubmit(values);
+    setSaveAction(status);
+    onSubmit({ ...values, status });
   };
 
-  const selector = <PinyinSelector pinyins={pinyins} activeIdx={curIdx} onSelect={setActiveIdx} onAdd={addPinyin} onRemove={dropPinyin} disabled={submitting} />;
+  const selector = <PinyinSelector pinyins={pinyins} activeIdx={curIdx} onSelect={setActiveIdx} onAdd={addPinyin} onRemove={idx => void dropPinyin(idx)} disabled={submitting || uploadingFile} readOnly={isView} />;
   const pinyinName = cur.pinyin || `pinyin ${curIdx + 1}`;
 
   return (
     <Modal
-      title={isEdit ? "Cập nhật từ vựng" : "Thêm từ vựng mới"}
+      title={isView ? <>Chi tiết từ vựng <span lang="zh">{values.hanzi}</span></> : isEdit ? "Cập nhật từ vựng" : "Thêm từ vựng mới"}
       open
-      centered
-      wrapClassName="content-tree-modal vocabulary-form-modal"
+      centered={!isView}
+      wrapClassName={`content-tree-modal vocabulary-form-modal${isView ? " vocabulary-details-modal" : ""}`}
       width={900}
       onCancel={onCancel}
-      onOk={submit}
-      okText={submitting ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo mới"}
+      onOk={() => submit("published")}
+      footer={(_, { CancelBtn, OkBtn }) => isView ? <CancelBtn /> : (
+        <>
+          <CancelBtn />
+          <Button disabled={submitting || uploadingFile} loading={submitting && saveAction === "draft"} onClick={() => submit("draft")}>
+            Lưu Nháp
+          </Button>
+          <OkBtn />
+        </>
+      )}
+      okText="Lưu & Xuất bản"
       cancelText="Đóng"
-      okButtonProps={{ disabled: submitting }}
-      confirmLoading={submitting}
+      okButtonProps={{ disabled: submitting || uploadingFile }}
+      confirmLoading={submitting && saveAction === "published"}
     >
-      <div data-testid="vocabulary-form">
-        <ul className="nav nav-tabs border-0 w-100 pb-2 vocab-form-tabs mb-3" role="tablist">
+      <div className="vocab-form" data-testid="vocabulary-form">
+        <ul className="nav nav-tabs vocab-form-tabs mb-3" role="tablist">
           {TABS.map((t) => (
             <li key={t.key} className="nav-item" role="presentation">
-              <button type="button" role="tab" aria-selected={tab === t.key} className={`nav-link ${tab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
+              <button type="button" role="tab" aria-selected={tab === t.key} className={`nav-link ${tab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)} disabled={uploadingFile}>
                 {t.label}
+                {t.key === "meaning" && totalMeanings > 0 && <span className="badge bg-primary rounded-pill ms-1" style={{ fontSize: 9 }}>{totalMeanings}</span>}
                 {t.key === "compounds" && pinyins.some((p) => p.compounds.length > 0) && <span className="badge bg-primary rounded-pill ms-1" style={{ fontSize: 9 }}>{pinyins.reduce((s, p) => s + p.compounds.length, 0)}</span>}
                 {t.key === "related" && pinyins.reduce((s, p) => s + p.synonyms.length + p.antonyms.length, 0) > 0 && <span className="badge bg-info rounded-pill ms-1" style={{ fontSize: 9 }}>{pinyins.reduce((s, p) => s + p.synonyms.length + p.antonyms.length, 0)}</span>}
               </button>
@@ -261,32 +287,27 @@ export function VocabularyFormModal({ mode, initialValues, submitting, onCancel,
           ))}
         </ul>
 
-        <div style={{ minHeight: 400 }}>
+        <div key={tab} className="vocab-form-panel">
           {tab === "info" && (
             <div className="row g-3" data-testid="vocab-tab-info">
-              <div className="col-md-4">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <label className={LABEL} htmlFor="vocab-hanzi">
                   Hán tự <span className="text-danger">*</span>
                 </label>
-                <input id="vocab-hanzi" type="text" className="form-control form-control-lg vocab-hanzi" value={values.hanzi} placeholder="Nhập từ vựng..." onChange={(e) => patch({ hanzi: e.target.value })} disabled={submitting} />
+                <input id="vocab-hanzi" type="text" className="form-control vocab-hanzi" value={values.hanzi} placeholder="Nhập từ vựng..." onChange={(e) => patch({ hanzi: e.target.value })} readOnly={isView} disabled={submitting} />
               </div>
-              <div className="col-md-4">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <label className={LABEL} htmlFor="vocab-radical">
                   Bộ thủ
                 </label>
-                <input id="vocab-radical" type="text" className="form-control form-control-lg" value={values.radical} placeholder="Nhập bộ..." onChange={(e) => patch({ radical: e.target.value })} disabled={submitting} />
+                <input id="vocab-radical" type="text" className="form-control" value={values.radical} placeholder="Nhập bộ..." onChange={(e) => patch({ radical: e.target.value })} readOnly={isView} disabled={submitting} />
               </div>
-              <div className="col-md-2">
-                <label className={LABEL} htmlFor="vocab-stroke-count">
-                  Số nét
-                </label>
-                <input id="vocab-stroke-count" type="number" className="form-control form-control-lg" min={1} value={values.strokeCount} placeholder="..." onChange={(e) => patch({ strokeCount: e.target.value })} disabled={submitting} />
-              </div>
-              <div className="col-md-2">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <label className={LABEL} htmlFor="vocab-hsk">
                   HSK
                 </label>
-                <select id="vocab-hsk" className="form-select form-select-lg" value={values.hskLevel} onChange={(e) => patch({ hskLevel: Number(e.target.value) })} disabled={submitting}>
+                <select id="vocab-hsk" className="form-select" value={values.hskLevel} onChange={(e) => patch({ hskLevel: Number(e.target.value) })} disabled={locked}>
+                  {isView && !HSK_LEVELS.includes(values.hskLevel) && <option value={values.hskLevel}>{values.hskLevel || "—"}</option>}
                   {HSK_LEVELS.map((lv) => (
                     <option key={lv} value={lv}>
                       {lv}
@@ -294,143 +315,168 @@ export function VocabularyFormModal({ mode, initialValues, submitting, onCancel,
                   ))}
                 </select>
               </div>
-              <div className="col-md-8">
-                <label className={LABEL} htmlFor="vocab-strokes">
-                  Nét bút
-                </label>
-                <input id="vocab-strokes" type="text" className="form-control form-control-lg" value={values.strokes} placeholder="横、竖、横..." onChange={(e) => patch({ strokes: e.target.value })} disabled={submitting} />
-              </div>
-              <div className="col-md-4 d-flex flex-column justify-content-end">
-                <div className="d-flex align-items-center justify-content-between p-2 border rounded-3 bg-light bg-opacity-50 h-100">
-                  <span className="fw-bold text-dark small">Cấu trúc</span>
-                  <div className="d-flex bg-white p-1 rounded-pill border shadow-sm" role="radiogroup" aria-label="Cấu trúc từ">
-                    {[true, false].map((val) => (
-                      <button key={String(val)} type="button" role="radio" aria-checked={values.isSingleVocab === val} className={`btn btn-sm px-3 py-1 rounded-pill ${values.isSingleVocab === val ? "btn-primary shadow-sm" : "text-muted border-0"}`} onClick={() => patch({ isSingleVocab: val })} style={{ fontSize: 12 }} disabled={submitting}>
-                        {val ? "Từ đơn" : "Từ ghép"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <label className={LABEL} htmlFor="vocab-status">
-                  Trạng thái
-                </label>
-                <select id="vocab-status" className="form-select form-select-lg" value={values.status} onChange={(e) => patch({ status: e.target.value === "published" ? "published" : "draft" })} disabled={submitting}>
-                  <option value="draft">Draft (Nháp)</option>
-                  <option value="published">Published (Đã xuất bản)</option>
-                </select>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <div id="vocab-structure-label" className={LABEL}>Cấu trúc</div>
+                <Segmented
+                  className="vocab-structure"
+                  aria-labelledby="vocab-structure-label"
+                  block
+                  size="large"
+                  options={["Từ đơn", "Từ ghép"]}
+                  value={values.isSingleVocab ? "Từ đơn" : "Từ ghép"}
+                  onChange={structure => patch({ isSingleVocab: structure === "Từ đơn" })}
+                  disabled={locked}
+                />
               </div>
 
-              <div className="col-md-12 mt-2">
-                <div className="border rounded-3 p-3 bg-white">
-                  <div className="fw-bold text-dark mb-2" style={{ fontSize: 14 }}>
-                    Pinyin ({pinyins.length})
+              <div className="col-12">
+                <section className="border rounded-3 p-3" aria-labelledby="vocab-readings">
+                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <h6 id="vocab-readings" className="fw-semibold text-dark mb-0">Pinyin ({pinyins.length})</h6>
+                    {cur.isPrimary ? (
+                      <span className="badge text-dark bg-light border">Pinyin chính</span>
+                    ) : !isView && (
+                      <button type="button" className="btn btn-sm btn-outline-secondary rounded-2 vocab-compact-button" disabled={locked || uploadingFile} onClick={() => patch({ pinyins: setPrimaryPinyin(pinyins, curIdx) })}>
+                        Đặt làm Pinyin chính
+                      </button>
+                    )}
                   </div>
                   {selector}
-                  <div className="border rounded-3 p-3 bg-light bg-opacity-25">
-                    <div className="row g-2 mb-3">
-                      <div className="col-md-4">
-                        <label className={`${LABEL} mb-1`} htmlFor="vocab-pinyin">
-                          Pinyin <span className="text-danger">*</span>
-                        </label>
-                        <input id="vocab-pinyin" type="text" className="form-control form-control-sm" placeholder="shàng, shǎng..." value={cur.pinyin} onChange={(e) => patchPinyin(curIdx, { pinyin: e.target.value })} disabled={submitting} />
-                      </div>
-                      <div className="col-md-4">
-                        <label className={`${LABEL} mb-1`} htmlFor="vocab-sino">
-                          Hán Việt
-                        </label>
-                        <input id="vocab-sino" type="text" className="form-control form-control-sm" placeholder="thượng..." value={cur.sinoVietnamese} onChange={(e) => patchPinyin(curIdx, { sinoVietnamese: e.target.value })} disabled={submitting} />
-                      </div>
-                      <div className="col-md-4 d-flex align-items-end">
-                        <button type="button" disabled={submitting || cur.isPrimary} className={`btn btn-sm w-100 rounded-pill ${cur.isPrimary ? "btn-warning text-dark" : "btn-outline-warning"}`} onClick={() => patch({ pinyins: setPrimaryPinyin(pinyins, curIdx) })} style={{ fontSize: 12 }}>
-                          {cur.isPrimary ? "★ Pinyin chính" : "☆ Đặt làm chính"}
-                        </button>
-                      </div>
+                  <div className="row g-3">
+                    <div className="col-12 col-sm-6 col-lg-3">
+                      <label className={LABEL} htmlFor="vocab-pinyin">
+                        Pinyin <span className="text-danger">*</span>
+                      </label>
+                      <input id="vocab-pinyin" type="text" className="form-control" placeholder="shàng, shǎng..." value={cur.pinyin} onChange={(e) => patchPinyin(curIdx, { pinyin: e.target.value })} readOnly={isView} disabled={submitting} />
                     </div>
-                    <div>
-                      <div className={`${LABEL} mb-2`}>
-                        Loại từ của <span className="text-primary">{pinyinName}</span> <small className="text-muted fw-normal ms-1">(chọn nhiều)</small>
-                      </div>
-                      <div className="d-flex flex-wrap gap-2" role="group" aria-label="Loại từ">
-                        {WORD_TYPES.map((type) => {
-                          const selected = cur.wordTypes.includes(type);
-                          return (
-                            <button key={type} type="button" aria-pressed={selected} className={`btn btn-sm px-3 py-1 rounded-pill ${selected ? "btn-primary shadow-sm" : "btn-outline-secondary"}`} onClick={() => toggleWordType(type)} style={{ fontSize: 12 }} disabled={submitting}>
-                              {selected && <i className="isax isax-tick-circle me-1" />}
-                              {type}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {cur.wordTypes.length === 0 && <small className="text-muted mt-1 d-block">Chưa chọn loại từ nào</small>}
+                    <div className="col-12 col-sm-6 col-lg-3">
+                      <label className={LABEL} htmlFor="vocab-sino">
+                        Hán Việt
+                      </label>
+                      <input id="vocab-sino" type="text" className="form-control" placeholder="thượng..." value={cur.sinoVietnamese} onChange={(e) => patchPinyin(curIdx, { sinoVietnamese: e.target.value })} readOnly={isView} disabled={submitting} />
                     </div>
+                    <div className="col-12 col-lg-6">
+                      <label className={LABEL} htmlFor="vocab-word-types">Loại từ của {pinyinName}</label>
+                      <Select
+                        id="vocab-word-types"
+                        mode="multiple"
+                        showSearch
+                        size="large"
+                        className="vocab-word-types w-100"
+                        placeholder="Chọn loại từ"
+                        options={WORD_TYPES.map(type => ({ label: type, value: type }))}
+                        value={cur.wordTypes}
+                        onChange={wordTypes => patchPinyin(curIdx, { wordTypes })}
+                        disabled={locked}
+                      />
+                    </div>
+                    {isView ? cur.audioUrl && (
+                      <div className="col-12">
+                        <ContentAudioPreview url={cur.audioUrl} label="Nghe tệp phát âm" />
+                      </div>
+                    ) : (
+                      <div className="col-12">
+                        <ContentFileField
+                          key={curIdx}
+                          id="vocab-pinyin-audio"
+                          label="Tệp phát âm"
+                          kind="audio"
+                          confirmRemove
+                          previewSelectedAudio
+                          previewUrl={cur.audioUrl}
+                          disabled={submitting || uploadingFile}
+                          onUploadingChange={setUploadingFile}
+                          onChange={fileId => patchPinyin(curIdx, { audioUrl: fileUrl(fileId) ?? undefined })}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
+                </section>
               </div>
             </div>
           )}
 
           {tab === "meaning" && (
-            <div data-testid="vocab-tab-meaning">
+            <div key={curIdx} data-testid="vocab-tab-meaning">
               {selector}
-              <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <h6 className="fw-bold text-dark mb-0">
                   Nghĩa của <span className="text-primary">{pinyinName}</span> <span className="text-muted ms-1">({cur.meanings.length})</span>
                 </h6>
-                <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" onClick={() => patchPinyin(curIdx, { meanings: [...cur.meanings, emptyMeaning()] })} disabled={submitting}>
-                  <i className="isax isax-add me-1" /> Thêm nghĩa
-                </button>
+                {!isView && <Button type="primary" icon={<i className="isax isax-add" aria-hidden="true" />} className="vocab-add-meaning" onClick={() => patchPinyin(curIdx, { meanings: [...cur.meanings, emptyMeaning()] })} disabled={locked}>
+                  Thêm nghĩa
+                </Button>}
               </div>
-              <div className="pe-2" style={{ maxHeight: 400, overflowY: "auto" }}>
+              <div>
                 {cur.meanings.map((m, index) => (
-                  <div key={index} className="card border mb-3 shadow-sm overflow-hidden" style={{ borderRadius: "1rem" }} data-testid="meaning-card">
-                    <div className="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
-                      <span className="fw-bold text-primary small">Nghĩa #{index + 1}</span>
-                      <button type="button" className="btn btn-sm text-danger p-0 border-0" onClick={() => dropMeaning(index)} title="Xóa nghĩa này" aria-label={`Xóa nghĩa ${index + 1}`} disabled={submitting}>
-                        <i className="isax isax-trash small" />
-                      </button>
+                  <div key={index} className="vocab-meaning-card card border rounded-3 mb-2 overflow-hidden" data-testid="meaning-card">
+                    <div className="card-header bg-light d-flex justify-content-between align-items-center py-1 px-3 border-bottom">
+                      <span className="fw-bold text-primary">Nghĩa #{index + 1}</span>
+                      {!isView && <Button type="text" danger className="vocab-delete-meaning" icon={<i className="isax isax-trash" aria-hidden="true" />} onClick={() => void dropMeaning(index)} title="Xóa nghĩa này" aria-label={`Xóa nghĩa ${index + 1}`} disabled={locked} />}
                     </div>
-                    <div className="card-body p-3">
-                      <div className="mb-3">
-                        <label className={LABEL} htmlFor={`vocab-meaning-${index}`}>
-                          Nghĩa (Tiếng Việt)
-                        </label>
-                        <input id={`vocab-meaning-${index}`} type="text" className="form-control form-control-sm" value={m.meaning} placeholder="Nhập nghĩa của từ..." onChange={(e) => patchMeaning(index, { meaning: e.target.value })} disabled={submitting} />
-                      </div>
-                      <div className="row g-2 mb-3">
-                        {([{ field: "meaningEn", label: "Nghĩa (Tiếng Anh)" }, { field: "meaningZh", label: "Nghĩa (Tiếng Trung)" }] as const).map(({ field, label }) => (
-                          <div className="col-md-6" key={field}>
-                            <label className={LABEL} htmlFor={`vocab-meaning-${index}-${field}`}>{label}</label>
-                            <input id={`vocab-meaning-${index}-${field}`} type="text" className="form-control form-control-sm" value={m[field]} onChange={(event) => patchMeaning(index, { [field]: event.target.value })} disabled={submitting} />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="bg-white border rounded-3 p-3">
-                        <div className={`${LABEL} mb-2`}>Ví Dụ</div>
-                        <div className="row g-2">
-                          {MEANING_EXAMPLE_FIELDS.map(({ field, label, placeholder }) => (
-                            <div key={field} className="col-md-6">
-                              <label className="form-label text-muted small mb-1" htmlFor={`vocab-meaning-${index}-${field}`}>
-                                {label}
-                              </label>
-                              <input id={`vocab-meaning-${index}-${field}`} type="text" className="form-control form-control-sm bg-light border-0" placeholder={placeholder} value={m[field]} onChange={(e) => patchMeaning(index, { [field]: e.target.value })} disabled={submitting} />
-                            </div>
-                          ))}
+                    <div className="card-body px-3 py-2">
+                      <div className="row g-2 mb-2">
+                        <div className="col-md-5">
+                          <div className={`${LABEL} d-flex align-items-center gap-2`}><Image src="/flags/vn.svg" alt="" width={18} height={12} />Nghĩa (Tiếng Việt)</div>
+                          <RichTextEditor label="Nghĩa (Tiếng Việt)" text={m.meaning} html={m.meaningViHtml} placeholder="Nhập nghĩa của từ…" readOnly={isView} disabled={submitting} onChange={(meaning, meaningViHtml) => patchMeaning(index, { meaning, meaningViHtml })} />
                         </div>
-                        <div className="mt-3 pt-3 border-top">
-                          <label className={`${LABEL} mb-2`} htmlFor={`vocab-meaning-${index}-type`}>
-                            Loại từ của ví dụ này
-                          </label>
-                          <select id={`vocab-meaning-${index}-type`} className="form-select form-select-sm bg-light border-0" value={m.exampleWordType} onChange={(e) => patchMeaning(index, { exampleWordType: e.target.value })} disabled={submitting}>
-                            <option value="">-- Chọn loại từ (nếu có) --</option>
-                            {(cur.wordTypes.length > 0 ? cur.wordTypes : WORD_TYPES).map((type) => (
-                              <option key={type} value={type}>
-                                {type}
-                              </option>
+                        <div className="col-md-4">
+                          <div className={`${LABEL} d-flex align-items-center gap-2`}><Image src="/flags/cn.svg" alt="" width={18} height={12} />Nghĩa (Tiếng Trung)</div>
+                          <RichTextEditor label="Nghĩa (Tiếng Trung)" text={m.meaningZh} html={m.meaningZhHtml} placeholder="Nhập nghĩa tiếng Trung…" readOnly={isView} disabled={submitting} onChange={(meaningZh, meaningZhHtml) => patchMeaning(index, { meaningZh, meaningZhHtml })} />
+                        </div>
+                        <div className="col-md-3">
+                          <label className={LABEL} htmlFor={`vocab-meaning-${index}-type`}>Loại từ</label>
+                          <select id={`vocab-meaning-${index}-type`} className="form-select form-select-sm" value={m.exampleWordType} onChange={(e) => patchMeaning(index, { exampleWordType: e.target.value })} disabled={locked}>
+                            <option value="">Chọn loại từ</option>
+                            {(cur.wordTypes.length > 0 ? cur.wordTypes : WORD_TYPES).map(type => (
+                              <option key={type} value={type}>{type}</option>
                             ))}
                           </select>
                         </div>
+                      </div>
+                      <div className="border-top pt-2">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <div className="fw-semibold">
+                            Ví dụ <span className="text-muted fw-normal">({m.examples.length})</span>
+                          </div>
+                          {!isView && (
+                            <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-3" onClick={() => addExample(index)} disabled={locked}>
+                              <i className="isax isax-add me-1" /> Thêm ví dụ
+                            </button>
+                          )}
+                        </div>
+                        {m.examples.map((example, exampleIndex) => (
+                          <div key={exampleIndex} className="rounded-2 px-2 py-1 mb-1 bg-light" data-testid="example-row">
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                              <span className="small fw-bold text-muted">Ví dụ #{exampleIndex + 1}</span>
+                              {!isView && (
+                                <button type="button" className="btn btn-sm text-danger p-0 border-0" onClick={() => void dropExample(index, exampleIndex)} title="Xóa ví dụ này" aria-label={`Xóa ví dụ ${exampleIndex + 1} của nghĩa ${index + 1}`} disabled={locked}>
+                                  <i className="isax isax-trash small" />
+                                </button>
+                              )}
+                            </div>
+                            <div className="row g-2">
+                              {EXAMPLE_FIELDS.map(exampleField => (
+                                <div key={exampleField.field} className="col-md-4">
+                                  <div className="form-label text-muted d-flex align-items-center gap-2">
+                                    {"flag" in exampleField && <Image src={`/flags/${exampleField.flag}.svg`} alt="" width={18} height={12} />}
+                                    {exampleField.label}
+                                  </div>
+                                  <RichTextEditor
+                                    label={exampleField.label}
+                                    text={example[exampleField.field]}
+                                    html={example[`${exampleField.field}Html`]}
+                                    placeholder={exampleField.placeholder}
+                                    readOnly={isView}
+                                    disabled={submitting}
+                                    onChange={(text, html) => patchExample(index, exampleIndex, { [exampleField.field]: text, [`${exampleField.field}Html`]: html })}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        {m.examples.length === 0 && <small className="text-muted">Chưa có ví dụ nào</small>}
                       </div>
                     </div>
                   </div>
@@ -442,76 +488,67 @@ export function VocabularyFormModal({ mode, initialValues, submitting, onCancel,
           {tab === "compounds" && (
             <div data-testid="vocab-tab-compounds">
               {selector}
-              <small className="text-muted d-block mb-3">
-                Từ ghép riêng cho cách đọc: <span className="fw-bold text-primary">{pinyinName}</span>
-              </small>
-              <RelatedWordsEditor idPrefix="compounds" title="Từ Ghép" icon="isax-components" tone="info" hanziPlaceholder="VD: 上午" extraPlaceholder="Hán Việt (VD: thượng ngọ)" emptyText="Chưa có từ ghép nào. Thêm từ ghép đầu tiên!" words={cur.compounds} onChange={(compounds) => patchPinyin(curIdx, { compounds })} disabled={submitting} />
+              <RelatedWordsEditor key={curIdx} idPrefix="compounds" title="Từ ghép" icon="isax-link-2" hanziPlaceholder="Ví dụ 上午" extraLabel="Tiếng Việt" emptyText="Chưa có từ ghép" words={cur.compounds} onChange={isView ? undefined : (compounds) => patchPinyin(curIdx, { compounds })} disabled={submitting} />
             </div>
           )}
 
           {tab === "related" && (
             <div data-testid="vocab-tab-related">
               {selector}
-              <MeasureWordsEditor value={cur.measureWord} onChange={(measureWord) => patchPinyin(curIdx, { measureWord })} disabled={submitting} />
-              <div className="row g-3 mb-4">
-                <div className="col-lg-6">
-                  <RelatedWordsEditor idPrefix="synonyms" title="Đồng Nghĩa" icon="isax-equals" tone="success" hanziPlaceholder="Hán tự (VD: 登)" extraPlaceholder="Pinyin (VD: dēng)" emptyText="Chưa có từ đồng nghĩa" words={cur.synonyms} onChange={(synonyms) => patchPinyin(curIdx, { synonyms })} disabled={submitting} />
-                </div>
-                <div className="col-lg-6">
-                  <RelatedWordsEditor idPrefix="antonyms" title="Trái Nghĩa" icon="isax-close-circle" tone="danger" hanziPlaceholder="Hán tự (VD: 下)" extraPlaceholder="Pinyin (VD: xià)" emptyText="Chưa có từ trái nghĩa" words={cur.antonyms} onChange={(antonyms) => patchPinyin(curIdx, { antonyms })} disabled={submitting} />
-                </div>
-              </div>
-              <div className="card border-0 shadow-sm" style={{ borderRadius: "1rem" }}>
-                <div className="card-header bg-warning bg-opacity-10 border-bottom py-3 px-4">
-                  <h6 className="mb-0 fw-bold text-dark">
-                    <i className="isax isax-note me-2" />
-                    Ghi chú (Pinyin: <span className="text-warning">{pinyinName}</span>)
-                  </h6>
-                </div>
-                <div className="card-body p-3">
-                  <textarea className="form-control" rows={4} aria-label="Ghi chú cho pinyin" placeholder="Ghi chú riêng cho cách đọc này (cách phân biệt, lưu ý cách dùng, v.v.)" value={cur.notes} onChange={(e) => patchPinyin(curIdx, { notes: e.target.value })} disabled={submitting} />
-                </div>
+              <div key={curIdx} className="vocab-detail-grid">
+                <RelatedWordsEditor idPrefix="measure-words" title="Lượng từ" icon="isax-box" hanziPlaceholder="Ví dụ 个" extraLabel="Pinyin" emptyText="Chưa có lượng từ"
+                  words={parseMeasureWords(cur.measureWord).map(({ hanzi, pinyin }) => ({ hanzi, extra: pinyin }))}
+                  onChange={isView ? undefined : words => patchPinyin(curIdx, { measureWord: formatMeasureWords(words.map(({ hanzi, extra }) => ({ hanzi, pinyin: extra }))) })} disabled={submitting} />
+                <RelatedWordsEditor idPrefix="synonyms" title="Đồng nghĩa" icon="isax-copy" hanziPlaceholder="Ví dụ 登" extraLabel="Hán Việt" emptyText="Chưa có từ đồng nghĩa" words={cur.synonyms} onChange={isView ? undefined : synonyms => patchPinyin(curIdx, { synonyms })} disabled={submitting} />
+                <RelatedWordsEditor idPrefix="antonyms" title="Trái nghĩa" icon="isax-close-circle" hanziPlaceholder="Ví dụ 下" extraLabel="Hán Việt" emptyText="Chưa có từ trái nghĩa" words={cur.antonyms} onChange={isView ? undefined : antonyms => patchPinyin(curIdx, { antonyms })} disabled={submitting} />
+                <section className="vocab-detail-section">
+                  <h6 className="vocab-section-title"><i className="isax isax-note" aria-hidden="true" /> Ghi chú cho {pinyinName}</h6>
+                  <textarea className="form-control" rows={4} aria-label="Ghi chú cho pinyin" placeholder="Ghi chú riêng cho cách đọc này (cách phân biệt, lưu ý cách dùng, v.v.)" value={cur.notes} onChange={(e) => patchPinyin(curIdx, { notes: e.target.value })} readOnly={isView} disabled={submitting} />
+                </section>
               </div>
             </div>
           )}
 
           {tab === "details" && (
             <div data-testid="vocab-tab-details">
-              <div className="row g-3 mb-4">
-                <div className="col-md-6">
-                  <label className={LABEL} htmlFor="vocab-image">
-                    Hình minh họa (URL)
-                  </label>
-                  <input id="vocab-image" type="text" className="form-control bg-light border-0" value={values.imageUrl} placeholder="Link ảnh minh họa..." onChange={(e) => patch({ imageUrl: e.target.value })} disabled={submitting} />
-                </div>
-                {values.isSingleVocab && (
-                  <div className="col-md-6">
-                    <label className={LABEL} htmlFor="vocab-stroke-url">
-                      URL ảnh động nét viết
-                    </label>
-                    <input id="vocab-stroke-url" type="text" className="form-control bg-light border-0" value={values.strokeAnimationUrl} placeholder="Link ảnh động viết chữ..." onChange={(e) => patch({ strokeAnimationUrl: e.target.value })} disabled={submitting} />
+              <div className="vocab-detail-grid vocab-media-grid mb-3">
+                <section className="vocab-detail-section vocab-illustration">
+                  {isView ? (
+                    <>
+                      <h6 className="vocab-section-title">Hình minh họa</h6>
+                        <ContentImagePreview url={values.imageUrl} alt={`Ảnh minh họa cho ${values.hanzi}`} />
+                    </>
+                  ) : (
+                    <ContentFileField
+                      id="vocab-image"
+                      label="Hình minh họa"
+                      kind="image"
+                      confirmRemove
+                      imageOverlay
+                      previewUrl={values.imageUrl}
+                      disabled={submitting || uploadingFile}
+                      onUploadingChange={setUploadingFile}
+                      onChange={fileId => patch({ imageUrl: fileUrl(fileId) ?? "" })}
+                    />
+                  )}
+                </section>
+                <section className="vocab-detail-section" aria-labelledby="vocab-stroke-heading">
+                  <h6 id="vocab-stroke-heading" className="vocab-section-title">
+                    <i className="isax isax-edit-2" aria-hidden="true" /> Thứ tự nét viết
+                  </h6>
+                  <div className="vocab-stroke-preview">
+                    <HanziStructureSvg key={values.hanzi} word={values.hanzi} showStatus />
                   </div>
-                )}
+                </section>
               </div>
-              <div className="mb-3">
-                <label className={LABEL} htmlFor="vocab-etymology">
-                  Chiết tự (nguồn gốc)
-                </label>
-                <textarea id="vocab-etymology" className="form-control bg-light border-0" rows={4} value={values.etymologyStory} placeholder="Giải thích nguồn gốc, câu chuyện ghi nhớ..." onChange={(e) => patch({ etymologyStory: e.target.value })} disabled={submitting} />
+              <div className="vocab-detail-section">
+                <h6 className="vocab-section-title">Chiết tự (nguồn gốc)</h6>
+                <RichTextEditor label="Chiết tự (nguồn gốc)" text={values.etymologyStory} html={values.etymologyStoryHtml} placeholder="Giải thích nguồn gốc, câu chuyện ghi nhớ…" readOnly={isView} disabled={submitting}
+                  onChange={(etymologyStory, etymologyStoryHtml) => patch({ etymologyStory, etymologyStoryHtml })} />
+                <h6 className="vocab-section-title mt-3">Ghi chú chung</h6>
+                <RichTextEditor label="Ghi chú chung" text={values.notes} html={values.notesHtml} placeholder="Ghi chú cho toàn bộ từ vựng…" readOnly={isView} disabled={submitting}
+                  onChange={(notes, notesHtml) => patch({ notes, notesHtml })} />
               </div>
-              <div className="mb-3">
-                <label className={LABEL} htmlFor="vocab-etymology-image">
-                  Ảnh chiết tự (URL)
-                </label>
-                <input id="vocab-etymology-image" type="text" className="form-control bg-light border-0" value={values.etymologyImage} placeholder="Link ảnh chiết tự..." onChange={(e) => patch({ etymologyImage: e.target.value })} disabled={submitting} />
-              </div>
-              <div className="mb-2">
-                <label className={LABEL} htmlFor="vocab-notes">
-                  Ghi chú chung
-                </label>
-                <textarea id="vocab-notes" className="form-control bg-light border-0" rows={2} value={values.notes} placeholder="Ghi chú cho toàn bộ từ vựng..." onChange={(e) => patch({ notes: e.target.value })} disabled={submitting} />
-              </div>
-              <small className="text-muted d-block">Tải tệp ảnh lên kho lưu trữ chưa chuyển sang bản mới: nhập đường dẫn ảnh có sẵn.</small>
             </div>
           )}
         </div>

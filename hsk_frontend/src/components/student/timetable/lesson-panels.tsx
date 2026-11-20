@@ -18,8 +18,8 @@ export function vocabularyWords(resources:TimetableModule[]):Word[]{
    const pinyins=(Array.isArray(item.pinyins)?item.pinyins:[]).map(object);const primary=pinyins.find(p=>p.isPrimary === true)??pinyins[0]??{};
    const meanings=(Array.isArray(primary.meanings)?primary.meanings:[]).map(object);
    const meaning=meanings.map(m=>str(m.meaningVi)||str(m.meaningEn)).find(Boolean)??"";
-   const examples=meanings.map(m=>({cn:str(m.exampleSentenceZh),pinyin:str(m.exampleSentencePinyin),vi:str(m.exampleSentenceVi)})).filter(e=>e.cn);
-   return [{topic:resource.topicTitle,progressKnown:resource.progress !== null,learned:resource.progress !== null && resource.progress>=100,id:resource.id+":"+index,resourceId:resource.resourceId,word,pinyin:str(primary.pinyin),meaning,pos:str(primary.wordTypes),image:safeResourceUrl(str(item.imageUrl)),audio:safeResourceUrl(str(item.audioUrl)),examples}];});
+   const examples=meanings.flatMap(m=>(Array.isArray(m.examples)?m.examples:[]).map(object)).map(e=>({cn:str(e.zh),pinyin:str(e.pinyin),vi:str(e.vi)})).filter(e=>e.cn);
+   return [{topic:resource.topicTitle,progressKnown:resource.progress !== null,learned:resource.progress !== null && resource.progress>=100,id:resource.id+":"+index,resourceId:resource.resourceId,word,pinyin:str(primary.pinyin),meaning,pos:str(primary.wordTypes),image:safeResourceUrl(str(item.imageUrl)),audio:safeResourceUrl(str(primary.audioUrl)),examples}];});
  });
 }
 export function VocabularyPanel({resources,view}:{resources:TimetableModule[];view:VocabularyView}){

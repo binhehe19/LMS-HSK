@@ -5,7 +5,7 @@
 // (trong .hsk-vocab-modal) để SCSS đã khoanh vùng vẫn áp dụng; truy cập localStorage bọc try/catch.
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import type { VocabularyMeaning } from "@/types/dictionary";
+import type { VocabularyExample } from "@/types/dictionary";
 import { PracticeModal } from "./practice-modal";
 import { VocabularyHighlight } from "./vocabulary-highlight";
 import "./conversation-modal.scss";
@@ -29,7 +29,7 @@ interface ConversationModalProps {
   meaning: string;
   wordType?: string;
   /** các câu ví dụ — mỗi câu là một lượt thoại */
-  examples: VocabularyMeaning[];
+  examples: VocabularyExample[];
   onSpeak: (text: string, rate?: number) => void;
   onStop: () => void;
   onClose: () => void;
@@ -55,13 +55,13 @@ export function ConversationModal({ hanzi, hskLevel, pinyin, meaning, wordType, 
   };
 
   const turns = examples
-    .filter((e) => e.exampleSentenceCn)
+    .filter((e) => e.zh)
     .map((e, i) => ({
-      key: e.id ?? `turn-${i}`,
+      key: `turn-${i}`,
       speaker: i % 2 === 0 ? ("A" as const) : ("B" as const),
-      cn: e.exampleSentenceCn ?? "",
-      pinyin: e.exampleSentencePinyin ?? "",
-      vi: e.exampleSentenceVi ?? "",
+      cn: e.zh ?? "",
+      pinyin: e.pinyin ?? "",
+      vi: e.vi ?? "",
     }));
 
   const playAll = () => {

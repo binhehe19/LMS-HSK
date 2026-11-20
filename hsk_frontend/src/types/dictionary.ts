@@ -1,22 +1,34 @@
 // Dữ liệu hiển thị từ vựng tiếng Trung, chuyển từ API VOCABULARY trong lms-dictionary-client.
 
+/** Một câu ví dụ của một nghĩa. */
+export interface VocabularyExample {
+  zh?: string;
+  pinyin?: string;
+  vi?: string;
+  en?: string;
+  zhHtml?: string;
+  pinyinHtml?: string;
+  viHtml?: string;
+}
+
 export interface VocabularyMeaning {
   id?: string;
   meaning: string;
   meaningEn?: string;
   meaningZh?: string;
-  exampleSentenceCn?: string;
-  exampleSentenceVi?: string;
-  exampleSentenceEn?: string;
-  exampleSentencePinyin?: string;
-  /** Từ loại áp cho riêng ví dụ này. */
+  meaningViHtml?: string;
+  meaningZhHtml?: string;
+  /** Loại từ của nghĩa này. */
   exampleWordType?: string;
+  /** Các câu ví dụ của nghĩa này (một nghĩa có thể có nhiều ví dụ). */
+  examples?: VocabularyExample[];
   definitionCn?: string;
 }
 
 export interface VocabularyPinyin {
   id?: string;
   pinyin: string;
+  audioUrl?: string;
   sinoVietnamese?: string;
   /** Từ loại, phân cách bằng dấu phẩy: "Động từ,Danh từ". */
   wordTypes?: string;
@@ -39,17 +51,13 @@ export interface Vocabulary {
   id: string;
   hanzi: string;
   hskLevel?: number;
-  audioUrl?: string;
   imageUrl?: string;
-  strokeAnimationUrl?: string;
   etymologyStory?: string;
-  etymologyImage?: string;
+  etymologyStoryHtml?: string;
   radical?: string;
-  strokeCount?: number;
-  /** Tên các nét, vd "横、竖、横". */
-  strokes?: string;
   isSingleVocab: boolean;
   notes?: string;
+  notesHtml?: string;
   status?: VocabularyStatus | string;
   pinyins?: VocabularyPinyin[];
   createdAt?: string;
@@ -60,16 +68,13 @@ export interface Vocabulary {
 export interface VocabularyInput {
   hanzi: string;
   hskLevel?: number;
-  audioUrl?: string;
   imageUrl?: string;
-  strokeAnimationUrl?: string;
   etymologyStory?: string;
-  etymologyImage?: string;
+  etymologyStoryHtml?: string;
   radical?: string;
-  strokeCount?: number;
-  strokes?: string;
   isSingleVocab: boolean;
   notes?: string;
+  notesHtml?: string;
   status?: VocabularyStatus | string;
   pinyins: VocabularyPinyin[];
 }

@@ -1,19 +1,32 @@
 // Nội dung học liệu VOCABULARY loại phụ ZH (VocabularyZhContent ở backend): chữ Hán → nhiều cách đọc (pinyin) → nhiều nghĩa.
 // Độc lập với nội dung EN (IELTS): không dùng chung kiểu; mọi tên trường khớp đúng với lớp backend.
 
+/** Một câu ví dụ của một nghĩa (VocabularyZhContent.DictionaryExampleItem ở backend). */
+export interface VocabularyZhExample {
+  zh?: string;
+  pinyin?: string;
+  vi?: string;
+  en?: string;
+  zhHtml?: string;
+  pinyinHtml?: string;
+  viHtml?: string;
+}
+
 export interface VocabularyZhMeaning {
   meaningVi?: string;
   meaningEn?: string;
   meaningZh?: string;
-  exampleSentenceZh?: string;
-  exampleSentencePinyin?: string;
-  exampleSentenceVi?: string;
-  exampleSentenceEn?: string;
+  meaningViHtml?: string;
+  meaningZhHtml?: string;
+  /** Loại từ của nghĩa này. */
   exampleWordType?: string;
+  /** Các câu ví dụ minh họa nghĩa này. */
+  examples?: VocabularyZhExample[];
 }
 
 export interface VocabularyZhPinyin {
   pinyin?: string;
+  audioUrl?: string;
   sinoVietnamese?: string;
   /** Từ loại, phân cách bằng dấu phẩy: "Động từ,Danh từ". */
   wordTypes?: string;
@@ -30,17 +43,12 @@ export interface VocabularyZhContent {
   /** Chữ Hán. */
   word: string;
   imageUrl?: string;
-  note?: string;
-  sortOrder?: number;
   hskLevel?: number;
-  audioUrl?: string;
-  strokeAnimationUrl?: string;
   etymologyStory?: string;
-  etymologyImage?: string;
+  etymologyStoryHtml?: string;
   radical?: string;
-  strokeCount?: number;
-  strokes?: string;
   isSingleVocab?: boolean;
   notes?: string;
+  notesHtml?: string;
   pinyins?: VocabularyZhPinyin[];
 }

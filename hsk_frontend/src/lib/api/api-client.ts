@@ -129,6 +129,13 @@ export async function apiFetch<T>(baseUrl: string, path: string, init: RequestIn
   return (body !== null && body !== undefined ? body : {}) as T;
 }
 
+export async function apiFetchBlob(baseUrl: string, path: string, signal?: AbortSignal): Promise<Blob> {
+  const res = await fetchWithDevRefresh(() => send(joinUrl(baseUrl, path), { signal }));
+  if (res.status === 401) notifySessionExpired();
+  if (!res.ok) throw new ApiError(httpStatusMessage(res.status), res.status);
+  return res.blob();
+}
+
 /** Bộ hàm get/post/put/delete gắn sẵn base URL của một service. `getBaseUrl` trả null nếu chưa cấu hình. */
 export function createApiClient(getBaseUrl: () => string | null) {
   const base = (): string => {

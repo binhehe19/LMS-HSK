@@ -1,13 +1,17 @@
+"use client";
+
+import { Button } from "antd";
 import type { ReactNode } from "react";
 import styles from "./content-catalog.module.css";
 
-export function CatalogToolbar({ label, heading, icon, description, actions, onReload, loading, children }: {
+export function CatalogToolbar({ label, heading, icon, description, actions, onReload, onClearFilters, loading, children }: {
   label: string;
   heading: string;
   icon: string;
   description: string;
   actions?: ReactNode;
   onReload: () => void;
+  onClearFilters?: () => void;
   loading: boolean;
   children: ReactNode;
 }) {
@@ -28,7 +32,17 @@ export function CatalogToolbar({ label, heading, icon, description, actions, onR
           </button>
         </div>
       </div>
-      <div className={`${styles.bar} ${styles.filters}`}>{children}</div>
+      <div className={`${styles.bar} ${styles.filters}`}>
+        {children}
+        {onClearFilters && (
+          <Button
+            aria-label="Xóa bộ lọc"
+            title="Xóa bộ lọc"
+            icon={<i className="isax isax-eraser-1" aria-hidden="true" />}
+            onClick={onClearFilters}
+          />
+        )}
+      </div>
     </section>
   );
 }

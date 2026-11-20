@@ -4,11 +4,11 @@
 // Trạng thái: AVAILABLE (chưa xác minh trên môi trường thật). Để trống NEXT_PUBLIC_STORAGE_API_BASE_PATH => ApiNotConfiguredError.
 "use client";
 
-import { ApiError, ApiNotConfiguredError, createApiClient } from "@/lib/api/api-client";
+import { ApiError, ApiNotConfiguredError, apiFetchBlob, createApiClient } from "@/lib/api/api-client";
 
 function getStorageApiBase(): string | null {
   const base = process.env.NEXT_PUBLIC_STORAGE_API_BASE_PATH?.trim().replace(/\/+$/, "");
-  return base || null;
+  return base || (process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_STORAGE_API_BASE_URL?.trim() ? "/api/storage" : null);
 }
 
 export function isStorageApiConfigured(): boolean {
@@ -35,6 +35,15 @@ export function fileUrl(fileId: string | undefined | null, disposition: "inline"
   const base = getStorageApiBase();
   if (!base || !fileId) return null;
   return `${base}/file/${encodeURIComponent(fileId)}?disposition=${disposition}`;
+}
+
+export function fetchStoredAudio(url: string, signal?: AbortSignal): Promise<Blob> | undefined {
+  const base = getStorageApiBase();
+  const prefix = `${base}/file/`;
+  if (!base || !url.startsWith(prefix)) return;
+  const [id] = url.slice(prefix.length).split("?");
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return;
+  return apiFetchBlob(base, `/file/${id}?disposition=inline`, signal);
 }
 
 /**

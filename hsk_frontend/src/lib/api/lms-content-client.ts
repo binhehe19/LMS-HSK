@@ -6,7 +6,7 @@
 // Mapping (đã chốt với người phụ trách, xem plans/compressed-dancing-shore.md):
 //  - Flashcard HSK là LearningResourceType.VOCABULARY loại phụ ZH, nội dung VocabularyZhContent (chữ Hán → phiên âm → nghĩa) như Từ điển:
 //    term→word, pinyin→pinyins[0].pinyin (phiên âm chính), wordType→pinyins[0].wordTypes, meaning→meanings[0].meaningVi,
-//    example/examplePinyin/exampleMeaning→meanings[0].exampleSentenceZh/Pinyin/Vi, imageFileId→imageUrl, audioFileId→audioUrl (URL đã
+//    example/examplePinyin/exampleMeaning→meanings[0].examples[0].zh/pinyin/vi, imageFileId→imageUrl, audioFileId→audioUrl (URL đã
 //    resolve qua storage-client), customFields→notes (mỗi dòng "nhãn: giá trị").
 //  - Package→Folder→StudySet→Item của HSK cũ rút gọn còn Package→resource (phẳng, không Folder/StudySet); sessionNo cố định = 1.
 //  - Gói của Kho là học phần tự do (không có syllabusId/syllabusVersionId).
@@ -84,22 +84,22 @@ function notesToCustomFields(notes: string | undefined): FlashcardCard["customFi
 }
 
 function toVocabularyContent(input: FlashcardCardInput): VocabularyContent {
+  // Thẻ chỉ có một ví dụ: nó là ví dụ đầu tiên của nghĩa đầu; không nhập gì thì không có ví dụ.
+  const example = { zh: input.example || undefined, pinyin: input.examplePinyin || undefined, vi: input.exampleMeaning || undefined };
   return {
     word: input.term,
     imageUrl: fileUrl(input.imageFileId) ?? undefined,
-    audioUrl: fileUrl(input.audioFileId) ?? undefined,
     notes: customFieldsToNotes(input.customFields),
     pinyins: [
       {
         pinyin: input.pinyin ?? "",
+        audioUrl: fileUrl(input.audioFileId) ?? undefined,
         wordTypes: input.wordType || undefined,
         isPrimary: true,
         meanings: [
           {
             meaningVi: input.meaning || undefined,
-            exampleSentenceZh: input.example || undefined,
-            exampleSentencePinyin: input.examplePinyin || undefined,
-            exampleSentenceVi: input.exampleMeaning || undefined,
+            examples: Object.values(example).some(Boolean) ? [example] : undefined,
           },
         ],
       },
@@ -115,11 +115,28 @@ function mergeCardIntoContent(current: VocabularyContent | null, input: Flashcar
   const target = current.pinyins[at];
   const [nextPinyin] = next.pinyins as DictionaryPinyin[];
   const [firstMeaning, ...restMeanings] = target.meanings ?? [];
+  const nextMeaning = (nextPinyin.meanings as DictionaryMeaning[])[0];
+  // Thẻ chỉ thay ví dụ đầu của nghĩa đầu; các ví dụ khác (thêm ở màn từ điển) được giữ.
+  const [firstExample, ...otherExamples] = firstMeaning?.examples ?? [];
+  const nextExample = nextMeaning.examples?.[0];
+  const examples = nextExample ? [{
+    ...firstExample,
+    ...nextExample,
+    zhHtml: nextExample.zh === firstExample?.zh ? firstExample?.zhHtml : undefined,
+    pinyinHtml: nextExample.pinyin === firstExample?.pinyin ? firstExample?.pinyinHtml : undefined,
+    viHtml: nextExample.vi === firstExample?.vi ? firstExample?.viHtml : undefined,
+  }, ...otherExamples] : otherExamples;
   const merged: DictionaryPinyin = {
     ...target,
     pinyin: nextPinyin.pinyin,
+    audioUrl: nextPinyin.audioUrl,
     wordTypes: nextPinyin.wordTypes,
-    meanings: [{ ...(firstMeaning ?? {}), ...(nextPinyin.meanings as DictionaryMeaning[])[0] }, ...restMeanings],
+    meanings: [{
+      ...firstMeaning,
+      ...nextMeaning,
+      meaningViHtml: nextMeaning.meaningVi === firstMeaning?.meaningVi ? firstMeaning?.meaningViHtml : undefined,
+      examples: examples.length > 0 ? examples : undefined,
+    }, ...restMeanings],
   };
   return { ...current, ...next, pinyins: current.pinyins.map((p, i) => (i === at ? merged : p)) };
 }
@@ -127,6 +144,7 @@ function mergeCardIntoContent(current: VocabularyContent | null, input: Flashcar
 function fromVocabularyContent(id: string, index: number, content: VocabularyContent | null): FlashcardCard {
   const primary = content?.pinyins?.find((p) => p.isPrimary) ?? content?.pinyins?.[0];
   const firstMeaning = primary?.meanings?.[0];
+  const firstExample = firstMeaning?.examples?.[0];
   return {
     id,
     studySetId: "",
@@ -135,11 +153,11 @@ function fromVocabularyContent(id: string, index: number, content: VocabularyCon
     pinyin: primary?.pinyin || undefined,
     wordType: primary?.wordTypes || undefined,
     meaning: firstMeaning?.meaningVi ?? "",
-    example: firstMeaning?.exampleSentenceZh || undefined,
-    examplePinyin: firstMeaning?.exampleSentencePinyin || undefined,
-    exampleMeaning: firstMeaning?.exampleSentenceVi || undefined,
+    example: firstExample?.zh || undefined,
+    examplePinyin: firstExample?.pinyin || undefined,
+    exampleMeaning: firstExample?.vi || undefined,
     imageFileId: fileIdFromUrl(content?.imageUrl),
-    audioFileId: fileIdFromUrl(content?.audioUrl),
+    audioFileId: fileIdFromUrl(primary?.audioUrl),
     customFields: notesToCustomFields(content?.notes),
   };
 }

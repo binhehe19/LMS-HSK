@@ -63,7 +63,7 @@ describe("màn Từ điển học viên /vocabulary", () => {
   it("hiện banner, ô tra cứu, lưới thẻ (Hán tự, phiên âm, từ loại có màu, nghĩa) và liên kết tới chi tiết", async () => {
     render(<VocabularyHomePageContent />);
     expect(screen.getByRole("heading", { name: "Từ vựng" })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Tra cứu bằng tiếng Trung, Pinyin hoặc nghĩa tiếng Việt...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Tra cứu bằng Hán tự, Pinyin hoặc bộ thủ...")).toBeInTheDocument();
     const cards = await screen.findAllByTestId("vocabulary-card");
     expect(cards).toHaveLength(3);
     expect(cards[0]).toHaveAttribute("href", "/vocabulary/w1");

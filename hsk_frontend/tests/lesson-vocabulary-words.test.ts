@@ -9,16 +9,16 @@ const vocab = (content: unknown, over: Partial<TimetableModule> = {}): Timetable
 const zh = {
   word: "你好",
   imageUrl: "/api/storage/file/img-1",
-  audioUrl: "/api/storage/file/aud-1",
   pinyins: [
     { pinyin: "nǐ hǎo (phụ)", isPrimary: false, meanings: [{ meaningVi: "nghĩa phụ" }] },
     {
       pinyin: "nǐ hǎo",
+      audioUrl: "/api/storage/file/aud-1",
       wordTypes: "Thán từ",
       isPrimary: true,
       meanings: [
-        { meaningVi: "xin chào", exampleSentenceZh: "你好吗？", exampleSentencePinyin: "nǐ hǎo ma?", exampleSentenceVi: "bạn khỏe không?" },
-        { meaningEn: "hello", exampleSentenceZh: "你好！", exampleSentencePinyin: "nǐ hǎo!" },
+        { meaningVi: "xin chào", examples: [{ zh: "你好吗？", pinyin: "nǐ hǎo ma?", vi: "bạn khỏe không?" }, { zh: "你好，老师！", pinyin: "nǐ hǎo, lǎoshī!" }] },
+        { meaningEn: "hello", examples: [{ zh: "你好！", pinyin: "nǐ hǎo!" }] },
       ],
     },
   ],
@@ -30,6 +30,7 @@ describe("vocabularyWords: đọc nội dung từ vựng ZH ở màn học của
     expect(word).toMatchObject({ word: "你好", pinyin: "nǐ hǎo", pos: "Thán từ", meaning: "xin chào" });
     expect(word.examples).toEqual([
       { cn: "你好吗？", pinyin: "nǐ hǎo ma?", vi: "bạn khỏe không?" },
+      { cn: "你好，老师！", pinyin: "nǐ hǎo, lǎoshī!", vi: "" },
       { cn: "你好！", pinyin: "nǐ hǎo!", vi: "" },
     ]);
     expect(word.image).toContain("img-1");

@@ -15,7 +15,10 @@ const isProduction = process.env.NODE_ENV === "production";
 const API_SERVICES = [
   { basePath: process.env.NEXT_PUBLIC_QUIZ_API_BASE_PATH, proxyTarget: process.env.QUIZ_API_PROXY_TARGET },
   { basePath: process.env.NEXT_PUBLIC_LMS_API_BASE_PATH, proxyTarget: process.env.LMS_API_PROXY_TARGET },
-  { basePath: process.env.NEXT_PUBLIC_STORAGE_API_BASE_PATH, proxyTarget: process.env.STORAGE_API_PROXY_TARGET },
+  {
+    basePath: process.env.NEXT_PUBLIC_STORAGE_API_BASE_PATH || "/api/storage",
+    proxyTarget: process.env.STORAGE_API_PROXY_TARGET || process.env.NEXT_PUBLIC_STORAGE_API_BASE_URL,
+  },
   { basePath: process.env.NEXT_PUBLIC_HSK_API_BASE_PATH, proxyTarget: process.env.HSK_API_PROXY_TARGET },
   { basePath: process.env.NEXT_PUBLIC_NOTIFICATION_API_BASE_PATH, proxyTarget: process.env.NOTIFICATION_API_PROXY_TARGET },
   { basePath: process.env.NEXT_PUBLIC_TICKET_API_BASE_PATH, proxyTarget: process.env.TICKET_API_PROXY_TARGET },

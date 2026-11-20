@@ -21,6 +21,7 @@ interface BackendLearningResource {
 }
 interface BackendVersion {
   id: string;
+  content: DictionaryContent | null;
 }
 type DictionaryWordResponse = Omit<VocabularyDetail, "pinyins"> & { pinyins: DictionaryPinyinContent[] };
 
@@ -29,11 +30,10 @@ function fromMeaningContent(meaning: DictionaryMeaningContent): VocabularyPinyin
     meaning: meaning.meaningVi ?? "",
     meaningEn: meaning.meaningEn,
     meaningZh: meaning.meaningZh,
-    exampleSentenceCn: meaning.exampleSentenceZh,
-    exampleSentencePinyin: meaning.exampleSentencePinyin,
-    exampleSentenceVi: meaning.exampleSentenceVi,
-    exampleSentenceEn: meaning.exampleSentenceEn,
+    meaningViHtml: meaning.meaningViHtml,
+    meaningZhHtml: meaning.meaningZhHtml,
     exampleWordType: meaning.exampleWordType,
+    examples: meaning.examples,
   };
 }
 
@@ -50,18 +50,16 @@ function toDictionaryContent(input: VocabularyInput): DictionaryContent {
   return {
     word: input.hanzi,
     hskLevel: input.hskLevel,
-    audioUrl: input.audioUrl,
     imageUrl: input.imageUrl,
-    strokeAnimationUrl: input.strokeAnimationUrl,
     etymologyStory: input.etymologyStory,
-    etymologyImage: input.etymologyImage,
+    etymologyStoryHtml: input.etymologyStoryHtml,
     radical: input.radical,
-    strokeCount: input.strokeCount,
-    strokes: input.strokes,
     isSingleVocab: input.isSingleVocab,
     notes: input.notes,
+    notesHtml: input.notesHtml,
     pinyins: (input.pinyins ?? []).map((p) => ({
       pinyin: p.pinyin,
+      audioUrl: p.audioUrl,
       sinoVietnamese: p.sinoVietnamese,
       wordTypes: p.wordTypes,
       isPrimary: p.isPrimary,
@@ -74,11 +72,10 @@ function toDictionaryContent(input: VocabularyInput): DictionaryContent {
         meaningVi: m.meaning || undefined,
         meaningEn: m.meaningEn,
         meaningZh: m.meaningZh,
-        exampleSentenceZh: m.exampleSentenceCn,
-        exampleSentencePinyin: m.exampleSentencePinyin,
-        exampleSentenceVi: m.exampleSentenceVi,
-        exampleSentenceEn: m.exampleSentenceEn,
+        meaningViHtml: m.meaningViHtml,
+        meaningZhHtml: m.meaningZhHtml,
         exampleWordType: m.exampleWordType,
+        examples: m.examples,
       })),
     })),
   };
@@ -90,6 +87,7 @@ function fromDictionaryContent(id: string, status: Vocabulary["status"], content
     sinoVietnamese: p.sinoVietnamese,
     wordTypes: p.wordTypes,
     isPrimary: p.isPrimary,
+    audioUrl: p.audioUrl,
     measureWord: p.measureWord,
     compounds: p.compounds,
     synonyms: p.synonyms,
@@ -101,16 +99,13 @@ function fromDictionaryContent(id: string, status: Vocabulary["status"], content
     id,
     hanzi: content.word,
     hskLevel: content.hskLevel,
-    audioUrl: content.audioUrl,
     imageUrl: content.imageUrl,
-    strokeAnimationUrl: content.strokeAnimationUrl,
     etymologyStory: content.etymologyStory,
-    etymologyImage: content.etymologyImage,
+    etymologyStoryHtml: content.etymologyStoryHtml,
     radical: content.radical,
-    strokeCount: content.strokeCount,
-    strokes: content.strokes,
     isSingleVocab: content.isSingleVocab ?? true,
     notes: content.notes,
+    notesHtml: content.notesHtml,
     status,
     pinyins,
   };
@@ -136,10 +131,16 @@ export async function searchVocabularies(params: VocabularySearchParams): Promis
 
 /** Chi tiết đầy đủ — bản cũ gọi trước khi mở form sửa vì danh sách chỉ là bản rút gọn. */
 export async function getVocabulary(id: number | string): Promise<Vocabulary> {
-  const resource = await lmsClient.get<BackendLearningResource>(`/learning-resources/${enc(String(id))}`);
-  if (!resource.content) throw new Error("Từ chưa có nội dung");
-  const status: Vocabulary["status"] = resource.publishedVersionId ? "published" : "draft";
-  return fromDictionaryContent(resource.id, status, resource.content);
+  const path = `/learning-resources/${enc(String(id))}`;
+  const resource = await lmsClient.get<BackendLearningResource>(path);
+  let content = resource.content;
+  if (resource.draftVersionId && resource.publishedVersionId) {
+    const versions = await lmsClient.get<BackendVersion[]>(`${path}/versions`);
+    content = versions.find(version => version.id === resource.draftVersionId)?.content ?? null;
+    if (!content) throw new Error("Không tải được bản nháp của từ vựng.");
+  }
+  if (!content) throw new Error("Từ chưa có nội dung");
+  return fromDictionaryContent(resource.id, resource.draftVersionId ? "draft" : "published", content);
 }
 
 export async function createVocabulary(input: VocabularyInput, demoActive: boolean): Promise<Vocabulary> {
@@ -149,27 +150,25 @@ export async function createVocabulary(input: VocabularyInput, demoActive: boole
     subType: "ZH",
     content: toDictionaryContent(input),
     inLibrary: true,
+    publishImmediately: input.status === "published",
   });
-  let status: Vocabulary["status"] = "draft";
-  if (input.status === "published" && resource.draftVersionId) {
-    await lmsClient.post(`/learning-resources/${enc(resource.id)}/versions/${enc(resource.draftVersionId)}/publish`);
-    status = "published";
-  }
-  return fromDictionaryContent(resource.id, status, resource.content ?? toDictionaryContent(input));
+  return fromDictionaryContent(resource.id, resource.publishedVersionId ? "published" : "draft", resource.content ?? toDictionaryContent(input));
 }
 
 export async function updateVocabulary(id: number | string, input: VocabularyInput, demoActive: boolean): Promise<Vocabulary> {
   assertWriteEnabled("content", demoActive);
-  const resourceId = enc(String(id));
-  const version = await lmsClient.post<BackendVersion>(`/learning-resources/${resourceId}/versions`, {
-    content: toDictionaryContent(input),
-  });
-  let status: Vocabulary["status"] = "draft";
-  if (input.status === "published") {
-    await lmsClient.post(`/learning-resources/${resourceId}/versions/${enc(version.id)}/publish`);
-    status = "published";
+  const path = `/learning-resources/${enc(String(id))}`;
+  const resource = await lmsClient.get<BackendLearningResource>(path);
+  const content = toDictionaryContent(input);
+  const publishImmediately = input.status === "published";
+  if (resource.draftVersionId) {
+    const draftPath = `${path}/versions/${enc(resource.draftVersionId)}`;
+    await lmsClient.put(draftPath, { content });
+    if (publishImmediately) await lmsClient.post(`${draftPath}/publish`);
+  } else {
+    await lmsClient.post(`${path}/versions`, { content, publishImmediately });
   }
-  return fromDictionaryContent(String(id), status, toDictionaryContent(input));
+  return fromDictionaryContent(String(id), publishImmediately ? "published" : "draft", content);
 }
 
 export async function deleteVocabulary(id: number | string, demoActive: boolean): Promise<void> {
@@ -192,7 +191,7 @@ function toStudentQuery(params: StudentVocabularySearchParams): string {
 }
 
 /**
- * Danh sách từ theo từ khoá (Hán tự / pinyin không dấu / nghĩa), cấp HSK, bộ thủ; thứ tự như từ điển cũ. Dùng chung endpoint tìm kiếm có sẵn của
+ * Danh sách từ theo từ khoá (Hán tự / pinyin không dấu / bộ thủ), cấp HSK, bộ thủ; thứ tự như từ điển cũ. Dùng chung endpoint tìm kiếm có sẵn của
  * màn quản lý: backend chỉ trả từ ĐÃ XUẤT BẢN cho người không phải Admin.
  */
 export async function searchPublishedVocabularies(params: StudentVocabularySearchParams): Promise<VocabularyPage> {

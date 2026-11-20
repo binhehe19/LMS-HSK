@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DictionaryManageView } from "@/components/management/dictionary/dictionary-manage-view";
 import { useDictionary } from "@/components/management/dictionary/use-dictionary";
@@ -10,7 +11,8 @@ import { emptyVocabularyForm, vocabularyToForm } from "@/lib/dictionary/vocabula
 import type { Vocabulary } from "@/types/dictionary";
 
 interface FormModalState {
-  editing: Vocabulary | null;
+  mode: "create" | "edit" | "view";
+  vocab: Vocabulary | null;
   key: number;
 }
 
@@ -22,10 +24,22 @@ export function DictionaryManagePageContent() {
   const dict = useDictionary();
   const [formModal, setFormModal] = useState<FormModalState | null>(null);
 
-  const openEdit = async (vocab: Vocabulary) => {
-    const detail = await dict.loadForEdit(vocab.id);
-    if (detail) setFormModal((prev) => ({ editing: detail, key: (prev?.key ?? 0) + 1 }));
+  const openEdit = async (id: string) => {
+    const detail = await dict.loadForEdit(id);
+    if (detail) setFormModal((prev) => ({ mode: "edit", vocab: detail, key: (prev?.key ?? 0) + 1 }));
   };
+
+  // `?edit=<id>`: link "Sửa trong Kho" từ học phần mở thẳng form sửa (một lần, khi đã có quyền ghi).
+  const editId = useSearchParams().get("edit");
+  const openedEditId = useRef<string | null>(null);
+  const openLinkedEdit = useEffectEvent((id: string) => void openEdit(id));
+  useEffect(() => {
+    if (!editId || !dict.canWrite || openedEditId.current === editId) return;
+    openedEditId.current = editId;
+    openLinkedEdit(editId);
+  }, [editId, dict.canWrite]);
+  const initialValues = formModal?.vocab ? vocabularyToForm(formModal.vocab) : emptyVocabularyForm();
+  if (formModal?.mode === "view") initialValues.hskLevel = formModal.vocab?.hskLevel ?? 0;
 
   const remove = async (vocab: Vocabulary) => {
     const ok = await confirmAction({
@@ -48,26 +62,26 @@ export function DictionaryManagePageContent() {
         filters={dict.filters}
         state={dict.state}
         page={dict.page}
-        refreshing={dict.refreshing}
         access={dict.access}
         writeEnabled={dict.writeEnabled}
         canWrite={dict.canWrite}
         busy={dict.busy}
         onFiltersChange={dict.setFilters}
-        onCreate={() => setFormModal((prev) => ({ editing: null, key: (prev?.key ?? 0) + 1 }))}
+        onCreate={() => setFormModal((prev) => ({ mode: "create", vocab: null, key: (prev?.key ?? 0) + 1 }))}
         onImport={() => toast.info("Import từ Excel chưa được chuyển sang bản mới (chờ hợp đồng import bất đồng bộ của backend).")}
-        onEdit={(vocab) => void openEdit(vocab)}
+        onView={(vocab) => setFormModal((prev) => ({ mode: "view", vocab, key: (prev?.key ?? 0) + 1 }))}
+        onEdit={(vocab) => void openEdit(vocab.id)}
         onDelete={(vocab) => void remove(vocab)}
         onRetry={dict.reload}
       />
       {formModal && (
         <VocabularyFormModal
           key={formModal.key}
-          mode={formModal.editing ? "edit" : "create"}
-          initialValues={formModal.editing ? vocabularyToForm(formModal.editing) : emptyVocabularyForm()}
+          mode={formModal.mode}
+          initialValues={initialValues}
           submitting={dict.busy}
           onCancel={() => setFormModal(null)}
-          onSubmit={(values) => void dict.save(values, formModal.editing).then((ok) => ok && setFormModal(null))}
+          onSubmit={formModal.mode === "view" ? undefined : (values) => void dict.save(values, formModal.vocab).then((ok) => ok && setFormModal(null))}
         />
       )}
     </>

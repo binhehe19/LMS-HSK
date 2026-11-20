@@ -65,7 +65,7 @@ export function VocabularyHomeView(props: VocabularyHomeViewProps) {
               type="search"
               className="form-control rounded-pill border-0 shadow-sm bg-white"
               style={{ paddingLeft: "44px", paddingRight: "80px", height: "48px", fontSize: "15px" }}
-              placeholder="Tra cứu bằng tiếng Trung, Pinyin hoặc nghĩa tiếng Việt..."
+              placeholder="Tra cứu bằng Hán tự, Pinyin hoặc bộ thủ..."
               aria-label="Tra cứu từ vựng"
               maxLength={100}
               value={props.keywordDraft}

@@ -3,7 +3,7 @@
 // Popup Luyện tập từ vựng (vocab-practice-modal.tsx của HSK cũ): câu nối từ ghép ↔ Hán Việt + câu viết pinyin, bảng điểm cuối bài.
 // Logic dựng câu hỏi / chấm / xếp loại ở lib/dictionary/vocab-practice.ts. Bộ câu hỏi dựng MỘT lần khi mở popup (xáo trộn không chạy lại mỗi lần render).
 import { useState } from "react";
-import type { VocabularyMeaning } from "@/types/dictionary";
+import type { VocabularyExample } from "@/types/dictionary";
 import { buildPracticeQuestions, isAnswerCorrect, practiceTier } from "@/lib/dictionary/vocab-practice";
 import { PracticeModal } from "./practice-modal";
 import "./vocab-practice-modal.scss";
@@ -12,7 +12,7 @@ interface VocabPracticeModalProps {
   hanzi: string;
   /** JSON compounds của pinyin chính: [{hanzi, sinoVietnamese}] */
   compounds?: string;
-  examples: VocabularyMeaning[];
+  examples: VocabularyExample[];
   onClose: () => void;
 }
 

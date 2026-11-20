@@ -72,7 +72,7 @@ export function VocabularyDetailPageContent({ id }: { id: string }) {
   const word = detail ? deriveWord(detail) : null;
   const displayPinyin = word?.displayPinyin ?? "";
 
-  const wikiImage = useWikimediaSealImage(detail && !detail.imageUrl && !detail.etymologyImage ? detail.hanzi : "");
+  const wikiImage = useWikimediaSealImage(detail && !detail.imageUrl ? detail.hanzi : "");
 
   // Lưu "Từ đã xem" (kho ngoài localStorage, không phải state của component).
   useEffect(() => {
@@ -135,7 +135,8 @@ export function VocabularyDetailPageContent({ id }: { id: string }) {
   /** Nút loa của chính từ này phát tệp phát âm thật nếu có; câu ví dụ / đoạn hội thoại luôn đọc bằng TTS. */
   const handleSpeak = (text: string, rate?: number) => {
     if (!text) return;
-    speak(text, { rate, audioUrl: text === detail.hanzi ? detail.audioUrl : undefined });
+    const primary = detail.pinyins?.find(pinyin => pinyin.isPrimary) ?? detail.pinyins?.[0];
+    speak(text, { rate, audioUrl: text === detail.hanzi ? primary?.audioUrl : undefined });
   };
 
   const closePractice = () => {
@@ -161,7 +162,7 @@ export function VocabularyDetailPageContent({ id }: { id: string }) {
         primaryMeaning={word.primaryMeaning}
         examples={word.examples}
         analysisNodes={word.analysisNodes}
-        illustration={detail.imageUrl || detail.etymologyImage || wikiImage}
+        illustration={detail.imageUrl || wikiImage}
         recent={recent}
         isSaved={isSaved}
         onToggleSave={toggleSave}
@@ -174,9 +175,9 @@ export function VocabularyDetailPageContent({ id }: { id: string }) {
       {practice === "pronunciation" && (
         <PronunciationModal
           hanzi={detail.hanzi}
-          sentenceCn={firstExample?.exampleSentenceCn || detail.hanzi}
-          sentencePinyin={firstExample?.exampleSentencePinyin || word.displayPinyin}
-          sentenceVi={firstExample?.exampleSentenceVi}
+          sentenceCn={firstExample?.zh || detail.hanzi}
+          sentencePinyin={firstExample?.pinyin || word.displayPinyin}
+          sentenceVi={firstExample?.vi}
           onSpeak={handleSpeak}
           onClose={closePractice}
         />

@@ -18,13 +18,13 @@ Khác bản cũ có chủ đích: ô tra cứu chờ 400ms sau lần gõ cuối 
 
 | Endpoint | Quyền | Ghi chú |
 | --- | --- | --- |
-| `GET /learning-resources/dictionary-hanzi/search?keySearch&hskLevel&radical&isSingleVocab&wordType&page&size` | đã đăng nhập | Endpoint **có sẵn** của màn quản lý, nay mở cho học viên: Admin thấy cả bản nháp, người khác chỉ thấy từ đã xuất bản. `radical` nhận ký tự (`口`) hoặc dạng DB cũ (`KHẨU 口`). Thứ tự = `sortOrder` (id ở hệ cũ), từ tạo mới xếp sau. |
+| `GET /learning-resources/dictionary-hanzi/search?keySearch&hskLevel&radical&isSingleVocab&wordType&page&size` | đã đăng nhập | Endpoint **có sẵn** của màn quản lý, nay mở cho học viên: Admin thấy cả bản nháp, người khác chỉ thấy từ đã xuất bản. `radical` nhận ký tự (`口`) hoặc dạng DB cũ (`KHẨU 口`). Thứ tự = id (từ nhập từ hệ cũ có id mang thứ tự cũ; từ tạo mới là ULID theo thời điểm tạo). |
 | `GET /learning-resources/dictionary-hanzi/words/{id}` | đã đăng nhập | **Endpoint mới duy nhất**: từ đã xuất bản + `components` (tra từng chữ của từ ghép theo `word_key`); 404 nếu chưa xuất bản. Lý do thêm: `GET /learning-resources/{id}` có sẵn chỉ cho Admin và trả cả lịch sử phiên bản. |
-| `POST /learning-resources/bulk` (`type=DICTIONARY`) | ROLE_ADMIN | Endpoint **có sẵn** dùng để nhập từ hệ cũ (≤ 500 mục/lần). Cải thiện nhỏ: với từ điển Hán tự, chống trùng theo `sortOrder` (như từ vựng chống trùng theo từ). |
+| `POST /learning-resources/bulk` (`type=DICTIONARY`) | ROLE_ADMIN | Endpoint **có sẵn** dùng để nhập từ hệ cũ (≤ 500 mục/lần). Chống trùng theo chữ Hán. |
 
 Backend (chỉ thêm trường + sửa nhỏ trong file có sẵn, không thêm file/bảng):
 - 5 cột lọc trên `learning_resources`: `dict_hsk_level, dict_single_vocab, dict_word_types, dict_radical, dict_order` (`ddl-auto: update` tự thêm, null với loại khác); tính lại cùng các cột tìm kiếm trong `LearningResourceService.applySearchColumns`.
-- Trường `sortOrder` trong JSON nội dung `DictionaryContent`; trường `components` trong `DictionaryWordResponse`.
+- Trường `components` trong `DictionaryWordResponse`.
 - `searchDictionaryHanzi` có sẵn: lọc + phân trang bằng SQL trên các cột trên (trước đây nạp toàn bộ từ điển rồi lọc bằng Java — không chạy nổi với ~112 nghìn từ).
 - Từ khoá khớp "chứa" trên `search_title`/`search_text` (Hán tự, phiên âm bỏ dấu, nghĩa bỏ dấu); từ loại không còn nằm trong chuỗi tìm kiếm (lọc riêng bằng `wordType`), tránh gõ "từ" ra cả từ điển.
 - Không thêm index (cấu trúc DB giữ nguyên). Đề xuất cho lead: index `(type, dict_order)` giúp danh sách nhanh hơn khi từ điển đủ ~112 nghìn từ.
@@ -38,7 +38,7 @@ Backend: không có biến mới.
 ## Chuyển dữ liệu từ hệ cũ (111.662 từ)
 
 `backend/scripts/import-hsk-dictionary.mjs` (Node ≥ 18, không phụ thuộc gói ngoài; cấu hình: `backend/scripts/import-hsk-dictionary.env.example`). Đọc API công khai của hệ cũ
-`GET {HSK_DICT_SOURCE_API_BASE}/vocabularies/search` theo trang (sắp theo id), ghi qua `POST /learning-resources/bulk` có sẵn bằng token ROLE_ADMIN (id cũ ghi vào `sortOrder`). Không cần quyền DB.
+`GET {HSK_DICT_SOURCE_API_BASE}/vocabularies/search` theo trang (sắp theo id), ghi qua `POST /learning-resources/bulk` có sẵn bằng token ROLE_ADMIN. Không cần quyền DB.
 
 ```
 export HSK_DICT_SOURCE_API_BASE=https://lms-ai.hoc-ba.edu.vn/api/dictionary

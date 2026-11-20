@@ -8,7 +8,7 @@ import { AssetImage } from "@/components/shared/asset-image";
 import type { RecentWord } from "@/lib/dictionary/recent-vocabulary";
 import type { AnalysisNode } from "@/lib/dictionary/vocabulary-detail-model";
 import { getWordTypeBadgeStyle } from "@/lib/dictionary/word-type-style";
-import type { VocabularyDetail, VocabularyMeaning } from "@/types/dictionary";
+import type { VocabularyDetail, VocabularyExample } from "@/types/dictionary";
 import { VocabularyHighlight } from "./vocabulary-highlight";
 
 export type VocabularyPracticeKind = "pronunciation" | "conversation" | "stroke" | "practice";
@@ -19,7 +19,7 @@ export interface VocabularyDetailViewProps {
   sinoVietnamese: string;
   wordTypes: string[];
   primaryMeaning: string;
-  examples: VocabularyMeaning[];
+  examples: VocabularyExample[];
   analysisNodes: AnalysisNode[];
   illustration: string | null;
   recent: RecentWord[];
@@ -268,11 +268,11 @@ export function VocabularyDetailView({
               {visibleExamples.length === 0 && <p className="vd-empty">Chưa có ví dụ cho từ này.</p>}
 
               {visibleExamples.map((ex, i) => (
-                <article className="vd-example" key={ex.id ?? `example-${i}`}>
+                <article className="vd-example" key={`example-${i}`}>
                   <button
                     type="button"
                     className="vd-speaker vd-speaker--sm"
-                    onClick={() => onSpeak(ex.exampleSentenceCn ?? "")}
+                    onClick={() => onSpeak(ex.zh ?? "")}
                     title="Nghe câu ví dụ"
                     aria-label="Nghe câu ví dụ"
                   >
@@ -280,15 +280,15 @@ export function VocabularyDetailView({
                   </button>
 
                   <div className="vd-example__body">
-                    {ex.exampleSentencePinyin && (
+                    {ex.pinyin && (
                       <p className="vd-example__pinyin">
-                        <VocabularyHighlight text={ex.exampleSentencePinyin} needle={displayPinyin} className="hl" />
+                        <VocabularyHighlight text={ex.pinyin} needle={displayPinyin} className="hl" />
                       </p>
                     )}
                     <p className="vd-example__cn">
-                      <VocabularyHighlight text={ex.exampleSentenceCn ?? ""} needle={detail.hanzi} className="hl" />
+                      <VocabularyHighlight text={ex.zh ?? ""} needle={detail.hanzi} className="hl" />
                     </p>
-                    {ex.exampleSentenceVi && <p className="vd-example__vi">{ex.exampleSentenceVi}</p>}
+                    {ex.vi && <p className="vd-example__vi">{ex.vi}</p>}
                   </div>
                 </article>
               ))}
