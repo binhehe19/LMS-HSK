@@ -1,5 +1,5 @@
 import {it,expect,vi,beforeEach} from "vitest";
-import {render,screen,fireEvent,waitFor,cleanup} from "@testing-library/react";
+import {render,screen,fireEvent,waitFor,cleanup,within} from "@testing-library/react";
 import LessonVocabulary from "@/components/student/timetable/lesson-vocabulary";
 const api=vi.hoisted(()=>({save:vi.fn()}));
 vi.mock("@/lib/api/student-client",()=>({studentApi:{saveVocabularyState:api.save}}));
@@ -21,4 +21,23 @@ it("starts a different flashcard on the front without reusing the flipped elemen
   expect(secondCard).not.toBe(firstCard);
   expect(secondCard).toHaveTextContent("谢谢");
   expect(secondCard).toHaveAttribute("aria-pressed", "false");
+});
+
+it("shows both sides in the flashcard list and highlights the selected word", () => {
+  const secondWord = {
+    ...word,
+    id: "link:1",
+    word: "谢谢",
+    pinyin: "xièxie",
+    meaning: "Cảm ơn",
+    examples: [{ cn: "谢谢您。", pinyin: "Xièxie nín.", vi: "Cảm ơn anh/chị." }],
+  };
+  render(<LessonVocabulary words={[word, secondWord]} view="flashcards" />);
+  const list = within(screen.getByRole("region", { name: "Danh sách thẻ" }));
+  const row = list.getByRole("button", { name: /谢谢 xièxie Cảm ơn/ });
+  expect(row).toHaveAccessibleName(/谢谢您。 Xièxie nín\. Cảm ơn anh\/chị\./);
+  expect(list.getByRole("button", { name: "Nghe 谢谢" })).toBeInTheDocument();
+  fireEvent.click(row);
+  expect(row).toHaveAttribute("aria-current", "true");
+  expect(screen.getByRole("button", { name: "Lật thẻ từ vựng" })).toHaveTextContent("谢谢");
 });
