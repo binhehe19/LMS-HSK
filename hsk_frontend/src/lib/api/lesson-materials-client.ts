@@ -29,6 +29,7 @@ interface BackendPackage {
   updatedAt?: string;
 }
 interface SlideMaterialContent {
+  title?: string;
   fileId: string;
   fileName?: string;
   mimeType?: string;
@@ -69,7 +70,7 @@ function toUiGroup(pkg: ManagedPackage, type: LessonMaterialType): LessonMateria
 function toUiMaterial(groupId: string, link: BackendPackageVersionResource): LessonMaterial {
   return {
     id: link.learningResourceId,
-    title: link.resourceContent?.fileName ?? "",
+    title: link.resourceContent?.title || link.resourceContent?.fileName || "",
     fileId: link.resourceContent?.fileId ?? "",
     filename: link.resourceContent?.fileName,
     mimeType: link.resourceContent?.mimeType,
@@ -148,7 +149,7 @@ export async function listGroupMaterials(groupId: string, sessionNo = 1): Promis
 export async function createMaterial(groupId: string, groupType: LessonMaterialType, groupPublished: boolean, input: CreateLessonMaterialRequest, demo: boolean, sessionNo = 1): Promise<LessonMaterial> {
   assertWriteEnabled(FEATURE, demo);
   const versionId = await ensureDraftVersionId(groupId);
-  const content: SlideMaterialContent = { fileId: input.fileId, fileName: input.filename || input.title, mimeType: input.mimeType, sizeBytes: input.sizeBytes };
+  const content: SlideMaterialContent = { title: input.title, fileId: input.fileId, fileName: input.filename || input.title, mimeType: input.mimeType, sizeBytes: input.sizeBytes };
   const resource = await lmsClient.post<BackendLearningResource>("/learning-resources", {
     type: groupType,
     content,
