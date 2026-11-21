@@ -42,6 +42,9 @@ export function timetableOverview(classes: TimetableClass[], classId: string) {
  const attendanceRate=attendance?attendance.attendanceRate:records.length?Math.round(records.filter(s=>["PRESENT","LATE"].includes(s.myAttendanceStatus!)).length/records.length*1000)/10:null;
  return {course,total,done,percent:total?Math.round(done/total*1000)/10:null,start:course?.startDate || sessions.map(s=>s.startAt).filter((d):d is string=>!!d && dayjs(d).isValid()).sort()[0],end:dates.at(-1),schedule:classSchedule(course),attendanceRate,progress:course?.personalProgress ?? null,averageScore:course?.averageScore ?? null,diligence:course?.homeworkDiligence ?? null};
 }
-export function visibleTimetableSessions(sessions:TimetableSession[],month:string,wholeCourse:boolean,classId="ALL") {
- return sessions.filter(s=>(classId==="ALL" || s.classId===classId) && (wholeCourse || (!!s.date && dayjs(s.date).format("YYYY-MM")===month))).sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime));
+export function visibleTimetableSessions(sessions:TimetableSession[],month:string,wholeCourse:boolean,classId="ALL",classes:TimetableClass[]=[]) {
+ const closedClasses=new Set(classes.filter(course=>course.lifecycleStatus==="RECRUITMENT_CLOSED").map(course=>course.id));
+ return sessions.filter(s=>(classId==="ALL" || s.classId===classId)
+  && (!closedClasses.has(s.classId) || (s.sessionNo>=1 && s.sessionNo<=2))
+  && (wholeCourse || (!!s.date && dayjs(s.date).format("YYYY-MM")===month))).sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime));
 }

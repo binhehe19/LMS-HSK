@@ -29,3 +29,14 @@ it("keeps the chosen class in both month and whole-course scopes",()=>{
  expect(visibleTimetableSessions(rows,"2026-12",false,"a").map(s=>s.id)).toEqual(["a-dec"]);
  expect(visibleTimetableSessions(rows,"2026-11",true,"ALL")).toHaveLength(3);
 });
+
+it("limits recruitment-closed classes to session numbers 1 and 2 even in a mixed class list",()=>{
+ const closed={id:"closed",lifecycleStatus:"RECRUITMENT_CLOSED"};
+ const started={id:"started",lifecycleStatus:"IN_PROGRESS"};
+ const rows=[3,1,2].flatMap(sessionNo=>[closed,started].map(course=>classSession(course,{
+  id:`${course.id}-${sessionNo}`,classId:course.id,sessionNo,startAt:`2026-11-0${sessionNo}T08:00:00`,
+ })));
+ expect(visibleTimetableSessions(rows,"2026-11",true,"closed",[closed,started]).map(s=>s.sessionNo)).toEqual([1,2]);
+ expect(visibleTimetableSessions(rows,"2026-11",true,"started",[closed,started])).toHaveLength(3);
+ expect(visibleTimetableSessions(rows,"2026-11",false,"ALL",[closed,started])).toHaveLength(5);
+});
