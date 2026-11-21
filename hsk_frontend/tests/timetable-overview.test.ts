@@ -4,7 +4,13 @@ import {classSession} from "@/components/student/timetable/timetable-source";
 import type {TimetableClass} from "@/components/student/timetable/timetable-source";
 const courses:TimetableClass[]=[{id:"a",code:"GT1",startDate:"2026-09-01",teacher:{fullName:"Cô A"},totalSessions:20,completedSessions:3,personalProgress:10,averageScore:21,homeworkDiligence:9,schedulePatterns:[{dayOfWeek:"MONDAY",startTime:"08:00:00",endTime:"10:00:00"}],myAttendanceSummary:{totalRecorded:4,attendanceRate:75},sessions:[{id:"a1",classId:"a",startAt:"2026-11-01T08:00:00",endAt:"2026-11-01T10:00:00",status:"DONE"}]},{id:"b",code:"GT2",teacher:{fullName:"Thầy B"},totalSessions:8,completedSessions:2,personalProgress:60,averageScore:80,homeworkDiligence:50,myAttendanceSummary:{totalRecorded:2,attendanceRate:100},sessions:[]}];
 describe("learner timetable overview",()=>{
- it("does not mix metrics from multiple enrolled classes in ALL",()=>{const result=timetableOverview(courses,"ALL");expect(result.course?.id).toBe("a");expect(result.total).toBe(20);expect(result.done).toBe(3);expect(result.percent).toBe(15);expect(result.progress).toBe(10);expect(result.attendanceRate).toBe(75);expect(result.schedule).toBe("T2 | 08:00 - 10:00");expect(result.start).toBe("2026-09-01");});
+ it("does not use a single class for the All classes overview",()=>{
+  const result=timetableOverview(courses,"ALL");
+  expect(result.course).toBeUndefined();
+  expect(result.total).toBe(0);
+  expect(result.progress).toBeNull();
+  expect(result.attendanceRate).toBeNull();
+ });
  it("selects all hero fields from the requested class including classes with no sessions",()=>{const result=timetableOverview(courses,"b");expect(result.course?.teacher?.fullName).toBe("Thầy B");expect(result.progress).toBe(60);expect(result.averageScore).toBe(80);expect(result.diligence).toBe(50);expect(result.attendanceRate).toBe(100);expect(result.total).toBe(8);expect(result.schedule).toBe("Chưa xếp lịch");});
  it("does not fall back to another class for an unauthorized or stale class query",()=>{const result=timetableOverview(courses,"not-mine");expect(result.course).toBeUndefined();expect(result.progress).toBeNull();expect(result.attendanceRate).toBeNull();});
  it("counts LATE attendance and excludes cancelled sessions without declaring past dates completed",()=>{const result=timetableOverview([{id:"c",sessions:[{id:"1",classId:"c",myAttendanceStatus:"LATE",status:"DONE"},{id:"2",classId:"c",myAttendanceStatus:"ABSENT",status:"UPCOMING",startAt:"2020-01-01"},{id:"3",classId:"c",status:"CANCELLED",myAttendanceStatus:"PRESENT"}]}],"c");expect(result.attendanceRate).toBe(50);expect(result.done).toBe(1);expect(result.total).toBe(2);});

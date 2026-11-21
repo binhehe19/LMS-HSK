@@ -226,6 +226,9 @@ it("opens the session dialog with a named title, progress and separate activity 
 it("keeps All classes as an explicit filter", async () => {
   const { rerender } = render(<StudentTimetable />);
   await screen.findByRole("button", { name: "Chi tiết buổi 1: Chủ đề a" });
+  const hero = within(screen.getByRole("region", { name: "THỜI KHÓA BIỂU" }));
+  expect(hero.getByText(/Mã lớp:/)).toBeInTheDocument();
+  expect(hero.getByText("Tiến độ lớp học chuẩn")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Thời khóa biểu" }));
   fireEvent.click(await screen.findByRole("menuitem", { name: "Tất cả lớp" }));
   expect(new URLSearchParams(window.location.search).get("classId")).toBe("ALL");
@@ -233,6 +236,10 @@ it("keeps All classes as an explicit filter", async () => {
   rerender(<StudentTimetable />);
   await screen.findByRole("button", { name: "Chi tiết buổi 1: Chủ đề b" });
   expect(screen.getByRole("button", { name: "Chi tiết buổi 1: Chủ đề a" })).toBeInTheDocument();
+  expect(hero.getByText("Tất cả lớp")).toBeInTheDocument();
+  expect(hero.getByText(/2 lớp/)).toBeInTheDocument();
+  expect(hero.queryByText(/Mã lớp:|Giáo viên:|Thời gian:|Tiến độ lớp học chuẩn/)).not.toBeInTheDocument();
+  expect(hero.queryByRole("region", { name: "Tổng quan lớp học" })).not.toBeInTheDocument();
 });
 
 it("avoids focus refetches and refreshes progress after a write without refetching the catalog", async () => {
