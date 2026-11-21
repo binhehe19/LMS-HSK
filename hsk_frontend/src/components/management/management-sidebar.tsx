@@ -11,7 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { MANAGEMENT_AREAS } from "@/components/management/management-areas";
-import { isNavItemActive, type NavItem } from "@/components/management/management-nav";
+import { filterNavItemsForRoles, isNavItemActive, type NavItem } from "@/components/management/management-nav";
 import type { UnreadCountState } from "@/components/management/notifications/use-unread-count";
 import { TicketWelcomeToast } from "@/components/management/tickets/ticket-welcome-toast";
 import { useAuthFrontendUrl } from "@/components/management/use-auth-frontend-url";
@@ -20,6 +20,7 @@ import { AssetImage } from "@/components/shared/asset-image";
 import type { ManagementArea } from "@/lib/management/area";
 import { getNavTargetStatus } from "@/lib/management/route-registry";
 import { formatUnreadBadge } from "@/lib/notifications/unread-badge";
+import { useAppSelector } from "@/redux/hooks";
 
 // Chuông thông báo, tìm kiếm, nút thu gọn, hồ sơ, cài đặt và đăng xuất nằm ở ManagementHeader; sidebar chỉ còn thương hiệu + menu. `unread` do khung truyền xuống (huy hiệu menu).
 export function ManagementSidebar({ area, unread, onNavigate }: { area: ManagementArea; unread: UnreadCountState; onNavigate?: (href: string) => void }) {
@@ -28,11 +29,12 @@ export function ManagementSidebar({ area, unread, onNavigate }: { area: Manageme
   const { collapsed } = useSidebarCollapse();
   const scrollRef = useRef<HTMLDivElement>(null);
   const unreadBadge = formatUnreadBadge(unread.count);
+  const userRoles = useAppSelector((state) => state.auth.user?.roles);
 
   // Giống buildAuthAdminUsersUrl của bản cũ (redirect param rỗng).
   const authAdminUsersUrl = useAuthFrontendUrl("/admin/users", "");
 
-  const navItems = useMemo(() => config.buildNav(authAdminUsersUrl), [config, authAdminUsersUrl]);
+  const navItems = useMemo(() => filterNavItemsForRoles(config.buildNav(authAdminUsersUrl), userRoles), [config, authAdminUsersUrl, userRoles]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem(config.scrollKey);

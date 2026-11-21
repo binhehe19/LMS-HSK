@@ -52,8 +52,6 @@ export const MIGRATED_ROUTES: readonly string[] = [
   "/sets/:id/edit",
   // M5 — W2-C: tài liệu học tập
   "/learning-path/lesson-materials/manage",
-  // M5 — W1-C: sao kê
-  "/admin/statements",
   // M5 — W2-E: luyện phát âm trên nền content-tree
   "/pronunciation/manage",
   "/pronunciation/manage/select-type",
@@ -78,6 +76,7 @@ export const RENAMED_ROUTES: Readonly<Record<string, string>> = {
  * Route của HSK cũ thuộc chức năng đã gỡ. Không phục vụ và không hiện trang "đang chuyển đổi": trả 404.
  */
 export const REMOVED_ROUTES: readonly string[] = [
+  "/admin/statements",
   "/admin/teacher-management",
   "/learning-path/online-course/manage",
   "/learning-path/online-course/leads",
@@ -118,16 +117,31 @@ export const UI_ROLE_DECISIONS: Readonly<Record<string, UiRoleDecision>> = {
 };
 
 /**
- * Vai trò được THÊM vào route đã có PrivateRoute ở HSK cũ (HSK cũ giữ nguyên, không sửa dữ kiện trong old-routes.generated.ts).
- * Chấm bài ở backend chung chỉ cho ROLE_ADMIN (AssessmentGradingManagementController) nên Admin được vào luồng lớp → buổi → nộp bài → chấm bài
- * (quyết định chủ dự án, 2026-11-14). Muốn cho vai trò khác chấm bài: thêm vai trò vào đây VÀ mở quyền ở backend. Chỉ là rào chắn giao diện.
+ * Vai trò được THÊM theo cụm tính năng LMS 2.0 vào các route đã có PrivateRoute ở HSK cũ:
+ * - Cụm 1 & 2 (/admin/dashboard, /admin/analytics, /admin/settings/notifications, /admin/class-management*): thêm TRAINING_OPS.
+ * - Cụm 4 (/learning-path/lesson-materials/manage): đồng bộ đủ 5 role làm học liệu (ADMIN, TRAINING_OPS, RND, TEACHER, MENTOR).
+ * - Cụm 5 (luồng chấm bài /instructor/list-class, list-lesson, submissions, grading): thêm ADMIN, TRAINING_OPS.
  */
-export const UI_ROLE_GRANTS: Readonly<Record<string, UiRoleDecision>> = Object.fromEntries(
-  ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"].map((path) => [
-    path,
-    { roles: [ROLES.ADMIN], note: "Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài" } satisfies UiRoleDecision,
-  ]),
-);
+const CLUSTER_CONTENT_ROLES = [ROLES.ADMIN, ROLES.TRAINING_OPS, ROLES.RND, ROLES.TEACHER, ROLES.MENTOR] as const;
+
+export const UI_ROLE_GRANTS: Readonly<Record<string, UiRoleDecision>> = {
+  ...Object.fromEntries(
+    ["/admin/dashboard", "/admin/analytics", "/admin/settings/notifications", "/admin/class-management", "/admin/class-management/students"].map((path) => [
+      path,
+      { roles: [ROLES.TRAINING_OPS], note: "Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS" } satisfies UiRoleDecision,
+    ]),
+  ),
+  "/learning-path/lesson-materials/manage": {
+    roles: CLUSTER_CONTENT_ROLES,
+    note: "Phân quyền LMS 2.0 (Cụm 4): đồng bộ đủ 5 role quản lý học liệu",
+  },
+  ...Object.fromEntries(
+    ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"].map((path) => [
+      path,
+      { roles: [ROLES.ADMIN, ROLES.TRAINING_OPS], note: "Phân quyền LMS 2.0 (Cụm 5): mở luồng chấm bài cho ADMIN và TRAINING_OPS" } satisfies UiRoleDecision,
+    ]),
+  ),
+};
 
 export interface ManagementRoute {
   path: string;
@@ -144,6 +158,21 @@ export interface ManagementRoute {
 }
 
 const shortRole = (r: string) => r.replace("ROLE_", "");
+
+const LEGACY_TO_LMS2_ROLE: Readonly<Record<string, string>> = {
+  [ROLES.TEACHER_MANAGER]: ROLES.TRAINING_OPS,
+  [ROLES.COLLABORATOR]: ROLES.RND,
+};
+
+function mapOldRolesToLms2(path: string, oldRoles: readonly string[]): string[] {
+  if (path.startsWith("/teacher-manager/")) {
+    return oldRoles.filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r));
+  }
+  const mapped = oldRoles
+    .map((r) => LEGACY_TO_LMS2_ROLE[r] ?? r)
+    .filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r));
+  return Array.from(new Set(mapped));
+}
 
 export function classifyRoute(
   fact: OldRouteFact,
@@ -171,7 +200,7 @@ export function classifyRoute(
   if (fact.guard !== "roles") {
     return { ...base, status: "UNKNOWN", allowedRoles: [], roleSource: "none", reason: "HSK cũ chỉ yêu cầu đăng nhập, không xác lập role" };
   }
-  const allowedRoles = fact.roles.filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r));
+  const allowedRoles = mapOldRolesToLms2(fact.path, fact.roles);
   const grant = grants[fact.path];
   const granted = (grant?.roles ?? []).filter((r) => MANAGEMENT_SUPPORTED_ROLES.includes(r) && !allowedRoles.includes(r));
   if (allowedRoles.length === 0 && granted.length === 0) {
@@ -191,12 +220,12 @@ const exact = new Map<string, ManagementRoute>();
 exact.set("/grammar/library", {
   path: "/grammar/library",
   status: "MIGRATED",
-  allowedRoles: [ROLES.ADMIN],
+  allowedRoles: [...CLUSTER_CONTENT_ROLES],
   oldComponent: "—",
   oldGuard: "none",
   oldRoles: [],
   roleSource: "owner-decision",
-  reason: "Kho ngữ pháp dùng API quản lý học liệu dành cho Admin.",
+  reason: "Kho ngữ pháp thuộc Cụm 4 (Quản lý Học liệu LMS 2.0).",
 });
 const patterns: { segments: string[]; paramCount: number; route: ManagementRoute }[] = [];
 for (const route of MANAGEMENT_ROUTES) {
