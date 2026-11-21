@@ -26,10 +26,10 @@ import { renderRouteStatusDoc } from "./support/route-status-doc";
 const fact = (over: Partial<OldRouteFact>): OldRouteFact => ({ path: "/x/manage", component: "X", line: 1, guard: "roles", roles: [ROLES.ADMIN], underConstruction: false, ...over });
 
 describe("classifyRoute (quy tắc trạng thái)", () => {
-  it("PrivateRoute theo role có role được hỗ trợ => NOT_MIGRATED, chỉ enforce phần giao với role được hỗ trợ", () => {
+  it("PrivateRoute theo role có role được hỗ trợ => NOT_MIGRATED, ánh xạ role 1.0 sang 2.0", () => {
     const r = classifyRoute(fact({ roles: [ROLES.TEACHER, ROLES.MENTOR, ROLES.ADMIN, ROLES.TEACHER_MANAGER, ROLES.COLLABORATOR] }), []);
     expect(r.status).toBe("NOT_MIGRATED");
-    expect(r.allowedRoles).toEqual([ROLES.TEACHER, ROLES.MENTOR, ROLES.ADMIN]);
+    expect(r.allowedRoles).toEqual([ROLES.TEACHER, ROLES.MENTOR, ROLES.ADMIN, ROLES.TRAINING_OPS, ROLES.RND]);
   });
 
   it("có trong danh sách đã chuyển => MIGRATED", () => {
@@ -46,8 +46,8 @@ describe("classifyRoute (quy tắc trạng thái)", () => {
     expect(classifyRoute(fact({ guard: "authenticated", roles: [] }), []).status).toBe("UNKNOWN");
   });
 
-  it.each([[[ROLES.TEACHER_MANAGER]], [[ROLES.COLLABORATOR]], [[ROLES.TEACHER_MANAGER, ROLES.COLLABORATOR]]])("%j chỉ dành cho role chưa xác minh => UNKNOWN, kể cả khi đã nằm trong danh sách chuyển", (roles) => {
-    const r = classifyRoute(fact({ roles }), ["/x/manage"]);
+  it("route /teacher-manager/* chỉ dành cho ROLE_TEACHER_MANAGER => UNKNOWN", () => {
+    const r = classifyRoute(fact({ path: "/teacher-manager/x", roles: [ROLES.TEACHER_MANAGER] }), ["/teacher-manager/x"]);
     expect(r.status).toBe("UNKNOWN");
     expect(r.allowedRoles).toEqual([]);
   });
@@ -93,21 +93,23 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
   const roles = (url: string) => [...(findRoute(url)?.allowedRoles ?? [])].sort();
   const sorted = (...r: string[]) => [...r].sort();
 
-  it("/admin/* chỉ ADMIN", () => {
+  it("/admin/* NOT_MIGRATED chỉ ADMIN; Cụm 1 & 2 cho ADMIN + TRAINING_OPS", () => {
     for (const r of MANAGEMENT_ROUTES.filter((x) => x.path.startsWith("/admin/") && x.status === "NOT_MIGRATED")) {
       expect(r.allowedRoles, r.path).toEqual([ROLES.ADMIN]);
     }
-    expect(roles("/admin/class-management")).toEqual([ROLES.ADMIN]);
+    for (const url of ["/admin/dashboard", "/admin/analytics", "/admin/settings/notifications", "/admin/class-management", "/admin/class-management/students"]) {
+      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TRAINING_OPS));
+    }
   });
 
-  it("Kho ngữ pháp dùng API dành cho Admin", () => {
+  it("Kho ngữ pháp thuộc Cụm 4 (5 role học liệu)", () => {
     expect(getServedRoute("/grammar/library")?.status).toBe("MIGRATED");
-    expect(roles("/grammar/library")).toEqual([ROLES.ADMIN]);
+    expect(roles("/grammar/library")).toEqual(sorted(ROLES.ADMIN, ROLES.TRAINING_OPS, ROLES.RND, ROLES.TEACHER, ROLES.MENTOR));
   });
 
-  it("luồng chấm bài /instructor/list-class(+list-lesson, submissions, grading): TEACHER, MENTOR và ADMIN (quyết định chủ dự án vì backend chỉ cho Admin chấm)", () => {
+  it("luồng chấm bài /instructor/list-class(+list-lesson, submissions, grading): TEACHER, MENTOR, ADMIN, TRAINING_OPS", () => {
     for (const url of ["/instructor/list-class", "/instructor/list-class/list-lesson", "/instructor/list-class/submissions", "/instructor/list-class/grading"]) {
-      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
+      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TRAINING_OPS, ROLES.TEACHER, ROLES.MENTOR));
       expect(findRoute(url)?.roleSource, url).toBe("owner-decision");
     }
   });
@@ -129,7 +131,7 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
 
   it("chức năng đã gỡ (REMOVED_ROUTES): vẫn có trong registry nhưng OUT_OF_SCOPE, không role nào, không được phục vụ (404, không placeholder)", () => {
     expect([...REMOVED_ROUTES].sort()).toEqual([
-      "/admin/hanzi/manage", "/admin/membership-management", "/admin/teacher-management", "/admin/tickets",
+      "/admin/hanzi/manage", "/admin/membership-management", "/admin/statements", "/admin/teacher-management", "/admin/tickets",
       "/hanzi/create", "/hanzi/edit/:id", "/hanzi/manage", "/hanzi/manage/create-package", "/hanzi/manage/select-type",
       "/instructor/instructor-tickets", "/instructor/manage-storage", "/learning-path/online-course/leads", "/learning-path/online-course/manage",
       "/teacher-manager/hanzi/manage",
@@ -144,15 +146,9 @@ describe("quyền theo từng route đã xác minh từ HSK cũ (router.link.tsx
     expect(getServedRoute("/hanzi/edit/123")).toBeNull();
   });
 
-  it("route dùng chung có guard rõ ràng: các trang */manage cho ADMIN + TEACHER + MENTOR", () => {
-    for (const url of ["/pronunciation/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage"]) {
-      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TEACHER, ROLES.MENTOR));
-    }
-  });
-
-  it("tài liệu học tập: HSK cũ ADMIN + TEACHER_MANAGER → app mới chỉ ADMIN", () => {
-    for (const url of ["/learning-path/lesson-materials/manage"]) {
-      expect(roles(url), url).toEqual([ROLES.ADMIN]);
+  it("Cụm 3 & 4: các trang quản lý giáo trình & học liệu cho ADMIN + TRAINING_OPS + RND + TEACHER + MENTOR", () => {
+    for (const url of ["/pronunciation/manage", "/quiz/manage", "/flashcard/package", "/vocab-set/manage", "/grammar/manage", "/learning-path/syllabus/manage", "/learning-path/lesson-materials/manage"]) {
+      expect(roles(url), url).toEqual(sorted(ROLES.ADMIN, ROLES.TRAINING_OPS, ROLES.RND, ROLES.TEACHER, ROLES.MENTOR));
     }
   });
 
@@ -200,15 +196,19 @@ describe("bất biến của registry", () => {
     expect(new Set(paths).size).toBe(paths.length);
   });
 
-  it("allowedRoles ⊂ role được hỗ trợ ∩ role HSK cũ cho phép; chỉ route được phục vụ mới có role", () => {
+  it("allowedRoles ⊂ role được hỗ trợ ∩ (role HSK cũ ánh xạ 2.0 + grants); chỉ route được phục vụ mới có role", () => {
+    const mapOld = (path: string, oldRoles: readonly string[]) =>
+      path.startsWith("/teacher-manager/")
+        ? oldRoles
+        : oldRoles.map((x) => (x === ROLES.TEACHER_MANAGER ? ROLES.TRAINING_OPS : x === ROLES.COLLABORATOR ? ROLES.RND : x));
     for (const r of MANAGEMENT_ROUTES) {
       const served = r.status === "MIGRATED" || r.status === "NOT_MIGRATED";
       expect(r.allowedRoles.length > 0, r.path).toBe(served);
+      const mappedOld = mapOld(r.path, r.oldRoles);
       for (const role of r.allowedRoles) {
         expect(MANAGEMENT_SUPPORTED_ROLES, r.path).toContain(role);
-        // Quyền phải có nguồn: PrivateRoute của HSK cũ, hoặc quyết định giao diện của chủ dự án (chỉ cho route không có PrivateRoute).
-        if (r.roleSource === "private-route") expect(r.oldRoles, r.path).toContain(role);
-        else if (r.oldGuard === "roles") expect([...r.oldRoles, ...(UI_ROLE_GRANTS[r.path]?.roles ?? [])], r.path).toContain(role);
+        if (r.roleSource === "private-route") expect(mappedOld, r.path).toContain(role);
+        else if (r.oldGuard === "roles") expect([...mappedOld, ...(UI_ROLE_GRANTS[r.path]?.roles ?? [])], r.path).toContain(role);
         else expect(UI_ROLE_DECISIONS[r.path]?.roles, r.path).toContain(role);
       }
     }

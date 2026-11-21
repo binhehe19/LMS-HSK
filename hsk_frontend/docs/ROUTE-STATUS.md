@@ -7,10 +7,10 @@ Dữ kiện HSK cũ: LMS_Frontend/src/routes/router.link.tsx @ 72292b7 (xem `doc
 
 | Trạng thái | Số route | Ý nghĩa |
 |---|---|---|
-| MIGRATED | 29 | Đã có trang thật |
+| MIGRATED | 28 | Đã có trang thật |
 | NOT_MIGRATED | 33 | Role xác định được (PrivateRoute HSK cũ, hoặc quyết định giao diện của chủ dự án); hiện trang "Chức năng đang được chuyển đổi" ở đúng URL cũ |
 | UNKNOWN | 48 | Không đủ bằng chứng để phục vụ (không có PrivateRoute và chưa có quyết định, hoặc chỉ dành cho role chưa xác minh); trả 404 |
-| OUT_OF_SCOPE | 38 | HSK cũ chỉ hiện "đang xây dựng" hoặc chức năng đã gỡ; trả 404 |
+| OUT_OF_SCOPE | 39 | HSK cũ chỉ hiện "đang xây dựng" hoặc chức năng đã gỡ; trả 404 |
 
 **Các route UNKNOWN chia thành nhóm không chồng lấn** (mỗi route đúng một nhóm, tổng = 48; không đổi UNKNOWN để cho số liệu khớp):
 
@@ -24,39 +24,38 @@ Dữ kiện HSK cũ: LMS_Frontend/src/routes/router.link.tsx @ 72292b7 (xem `doc
 Role app mới hỗ trợ: ADMIN, TEACHER, MENTOR. "Role app mới enforce" = role HSK cũ cho phép ∩ role hỗ trợ; Teacher-manager và Collaborator chưa xác minh nên
 không được cấp dù HSK cũ có liệt kê. "Quyết định chủ dự án (giao diện)" chỉ là phạm vi hiển thị của frontend mới, **không phải xác nhận quyền từ backend**.
 
-## MIGRATED (29)
+## MIGRATED (28)
 
 | Route | Component HSK cũ | Guard cũ | Role cũ (nguyên văn) | Trạng thái | Role app mới enforce | Nguồn quyền | Căn cứ |
 |---|---|---|---|---|---|---|---|
-| `/admin/dashboard` | AdminDashboard | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/analytics` | AdminAnalyticsDashboard | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/class-management` | AdminClassManagementPage | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/class-management/students` | AdminClassStudentsPage | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/statements` | InstructorFinancialStatement | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/admin/settings/notifications` | AdminNotification | roles | ADMIN | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
+| `/admin/dashboard` | AdminDashboard | roles | ADMIN | **MIGRATED** | ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN; thêm TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS |
+| `/admin/analytics` | AdminAnalyticsDashboard | roles | ADMIN | **MIGRATED** | ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN; thêm TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS |
+| `/admin/class-management` | AdminClassManagementPage | roles | ADMIN | **MIGRATED** | ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN; thêm TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS |
+| `/admin/class-management/students` | AdminClassStudentsPage | roles | ADMIN | **MIGRATED** | ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN; thêm TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS |
+| `/admin/settings/notifications` | AdminNotification | roles | ADMIN | **MIGRATED** | ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN; thêm TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 1 & 2): mở cho ROLE_TRAINING_OPS |
 | `/instructor/welcome` | InstructorWelcome | none | — | **MIGRATED** | TEACHER, MENTOR | Quyết định chủ dự án (giao diện) | Quyết định chủ dự án (M3B.2, 2026-10-24): giao diện chỉ TEACHER, MENTOR; HSK cũ không có PrivateRoute; chưa phải xác nhận quyền từ backend |
-| `/instructor/list-class` | ClassListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN: Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài |
-| `/instructor/list-class/list-lesson` | LessonListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN: Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài |
+| `/instructor/list-class` | ClassListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN, TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 5): mở luồng chấm bài cho ADMIN và TRAINING_OPS |
+| `/instructor/list-class/list-lesson` | LessonListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN, TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 5): mở luồng chấm bài cho ADMIN và TRAINING_OPS |
 | `/instructor/list-class/lesson-detail` | LessonDetailPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR |
-| `/instructor/list-class/submissions` | SubmissionListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN: Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài |
-| `/instructor/list-class/grading` | GradingWorkspacePage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN: Quyết định chủ dự án (2026-11-14): thêm ADMIN vào luồng chấm bài vì backend chung chỉ cho ROLE_ADMIN chấm bài |
+| `/instructor/list-class/submissions` | SubmissionListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN, TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 5): mở luồng chấm bài cho ADMIN và TRAINING_OPS |
+| `/instructor/list-class/grading` | GradingWorkspacePage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS | Quyết định chủ dự án (giao diện) | PrivateRoute: TEACHER, MENTOR; thêm ADMIN, TRAINING_OPS: Phân quyền LMS 2.0 (Cụm 5): mở luồng chấm bài cho ADMIN và TRAINING_OPS |
 | `/instructor/list-class/learning-analysis` | LearningAnalysisListPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR |
 | `/instructor/list-class/learning-analysis/detail` | LearningAnalysisDetailPage | roles | TEACHER, MENTOR | **MIGRATED** | TEACHER, MENTOR | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR |
 | `/instructor/instructor-notifications` | InstructorNotification | none | — | **MIGRATED** | TEACHER, MENTOR | Quyết định chủ dự án (giao diện) | Quyết định chủ dự án (M3B.2, 2026-10-24): giao diện chỉ TEACHER, MENTOR (Admin dùng /admin/settings/notifications); HSK cũ không có PrivateRoute; chưa phải xác nhận quyền từ backend |
-| `/sets/create` | CreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/sets/:id/edit` | UpdateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/flashcard/manage` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/flashcard/create-package` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/flashcard/manage-learning-path` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/flashcard/manage-learning` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/vocab-set/manage` | ManageVocabularySet | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/vocabulary/manage` | ManageVocabulary | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/learning-path/syllabus/manage` | SyllabusManagementPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/learning-path/lesson-materials/manage` | LessonMaterialManagementPage | roles | ADMIN, TEACHER_MANAGER | **MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN, TEACHER_MANAGER |
-| `/pronunciation/manage` | ManagePronunciation | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/pronunciation/manage/select-type` | PronunciationSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/quiz/manage` | ManageQuiz | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/grammar/manage` | ManageGrammar | roles | TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER | **MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER |
+| `/sets/create` | CreateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/sets/:id/edit` | UpdateSetPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/flashcard/manage` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/flashcard/create-package` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/flashcard/manage-learning-path` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/flashcard/manage-learning` | ManageFlashcard | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/vocab-set/manage` | ManageVocabularySet | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/vocabulary/manage` | ManageVocabulary | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/learning-path/syllabus/manage` | SyllabusManagementPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/learning-path/lesson-materials/manage` | LessonMaterialManagementPage | roles | ADMIN, TEACHER_MANAGER | **MIGRATED** | ADMIN, TRAINING_OPS, RND, TEACHER, MENTOR | Quyết định chủ dự án (giao diện) | PrivateRoute: ADMIN, TEACHER_MANAGER; thêm RND, TEACHER, MENTOR: Phân quyền LMS 2.0 (Cụm 4): đồng bộ đủ 5 role quản lý học liệu |
+| `/pronunciation/manage` | ManagePronunciation | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/pronunciation/manage/select-type` | PronunciationSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/quiz/manage` | ManageQuiz | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/grammar/manage` | ManageGrammar | roles | TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER | **MIGRATED** | TEACHER, MENTOR, RND, ADMIN, TRAINING_OPS | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, COLLABORATOR, ADMIN, TEACHER_MANAGER |
 
 ## NOT_MIGRATED (33)
 
@@ -91,12 +90,12 @@ Phục vụ trang placeholder dùng chung. Khi chuyển xong: tạo `page.tsx` �
 | `/admin/settings/linked-accounts` | AdminLinkedAccounts | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/settings/integrations` | AdminIntegrations | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
 | `/admin/settings/withdraw` | AdminWithdraw | roles | ADMIN | **NOT_MIGRATED** | ADMIN | PrivateRoute HSK cũ | PrivateRoute: ADMIN |
-| `/learning-path/create` | LPCreateLearningPathPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/learning-path/manage` | LPManageLearningPath | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/learning-path/listening-practice/manage` | ManageListeningPractice | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/kanji-origin/manage` | ManageKanjiOrigin | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/kanji-origin/manage/select-type` | KanjiOriginSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
-| `/ai-practice/manage` | ManageAiPractice | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/learning-path/create` | LPCreateLearningPathPage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/learning-path/manage` | LPManageLearningPath | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/learning-path/listening-practice/manage` | ManageListeningPractice | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/kanji-origin/manage` | ManageKanjiOrigin | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/kanji-origin/manage/select-type` | KanjiOriginSelectTypePage | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
+| `/ai-practice/manage` | ManageAiPractice | roles | TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR | **NOT_MIGRATED** | TEACHER, MENTOR, ADMIN, TRAINING_OPS, RND | PrivateRoute HSK cũ | PrivateRoute: TEACHER, MENTOR, ADMIN, TEACHER_MANAGER, COLLABORATOR |
 
 ## UNKNOWN (48)
 
@@ -153,7 +152,7 @@ KHÔNG được phục vụ. Cần bằng chứng/quyết định của chủ d�
 | `/instructor/instructor-quiz-questions` | InstructorQuizQuestions | none | — | **UNKNOWN** | — | — | HSK cũ không bọc PrivateRoute: không có guard ở tầng route, quyền chưa được xác lập |
 | `/instructor/instructor-settings` | InstructorProfileSettings | none | — | **UNKNOWN** | — | — | HSK cũ không bọc PrivateRoute: không có guard ở tầng route, quyền chưa được xác lập |
 
-## OUT_OF_SCOPE (38)
+## OUT_OF_SCOPE (39)
 
 KHÔNG được phục vụ.
 
@@ -178,6 +177,7 @@ KHÔNG được phục vụ.
 | `/admin/students-list` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/students-details` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/teacher-management` | TeacherManagementPage | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
+| `/admin/statements` | InstructorFinancialStatement | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/admin/messages` | UnderConstructionContent | roles | ADMIN | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |
 | `/admin/tickets` | TeacherManagerTickets | roles | ADMIN | **OUT_OF_SCOPE** | — | — | Chức năng đã gỡ khỏi hệ thống theo quyết định của chủ dự án |
 | `/instructor/instructor-course` | UnderConstructionContent | none | — | **OUT_OF_SCOPE** | — | — | HSK cũ chỉ hiện UnderConstructionContent (chưa từng có chức năng thật) |

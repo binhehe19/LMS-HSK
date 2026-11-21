@@ -8,22 +8,13 @@ import { AuthCard, FullScreenMessage } from "@/components/auth/auth-panels";
 import { isAuthFrontendConfigured, redirectToAuthFrontend } from "@/lib/auth/auth-redirect";
 import { isDevIdpLogin } from "@/lib/auth/dev-token-session";
 import { markAuthRedirect } from "@/lib/auth/redirect-guard";
-import { hasAnyRole, ROLES } from "@/lib/auth/roles";
-import { areaForRoles } from "@/lib/management/area";
+import { resolveHomeDestination } from "@/lib/auth/home-destination";
 import { useAppSelector } from "@/redux/hooks";
 
 function HomeDestination() {
   const router = useRouter();
   const { status, user } = useAppSelector((state) => state.auth);
-  const roles = user?.roles;
-  const area = areaForRoles(roles);
-  const destination = hasAnyRole(roles, [ROLES.USER, "ROLE_STUDENT"])
-    ? "/student/student-dashboard"
-    : area === "admin"
-      ? "/admin/dashboard"
-      : area === "instructor"
-        ? "/instructor/welcome"
-        : null;
+  const destination = resolveHomeDestination(status, user?.roles);
 
   useEffect(() => {
     if (destination) router.replace(destination);
