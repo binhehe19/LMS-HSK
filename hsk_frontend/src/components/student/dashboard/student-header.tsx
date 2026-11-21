@@ -1,10 +1,13 @@
 "use client";
-import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { AppstoreOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { Dropdown } from "antd";
 import { redirectToSignOut } from "@/lib/auth/auth-redirect";
+import { resolveHomeDestination } from "@/lib/auth/home-destination";
+import { hasAnyRole, MANAGEMENT_SUPPORTED_ROLES } from "@/lib/auth/roles";
 import { useAppDispatch } from "@/redux/hooks";
 import { signout } from "@/redux/slices/auth-slice";
 import { useState } from "react";
+import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStudentIdentity } from "../student-data";
 import StudentNotifications from "../student-notifications";
@@ -24,6 +27,9 @@ export default function StudentHeader({ timetableSelection }: { timetableSelecti
  const resultActive = pathname.startsWith("/quiz-session/");
  const timetableActive = pathname === all_routes.studentTimetable || lessonActive;
  const dictionaryActive = pathname === all_routes.vocabulary || pathname.startsWith(`${all_routes.vocabulary}/`);
+ const managementHref = hasAnyRole(identity.user?.roles, MANAGEMENT_SUPPORTED_ROLES)
+   ? resolveHomeDestination("authenticated", identity.user?.roles)
+   : null;
  return (
   <header className="student-topbar">
     <button type="button" className="student-menu-toggle" aria-label="Mở menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><i aria-hidden="true" className="fa-solid fa-bars" /></button>
@@ -32,13 +38,12 @@ export default function StudentHeader({ timetableSelection }: { timetableSelecti
       <Link to={dashboardPath} className={pathname === dashboardPath ? "is-active" : ""} aria-current={pathname === dashboardPath ? "page" : undefined}>Bảng điều khiển</Link>
       <Link to={all_routes.studentCourses} className={pathname === all_routes.studentCourses ? "is-active" : ""} aria-current={pathname === all_routes.studentCourses ? "page" : undefined}>Khóa học</Link>
       <div className={`student-timetable-nav ${timetableActive ? "is-active" : resultActive ? "is-active-desktop" : ""}`}>
-        {!timetableSelection && <Link to={all_routes.studentTimetable} aria-current={pathname === all_routes.studentTimetable ? "page" : lessonActive || resultActive ? "location" : undefined}>Thời khóa biểu</Link>}
-        <TimetableClassMenu userId={identity.user?.id} selection={timetableSelection && {
+        <TimetableClassMenu userId={identity.user?.id} current={pathname === all_routes.studentTimetable ? "page" : lessonActive || resultActive ? "location" : undefined} selection={timetableSelection && {
           ...timetableSelection,
           onSelect: id => { timetableSelection.onSelect(id); setMenuOpen(false); },
         }} onNavigate={id => {
           setMenuOpen(false);
-          router.push(`${all_routes.studentTimetable}?classId=${encodeURIComponent(id)}`);
+          router.push(id ? `${all_routes.studentTimetable}?classId=${encodeURIComponent(id)}` : all_routes.studentTimetable);
         }} />
       </div>
       <Link to={all_routes.studentQuiz} className={practiceActive ? "is-active-desktop" : undefined} aria-current={practiceActive ? "page" : undefined}>Luyện tập<span className="d-lg-none" aria-hidden="true">⌄</span></Link>
@@ -61,14 +66,32 @@ export default function StudentHeader({ timetableSelection }: { timetableSelecti
               <strong>{identity.name}</strong>
             </div>,
             children: [
-              { key: "profile", label: "Hồ sơ của tôi", icon: <UserOutlined aria-hidden="true" /> },
+              {
+                key: "profile",
+                label: (
+                  <Link to={all_routes.studentProfile} style={{ color: "inherit", textDecoration: "none" }} onClick={() => setAccountOpen(false)}>
+                    Hồ sơ của tôi
+                  </Link>
+                ),
+                icon: <UserOutlined aria-hidden="true" />,
+              },
+              ...(managementHref
+                ? [{
+                    key: "management",
+                    label: (
+                      <NextLink href={managementHref} style={{ color: "inherit", textDecoration: "none" }} onClick={() => setAccountOpen(false)}>
+                        Quản trị
+                      </NextLink>
+                    ),
+                    icon: <AppstoreOutlined aria-hidden="true" />,
+                  }]
+                : []),
               { key: "logout", label: "Đăng xuất", icon: <LogoutOutlined aria-hidden="true" />, danger: true },
             ],
           }],
           onClick: ({ key }) => {
-            if (key === "profile") {
-              router.push(all_routes.studentProfile);
-            } else if (key === "logout") {
+            setAccountOpen(false);
+            if (key === "logout") {
               dispatch(signout());
               redirectToSignOut();
             }

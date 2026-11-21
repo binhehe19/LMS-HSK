@@ -32,7 +32,7 @@ export function classSchedule(course?: TimetableClass, compact = false): string 
 // One class owns every hero metric. The ALL list may span classes; never average
 // class percentages or combine the first teacher with another class's schedule.
 export function timetableOverview(classes: TimetableClass[], classId: string) {
- const course=classId === "ALL"?classes[0]:classes.find(c=>c.id===classId);
+ const course=classes.find(c=>c.id===classId);
  const sessions=(course?.sessions ?? []).filter(s=>s.status!=="CANCELLED");
  const dates=sessions.map(s=>s.endAt || s.startAt).filter((date):date is string=>!!date && dayjs(date).isValid()).sort((a,b)=>dayjs(a).valueOf()-dayjs(b).valueOf());
  const total=course?.totalSessions ?? sessions.length;

@@ -271,6 +271,7 @@ export type NavTargetStatus = RouteStatus | "EXTERNAL" | "UNREGISTERED";
 /** Trạng thái đích của một mục menu (đường dẫn nội bộ hoặc URL ngoài). */
 export function getNavTargetStatus(href: string): NavTargetStatus {
   if (/^https?:\/\//i.test(href)) return "EXTERNAL";
+  if (href.startsWith("/student/")) return "MIGRATED";
   return findRoute(href)?.status ?? "UNREGISTERED";
 }
 

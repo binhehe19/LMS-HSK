@@ -44,6 +44,7 @@ function TimetableContent() {
  const catalog=useTimetableRead(owner?`${owner}:timetable-classes`:null,loadTimetableClasses,300_000);
  const classParam=params.get("classId") ?? params.get("courseId");
  const classId=classParam && (classParam==="ALL" || catalog.data?.some(item=>item.id===classParam)) ? classParam : catalog.data?.[0]?.id || "";
+ const allClasses=classId==="ALL";
  useEffect(()=>{
   if(classParam || !classId)return;
   const query=new URLSearchParams(params.toString());
@@ -51,7 +52,7 @@ function TimetableContent() {
   query.set("classId",classId);
   window.history.replaceState(null,"",`${pathname}?${query}`);
  },[classParam,classId,params,pathname]);
- const classIds=useMemo(()=>catalog.data?.filter(item=>classId==="ALL" || item.id===classId).map(item=>item.id) ?? [],[catalog.data,classId]);
+ const classIds=useMemo(()=>catalog.data?.filter(item=>allClasses || item.id===classId).map(item=>item.id) ?? [],[catalog.data,allClasses,classId]);
  const request=useTimetableRead(owner && catalog.data?`${owner}:timetable:${JSON.stringify(classIds)}`:null,useCallback(()=>loadTimetable(classIds),[classIds]),60_000);
  const sessions=useMemo(()=>request.data?.sessions ?? [],[request.data]); const [view,setView]=useState<"calendar"|"list">("calendar"); const [requestedWholeCourse,setWholeCourse]=useState(false);
  const [selected,setSelected]=useState<TimetableSession|null>(null);
@@ -60,7 +61,7 @@ function TimetableContent() {
  const selectedModules=detail.data?.modules ?? selected?.modules ?? [];
  const monthParam=params.get("month"); const month=monthParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam) ? dayjs(monthParam+"-01") : dayjs().startOf("month");
  const classes=useMemo(()=>request.data?.classes ?? [],[request.data]);
- const selectedClasses=classes.filter(course=>classId==="ALL" || course.id===classId);
+ const selectedClasses=classes.filter(course=>allClasses || course.id===classId);
  const wholeCourseOnly=selectedClasses.length>0 && selectedClasses.every(course=>course.lifecycleStatus==="RECRUITMENT_CLOSED");
  const wholeCourse=wholeCourseOnly || requestedWholeCourse;
  const timetableError=catalog.error || request.error;
@@ -108,13 +109,17 @@ function TimetableContent() {
  const submittedAttempts=studySummary.submitted;
  const selectedState=selected && getSessionState(selected);
  return <StudentShell layout="bleed" timetableSelection={{classes:catalog.data,selected:classId,onSelect:id=>setQuery("classId",id),error:catalog.error,reload:catalog.reload}}><div className="hsk-timetable student-timetable-page">
-  <section className="tkb-hero mb-3">
+  <section className="tkb-hero mb-3" aria-labelledby="timetable-heading">
    <img src={asset("dots.png")} className="tkb-hero__dots tkb-hero__dots--right" alt="" /><img src={asset("dots.png")} className="tkb-hero__dots tkb-hero__dots--left" alt="" />
-   <div className="tkb-hero__inner"><div className="row align-items-center g-4"><div className="col-lg-6">
+   <div className="tkb-hero__inner"><div className="row align-items-center g-4"><div className={allClasses ? "col-12" : "col-lg-6"}>
     <div className="tkb-hero__mascot"><span className="tkb-hero__mascot-shadow" /><img className="tkb-hero__mascot-clock" src={asset("clock.png")} alt="" /><img className="tkb-hero__mascot-book" src={asset("book.png")} alt="" /><img className="tkb-hero__mascot-main" src={asset("mascot.png")} alt="Cú Học Bá bên đồng hồ" /></div>
-    <h1 className="tkb-hero__title">THỜI KHÓA BIỂU</h1><div className="tkb-hero__greeting">Xin chào {identity.name}</div>
-    <div className="tkb-hero__chips d-none d-md-flex"><span className="tkb-hero__chip"><Icon name="id-card" /> Mã lớp: <strong>{overview.course?.code || "—"}</strong></span>{<span className="tkb-hero__chip"><Icon name="chalkboard-user" /> Giáo viên: <strong>{teacher || "Chưa phân công"}</strong></span>}</div>
-    <div className="tkb-hero__chips d-none d-md-flex"><span className="tkb-hero__chip"><Icon name="clock" /> Thời gian: <strong>{overview.schedule}</strong></span></div>
+    <h1 id="timetable-heading" className="tkb-hero__title">THỜI KHÓA BIỂU</h1><div className="tkb-hero__greeting">Xin chào {identity.name}</div>
+    {allClasses ? (
+     <div className="tkb-hero__chips"><span className="tkb-hero__chip"><Icon name="layer-group" /> <strong>Tất cả lớp</strong>{catalog.data && `· ${catalog.data.length} lớp`}</span></div>
+    ) : <>
+     <div className="tkb-hero__chips d-none d-md-flex"><span className="tkb-hero__chip"><Icon name="id-card" /> Mã lớp: <strong>{overview.course?.code || "—"}</strong></span><span className="tkb-hero__chip"><Icon name="chalkboard-user" /> Giáo viên: <strong>{teacher || "Chưa phân công"}</strong></span></div>
+     <div className="tkb-hero__chips d-none d-md-flex"><span className="tkb-hero__chip"><Icon name="clock" /> Thời gian: <strong>{overview.schedule}</strong></span></div>
+    </>}
    </div>
    {overview.course && <div className="col-12 d-md-none">
     <section className="tkb-mobile-class" aria-label="Tổng quan lớp học">
@@ -130,11 +135,11 @@ function TimetableContent() {
      </details>}
     </section>
    </div>}
-   <div className="col-lg-6 d-none d-md-flex justify-content-lg-end"><div className="tkb-glass-card">
+   {!allClasses && <div className="col-lg-6 d-none d-md-flex justify-content-lg-end"><div className="tkb-glass-card">
     <div className="tkb-glass-card__head"><div className="tkb-glass-card__course"><Icon name="play" /><span>{courseName || "Chưa có khóa học"}</span></div><div className="tkb-glass-card__level">{overview.course?.code}</div></div>
     <div className="tkb-glass-card__standard"><div className="tkb-glass-card__standard-info"><div className="tkb-glass-card__standard-title"><img src={asset("progress-net.svg")} alt="" /> Tiến độ lớp học chuẩn</div><div className="tkb-glass-card__standard-dates"><span>Khai giảng: {overview.start ? dayjs(overview.start).format("DD/MM/YYYY") : "Chưa xếp lịch"}</span><span>Kết thúc: {overview.end ? dayjs(overview.end).format("DD/MM/YYYY") : "Chưa xếp lịch"}</span></div></div><div className="tkb-glass-card__standard-progress"><Ring value={overview.percent} /><div className="tkb-glass-card__standard-count"><div><strong>{overview.done}</strong><span>{` / ${overview.total}`}</span></div><p>{`Còn ${Math.max(0,overview.total-overview.done)} buổi kết thúc`}</p></div></div></div>
     <div className="tkb-glass-card__grid"><Stat icon="personal" title="Tiến độ cá nhân" value={progress} /><Stat icon="score" title="Điểm trung bình bài tập" value={averageScore} score /><Stat icon="attend" title="Chuyên cần tham gia" value={attendanceRate} circular /><Stat icon="hwdone" title="Chuyên cần bài tập về nhà" value={diligence} /></div>
-   </div></div></div></div>
+   </div></div>}</div></div>
   </section>
   <div className="hsk-timetable-body">
    {timetableError && <StudentFetchError title="Không tải được thời khóa biểu" description={timetableError} className="alert alert-danger" onRetry={reloadTimetable} mobileContent={<>Không tải được thời khóa biểu: {timetableError} </>} />}

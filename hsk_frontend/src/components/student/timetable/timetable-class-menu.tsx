@@ -1,6 +1,7 @@
 "use client";
 
 import { Dropdown } from "antd";
+import { CalendarOutlined, TeamOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import type { StudentClass } from "@/lib/api/student-client";
 import { loadTimetableClasses } from "./timetable-source";
@@ -14,34 +15,56 @@ export interface TimetableClassSelection {
   reload: () => void;
 }
 
-export function TimetableClassMenu({ userId, selection, onNavigate }: {
+export function TimetableClassMenu({ userId, selection, current, onNavigate }: {
   userId?: string;
   selection?: TimetableClassSelection;
-  onNavigate: (id: string) => void;
+  current?: "page" | "location";
+  onNavigate: (id?: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const request = useTimetableRead(
-    open && !selection && userId ? `${encodeURIComponent(userId)}:student:timetable-classes` : null,
+    !selection && userId ? `${encodeURIComponent(userId)}:student:timetable-classes` : null,
     loadTimetableClasses,
     300_000,
   );
   const classes = selection ? selection.classes : request.data;
+  const error = selection ? selection.error : request.error;
   const select = selection?.onSelect ?? onNavigate;
+
+  if (classes?.length === 1 || (!error && !classes?.length)) {
+    const onlyClass = classes?.[0];
+    const loading = !!userId && !classes;
+    return (
+      <button
+        type="button"
+        className="student-timetable-menu-trigger"
+        aria-current={current}
+        aria-busy={loading || undefined}
+        disabled={loading}
+        onClick={() => onlyClass ? select(onlyClass.id) : onNavigate()}
+      >
+        Thời khóa biểu
+      </button>
+    );
+  }
 
   return (
     <Dropdown
+      autoFocus
       trigger={["click"]}
       placement="bottomLeft"
+      overlayClassName="student-timetable-dropdown"
       open={open}
       onOpenChange={setOpen}
       menu={{
         selectable: true,
         selectedKeys: selection ? [selection.selected] : [],
-        style: { maxWidth: "min(340px, calc(100vw - 32px))", maxHeight: 300, overflowY: "auto" },
         items: [
-          { key: "ALL", label: "Tất cả lớp" },
+          { key: "ALL", label: <strong>Tất cả lớp</strong>, icon: <CalendarOutlined aria-hidden="true" /> },
+          ...(classes?.length ? [{ type: "divider" as const }] : []),
           ...(classes ?? []).map(course => ({
             key: course.id,
+            icon: <TeamOutlined aria-hidden="true" />,
             label: (
               <span className="student-timetable-menu-label">
                 <strong>{course.code || course.id}</strong>
@@ -49,9 +72,7 @@ export function TimetableClassMenu({ userId, selection, onNavigate }: {
               </span>
             ),
           })),
-          ...((selection ? selection.error : request.error) ? [{ key: "retry", label: "Thử tải lại danh sách" }]
-            : !classes ? [{ key: "loading", label: "Đang tải danh sách lớp…", disabled: true }]
-            : !classes.length ? [{ key: "empty", label: "Chưa có lớp học", disabled: true }] : []),
+          ...(error ? [{ key: "retry", label: "Thử tải lại danh sách" }] : []),
         ],
         onClick: ({ key }) => {
           if (key === "retry") {
@@ -63,8 +84,8 @@ export function TimetableClassMenu({ userId, selection, onNavigate }: {
         },
       }}
     >
-      <button type="button" className={`student-timetable-menu-trigger${selection ? " is-labeled" : ""}`} aria-label="Chọn lớp trong Thời khóa biểu" aria-current={selection ? "page" : undefined} aria-haspopup="menu" aria-expanded={open}>
-        {selection && <span>Thời khóa biểu</span>}
+      <button type="button" className="student-timetable-menu-trigger" aria-current={current} aria-haspopup="menu" aria-expanded={open}>
+        <span>Thời khóa biểu</span>
         <i className="fa-solid fa-chevron-down" aria-hidden="true" />
       </button>
     </Dropdown>
