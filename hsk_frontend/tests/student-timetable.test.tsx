@@ -1,11 +1,13 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import StudentTimetable from "@/components/student/timetable/student-timetable";
+import StudentHeader from "@/components/student/dashboard/student-header";
 import { timetableReadCache } from "@/components/student/timetable/timetable-read-cache";
 import { useTimetableCacheEvents } from "@/components/student/timetable/use-timetable-read";
 
 const mocks = vi.hoisted(() => ({
   params: new URLSearchParams("classId=a&month=2026-11"),
+  pathname: "/student/student-timetable",
   roles: ["ROLE_STUDENT"],
   push: vi.fn(),
   classes: vi.fn(),
@@ -19,7 +21,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/student/student-timetable",
+  usePathname: () => mocks.pathname,
   useRouter: () => ({ push: mocks.push }),
   useSearchParams: () => mocks.params,
 }));
@@ -40,6 +42,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   timetableReadCache.clear();
   mocks.roles = ["ROLE_STUDENT"];
+  mocks.pathname = "/student/student-timetable";
   mocks.params = new URLSearchParams("month=2026-11");
   window.history.replaceState(null, "", "/student/student-timetable?month=2026-11");
   mocks.classes.mockResolvedValue([{ id: "a", code: "Lớp A" }, { id: "b", code: "Lớp B" }]);
@@ -51,6 +54,32 @@ beforeEach(() => {
   mocks.resources.mockResolvedValue({});
 });
 afterEach(() => vi.restoreAllMocks());
+
+it("opens the only class directly from the dashboard without a dropdown", async () => {
+  mocks.pathname = "/student/student-dashboard";
+  mocks.classes.mockResolvedValue([{ id: "a", code: "Lớp A" }]);
+  render(<StudentHeader />);
+
+  const timetable = screen.getByRole("button", { name: "Thời khóa biểu" });
+  await waitFor(() => expect(timetable).toBeEnabled());
+  expect(timetable).not.toHaveAttribute("aria-haspopup");
+  fireEvent.click(timetable);
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith("/student/student-timetable?classId=a");
+  expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+});
+
+it("opens the class list when the timetable label is clicked on the dashboard", async () => {
+  mocks.pathname = "/student/student-dashboard";
+  render(<StudentHeader />);
+
+  await waitFor(() => expect(screen.getByRole("button", { name: "Thời khóa biểu" })).toHaveAttribute("aria-haspopup", "menu"));
+  fireEvent.click(screen.getByText("Thời khóa biểu"));
+  const menu = await screen.findByRole("menu");
+  expect(within(menu).getByRole("menuitem", { name: "Lớp A" })).toBeInTheDocument();
+  expect(within(menu).getByRole("menuitem", { name: "Lớp B" })).toBeInTheDocument();
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "Tất cả lớp" }));
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith("/student/student-timetable?classId=ALL");
+});
 
 it("shows only the first two closed-class sessions in whole-course scope and restores month controls for a started class",async()=>{
  mocks.params=new URLSearchParams("classId=a&month=2026-11");
@@ -103,7 +132,7 @@ it("loads only one class for a bare URL even when 50 classes are available", asy
   expect(mocks.classDetail).toHaveBeenCalledExactlyOnceWith("0");
   expect(mocks.progress).toHaveBeenCalledExactlyOnceWith("0");
   const nav = screen.getByRole("navigation", { name: "Điều hướng chính" });
-  fireEvent.click(within(nav).getByRole("button", { name: "Chọn lớp trong Thời khóa biểu" }));
+  fireEvent.click(within(nav).getByRole("button", { name: "Thời khóa biểu" }));
   const menu = await screen.findByRole("menu");
   expect(within(menu).getAllByRole("menuitem")).toHaveLength(51);
   expect(mocks.classes).toHaveBeenCalledTimes(1);
@@ -132,7 +161,7 @@ it("queries the selected class, keeps the other filter options, and reuses the d
   mocks.params = new URLSearchParams("courseId=a&month=2026-11");
   const { rerender } = render(<StudentTimetable />);
   await screen.findByRole("button", { name: "Chi tiết buổi 1: Chủ đề a" });
-  fireEvent.click(screen.getByRole("button", { name: "Chọn lớp trong Thời khóa biểu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Thời khóa biểu" }));
   fireEvent.click(await screen.findByRole("menuitem", { name: "Lớp B" }));
   expect(new URLSearchParams(window.location.search).get("classId")).toBe("b");
   expect(new URLSearchParams(window.location.search).has("courseId")).toBe(false);
@@ -197,7 +226,7 @@ it("opens the session dialog with a named title, progress and separate activity 
 it("keeps All classes as an explicit filter", async () => {
   const { rerender } = render(<StudentTimetable />);
   await screen.findByRole("button", { name: "Chi tiết buổi 1: Chủ đề a" });
-  fireEvent.click(screen.getByRole("button", { name: "Chọn lớp trong Thời khóa biểu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Thời khóa biểu" }));
   fireEvent.click(await screen.findByRole("menuitem", { name: "Tất cả lớp" }));
   expect(new URLSearchParams(window.location.search).get("classId")).toBe("ALL");
   mocks.params = new URLSearchParams(window.location.search);
