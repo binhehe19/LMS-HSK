@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { LoginOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { AuthInitializer } from "@/components/auth/auth-initializer";
-import { FullScreenMessage } from "@/components/auth/auth-panels";
+import { AuthCard, FullScreenMessage } from "@/components/auth/auth-panels";
+import { isAuthFrontendConfigured, redirectToAuthFrontend } from "@/lib/auth/auth-redirect";
+import { isDevIdpLogin } from "@/lib/auth/dev-token-session";
+import { markAuthRedirect } from "@/lib/auth/redirect-guard";
 import { hasAnyRole, ROLES } from "@/lib/auth/roles";
 import { areaForRoles } from "@/lib/management/area";
 import { useAppSelector } from "@/redux/hooks";
@@ -26,7 +30,34 @@ function HomeDestination() {
   }, [destination, router]);
 
   if (destination) {
-    return <FullScreenMessage title="Đang chuyển trang…" />;
+    return <AuthCard title="Đang chuyển trang…" pending />;
+  }
+
+  if (status === "unauthenticated") {
+    const loginUnavailable = isDevIdpLogin() && !isAuthFrontendConfigured();
+
+    return (
+      <AuthCard title="Chưa đăng nhập">
+        <p className={loginUnavailable ? "text-muted mb-0" : "text-muted mb-4"}>
+          {loginUnavailable
+            ? "Môi trường này chưa cấu hình đăng nhập."
+            : "Đăng nhập bằng tài khoản Học Bá để tiếp tục vào LMS."}
+        </p>
+        {!loginUnavailable && (
+          <button
+            type="button"
+            className="btn btn-primary rounded-pill w-100 d-inline-flex align-items-center justify-content-center gap-2"
+            onClick={() => {
+              markAuthRedirect();
+              redirectToAuthFrontend("/login", "/");
+            }}
+          >
+            <LoginOutlined aria-hidden="true" />
+            Đăng nhập vào LMS
+          </button>
+        )}
+      </AuthCard>
+    );
   }
 
   const title = status === "error" ? "Không thể xác minh phiên đăng nhập"
@@ -35,7 +66,7 @@ function HomeDestination() {
   return (
     <FullScreenMessage title={title}>
       <a className="btn btn-primary mt-2" href="https://hoc-ba.edu.vn/">
-        Về trang chủ
+        Trang chủ Học Bá
       </a>
     </FullScreenMessage>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FullScreenMessage } from "@/components/auth/auth-panels";
+import { AuthCard, FullScreenMessage } from "@/components/auth/auth-panels";
 import { parseTokenHash, safeReturnTo, saveSession } from "@/lib/auth/dev-token-session";
 
 /** Nhận token trong hash do trang tài khoản chuyển về, lưu lại, xóa hash khỏi URL rồi tải lại trang đích. */
@@ -34,6 +34,6 @@ export function DevAuthCallback() {
       </Link>
     </FullScreenMessage>
   ) : (
-    <FullScreenMessage title="Đang đăng nhập..." testId="dev-auth-signing-in" />
+    <AuthCard title="Đang đăng nhập…" pending testId="dev-auth-signing-in" />
   );
 }

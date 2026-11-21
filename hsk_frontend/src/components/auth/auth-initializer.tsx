@@ -9,7 +9,7 @@ import { clearAuthRedirectMark } from "@/lib/auth/redirect-guard";
 import { isDemoBlockedOnHost } from "@/lib/demo/demo-mode";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { authCheckError, authCheckFailed, signinSuccess } from "@/redux/slices/auth-slice";
-import { FullScreenSpinner } from "@/components/auth/auth-panels";
+import { AuthCard } from "@/components/auth/auth-panels";
 
 /**
  * Khởi tạo phiên trước khi cho render nội dung cần bảo vệ — theo mẫu AuthInitializer của IELTS. Đặt trong layout của nhóm
@@ -68,6 +68,6 @@ export function AuthInitializer({ children }: { children: ReactNode }) {
     };
   }, [status, dispatch]);
 
-  if (status === "loading") return <FullScreenSpinner />;
+  if (status === "loading") return <AuthCard title="Đang kiểm tra phiên đăng nhập…" pending />;
   return <>{children}</>;
 }

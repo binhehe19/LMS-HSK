@@ -56,10 +56,11 @@ describe("RequireAuth + AuthInitializer (phiên giả lập cách ly)", () => {
   });
 
   it("401 => chuyển sang /oauth2/start của gateway, quay về đúng trang hiện tại, không render nội dung", async () => {
+    Object.defineProperty(window.location, "search", { value: "?tab=writing" });
     getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
     setup();
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
-    expect(assign).toHaveBeenCalledWith("/oauth2/start?rd=%2Fadmin%2Fclass-management");
+    expect(assign).toHaveBeenCalledWith("/oauth2/start?rd=%2Fadmin%2Fclass-management%3Ftab%3Dwriting");
     expect(screen.queryByTestId("protected")).toBeNull();
   });
 
@@ -136,13 +137,13 @@ describe("chống vòng lặp redirect + callback + phiên hết hạn giữa ch
     expect(window.sessionStorage.getItem("hsk.auth.redirected-at")).not.toBeNull();
   });
 
-  it("quay về vẫn chưa có phiên (marker còn mới): KHÔNG chuyển lần nữa, hiện hướng dẫn; nút 'Đăng nhập lại' do người dùng bấm", async () => {
+  it("quay về vẫn chưa có phiên: chỉ chuyển sang Auth khi người dùng bấm 'Thử đăng nhập lại'", async () => {
     window.sessionStorage.setItem("hsk.auth.redirected-at", String(Date.now()));
     getCurrentUserMock.mockRejectedValue(new ApiError("hết hạn", 401));
     setup();
     expect(await screen.findByTestId("auth-redirect-loop")).toBeInTheDocument();
     expect(assign).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Đăng nhập lại" }));
+    await userEvent.click(screen.getByRole("button", { name: "Thử đăng nhập lại" }));
     expect(assign).toHaveBeenCalledTimes(1);
   });
 

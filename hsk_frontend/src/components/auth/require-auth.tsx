@@ -7,7 +7,7 @@ import { clearAuthRedirectMark, hasRecentAuthRedirect, markAuthRedirect } from "
 import { hasAnyRole } from "@/lib/auth/roles";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { authCheckRetry, authRedirectBlocked } from "@/redux/slices/auth-slice";
-import { FullScreenMessage, FullScreenSpinner } from "@/components/auth/auth-panels";
+import { AuthCard, FullScreenMessage } from "@/components/auth/auth-panels";
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -45,7 +45,7 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
     redirectToAuthFrontend();
   }, [status, redirectUnavailable, dispatch]);
 
-  if (status === "loading") return <FullScreenSpinner />;
+  if (status === "loading") return <AuthCard title="Đang kiểm tra phiên đăng nhập…" pending />;
 
   if (status === "error") {
     return (
@@ -60,7 +60,7 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
 
   if (status === "signed-out") {
     // Đăng xuất chủ động: handler đăng xuất tự chuyển sang /oauth2/sign_out.
-    return <FullScreenMessage title="Đang đăng xuất…" testId="auth-signed-out" />;
+    return <AuthCard title="Đang đăng xuất…" pending testId="auth-signed-out" />;
   }
 
   if (status === "redirect-loop") {
@@ -80,7 +80,7 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
             redirectToAuthFrontend();
           }}
         >
-          Đăng nhập lại
+          Thử đăng nhập lại
         </button>
       </FullScreenMessage>
     );
@@ -95,7 +95,7 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
         </p>
       </FullScreenMessage>
     ) : (
-      <FullScreenMessage title="Đang chuyển tới trang đăng nhập…" testId="auth-redirecting" />
+      <AuthCard title="Đang chuyển tới trang đăng nhập…" pending testId="auth-redirecting" />
     );
   }
 
