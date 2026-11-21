@@ -7,6 +7,7 @@ import { useScheduleResources, useScheduleTopics } from "@/components/management
 import { useSyllabusDetail } from "@/components/management/syllabus/use-syllabus-detail";
 import { useSyllabusList } from "@/components/management/syllabus/use-syllabus-list";
 import { useWriteGate } from "@/hooks/use-write-gate";
+import { requestCmsCacheEvict } from "@/lib/api/lms-syllabus-client";
 import { ROLES, hasAnyRole } from "@/lib/auth/roles";
 import { filterSyllabuses } from "@/lib/syllabus/syllabus-model";
 import { checkSyllabusId, parseSyllabusTab, type SyllabusTabKey } from "@/lib/syllabus/syllabus-params";
@@ -57,7 +58,17 @@ export function SyllabusManagePageContent() {
     if (syllabusId === null) return;
     router.replace(`${pathname}?view=${encodeURIComponent(syllabusId)}&tab=${key}`, { scroll: false });
   };
+  // Nút "Tải lại" (danh sách + chi tiết): Admin xoá cache ERP ở backend trước rồi mới gọi lại API để thấy ngay thay đổi vừa làm trên ERP.
+  // Lệnh xoá cache chỉ dành cho ROLE_ADMIN nên Giáo viên/Mentor chỉ tải lại (dữ liệu có thể là bản cache tối đa 15 phút).
+  const evictIfAdmin = () => {
+    if (isAdmin) void requestCmsCacheEvict();
+  };
+  const reloadList = () => {
+    evictIfAdmin();
+    list.reload();
+  };
   const reloadAll = () => {
+    evictIfAdmin();
     reloadDetail();
     if (scheduleIds !== null) reloadModules();
   };
@@ -73,7 +84,7 @@ export function SyllabusManagePageContent() {
         filtered={filtered}
         onKeywordChange={setKeyword}
         onOpen={openDetail}
-        onRetryList={list.reload}
+        onRetryList={reloadList}
         detailState={detail}
         versionsState={versions}
         tab={tab}

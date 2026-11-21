@@ -8,6 +8,7 @@
 
 import { isLmsApiConfigured } from "@/lib/api/lms-client";
 import { getClass, listAllClassEnrollments, listAllClasses, listClassSessions } from "@/lib/api/lms-class-client";
+import { waitForCmsCacheEvict } from "@/lib/api/lms-syllabus-client";
 import { listAdminClassStudentsLegacy, listAdminGradingClasses } from "@/lib/api/quiz-grading-client";
 import { classDetailToAdminClassInfo, classSummaryToGradingClass, enrollmentToAdminStudent, gradingStudentToAdminStudent } from "@/lib/class-management/lms-class-adapter";
 import type { AdminClassInfo, AdminClassStudent } from "@/types/admin-class";
@@ -22,6 +23,7 @@ export function adminClassSource(): AdminClassSource {
 /** Toàn bộ lớp cho /admin/class-management (lọc/thống kê ở client như HSK cũ). */
 export async function listAdminClasses(): Promise<GradingClassResponse[]> {
   if (adminClassSource() === "lms") {
+    await waitForCmsCacheEvict(); // nút "Tải lại" vừa yêu cầu xoá cache ERP thì đọc sau khi xoá xong
     const { items } = await listAllClasses();
     return items.map(classSummaryToGradingClass);
   }

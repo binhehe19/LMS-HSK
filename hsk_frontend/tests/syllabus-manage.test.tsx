@@ -9,7 +9,7 @@ import { SyllabusManagePageContent } from "@/components/management/syllabus/syll
 import { confirmAction } from "@/components/shared/confirm-action";
 import { ApiError, ApiNotConfiguredError } from "@/lib/api/api-client";
 import type { AuthUser } from "@/lib/api/auth-client";
-import { getSyllabus, listSyllabusVersions, listSyllabuses } from "@/lib/api/lms-syllabus-client";
+import { getSyllabus, listSyllabusVersions, listSyllabuses, requestCmsCacheEvict } from "@/lib/api/lms-syllabus-client";
 import { listFlashcardPackages, listPackageItems } from "@/lib/api/lms-content-client";
 import { listGrammarPackages, listPackageGrammarPoints } from "@/lib/api/lms-grammar-client";
 import { listPackageQuizItems, listQuizPackages } from "@/lib/api/lms-quiz-client";
@@ -64,7 +64,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/api/auth-client", () => ({ getCurrentUser: vi.fn(), logoutRemote: vi.fn() }));
 vi.mock("@/lib/api/notification-client", () => ({ getUnreadCount: vi.fn(), fetchNotifications: vi.fn(), markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("@/lib/api/ticket-client", () => ({ getTickets: vi.fn() }));
-vi.mock("@/lib/api/lms-syllabus-client", () => ({ listSyllabuses: vi.fn(), getSyllabus: vi.fn(), listSyllabusVersions: vi.fn() }));
+vi.mock("@/lib/api/lms-syllabus-client", () => ({ listSyllabuses: vi.fn(), getSyllabus: vi.fn(), listSyllabusVersions: vi.fn(), requestCmsCacheEvict: vi.fn() }));
 vi.mock("@/lib/api/syllabus-schedule-resources-client", () => ({ listScheduleResources: vi.fn(), attachLibraryItemsToSchedule: vi.fn(), reorderScheduleResources: vi.fn(), removeScheduleResource: vi.fn() }));
 vi.mock("@/lib/api/lms-content-client", () => ({ listFlashcardPackages: vi.fn(), listPackageItems: vi.fn() }));
 vi.mock("@/lib/api/lms-quiz-client", () => ({ listQuizPackages: vi.fn(), listPackageQuizItems: vi.fn() }));
@@ -132,6 +132,7 @@ beforeEach(() => {
   vi.mocked(listSyllabuses).mockReset().mockResolvedValue([syl(1), syl(2), syl(3)]);
   vi.mocked(getSyllabus).mockReset().mockResolvedValue(detail);
   vi.mocked(listSyllabusVersions).mockReset().mockResolvedValue(versions);
+  vi.mocked(requestCmsCacheEvict).mockReset().mockResolvedValue(undefined);
   vi.mocked(listScheduleResources).mockReset().mockImplementation(scheduleResourcesImpl);
   vi.mocked(attachLibraryItemsToSchedule).mockReset().mockResolvedValue({ added: 1, failed: [] });
   vi.mocked(reorderScheduleResources).mockReset().mockResolvedValue(undefined);
@@ -232,6 +233,7 @@ describe("chế độ danh sách (?view trống) — dữ liệu thật từ bac
     await userEvent.click(button("Thử lại", notice));
     expect(await screen.findByText("Giáo trình HSK 1")).toBeInTheDocument();
     expect(listSyllabuses).toHaveBeenCalledTimes(2);
+    expect(requestCmsCacheEvict).toHaveBeenCalledTimes(1); // Admin: tải lại thì xoá cache ERP trước
   });
 });
 
@@ -310,7 +312,9 @@ describe("chế độ chi tiết (?view=<id>) — chỉ đọc từ backend chun
     expect(await screen.findByTestId("syllabus-notice")).toHaveAttribute("data-kind", "waiting");
     expect(toast.error).not.toHaveBeenCalled();
     vi.mocked(getSyllabus).mockRejectedValueOnce(new ApiError("Không tìm thấy giáo trình (MOCK)", 404)).mockResolvedValueOnce(detail);
+    expect(requestCmsCacheEvict).not.toHaveBeenCalled(); // mở trang không xoá cache
     await userEvent.click(button("Tải lại"));
+    expect(requestCmsCacheEvict).toHaveBeenCalledTimes(1);
     const err = await screen.findByTestId("syllabus-notice");
     expect(err).toHaveAttribute("data-kind", "error");
     expect(toast.error).toHaveBeenCalledWith("Không tìm thấy giáo trình (MOCK)");
