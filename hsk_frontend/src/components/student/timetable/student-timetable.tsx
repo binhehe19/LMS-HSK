@@ -53,16 +53,19 @@ function TimetableContent() {
  },[classParam,classId,params,pathname]);
  const classIds=useMemo(()=>catalog.data?.filter(item=>classId==="ALL" || item.id===classId).map(item=>item.id) ?? [],[catalog.data,classId]);
  const request=useTimetableRead(owner && catalog.data?`${owner}:timetable:${JSON.stringify(classIds)}`:null,useCallback(()=>loadTimetable(classIds),[classIds]),60_000);
- const sessions=useMemo(()=>request.data?.sessions ?? [],[request.data]); const [view,setView]=useState<"calendar"|"list">("calendar"); const [wholeCourse,setWholeCourse]=useState(false);
+ const sessions=useMemo(()=>request.data?.sessions ?? [],[request.data]); const [view,setView]=useState<"calendar"|"list">("calendar"); const [requestedWholeCourse,setWholeCourse]=useState(false);
  const [selected,setSelected]=useState<TimetableSession|null>(null);
  const [notice,setNotice]=useState<{ title: string; text: string }|null>(null);
  const detail=useTimetableRead(owner && selected?`${owner}:session:${selected.classId}:${selected.id}:${selected.syllabusId || ""}:${selected.sessionNo}`:null,useCallback(async()=>selected?loadSessionStudy(selected,false):null,[selected]),30_000);
  const selectedModules=detail.data?.modules ?? selected?.modules ?? [];
  const monthParam=params.get("month"); const month=monthParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam) ? dayjs(monthParam+"-01") : dayjs().startOf("month");
  const classes=useMemo(()=>request.data?.classes ?? [],[request.data]);
+ const selectedClasses=classes.filter(course=>classId==="ALL" || course.id===classId);
+ const wholeCourseOnly=selectedClasses.length>0 && selectedClasses.every(course=>course.lifecycleStatus==="RECRUITMENT_CLOSED");
+ const wholeCourse=wholeCourseOnly || requestedWholeCourse;
  const timetableError=catalog.error || request.error;
  const timetableLoading=catalog.loading || request.loading;
- const visible=useMemo(()=>visibleTimetableSessions(sessions,month.format("YYYY-MM"),wholeCourse,classId),[sessions,wholeCourse,month,classId]);
+ const visible=useMemo(()=>visibleTimetableSessions(sessions,month.format("YYYY-MM"),wholeCourse,classId,classes),[sessions,wholeCourse,month,classId,classes]);
  const overview=timetableOverview(classes,classId);
  const first=sessions.find(s=>s.classId===overview.course?.id);
  const progress=overview.progress,averageScore=overview.averageScore,attendanceRate=overview.attendanceRate,diligence=overview.diligence;
@@ -140,7 +143,7 @@ function TimetableContent() {
     <ul>{request.data.warnings.map((warning,index)=><li key={index}>{warning}</li>)}</ul>
     <Button className="d-md-none" loading={timetableLoading} onClick={reloadTimetable}>Thử lại</Button>
    </div>}
-   <TimetableToolbar month={month.format("M/YYYY")} wholeCourse={wholeCourse} view={view} onToday={today} onMonth={shiftMonth} onScope={setWholeCourse} onView={setView} onReload={reloadTimetable} loading={timetableLoading} />
+   <TimetableToolbar month={month.format("M/YYYY")} wholeCourse={wholeCourse} wholeCourseOnly={wholeCourseOnly} view={view} onToday={today} onMonth={shiftMonth} onScope={setWholeCourse} onView={setView} onReload={reloadTimetable} loading={timetableLoading} />
    <div className="tkb-content">{timetableLoading ? <StudentContentState kind="loading" className="tkb-empty">Đang tải lịch lớp học…</StudentContentState> : !timetableError && !visible.length ? <StudentContentState kind="empty" className="tkb-empty"><Icon name="calendar-xmark" /><h2>Chưa có lịch học</h2><p>Không có buổi học trong tháng hoặc lớp đã chọn.</p><button className="tkb-card__cta tkb-card__cta--review" type="button" onClick={today}>Về tháng hiện tại</button></StudentContentState> : <div className={view === "calendar"?"tkb-grid":"tkb-list"}>{visible.map(session=>{const state=getSessionState(session);return <div className="tkb-card-wrap" key={session.id}><article className={`tkb-card is-${state}`}>
     <button type="button" className="tkb-open-session" aria-label={`Chi tiết buổi ${session.sessionNo}: ${session.title}`} onClick={()=>openSession(session)}><div className="tkb-card__head"><div className="tkb-card__head-left"><div className="tkb-card__session-group"><span className="tkb-card__session-pill">Buổi {session.sessionNo}</span><span className="tkb-card__level">{session.classCode}</span>{session.isExam && <span className="tkb-card__status tkb-card__status--exam">Kiểm tra</span>}</div><Status session={session} /></div><div className="tkb-card__head-right"><span className="tkb-card__weekday">{session.date ? weekDays[dayjs(session.date).day()] : "Giáo trình"}</span><span className="tkb-card__date">{session.date ? dayjs(session.date).format("DD/MM") : `#${session.sessionNo}`}</span></div></div><div className="tkb-card__info"><div className="tkb-card__title-row"><Icon name={session.access === "locked"?"lock":"pen-to-square"} /><span title={session.title}>{session.title}</span></div><div className="tkb-card__time-row"><Icon name="hourglass-half" /><span>{session.date ? `${session.startTime} - ${session.endTime}` : "Chưa xếp ngày giờ học"}</span>{sessionProgress(session) !== null && <Ring className="tkb-card__hw-badge" value={sessionProgress(session)!} size={42} />}</div></div></button>
     <div className={state === "done" && !session.isExam ? "tkb-card__body tkb-card__body--actions" : "tkb-card__body"}>

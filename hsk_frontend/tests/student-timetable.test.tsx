@@ -52,6 +52,27 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
+it("shows only the first two closed-class sessions in whole-course scope and restores month controls for a started class",async()=>{
+ mocks.params=new URLSearchParams("classId=a&month=2026-11");
+ mocks.classDetail.mockImplementation(async(id:string)=>({
+  id,code:id,lifecycleStatus:id==="a"?"RECRUITMENT_CLOSED":"IN_PROGRESS",
+  sessions:[3,2,1].map(sessionNo=>({id:`${id}-${sessionNo}`,classId:id,sessionNo,
+   topic:`${id} buổi ${sessionNo}`,startAt:`2027-01-0${sessionNo}T08:00:00`})),
+ }));
+ const {rerender}=render(<StudentTimetable />);
+ expect(await screen.findByRole("button",{name:"Chi tiết buổi 1: a buổi 1"})).toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"Chi tiết buổi 2: a buổi 2"})).toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Chi tiết buổi 3: a buổi 3"})).not.toBeInTheDocument();
+ expect(screen.getByRole("radio",{name:"Toàn khóa"})).toBeChecked();
+ expect(screen.queryByRole("radio",{name:"Theo tháng"})).not.toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Hôm nay"})).not.toBeInTheDocument();
+ mocks.params=new URLSearchParams("classId=b&month=2027-01");
+ rerender(<StudentTimetable />);
+ expect(await screen.findByRole("button",{name:"Chi tiết buổi 3: b buổi 3"})).toBeInTheDocument();
+ expect(screen.getByRole("radio",{name:"Theo tháng"})).toBeChecked();
+ expect(screen.getByRole("button",{name:"Hôm nay"})).toBeInTheDocument();
+});
+
 it("keeps the mobile overview compact and lists only available class details", async () => {
   mocks.classDetail.mockResolvedValue({
     id: "a", code: "GS0353", syllabusName: "Tiếng Trung công sở",

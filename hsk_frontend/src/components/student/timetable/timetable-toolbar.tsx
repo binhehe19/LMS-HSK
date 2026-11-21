@@ -3,7 +3,7 @@ import { Button, Segmented } from "antd";
 
 interface Props {
  month: string;
- wholeCourse:boolean; view:"calendar"|"list";
+ wholeCourse:boolean; wholeCourseOnly?:boolean; view:"calendar"|"list";
  onToday:()=>void; onMonth:(amount:number)=>void;
  onScope:(wholeCourse:boolean)=>void; onView:(view:"calendar"|"list")=>void;
  onReload:()=>void; loading?:boolean;
@@ -17,12 +17,12 @@ export default function TimetableToolbar(p:Props) {
     <Button aria-label="Tháng trước" title="Tháng trước" icon={<Icon name="chevron-left" />} onClick={()=>p.onMonth(-1)} />
     <Button aria-label="Tháng sau" title="Tháng sau" icon={<Icon name="chevron-right" />} onClick={()=>p.onMonth(1)} />
    </div>}
-   <Button onClick={p.onToday}>Hôm nay</Button>
+   {!p.wholeCourseOnly && <Button onClick={p.onToday}>Hôm nay</Button>}
   </div>
   <div className="tkb-toolbar-options">
-   <Segmented aria-label="Phạm vi lịch" value={p.wholeCourse?"course":"month"} onChange={value=>p.onScope(value==="course")}
-    options={[{value:"month",label:"Theo tháng"},{value:"course",label:"Toàn khóa"}]} />
-   <Segmented className="tkb-toolbar-view" aria-label="Kiểu hiển thị" value={p.view} onChange={p.onView}
+   <Segmented name="timetable-scope" aria-label="Phạm vi lịch" value={p.wholeCourse?"course":"month"} onChange={value=>p.onScope(value==="course")}
+    options={p.wholeCourseOnly?[{value:"course",label:"Toàn khóa"}]:[{value:"month",label:"Theo tháng"},{value:"course",label:"Toàn khóa"}]} />
+   <Segmented name="timetable-view" className="tkb-toolbar-view" aria-label="Kiểu hiển thị" value={p.view} onChange={p.onView}
     options={[
      {value:"calendar",label:<><Icon name="table-cells-large" /><span className="visually-hidden">Dạng thẻ</span></>,title:"Dạng thẻ"},
      {value:"list",label:<><Icon name="list-ul" /><span className="visually-hidden">Dạng danh sách</span></>,title:"Dạng danh sách"},
