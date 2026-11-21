@@ -9,6 +9,11 @@ export function buildAdminNav(authAdminUsersUrl: string): NavItem[] {
   return [
     {
       header: "TỔNG QUAN",
+      title: "Trang Học viên",
+      icon: "isax isax-home-2",
+      href: "/student/student-dashboard",
+    },
+    {
       title: "Overview",
       icon: "isax isax-grid-3",
       href: "/admin/dashboard",

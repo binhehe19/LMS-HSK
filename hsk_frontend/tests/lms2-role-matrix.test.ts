@@ -30,11 +30,12 @@ describe("LMS 2.0 phân quyền theo cụm tính năng", () => {
       expect(filterNavItemsForRoles(fullNav, [ROLES.ADMIN])).toHaveLength(fullNav.length);
     });
 
-    it("ROLE_RND chỉ thấy Giáo trình và Hệ thống học liệu (Ngữ pháp, Từ vựng, Bài tập, Tài liệu học tập)", () => {
+    it("ROLE_RND thấy Trang Học viên (khu học viên), Giáo trình và Hệ thống học liệu (Ngữ pháp, Từ vựng, Bài tập, Tài liệu học tập)", () => {
       const rndNav = filterNavItemsForRoles(fullNav, [ROLES.RND]);
       const titles = rndNav.map((x) => x.title);
-      expect(titles).toEqual(["Giáo trình", "Ngữ pháp", "Từ vựng", "Bài tập", "Tài liệu học tập"]);
-      expect(rndNav[0].header).toBe("CHƯƠNG TRÌNH HỌC");
+      expect(titles).toEqual(["Trang Học viên", "Giáo trình", "Ngữ pháp", "Từ vựng", "Bài tập", "Tài liệu học tập"]);
+      expect(rndNav[0].header).toBe("TỔNG QUAN");
+      expect(rndNav[0].href).toBe("/student/student-dashboard");
       // Mục Chấm bài dưới Bài tập không thuộc quyền RND nên phải bị ẩn
       const quizItem = rndNav.find((x) => x.title === "Bài tập");
       expect(quizItem?.children?.map((c) => c.title)).toEqual(["Học phần bài tập"]);

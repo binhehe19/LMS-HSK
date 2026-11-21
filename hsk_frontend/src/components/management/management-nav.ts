@@ -31,6 +31,7 @@ function canAccessNavHref(href: string, userRoles: readonly string[] | undefined
   if (!userRoles || userRoles.length === 0) return false;
   if (hasAnyRole(userRoles, [ROLES.ADMIN])) return true;
   if (!href || href.startsWith("http://") || href.startsWith("https://")) return false;
+  if (href.startsWith("/student/")) return true;
   const route = getServedRoute(href);
   return route ? hasAnyRole(userRoles, route.allowedRoles) : false;
 }
