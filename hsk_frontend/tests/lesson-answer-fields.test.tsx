@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AnswerFields, shuffledOrder } from "@/components/student/timetable/lesson-answer-fields";
 import { encodeChoice, encodeChunks, encodeKeyed, encodeMatching, encodeMultiple, encodeText, isAnswered, keyedAnswers, matchingAnswers, optionLabel, partKey, parseAnswer } from "@/lib/assessment/answer-codec";
@@ -62,14 +62,40 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
     expect(onChange).toHaveBeenLastCalledWith("");
   });
 
-  it("câu nối: gửi optionIndex của lựa chọn; chọn một dòng giữ nguyên dòng khác, không khoá đáp án dùng lại", () => {
+  it("câu nối hai cột: bấm câu trái rồi đáp án phải (hoặc ngược lại) gửi optionIndex; đủ lựa chọn thì một đáp án chỉ nối một câu", () => {
     const question = { questionType: "MATCHING", options: [{ optionIndex: 0, content: "a" }, { optionIndex: 1, content: "b" }], matchingPairs: [{ pairIndex: 0, prompt: "1" }, { pairIndex: 1, prompt: "2" }] };
     const onChange = setup(question, '{"matchingAnswers":{"0":0}}');
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[1], { target: { value: "0" } });
-    expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":0,"1":0}}');
-    fireEvent.change(selects[0], { target: { value: "" } });
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Câu 1: 1, đã nối với a" })).toHaveClass("is-matched");
+    expect(screen.getByRole("button", { name: "Đáp án a, đã nối với câu 1" })).toHaveTextContent("1");
+    // Nối câu 2 với "a" đang nối câu 1 => gỡ câu 1 (như LMS 1.0).
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 2: 2/ }));
+    expect(screen.getByRole("button", { name: /^Câu 2: 2/ })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: /^Đáp án a/ }));
+    expect(onChange).toHaveBeenLastCalledWith('{"matchingAnswers":{"1":0}}');
+    // Chọn đáp án trước rồi chọn câu cũng nối được.
+    fireEvent.click(screen.getByRole("button", { name: /^Đáp án b/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 2: 2/ }));
+    expect(onChange).toHaveBeenLastCalledWith('{"matchingAnswers":{"0":0,"1":1}}');
+  });
+
+  it("câu nối: bấm lại đúng cặp đang nối để gỡ, 'Làm lại' xoá hết; đề ít lựa chọn hơn số câu thì cho dùng lại đáp án", () => {
+    const reuse = { questionType: "MATCHING", options: [{ optionIndex: 0, content: "对" }], matchingPairs: [{ pairIndex: 0, prompt: "1" }, { pairIndex: 1, prompt: "2" }] };
+    const onChange = setup(reuse, '{"matchingAnswers":{"0":0}}');
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 2: 2/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Đáp án 对/ }));
+    expect(onChange).toHaveBeenLastCalledWith('{"matchingAnswers":{"0":0,"1":0}}');
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 1: 1/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Đáp án 对/ }));
     expect(onChange).toHaveBeenLastCalledWith("");
+    fireEvent.click(screen.getByRole("button", { name: "Làm lại" }));
+    expect(onChange).toHaveBeenLastCalledWith("");
+  });
+
+  it("câu nối đã khoá (đang nộp/đã nộp): không bấm nối được", () => {
+    const onChange = vi.fn();
+    render(<AnswerFields question={{ questionType: "MATCHING", options: [{ optionIndex: 0, content: "a" }], matchingPairs: [{ pairIndex: 0, prompt: "1" }] }} value="" onChange={onChange} disabled />);
+    for (const button of screen.getAllByRole("button")) expect(button).toBeDisabled();
   });
 
   it("câu nối hai tranh cùng nhãn 'A': mỗi tranh là một lựa chọn riêng, gửi đúng chỉ số của tranh đã chọn", () => {
@@ -80,8 +106,10 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
       matchingPairs: [{ pairIndex: 0, prompt: "狗" }],
     };
     const onChange = setup(question);
-    expect(screen.getAllByRole("option", { name: "A" })).toHaveLength(2);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "1" } });
+    expect(screen.getAllByRole("button", { name: "Đáp án A" })).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 1: 狗/ }));
+    const dog = screen.getAllByAltText("Lựa chọn A").find((img) => img.getAttribute("src") === "/api/storage/file/dog")!;
+    fireEvent.click(dog.closest("button")!);
     expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":1}}');
   });
 
@@ -115,11 +143,12 @@ describe("AnswerFields — ô trả lời theo loại câu", () => {
       matchingPairs: [{ pairIndex: 0, prompt: "猫", promptMediaUrl: "/api/storage/file/left" }],
     };
     const onChange = setup(question);
-    expect(screen.getByRole("list", { name: "Các lựa chọn" })).toBeInTheDocument();
-    expect(screen.getByAltText("Lựa chọn C.")).toHaveAttribute("src", "/api/storage/file/cat");
-    expect(screen.getByAltText("Dòng 1")).toHaveAttribute("src", "/api/storage/file/left");
-    expect(screen.queryByRole("option", { name: /^A\. / })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "0" } });
+    const answers = within(screen.getByRole("group", { name: "Đáp án" }));
+    expect(answers.getByAltText("Lựa chọn C.")).toHaveAttribute("src", "/api/storage/file/cat");
+    expect(within(screen.getByRole("group", { name: "Câu cần nối" })).getByAltText("Dòng 1")).toHaveAttribute("src", "/api/storage/file/left");
+    expect(answers.queryByRole("button", { name: /^Đáp án A\. / })).not.toBeInTheDocument();
+    fireEvent.click(answers.getByRole("button", { name: "Đáp án C." }));
+    fireEvent.click(screen.getByRole("button", { name: /^Câu 1: 猫/ }));
     expect(onChange).toHaveBeenCalledWith('{"matchingAnswers":{"0":0}}');
   });
 

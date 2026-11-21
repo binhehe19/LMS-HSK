@@ -6,13 +6,21 @@ import { plainText } from "./timetable-source";
 type Obj = Record<string, unknown>;
 const obj = (value: unknown): Obj => (value && typeof value === "object" && !Array.isArray(value) ? (value as Obj) : {});
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
-const isImage = (file: Obj) => /^image\//i.test(String(file.mimeType ?? "")) || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(String(file.name ?? ""));
+// Tên quy ước của ảnh đề: "passage-image" (ảnh chung của phần) và "question-image" (ảnh của câu). Dữ liệu chuyển từ LMS 1.0
+// (backend/scripts/migrate-lms1/load-quizzes.mjs) ghi {url, name} KHÔNG có mimeType và url /api/storage/file/<id> không có đuôi,
+// nên phải nhận theo tên; màn sửa đề HSK (lms-quiz-client withImage) cũng dùng tên "passage-image".
+const IMAGE_FILE_NAMES = new Set(["passage-image", "question-image"]);
+const isImage = (file: Obj) => {
+  const name = String(file.name ?? "");
+  return /^image\//i.test(String(file.mimeType ?? "")) || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(name) || (!file.mimeType && IMAGE_FILE_NAMES.has(name));
+};
 
 /** Ảnh trong danh sách tệp [{url, name, mimeType}] (của phần hoặc của câu), chỉ giữ đường dẫn an toàn. */
 export function imagesOf(files: unknown): { src: string; alt: string }[] {
   return list(files).map(obj).filter(isImage).flatMap((file) => {
     const src = safeResourceUrl(typeof file.url === "string" ? file.url : undefined);
-    return src ? [{ src, alt: typeof file.name === "string" ? file.name : "Hình minh hoạ" }] : [];
+    const name = typeof file.name === "string" && !IMAGE_FILE_NAMES.has(file.name) ? file.name : "Hình minh hoạ";
+    return src ? [{ src, alt: name }] : [];
   });
 }
 

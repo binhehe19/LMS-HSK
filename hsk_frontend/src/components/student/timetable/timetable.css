@@ -522,3 +522,6 @@
 @media (max-width: 379px) {
  .hsk-timetable-modal .tkb-activity-cards { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Popup buổi học: buổi chưa gắn ngữ pháp/từ vựng/bài tập (LessonActivityCards). */
+.hsk-timetable-modal .tkb-session-empty { margin: 16px 0 0; padding: 16px; border: 1px dashed #d8dee8; border-radius: 12px; color: #64748b; font-size: 14px; text-align: center; }

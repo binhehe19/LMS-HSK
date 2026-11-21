@@ -1,5 +1,5 @@
 import { describe,it,expect,vi,beforeEach } from "vitest";
-import { loadLesson, activityResources, additionalResources, grammarResources, safeResourceUrl } from "@/components/student/timetable/lesson-source";
+import { loadLesson, activityResources, additionalResources, grammarResources, lessonAvailability, safeResourceUrl, slideResources } from "@/components/student/timetable/lesson-source";
 import type { TimetableModule } from "@/components/student/timetable/timetable-data";
 const api=vi.hoisted(()=>({get:vi.fn(),list:vi.fn(),classDetail:vi.fn(),study:vi.fn(),classSession:vi.fn(),syllabusSessions:vi.fn()}));
 vi.mock("@/lib/api/lms-syllabus-client",()=>({getSyllabus:api.get,listSyllabuses:api.list}));
@@ -18,6 +18,22 @@ describe("live lesson source",()=>{
  it("uses the student's authorized class syllabus rather than a supplied syllabus ID",async()=>{api.classDetail.mockResolvedValue({id:"c1",syllabusId:"actual",sessions:[{id:"session1"}]});api.get.mockResolvedValue({id:"actual"});api.classSession.mockReturnValue({id:"session1"});api.study.mockResolvedValue({progress:null,modules:[],warnings:[]});await loadLesson({...context,syllabusId:"forged"},false);expect(api.get).not.toHaveBeenCalled();});
  it("rejects sessions outside the authorized class",async()=>{api.classDetail.mockResolvedValue({id:"c1",syllabusId:"actual",sessions:[]});await expect(loadLesson(context,false)).rejects.toThrow("không có trong lớp");expect(api.study).not.toHaveBeenCalled();});
  it("does not turn API failures into a fake empty lesson",async()=>{api.get.mockRejectedValue(Error("ERP unavailable"));await expect(loadLesson({...context,sessionId:"syllabus:s1:row1"},true)).rejects.toThrow("ERP unavailable");});
+ it("slides: package slides first, ERP study notes without a link are dropped, ERP links kept after",()=>{
+  // Như Buổi 2 HSK3: ERP studentMaterials ("Đề cương khóa học"… không có link) đứng trước 2 slide pptx của học phần.
+  const erp=(id:string,url?:string):TimetableModule=>({id,title:id,kind:"material",icon:"tailieu",description:"",progress:null,url});
+  const pkg=(id:string,url?:string):TimetableModule=>({...item(id,"SLIDE"),resourceId:"lr-"+id,url});
+  const modules=[erp("Đề cương khóa học"),erp("Form bài tập (LMS)"),erp("Drive","https://drive.example.com/x"),erp("Bad","javascript:alert(1)"),pkg("3.1 H3_3.0.pptx","/api/storage/file/a"),pkg("3.2 H3_3.0.pptx")];
+  expect(slideResources(modules).map(r=>r.id)).toEqual(["3.1 H3_3.0.pptx","3.2 H3_3.0.pptx","Drive"]);
+  expect(activityResources(modules,"slides")).toEqual(slideResources(modules));
+  expect(slideResources([erp("Đề cương khóa học")])).toEqual([]);
+ });
+ it("availability: only real content counts — skills need an exercise with resourceId",()=>{
+  const exercise=(id:string,skill:string):TimetableModule=>({...item(id,"ASSESSMENT"),skill,resourceId:"lr-"+id});
+  const erpPractice:TimetableModule={...item("erp","PRACTICE"),subType:"SPEAKING"};
+  expect(lessonAvailability([])).toEqual({slides:false,grammar:false,vocabulary:false,skills:[]});
+  expect(lessonAvailability([exercise("w","WRITING"),exercise("l","LISTENING"),erpPractice,{...item("note","SLIDE"),kind:"material"}])).toEqual({slides:false,grammar:false,vocabulary:false,skills:["listening","writing"]});
+  expect(lessonAvailability([item("word","VOCABULARY"),item("grammar","GRAMMAR"),{...item("s","SLIDE"),resourceId:"lr-s"}])).toEqual({slides:true,grammar:true,vocabulary:true,skills:[]});
+ });
  it("blocks executable resource URLs",()=>{expect(safeResourceUrl("javascript:alert(1)")).toBeNull();expect(safeResourceUrl("data:text/html,test")).toBeNull();expect(safeResourceUrl("/api/storage/file/id")).toBe("/api/storage/file/id");});
 });
 

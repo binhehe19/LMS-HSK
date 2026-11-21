@@ -99,7 +99,26 @@
 .hsk-question-image{display:block;max-width:100%;max-height:260px;margin:0 0 14px;border-radius:8px;border:1px solid #dfe4eb}
 .hsk-exercise-hint{margin:0 0 14px;color:#566176;font-style:italic}
 .hsk-answer-image{display:block;max-width:100%;max-height:160px;margin:4px 0;border-radius:6px;border:1px solid #dfe4eb}
-.lesson-matching-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;list-style:none;margin:0 0 14px;padding:0}.lesson-matching-choices li{padding:8px;border:1px solid #dfe4eb;border-radius:8px}.lesson-matching-choices strong{display:block;color:#bd071b}
+/* Câu nối hai cột (như "Nối cặp" LMS 1.0): cặp đã nối cùng màu theo data-pair (0-5). */
+.lesson-matching-hint{margin:0;color:#566176;font-size:13px}
+.lesson-matching-board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.lesson-matching-column{display:grid;gap:10px;min-width:0}
+.lesson-matching-item{--match-color:#bd071b;--match-tint:#fff1f3;display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border:1px solid #dfe4eb;border-radius:10px;background:#fff;color:#1f2937;text-align:start;font-size:15px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}
+.lesson-matching-item:hover:not(:disabled){border-color:#9fb3cc}
+.lesson-matching-item[aria-pressed="true"]{border-color:#087ff5;box-shadow:0 0 0 2px #d6e9ff;background:#f4f9ff}
+.lesson-matching-item.is-matched{border-color:var(--match-color);background:var(--match-tint)}
+.lesson-matching-item:disabled{cursor:default;opacity:.85}
+.lesson-matching-item .hsk-answer-image{max-height:110px;flex:none}
+.lesson-matching-text{flex:1;min-width:0}
+.lesson-matching-badge{flex:none;display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:#eef1f6;color:#34445b;font-size:13px;font-weight:700}
+.lesson-matching-item.is-matched .lesson-matching-badge{background:var(--match-color);color:#fff}
+.lesson-matching-item[data-pair="1"]{--match-color:#087ff5;--match-tint:#eef5ff}
+.lesson-matching-item[data-pair="2"]{--match-color:#15803d;--match-tint:#effaf2}
+.lesson-matching-item[data-pair="3"]{--match-color:#b45309;--match-tint:#fff7eb}
+.lesson-matching-item[data-pair="4"]{--match-color:#7c3aed;--match-tint:#f5f0ff}
+.lesson-matching-item[data-pair="5"]{--match-color:#0f766e;--match-tint:#ecfbf8}
+.lesson-matching-reset{justify-self:start;border:1px solid #bd071b;background:#fff;color:#bd071b;border-radius:8px;padding:6px 14px;font-weight:600}
+@media (max-width:575px){.lesson-matching-board{gap:8px}.lesson-matching-item{padding:8px;font-size:14px;gap:6px}}
 .hsk-exercise .hsk-essay-answer {
  border: 1px solid #dce3ee;
  border-radius: 12px;

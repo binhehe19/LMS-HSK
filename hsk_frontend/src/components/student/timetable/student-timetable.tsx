@@ -235,7 +235,7 @@ function TimetableContent() {
       </div>
      </section>
      {selected.access === "materials-only" && <div className="tkb-preview-notice" role="status"><Icon name="lock" /> Bạn đang xem trước tài liệu buổi học. Bài tập chưa mở.</div>}
-     <LessonActivityCards session={selected} />
+     <LessonActivityCards session={selected} modules={selectedModules} loading={detail.loading} />
     </div>
    )}
   </Modal>

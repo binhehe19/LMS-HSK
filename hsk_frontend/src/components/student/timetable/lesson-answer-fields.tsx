@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import {
   answerAudio,
   answerFiles,
@@ -113,48 +114,98 @@ function Multiple({ question, value, onChange, disabled }: AnswerFieldsProps) {
   );
 }
 
+type MatchPick = { side: "prompt"; key: string } | { side: "choice"; value: number } | null;
+
+/**
+ * Câu nối hai cột như LMS 1.0 ("Nối cặp" của QuizModuleDisplay): bấm một câu bên trái rồi bấm đáp án bên phải (hoặc ngược lại) để nối;
+ * cặp đã nối cùng màu, đáp án mang số của câu đã nối. Bấm lại đúng cặp đang nối để gỡ, "Làm lại" để xoá hết.
+ * Đề đủ lựa chọn thì mỗi đáp án chỉ nối một câu (nối sang câu khác sẽ gỡ cặp cũ, như LMS 1.0); đề có ít lựa chọn hơn số câu thì cho dùng lại.
+ * Giá trị gửi giữ nguyên {matchingAnswers: {pairIndex: optionIndex}} (chấm theo chỉ số); đáp án hiện theo thứ tự trộn cố định.
+ */
 function Matching({ question, value, onChange, disabled }: AnswerFieldsProps) {
+  const [pick, setPick] = useState<MatchPick>(null);
   const given = matchingAnswers(value);
   const options = list(question.options);
-  // Giá trị gửi là optionIndex (chấm theo chỉ số); nhãn là chữ của lựa chọn, rỗng thì chữ cái theo vị trí lưu.
+  // Nhãn là chữ của lựa chọn, rỗng thì chữ cái theo vị trí lưu.
   const all = options.map((option, i) => ({ value: optionValue(option, i), label: plainText(optionLabel(options, optionValue(option, i))), mediaUrl: obj(option).mediaUrl }));
   const choices = shuffledOrder(all.length, `${String(question.questionId ?? "")}:choices`).map((i) => all[i]);
-  const withImages = choices.some((choice) => imageOf(choice.mediaUrl));
+  const pairs = list(question.matchingPairs).map((pair, i) => ({ key: partKey(pair, i, "pairIndex"), prompt: str(obj(pair).prompt), mediaUrl: obj(pair).promptMediaUrl }));
+  const exclusive = choices.length >= pairs.length;
+  const pairNumber = (key: string) => pairs.findIndex((p) => p.key === key) + 1;
+  const labelOf = (v: number) => choices.find((c) => c.value === v)?.label ?? "";
+
+  const link = (key: string, v: number) => {
+    const next: Record<string, number | null> = { ...given };
+    if (next[key] === v) next[key] = null;
+    else {
+      if (exclusive) for (const k of Object.keys(next)) if (next[k] === v) next[k] = null;
+      next[key] = v;
+    }
+    onChange(encodeMatching(next));
+    setPick(null);
+  };
+  const clickPrompt = (key: string) => {
+    if (pick?.side === "choice") link(key, pick.value);
+    else setPick(pick?.side === "prompt" && pick.key === key ? null : { side: "prompt", key });
+  };
+  const clickChoice = (v: number) => {
+    if (pick?.side === "prompt") link(pick.key, v);
+    else setPick(pick?.side === "choice" && pick.value === v ? null : { side: "choice", value: v });
+  };
+
   return (
     <div className="lesson-matching-fields">
-      {withImages && (
-        <ol className="lesson-matching-choices" aria-label="Các lựa chọn">
-          {choices.map((choice) => (
-            <li key={choice.value}>
-              <strong>{choice.label}</strong>
-              <OptionImage url={choice.mediaUrl} alt={`Lựa chọn ${choice.label}`} />
-            </li>
-          ))}
-        </ol>
+      <p className="lesson-matching-hint">Bấm một câu bên trái rồi bấm đáp án tương ứng bên phải để nối. Bấm lại cặp đã nối để gỡ.</p>
+      <div className="lesson-matching-board">
+        <div className="lesson-matching-column" role="group" aria-label="Câu cần nối">
+          {pairs.map((pair, i) => {
+            const linked = given[pair.key];
+            const matched = linked !== undefined;
+            return (
+              <button
+                type="button"
+                key={pair.key}
+                className={`lesson-matching-item${matched ? " is-matched" : ""}`}
+                data-pair={matched ? i % 6 : undefined}
+                aria-pressed={pick?.side === "prompt" && pick.key === pair.key}
+                aria-label={`Câu ${i + 1}: ${pair.prompt}${matched ? `, đã nối với ${labelOf(linked) || "đáp án"}` : ""}`}
+                disabled={disabled}
+                onClick={() => clickPrompt(pair.key)}
+              >
+                <span className="lesson-matching-badge">{i + 1}</span>
+                <OptionImage url={pair.mediaUrl} alt={`Dòng ${i + 1}`} />
+                <span className="lesson-matching-text">{pair.prompt}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="lesson-matching-column" role="group" aria-label="Đáp án">
+          {choices.map((choice) => {
+            const numbers = pairs.filter((p) => given[p.key] === choice.value).map((p) => pairNumber(p.key));
+            return (
+              <button
+                type="button"
+                key={choice.value}
+                className={`lesson-matching-item${numbers.length ? " is-matched" : ""}`}
+                data-pair={numbers.length ? (numbers[0] - 1) % 6 : undefined}
+                aria-pressed={pick?.side === "choice" && pick.value === choice.value}
+                aria-label={`Đáp án ${choice.label}${numbers.length ? `, đã nối với câu ${numbers.join(", ")}` : ""}`}
+                disabled={disabled}
+                onClick={() => clickChoice(choice.value)}
+              >
+                {numbers.length > 0 && <span className="lesson-matching-badge">{numbers.join(", ")}</span>}
+                <OptionImage url={choice.mediaUrl} alt={`Lựa chọn ${choice.label}`} />
+                {choice.label && <span className="lesson-matching-text">{choice.label}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {Object.keys(given).length > 0 && (
+        <button type="button" className="lesson-matching-reset" disabled={disabled} onClick={() => { setPick(null); onChange(""); }}>
+          Làm lại
+        </button>
       )}
-      {list(question.matchingPairs).map((pair, i) => {
-        const key = partKey(pair, i, "pairIndex");
-        return (
-          <label key={key}>
-            <span>
-              <OptionImage url={obj(pair).promptMediaUrl} alt={`Dòng ${i + 1}`} />
-              {str(obj(pair).prompt)}
-            </span>
-            <select
-              value={given[key] === undefined ? "" : String(given[key])}
-              disabled={disabled}
-              onChange={(e) => onChange(encodeMatching({ ...given, [key]: e.target.value === "" ? null : Number(e.target.value) }))}
-            >
-              <option value="">Chọn đáp án</option>
-              {choices.map((choice) => (
-                <option key={choice.value} value={String(choice.value)}>
-                  {choice.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        );
-      })}
     </div>
   );
 }

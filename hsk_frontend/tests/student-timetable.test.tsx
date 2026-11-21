@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   progress: vi.fn(),
   sessionProgress: vi.fn(),
   resources: vi.fn(),
+  attempts: vi.fn(),
   adminCatalog: vi.fn(),
   adminClass: vi.fn(),
   adminSessions: vi.fn(),
@@ -32,7 +33,7 @@ vi.mock("@/components/student/student-data", () => ({
   useStudentData: () => ({ history: { loading: false } }),
 }));
 vi.mock("@/lib/api/student-client", () => ({
-  studentApi: { classes: mocks.classes, classDetail: mocks.classDetail, progress: mocks.progress, sessionProgress: mocks.sessionProgress, resources: mocks.resources },
+  studentApi: { classes: mocks.classes, classDetail: mocks.classDetail, progress: mocks.progress, sessionProgress: mocks.sessionProgress, resources: mocks.resources, attempts: mocks.attempts },
 }));
 vi.mock("@/lib/api/lms-class-client", () => ({
   listClasses: mocks.adminCatalog, getClass: mocks.adminClass, listClassSessions: mocks.adminSessions,
@@ -52,6 +53,7 @@ beforeEach(() => {
   mocks.progress.mockResolvedValue({ sessions: [] });
   mocks.sessionProgress.mockResolvedValue({ homeworkProgress: null });
   mocks.resources.mockResolvedValue({});
+  mocks.attempts.mockResolvedValue({ attempts: [] });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -202,6 +204,11 @@ it("opens the session dialog with a named title, progress and separate activity 
     id: "a", code: "Lớp A", syllabusId: "syllabus-a", syllabusName: "HSK 3",
     sessions: [{ id: "session-a", classId: "a", sessionNo: 1, topic: "Chủ đề buổi học", startAt: "2026-11-15T08:00:00", status: "DONE" }],
   });
+  // Buổi có ngữ pháp và một bài Nghe: chỉ những mục này có thẻ (không có từ vựng / Đọc / Viết / Nói).
+  mocks.resources.mockResolvedValue({
+    grammar: { freeResources: [{ id: "g1", learningResourceId: "lr-g1", resourceType: "GRAMMAR", resourceContent: { title: "看上去" } }] },
+    quiz: { freeResources: [{ id: "x1", learningResourceId: "lr-x1", contentPackageVersionId: "v1", resourceType: "ASSESSMENT", skill: "LISTENING", resourceTitle: "听力 第一部分" }] },
+  });
   render(<StudentTimetable />);
   fireEvent.click(await screen.findByRole("button", { name: "Xem lại buổi học" }));
   const reviewUrl = new URL(mocks.push.mock.lastCall?.[0], "http://localhost");
@@ -213,14 +220,30 @@ it("opens the session dialog with a named title, progress and separate activity 
   expect(within(progress).getByRole("button", { name: "Xem lại buổi học" })).toBeInTheDocument();
   const slides = within(progress).getByRole("link", { name: "Xem tài liệu học tập - Slides" });
   expect(Object.fromEntries(new URL(slides.getAttribute("href")!, "http://localhost").searchParams)).toEqual({ classId: "a", sessionId: "session-a", tab: "slides" });
+  await waitFor(() => expect(within(dialog).queryByText("Đang tải tài nguyên của buổi học…")).not.toBeInTheDocument());
   const materials = within(dialog).getByRole("region", { name: "Ngữ pháp & Từ vựng" });
   const grammar = within(materials).getByRole("link", { name: "Ngữ pháp" });
   expect(grammar).toHaveTextContent(/^Ngữ pháp$/);
   expect(within(materials).queryByRole("link", { name: /slides/i })).not.toBeInTheDocument();
-  expect(within(dialog).getByRole("region", { name: "Luyện tập" })).toBeInTheDocument();
-  await waitFor(() => expect(within(dialog).queryByText("Đang tải tài nguyên của buổi học…")).not.toBeInTheDocument());
+  expect(within(materials).queryByRole("link", { name: "Từ vựng" })).not.toBeInTheDocument();
+  const practice = within(dialog).getByRole("region", { name: "Luyện tập" });
+  expect(within(practice).getAllByRole("link").map(link => link.getAttribute("aria-label"))).toEqual(["Phần Nghe: 听力"]);
   fireEvent.click(within(dialog).getByRole("button", { name: /close/i }));
   await waitFor(() => expect(screen.queryByRole("dialog", { name: /Chủ đề buổi học/ })).not.toBeInTheDocument());
+});
+
+it("does not list grammar, vocabulary or skill cards for a session with no attached content", async () => {
+  mocks.classDetail.mockResolvedValue({
+    id: "a", code: "Lớp A", syllabusId: "syllabus-a", syllabusName: "HSK 3",
+    sessions: [{ id: "session-a", classId: "a", sessionNo: 1, topic: "Buổi trống", startAt: "2026-11-15T08:00:00", status: "DONE" }],
+  });
+  render(<StudentTimetable />);
+  fireEvent.click(await screen.findByRole("button", { name: "Bài tập & Học liệu" }));
+  const dialog = await screen.findByRole("dialog", { name: /Buổi trống/ });
+  await waitFor(() => expect(within(dialog).queryByText("Đang tải tài nguyên của buổi học…")).not.toBeInTheDocument());
+  expect(within(dialog).getByText("Buổi học chưa được gắn ngữ pháp, từ vựng hay bài tập luyện tập.")).toBeInTheDocument();
+  expect(within(dialog).queryByRole("region", { name: "Ngữ pháp & Từ vựng" })).not.toBeInTheDocument();
+  expect(within(dialog).queryByRole("region", { name: "Luyện tập" })).not.toBeInTheDocument();
 });
 
 it("keeps All classes as an explicit filter", async () => {

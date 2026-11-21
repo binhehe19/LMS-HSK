@@ -25,13 +25,31 @@ export async function loadLesson(context:LessonContext,isAdmin:boolean):Promise<
  const detail=await loadSessionStudy(session,true);
  return {session,modules:detail.modules,warnings:detail.warnings};
 }
+/**
+ * Slide/tài liệu của buổi: học liệu SLIDE/MATERIAL gắn qua học phần (có resourceId) đứng trước, tài liệu ghi trong giáo trình ERP
+ * (studentMaterials, không có resourceId) đứng sau. Mục ERP không có đường dẫn chỉ là nhãn ("Đề cương khóa học", "Form bài tập (LMS)"…),
+ * không xem được nên bỏ — trước đây nó đứng đầu khiến màn Slides mở ra "Chưa có đường dẫn tài liệu" dù buổi có slide thật.
+ */
+export function slideResources(modules:TimetableModule[]):TimetableModule[] {
+ const materials=modules.filter(item=>item.kind === "material" && (item.resourceId || safeResourceUrl(item.url)));
+ return [...materials.filter(item=>item.resourceId),...materials.filter(item=>!item.resourceId)];
+}
 export function activityResources(modules:TimetableModule[],activity:LessonActivity):TimetableModule[] {
- if(activity === "slides")return modules.filter(item=>item.kind === "material");
+ if(activity === "slides")return slideResources(modules);
  const type={listening:"LISTENING",reading:"READING",writing:"WRITING",speaking:"SPEAKING"}[activity];
  return modules.filter(item=>assessmentSkill(item) === type || (activity === "speaking" && assessmentSkill(item) === "PRONUNCIATION"));
 }
 export function grammarResources(modules:TimetableModule[]):TimetableModule[] {
  return modules.filter(item=>item.group==="grammar" || item.resourceType==="GRAMMAR" || item.resourceType==="GRAMMAR_3_0");
+}
+export interface LessonAvailability { slides:boolean; grammar:boolean; vocabulary:boolean; skills:Exclude<LessonActivity,"slides">[]; }
+/**
+ * Mục nào của buổi có nội dung thật, để thanh bên / thẻ hoạt động chỉ hiện mục có dữ liệu (như LMS 1.0 chỉ hiện module được gắn).
+ * Kỹ năng chỉ tính bài tập có resourceId: mục ôn luyện ghi trong ERP (moduleOnLuyen) không có resourceId thì không làm bài được.
+ */
+export function lessonAvailability(modules:TimetableModule[]):LessonAvailability {
+ const skills=(["listening","reading","writing","speaking"] as const).filter(key=>activityResources(modules,key).some(item=>item.resourceId));
+ return {slides:slideResources(modules).length>0,grammar:grammarResources(modules).length>0,vocabulary:modules.some(item=>item.resourceType === "VOCABULARY"),skills:[...skills]};
 }
 export function additionalResources(modules:TimetableModule[]):TimetableModule[] {
  const mapped=new Set(["LISTENING","READING","WRITING","SPEAKING","PRONUNCIATION"]);
