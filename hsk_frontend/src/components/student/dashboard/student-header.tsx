@@ -7,6 +7,7 @@ import { hasAnyRole, MANAGEMENT_SUPPORTED_ROLES } from "@/lib/auth/roles";
 import { useAppDispatch } from "@/redux/hooks";
 import { signout } from "@/redux/slices/auth-slice";
 import { useState } from "react";
+import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStudentIdentity } from "../student-data";
 import StudentNotifications from "../student-notifications";
@@ -65,19 +66,32 @@ export default function StudentHeader({ timetableSelection }: { timetableSelecti
               <strong>{identity.name}</strong>
             </div>,
             children: [
-              { key: "profile", label: "Hồ sơ của tôi", icon: <UserOutlined aria-hidden="true" /> },
+              {
+                key: "profile",
+                label: (
+                  <Link to={all_routes.studentProfile} style={{ color: "inherit", textDecoration: "none" }} onClick={() => setAccountOpen(false)}>
+                    Hồ sơ của tôi
+                  </Link>
+                ),
+                icon: <UserOutlined aria-hidden="true" />,
+              },
               ...(managementHref
-                ? [{ key: "management", label: "Quản trị", icon: <AppstoreOutlined aria-hidden="true" /> }]
+                ? [{
+                    key: "management",
+                    label: (
+                      <NextLink href={managementHref} style={{ color: "inherit", textDecoration: "none" }} onClick={() => setAccountOpen(false)}>
+                        Quản trị
+                      </NextLink>
+                    ),
+                    icon: <AppstoreOutlined aria-hidden="true" />,
+                  }]
                 : []),
               { key: "logout", label: "Đăng xuất", icon: <LogoutOutlined aria-hidden="true" />, danger: true },
             ],
           }],
           onClick: ({ key }) => {
-            if (key === "profile") {
-              router.push(all_routes.studentProfile);
-            } else if (key === "management" && managementHref) {
-              router.push(managementHref);
-            } else if (key === "logout") {
+            setAccountOpen(false);
+            if (key === "logout") {
               dispatch(signout());
               redirectToSignOut();
             }
