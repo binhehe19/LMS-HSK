@@ -1,0 +1,116 @@
+{
+  "cards": [
+    {
+      "id": "c0",
+      "term": "word0",
+      "definition": "meaning0"
+    },
+    {
+      "id": "c1",
+      "term": "word1",
+      "definition": "meaning1"
+    },
+    {
+      "id": "c2",
+      "term": "word2",
+      "definition": "meaning2"
+    },
+    {
+      "id": "c3",
+      "term": "word3",
+      "definition": "meaning3"
+    },
+    {
+      "id": "c4",
+      "term": "word4",
+      "definition": "meaning4"
+    },
+    {
+      "id": "c5",
+      "term": "word5",
+      "definition": "meaning5"
+    },
+    {
+      "id": "c6",
+      "term": "word6",
+      "definition": "meaning6"
+    },
+    {
+      "id": "c7",
+      "term": "word7",
+      "definition": "meaning7"
+    }
+  ],
+  "seed": 123,
+  "commands": [
+    "wrong",
+    "correct",
+    "correct",
+    "wrong",
+    "correct",
+    "correct",
+    "correct",
+    "correct",
+    "correct",
+    "correct"
+  ],
+  "request": {
+    "hits": [
+      {
+        "questionCardId": "c5",
+        "cardId": "c0",
+        "atMs": 247
+      },
+      {
+        "questionCardId": "c5",
+        "cardId": "c5",
+        "atMs": 1178
+      },
+      {
+        "questionCardId": "c4",
+        "cardId": "c4",
+        "atMs": 2055
+      },
+      {
+        "questionCardId": "c2",
+        "cardId": "c0",
+        "atMs": 2809
+      },
+      {
+        "questionCardId": "c2",
+        "cardId": "c2",
+        "atMs": 3850
+      },
+      {
+        "questionCardId": "c3",
+        "cardId": "c3",
+        "atMs": 4727
+      },
+      {
+        "questionCardId": "c6",
+        "cardId": "c6",
+        "atMs": 5658
+      },
+      {
+        "questionCardId": "c0",
+        "cardId": "c0",
+        "atMs": 6453
+      },
+      {
+        "questionCardId": "c1",
+        "cardId": "c1",
+        "atMs": 7275
+      },
+      {
+        "questionCardId": "c7",
+        "cardId": "c7",
+        "atMs": 8206
+      }
+    ],
+    "elapsedMs": 8631,
+    "reason": "COMPLETED"
+  },
+  "score": 7,
+  "answered": 8,
+  "mistakes": 2
+}

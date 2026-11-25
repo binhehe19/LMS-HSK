@@ -1,0 +1,122 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 1"
+  ],
+  "content": {
+    "title": "Marriage and Age in Australia",
+    "description": "The table below gives information about the situation of marriage and age from 1960 to 2000 in Australia. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "timeLimits": {
+      "default": 1200,
+      "hard": 900,
+      "easy": 1800
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D5H0JVCEQ57Q6V2ED2",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>The table below gives information about the situation of marriage and age from 1960 to 2000 in Australia. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.</p>",
+        "task": 1,
+        "minimumWords": 150,
+        "aiRubric": "IELTS_WRITING",
+        "referenceText": "Australia marriage counts and average ages, columns Year / Religious marriages / Civil marriages / Bride age / Bridegroom age: 1960: 25000 / 8000 / 21 / 24; 1970: 28000 / 12000 / 23 / 25; 1980: 50000 / 16000 / 25 / 27; 1990: 32000 / 23000 / 27 / 30; 2000: 34000 / 40000 / 30 / 32.",
+        "hints": {
+          "analysis": [
+            "Bảng gồm số lễ cưới theo hai hình thức và tuổi trung bình của cô dâu, chú rể.",
+            "So sánh xu hướng từ năm 1960 đến 2000; nêu đơn vị và mốc thời gian.",
+            "Viết overview, chọn số liệu nổi bật; không giải thích nguyên nhân ngoài đề."
+          ],
+          "ideas": [
+            {
+              "title": "Số lượng lễ cưới",
+              "points": [
+                "Religious marriages đạt đỉnh 50,000 vào 1980 rồi giảm.",
+                "Civil marriages tăng từ 8,000 lên 40,000 và vượt religious marriages vào 2000."
+              ]
+            },
+            {
+              "title": "Độ tuổi kết hôn",
+              "points": [
+                "Cả cô dâu và chú rể đều kết hôn muộn hơn.",
+                "Tuổi chú rể luôn cao hơn tuổi cô dâu từ 2 đến 3 năm."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "increase steadily",
+              "meaning": "tăng đều đặn",
+              "example": "The average age of brides increased steadily over the period."
+            },
+            {
+              "word": "reach a peak",
+              "meaning": "đạt đỉnh",
+              "example": "Religious marriages reached a peak of 50,000 in 1980."
+            },
+            {
+              "word": "overtake",
+              "meaning": "vượt qua",
+              "example": "Civil marriages overtook religious marriages in 2000."
+            },
+            {
+              "word": "respectively",
+              "meaning": "lần lượt",
+              "example": "The average ages were 30 and 32 respectively."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Diễn đạt lại đề bài: đối tượng, địa điểm và khoảng thời gian. Không đưa số liệu chi tiết ở đây."
+            },
+            {
+              "id": "overview",
+              "label": "Overview",
+              "instruction": "Nêu hai đặc điểm nổi bật của bảng, biểu đồ hoặc quy trình. Với dữ liệu, hãy tìm xu hướng chung và điểm cao nhất/thấp nhất."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Chọn nhóm dữ liệu hoặc các giai đoạn đầu. So sánh và dùng số liệu cụ thể từ đề bài."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Trình bày nhóm dữ liệu hoặc các giai đoạn còn lại. Kiểm tra đơn vị và tránh thêm quan điểm cá nhân."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-marriage-v2",
+        "cover": "/images/writing/marriage.svg",
+        "source": "The IELTS Space PRO",
+        "label": "Task 1",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Table"
+        ],
+        "minimumWords": 150,
+        "title": "Marriage and Age in Australia",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-1",
+          "title": "Marriage and Age in Australia",
+          "questionIds": [
+            "01M4Q7K0D5H0JVCEQ57Q6V2ED2"
+          ]
+        }
+      ]
+    }
+  }
+}

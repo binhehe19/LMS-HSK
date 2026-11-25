@@ -1,0 +1,273 @@
+{
+  "subType": "PRACTICE_LISTENING",
+  "tags": [
+    "Các nguồn khác",
+    "free",
+    "single",
+    "Section 2"
+  ],
+  "content": {
+    "title": "Science Museum Workshop",
+    "description": "Đề Listening mẫu kèm audio tổng hợp để luyện giao diện.",
+    "timeLimits": {
+      "default": 600,
+      "hard": 480,
+      "easy": 900
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0CYTDYHPQG5H8G2NACC",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Choose the correct letter, A, B or C.</p><p>On which day will the workshop take place?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Monday"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Friday",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Sunday"
+          }
+        ],
+        "explanation": "Leah nói workshop diễn ra vào Friday."
+      },
+      {
+        "questionId": "01M4Q7K0CZHMNKX4DMVQHHXYXQ",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Where will the workshop be held?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "At the museum",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "At the college"
+          },
+          {
+            "optionIndex": 2,
+            "content": "At the school"
+          }
+        ],
+        "explanation": "Địa điểm được nhắc đến là museum."
+      },
+      {
+        "questionId": "01M4Q7K0CZ1T2WFSEEKDF3QWSV",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How many children will attend?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Ten"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Fifteen"
+          },
+          {
+            "optionIndex": 2,
+            "content": "Twenty",
+            "correct": true
+          }
+        ],
+        "explanation": "Số trẻ tham gia là twenty."
+      },
+      {
+        "questionId": "01M4Q7K0CZER4ZK6ADA94A3K2F",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>What do Leah and Joel decide should be the main aim of their session?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Support the class's current school topic"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Get the children asking their own questions",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Explain a scientific idea in depth"
+          }
+        ],
+        "explanation": "Joel muốn trẻ tự đặt câu hỏi; Leah tiếp tục kế hoạch theo hướng này."
+      },
+      {
+        "questionId": "01M4Q7K0CZZVMBCFRDMPA9WXVY",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Why did the museum demonstration fail last time?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "There were too many words"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Some children couldn't see properly",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "It took too long"
+          }
+        ],
+        "explanation": "Một số trẻ không nhìn rõ thí nghiệm, nên hai người chia nhóm nhỏ hơn."
+      },
+      {
+        "questionId": "01M4Q7K0CZ679J29FS8FVM4HH3",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Where will the equipment come from?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "They will borrow it from the museum"
+          },
+          {
+            "optionIndex": 1,
+            "content": "They will bring it from their college"
+          },
+          {
+            "optionIndex": 2,
+            "content": "The school will provide it",
+            "correct": true
+          }
+        ],
+        "explanation": "Joel xác nhận trường có thể cung cấp dụng cụ."
+      },
+      {
+        "questionId": "01M4Q7K0CZZAR00YENJBWP470Q",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How will the children be organised?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "In small groups",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "In pairs"
+          },
+          {
+            "optionIndex": 2,
+            "content": "As one large group"
+          }
+        ],
+        "explanation": "Giải pháp là chia thành smaller groups."
+      },
+      {
+        "questionId": "01M4Q7K0CZZE4CRZ7M5MF5WG79",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How long will the experiment last?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Twenty minutes"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Thirty minutes",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Forty minutes"
+          }
+        ],
+        "explanation": "Thí nghiệm kéo dài thirty minutes."
+      },
+      {
+        "questionId": "01M4Q7K0CZE1RPS8WFE8N532J6",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How will children record observations?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Write an essay"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Take photographs"
+          },
+          {
+            "optionIndex": 2,
+            "content": "Draw pictures",
+            "correct": true
+          }
+        ],
+        "explanation": "Các em vẽ tranh để ghi lại điều quan sát được."
+      },
+      {
+        "questionId": "01M4Q7K0CZCD9F26MNXRH1YCRD",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Who will collect the feedback?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "The teacher",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "Leah"
+          },
+          {
+            "optionIndex": 2,
+            "content": "The manager"
+          }
+        ],
+        "explanation": "Cuối buổi, giáo viên thu phản hồi."
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "listening-section-2-v2",
+        "cover": "/images/practice/thumb_book.png",
+        "source": "Các nguồn khác",
+        "label": "Section 2",
+        "scoreDisplay": "IELTS_LISTENING_BAND",
+        "questionTypes": [
+          "Multiple Choice"
+        ],
+        "title": "Science Museum Workshop",
+        "kind": "listening"
+      },
+      "sections": [
+        {
+          "id": "section-2",
+          "title": "Science Museum Workshop",
+          "questionIds": [
+            "01M4Q7K0CYTDYHPQG5H8G2NACC",
+            "01M4Q7K0CZHMNKX4DMVQHHXYXQ",
+            "01M4Q7K0CZ1T2WFSEEKDF3QWSV",
+            "01M4Q7K0CZER4ZK6ADA94A3K2F",
+            "01M4Q7K0CZZVMBCFRDMPA9WXVY",
+            "01M4Q7K0CZ679J29FS8FVM4HH3",
+            "01M4Q7K0CZZAR00YENJBWP470Q",
+            "01M4Q7K0CZZE4CRZ7M5MF5WG79",
+            "01M4Q7K0CZE1RPS8WFE8N532J6",
+            "01M4Q7K0CZCD9F26MNXRH1YCRD"
+          ]
+        }
+      ]
+    }
+  }
+}

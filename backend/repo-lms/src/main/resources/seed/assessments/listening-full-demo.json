@@ -1,0 +1,569 @@
+{
+  "subType": "PRACTICE_LISTENING",
+  "tags": [
+    "Các nguồn khác",
+    "free",
+    "full",
+    "Full"
+  ],
+  "content": {
+    "title": "Listening Practice Test 01",
+    "description": "Đề Listening mẫu kèm audio tổng hợp để luyện giao diện.",
+    "timeLimits": {
+      "default": 2400,
+      "hard": 1800,
+      "easy": 3600
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D1SGN1367SDCNAHHQ9",
+        "questionType": "FILL_IN_BLANK",
+        "points": 5,
+        "questionText": "<p>Complete the form below.</p><p>Write ONE WORD AND/OR A NUMBER for each answer.</p><p><strong>Ashdene Fitness Club — membership enquiry</strong></p><p>Deal name: the {{1}} membership</p><p>What&#39;s included: gym, swimming, every class, plus {{2}} at no charge</p><p>Extra facility included: the {{3}}</p><p>Monthly cost (introductory rate): £ {{4}}</p><p>Offer closes: {{5}} June</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "silver",
+            "acceptedAnswers": [],
+            "explanation": "Nhân viên gọi gói tập là ‘silver membership’, nên điền silver."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "parking",
+            "acceptedAnswers": [],
+            "explanation": "‘Free parking’ nghĩa là được gửi xe miễn phí."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "sauna",
+            "acceptedAnswers": [],
+            "explanation": "Tiện ích bổ sung được nói trực tiếp là sauna."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "40",
+            "acceptedAnswers": [],
+            "explanation": "Giá ưu đãi là forty pounds mỗi tháng, viết 40."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "30",
+            "acceptedAnswers": [],
+            "explanation": "‘The thirtieth of June’ tương ứng ngày 30 tháng 6."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0D1WD717VBYN7B26A1Q",
+        "questionType": "FILL_IN_BLANK",
+        "points": 5,
+        "questionText": "<p>Complete the notes below.</p><p>Write ONE WORD AND/OR A NUMBER for each answer.</p><p><strong>Joining the club</strong></p><p>Identification to bring: a {{1}}</p><p>Opening time: {{2}} am</p><p>Minimum membership: {{3}} months</p><p>Day of the tour: {{4}}</p><p>Name of the manager: {{5}}</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "passport",
+            "acceptedAnswers": [],
+            "explanation": "Giấy tờ được yêu cầu là passport."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "6",
+            "acceptedAnswers": [],
+            "explanation": "Câu ‘six in the morning’ cho biết giờ mở cửa là 6 am."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "3",
+            "acceptedAnswers": [],
+            "explanation": "Thời hạn tối thiểu là three months."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "Monday",
+            "acceptedAnswers": [],
+            "explanation": "Hai người xác nhận lịch tham quan vào Monday."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "Sarah",
+            "acceptedAnswers": [],
+            "explanation": "Người hướng dẫn tham quan là quản lý Sarah."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0D2WAYCB4E3R0XW6H1Y",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Choose the correct letter, A, B or C.</p><p>On which day will the workshop take place?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Monday"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Friday",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Sunday"
+          }
+        ],
+        "explanation": "Leah nói workshop diễn ra vào Friday."
+      },
+      {
+        "questionId": "01M4Q7K0D2Z6KXGBCGM91MN9Z7",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Where will the workshop be held?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "At the museum",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "At the college"
+          },
+          {
+            "optionIndex": 2,
+            "content": "At the school"
+          }
+        ],
+        "explanation": "Địa điểm được nhắc đến là museum."
+      },
+      {
+        "questionId": "01M4Q7K0D2MF9PBAHMMMSNT9A1",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How many children will attend?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Ten"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Fifteen"
+          },
+          {
+            "optionIndex": 2,
+            "content": "Twenty",
+            "correct": true
+          }
+        ],
+        "explanation": "Số trẻ tham gia là twenty."
+      },
+      {
+        "questionId": "01M4Q7K0D22DZ2NSJPZ3TV5NBN",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>What do Leah and Joel decide should be the main aim of their session?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Support the class's current school topic"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Get the children asking their own questions",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Explain a scientific idea in depth"
+          }
+        ],
+        "explanation": "Joel muốn trẻ tự đặt câu hỏi; Leah tiếp tục kế hoạch theo hướng này."
+      },
+      {
+        "questionId": "01M4Q7K0D21QN3N60S0R2QFSQA",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Why did the museum demonstration fail last time?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "There were too many words"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Some children couldn't see properly",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "It took too long"
+          }
+        ],
+        "explanation": "Một số trẻ không nhìn rõ thí nghiệm, nên hai người chia nhóm nhỏ hơn."
+      },
+      {
+        "questionId": "01M4Q7K0D2YQ6SDD18ZX4FG312",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Where will the equipment come from?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "They will borrow it from the museum"
+          },
+          {
+            "optionIndex": 1,
+            "content": "They will bring it from their college"
+          },
+          {
+            "optionIndex": 2,
+            "content": "The school will provide it",
+            "correct": true
+          }
+        ],
+        "explanation": "Joel xác nhận trường có thể cung cấp dụng cụ."
+      },
+      {
+        "questionId": "01M4Q7K0D2SCF7SQ174F58NC0R",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How will the children be organised?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "In small groups",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "In pairs"
+          },
+          {
+            "optionIndex": 2,
+            "content": "As one large group"
+          }
+        ],
+        "explanation": "Giải pháp là chia thành smaller groups."
+      },
+      {
+        "questionId": "01M4Q7K0D2S76PMWS6V758HBVN",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How long will the experiment last?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Twenty minutes"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Thirty minutes",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Forty minutes"
+          }
+        ],
+        "explanation": "Thí nghiệm kéo dài thirty minutes."
+      },
+      {
+        "questionId": "01M4Q7K0D2YFDTTRT25N313XVW",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>How will children record observations?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "Write an essay"
+          },
+          {
+            "optionIndex": 1,
+            "content": "Take photographs"
+          },
+          {
+            "optionIndex": 2,
+            "content": "Draw pictures",
+            "correct": true
+          }
+        ],
+        "explanation": "Các em vẽ tranh để ghi lại điều quan sát được."
+      },
+      {
+        "questionId": "01M4Q7K0D279CMBSFNAC2YMA1Y",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Who will collect the feedback?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "The teacher",
+            "correct": true
+          },
+          {
+            "optionIndex": 1,
+            "content": "Leah"
+          },
+          {
+            "optionIndex": 2,
+            "content": "The manager"
+          }
+        ],
+        "explanation": "Cuối buổi, giáo viên thu phản hồi."
+      },
+      {
+        "questionId": "01M4Q7K0D215FJ30B1QXW81W1K",
+        "questionType": "MATCHING",
+        "points": 4,
+        "questionText": "<p>Choose the type of accommodation for each student. Options may be used more than once.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "flat"
+          },
+          {
+            "optionIndex": 1,
+            "content": "house"
+          },
+          {
+            "optionIndex": 2,
+            "content": "hostel"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Anna",
+            "answer": "flat",
+            "explanation": "Anna ở flat.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Ben",
+            "answer": "house",
+            "explanation": "Ben chọn house.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "Clara",
+            "answer": "hostel",
+            "explanation": "Clara thích hostel.",
+            "answerOptionIndex": 2
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "David",
+            "answer": "flat",
+            "explanation": "David cũng chọn flat; được dùng lại lựa chọn này.",
+            "answerOptionIndex": 0
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0D2C1NQYSN7A0S1BJ8Q",
+        "questionType": "MATCHING",
+        "points": 6,
+        "questionText": "<p>Label the map below. Choose the correct letter, A–F.</p><p><em>Campus map</em></p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A"
+          },
+          {
+            "optionIndex": 1,
+            "content": "B"
+          },
+          {
+            "optionIndex": 2,
+            "content": "C"
+          },
+          {
+            "optionIndex": 3,
+            "content": "D"
+          },
+          {
+            "optionIndex": 4,
+            "content": "E"
+          },
+          {
+            "optionIndex": 5,
+            "content": "F"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Library",
+            "answer": "A",
+            "explanation": "Library nằm bên trái lối vào, ký hiệu A.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Cafe",
+            "answer": "B",
+            "explanation": "Cafe nằm bên phải, ký hiệu B.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "Gym",
+            "answer": "C",
+            "explanation": "Gym ở trung tâm, ký hiệu C.",
+            "answerOptionIndex": 2
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "Reception",
+            "answer": "D",
+            "explanation": "Reception ở góc trên bên trái, ký hiệu D.",
+            "answerOptionIndex": 3
+          },
+          {
+            "pairIndex": 4,
+            "prompt": "Garden",
+            "answer": "E",
+            "explanation": "Garden phía sau gym, ký hiệu E.",
+            "answerOptionIndex": 4
+          },
+          {
+            "pairIndex": 5,
+            "prompt": "Student shop",
+            "answer": "F",
+            "explanation": "Student shop ở góc trên bên phải, ký hiệu F.",
+            "answerOptionIndex": 5
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0D286B6XKG09T8NSXSG",
+        "questionType": "FILL_IN_BLANK",
+        "points": 10,
+        "questionText": "<p>Complete the notes below.</p><p>Write ONE WORD ONLY for each answer.</p><p><strong>Designing sustainable cities</strong></p><p>Better transport reduces {{1}}</p><p>Trees help control {{2}}</p><p>Cities need safe {{3}} routes</p><p>Parks support {{4}}</p><p>Rainwater is stored in {{5}}</p><p>Solar panels produce {{6}}</p><p>Buildings should use natural {{7}}</p><p>Recycling reduces {{8}}</p><p>Community gardens can improve {{9}}</p><p>Schools play a role in {{10}}</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "pollution",
+            "acceptedAnswers": [],
+            "explanation": "Giao thông tốt hơn giúp giảm pollution."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "temperature",
+            "acceptedAnswers": [],
+            "explanation": "Cây xanh giúp điều hòa temperature."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "cycling",
+            "acceptedAnswers": [],
+            "explanation": "Cần có tuyến cycling an toàn."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "wildlife",
+            "acceptedAnswers": [],
+            "explanation": "Công viên hỗ trợ wildlife."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "tanks",
+            "acceptedAnswers": [],
+            "explanation": "Nước mưa được chứa trong tanks."
+          },
+          {
+            "blankIndex": 5,
+            "correctAnswer": "electricity",
+            "acceptedAnswers": [],
+            "explanation": "Tấm pin mặt trời tạo electricity."
+          },
+          {
+            "blankIndex": 6,
+            "correctAnswer": "light",
+            "acceptedAnswers": [],
+            "explanation": "Tòa nhà nên dùng ánh sáng tự nhiên: light."
+          },
+          {
+            "blankIndex": 7,
+            "correctAnswer": "waste",
+            "acceptedAnswers": [],
+            "explanation": "Tái chế giảm waste."
+          },
+          {
+            "blankIndex": 8,
+            "correctAnswer": "health",
+            "acceptedAnswers": [],
+            "explanation": "Vườn cộng đồng giúp cải thiện health."
+          },
+          {
+            "blankIndex": 9,
+            "correctAnswer": "education",
+            "acceptedAnswers": [],
+            "explanation": "Vai trò của trường học là education."
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "listening-full-demo-v2",
+        "cover": "/images/practice/thumb_book.png",
+        "source": "Các nguồn khác",
+        "label": "Sections 1–4",
+        "scoreDisplay": "IELTS_LISTENING_BAND",
+        "questionTypes": [
+          "Gap Filling",
+          "Multiple Choice",
+          "Matching",
+          "Map Labelling"
+        ],
+        "title": "Listening Practice Test 01",
+        "kind": "listening"
+      },
+      "sections": [
+        {
+          "id": "section-1",
+          "title": "Ashdene Fitness Club",
+          "questionIds": [
+            "01M4Q7K0D1SGN1367SDCNAHHQ9",
+            "01M4Q7K0D1WD717VBYN7B26A1Q"
+          ]
+        },
+        {
+          "id": "section-2",
+          "title": "Science Museum Workshop",
+          "questionIds": [
+            "01M4Q7K0D2WAYCB4E3R0XW6H1Y",
+            "01M4Q7K0D2Z6KXGBCGM91MN9Z7",
+            "01M4Q7K0D2MF9PBAHMMMSNT9A1",
+            "01M4Q7K0D22DZ2NSJPZ3TV5NBN",
+            "01M4Q7K0D21QN3N60S0R2QFSQA",
+            "01M4Q7K0D2YQ6SDD18ZX4FG312",
+            "01M4Q7K0D2SCF7SQ174F58NC0R",
+            "01M4Q7K0D2S76PMWS6V758HBVN",
+            "01M4Q7K0D2YFDTTRT25N313XVW",
+            "01M4Q7K0D279CMBSFNAC2YMA1Y"
+          ]
+        },
+        {
+          "id": "section-3",
+          "title": "Student Accommodation",
+          "questionIds": [
+            "01M4Q7K0D215FJ30B1QXW81W1K",
+            "01M4Q7K0D2C1NQYSN7A0S1BJ8Q"
+          ]
+        },
+        {
+          "id": "section-4",
+          "title": "Sustainable Cities",
+          "questionIds": [
+            "01M4Q7K0D286B6XKG09T8NSXSG"
+          ]
+        }
+      ]
+    }
+  }
+}

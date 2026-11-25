@@ -1,0 +1,347 @@
+{
+  "subType": "PRACTICE_READING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Passage 1"
+  ],
+  "content": {
+    "title": "Snow Makers",
+    "description": "Bài luyện mẫu gồm các dạng câu hỏi Reading, kéo thả đáp án và điền nhãn sơ đồ máy tạo tuyết.",
+    "timeLimits": {
+      "default": 1200,
+      "hard": 900,
+      "easy": 1800
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0CNJFZSNJ2ZSKPSN9BF",
+        "questionType": "MATCHING",
+        "variant": "MATCHING_HEADING",
+        "points": 3,
+        "questionText": "<p>Choose the correct heading for paragraphs A–C from the list below.</p><p>Drag a heading to an answer box, or choose it from the box.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "i. A solution to uncertain weather"
+          },
+          {
+            "optionIndex": 1,
+            "content": "ii. Snow formation in nature"
+          },
+          {
+            "optionIndex": 2,
+            "content": "iii. How a snow gun works"
+          },
+          {
+            "optionIndex": 3,
+            "content": "iv. Environmental objections"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Paragraph A",
+            "answer": "i. A solution to uncertain weather",
+            "explanation": "Đoạn A giới thiệu vấn đề thời tiết không ổn định và giải pháp là máy tạo tuyết. Heading i bao quát ý chính.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Paragraph B",
+            "answer": "ii. Snow formation in nature",
+            "explanation": "Đoạn B mô tả quá trình hình thành tuyết tự nhiên từ hơi nước đến bông tuyết. Chọn ii.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "Paragraph C",
+            "answer": "iii. How a snow gun works",
+            "explanation": "Đoạn C giải thích các bộ phận và nguyên lý hoạt động của máy tạo tuyết. Chọn iii.",
+            "answerOptionIndex": 2
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CNK46T59BXJ4GYGAR0",
+        "questionType": "MATCHING",
+        "variant": "MATCHING_FEATURE",
+        "points": 2,
+        "questionText": "<p>Match each proposal with the correct researcher, A–C.</p><p>NB You may use any letter more than once.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A. Anna Meyer"
+          },
+          {
+            "optionIndex": 1,
+            "content": "B. David Chen"
+          },
+          {
+            "optionIndex": 2,
+            "content": "C. Sara Patel"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Water from melting snow should be used again.",
+            "answer": "B. David Chen",
+            "explanation": "“Used again” được diễn đạt bằng “for reuse”. Đề xuất thu gom và tái sử dụng nước là của David Chen (B).",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Resorts should not add chemicals to the water.",
+            "answer": "C. Sara Patel",
+            "explanation": "Sara Patel đề nghị tránh phụ gia hóa học vì ảnh hưởng đến đất và nguồn nước. Chọn C.",
+            "answerOptionIndex": 2
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CP7ZVQ6CVC83TXZH27",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>Choose the correct letter, A, B, C or D.</p><p>Where does the water entering the snow gun come from?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A river"
+          },
+          {
+            "optionIndex": 1,
+            "content": "A reservoir",
+            "correct": true
+          },
+          {
+            "optionIndex": 2,
+            "content": "Rain collected in the machine"
+          },
+          {
+            "optionIndex": 3,
+            "content": "The sea"
+          }
+        ],
+        "explanation": "Nguồn nước là hồ chứa (“reservoir”), tương ứng với phương án B."
+      },
+      {
+        "questionId": "01M4Q7K0CPJGBKSGVF3PH5QWVN",
+        "questionType": "MULTIPLE_CHOICE",
+        "points": 1,
+        "questionText": "<p>What is the purpose of the compressor?</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "To freeze water"
+          },
+          {
+            "optionIndex": 1,
+            "content": "To collect snow"
+          },
+          {
+            "optionIndex": 2,
+            "content": "To provide pressurised air",
+            "correct": true
+          },
+          {
+            "optionIndex": 3,
+            "content": "To measure humidity"
+          }
+        ],
+        "explanation": "Máy nén cung cấp khí có áp suất vào ống dẫn thứ hai, tương ứng C."
+      },
+      {
+        "questionId": "01M4Q7K0CPYPTP45WNSQS9QEVQ",
+        "questionType": "MATCHING",
+        "variant": "YES_NO_NOT_GIVEN",
+        "points": 3,
+        "questionText": "<p>Do the following statements agree with the views of the writer?</p><p>YES — the statement agrees with the writer</p><p>NO — the statement contradicts the writer</p><p>NOT GIVEN — the writer's view is not stated</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "YES"
+          },
+          {
+            "optionIndex": 1,
+            "content": "NO"
+          },
+          {
+            "optionIndex": 2,
+            "content": "NOT GIVEN"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Snow guns depend on suitable outdoor temperatures.",
+            "answer": "YES",
+            "explanation": "Máy không tự tạo nhiệt độ lạnh mà phụ thuộc điều kiện ngoài trời. Phát biểu phù hợp, chọn YES.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Chemical additives are necessary for responsible snow production.",
+            "answer": "NO",
+            "explanation": "“Necessary” trái nghĩa với “unnecessary” trong bài. Quan điểm của tác giả ngược với phát biểu, chọn NO.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "The first snow gun was invented in Finland.",
+            "answer": "NOT GIVEN",
+            "explanation": "Bài nhắc đến phát minh máy tạo tuyết nhưng không nêu quốc gia phát minh. Không đủ thông tin để kết luận, chọn NOT GIVEN.",
+            "answerOptionIndex": 2
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CP80RV7G1KYDE2CPWC",
+        "questionType": "FILL_IN_BLANK",
+        "variant": "SUMMARY_COMPLETION",
+        "points": 2,
+        "questionText": "<p>Complete the summary using the list of words, A–D.</p><p>Drag a word into each gap, or select it in the gap.</p><p><strong>Inside a snow gun</strong></p><p><strong>Water and air</strong></p><p>Water comes from a reservoir. Air is supplied by a {{1}}. A {{2}} then breaks the water into small droplets.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "reservoir"
+          },
+          {
+            "optionIndex": 1,
+            "content": "compressor"
+          },
+          {
+            "optionIndex": 2,
+            "content": "nozzle"
+          },
+          {
+            "optionIndex": 3,
+            "content": "snowflake"
+          }
+        ],
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "compressor",
+            "acceptedAnswers": [],
+            "explanation": "Khí được cung cấp bởi máy nén (“compressor”), là từ B trong danh sách."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "nozzle",
+            "acceptedAnswers": [],
+            "explanation": "Vòi phun (“nozzle”) chia dòng nước thành các giọt nhỏ, tương ứng với từ C."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CPSKDQ8DSSV74D9W9P",
+        "questionType": "FILL_IN_BLANK",
+        "points": 2,
+        "questionText": "<p>Label the diagram below.</p><p>Write ONE WORD ONLY from the passage for each answer.</p><p><em>Snow gun diagram: label 13 points to the water storage tank and label 14 points to the device spreading droplets. A compressor, hoses and nozzle are labelled.</em></p><p>Water storage: {{1}}</p><p>Droplet dispersal: {{2}}</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "reservoir",
+            "acceptedAnswers": [],
+            "explanation": "Mũi tên 13 chỉ nơi chứa nước được đưa vào máy: reservoir. Yêu cầu chỉ một từ."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "fan",
+            "acceptedAnswers": [],
+            "explanation": "Mũi tên 14 chỉ quạt giúp phân tán các giọt nước: fan. Yêu cầu chỉ một từ."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CPJ3ENZ32FC8ZAQHRE",
+        "questionType": "MATCHING",
+        "variant": "MATCHING_INFORMATION",
+        "points": 2,
+        "questionText": "<p>Which paragraph contains the following information?</p><p>Choose the correct letter, A–F.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A"
+          },
+          {
+            "optionIndex": 1,
+            "content": "B"
+          },
+          {
+            "optionIndex": 2,
+            "content": "C"
+          },
+          {
+            "optionIndex": 3,
+            "content": "D"
+          },
+          {
+            "optionIndex": 4,
+            "content": "E"
+          },
+          {
+            "optionIndex": 5,
+            "content": "F"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Environmental objections to snow-making systems",
+            "answer": "F",
+            "explanation": "Đoạn F đề cập ý kiến phản đối vì máy tiêu thụ điện, nước và tác động đến hệ sinh thái.",
+            "answerOptionIndex": 5
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Measurements taken before snow production begins",
+            "answer": "E",
+            "explanation": "Đoạn E nêu các phép đo nhiệt độ và độ ẩm trước khi bật máy.",
+            "answerOptionIndex": 4
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "read-snow-makers-01-v2",
+        "cover": "/images/practice/snow-gun-diagram.svg",
+        "source": "The IELTS Space PRO",
+        "label": "Passage 1",
+        "scoreDisplay": "IELTS_READING_BAND",
+        "questionTypes": [
+          "Matching Headings",
+          "Matching Features",
+          "Multiple Choice",
+          "Yes/No/Not Given",
+          "Gap Filling",
+          "Diagram Label",
+          "Match Information"
+        ],
+        "title": "Snow Makers",
+        "kind": "reading"
+      },
+      "sections": [
+        {
+          "id": "passage-1",
+          "title": "Snow Makers",
+          "content": "<p><em>How artificial snow is produced and the environmental questions it raises.</em></p><p><strong>A</strong>&nbsp;In the middle of the twentieth century, the growing popularity of skiing made mountain resorts profitable businesses. But resort owners were completely dependent on the weather. If there was not enough snow, they had to close. The invention of the snow gun offered a solution to this uncertainty. Today, snow-making equipment helps many resorts stay open for longer periods, even when natural snowfall is limited.</p><p><strong>B</strong>&nbsp;Natural snow begins as water vapour in the atmosphere. The vapour condenses into tiny droplets that form clouds. When the temperature is sufficiently low, the droplets freeze into ice crystals. More water particles then join each crystal, producing a snowflake. As a snowflake becomes heavier, it falls towards the ground. Its shape depends on the temperature and moisture of the surrounding air.</p><p><strong>C</strong>&nbsp;A snow gun achieves a similar result by combining water and air. Water travels from a reservoir through one hose. A compressor supplies pressurised air through a second hose. Inside the machine, a nozzle breaks the stream of water into tiny droplets. A fan spreads these droplets into the cold air, where they freeze before reaching the ground. The equipment does not create cold temperatures; it relies on suitable outdoor conditions.</p><p><strong>D</strong>&nbsp;Researchers have proposed several improvements to make snow production more sustainable. Engineer Anna Meyer focuses on pumps that consume less electricity. Hydrologist David Chen recommends collecting meltwater and returning it to the reservoir for reuse. Environmental scientist Sara Patel argues that resorts should avoid chemical additives, which may affect soil and local waterways. Their proposals address different costs of producing artificial snow.</p><p><strong>E</strong>&nbsp;Before switching on a snow gun, operators measure both air temperature and humidity. Cold, dry conditions are generally most suitable because the droplets cool and freeze more quickly. When the air is too warm, artificial snow cannot be produced effectively. Machine-made snow is often denser than natural snow, since its ice particles are smaller and more compact. The quantity of water required varies with the conditions and the desired depth of the snow layer.</p><p><strong>F</strong>&nbsp;Critics point to the electricity and water consumed by snow-making systems and question their effects on mountain ecosystems. The writer believes that chemical additives are unnecessary for responsible snow production. Better equipment and careful water management can reduce environmental costs, but they do not remove them entirely. Resorts must weigh the value of a longer skiing season against the resources it requires.</p>",
+          "questionIds": [
+            "01M4Q7K0CNJFZSNJ2ZSKPSN9BF",
+            "01M4Q7K0CNK46T59BXJ4GYGAR0",
+            "01M4Q7K0CP7ZVQ6CVC83TXZH27",
+            "01M4Q7K0CPJGBKSGVF3PH5QWVN",
+            "01M4Q7K0CPYPTP45WNSQS9QEVQ",
+            "01M4Q7K0CP80RV7G1KYDE2CPWC",
+            "01M4Q7K0CPSKDQ8DSSV74D9W9P",
+            "01M4Q7K0CPJ3ENZ32FC8ZAQHRE"
+          ]
+        }
+      ]
+    }
+  }
+}

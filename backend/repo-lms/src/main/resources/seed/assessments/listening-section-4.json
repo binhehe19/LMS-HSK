@@ -1,0 +1,112 @@
+{
+  "subType": "PRACTICE_LISTENING",
+  "tags": [
+    "Các nguồn khác",
+    "free",
+    "single",
+    "Section 4"
+  ],
+  "content": {
+    "title": "Sustainable Cities",
+    "description": "Đề Listening mẫu kèm audio tổng hợp để luyện giao diện.",
+    "timeLimits": {
+      "default": 600,
+      "hard": 480,
+      "easy": 900
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D1HHZN4HNS6FNH14BD",
+        "questionType": "FILL_IN_BLANK",
+        "points": 10,
+        "questionText": "<p>Complete the notes below.</p><p>Write ONE WORD ONLY for each answer.</p><p><strong>Designing sustainable cities</strong></p><p>Better transport reduces {{1}}</p><p>Trees help control {{2}}</p><p>Cities need safe {{3}} routes</p><p>Parks support {{4}}</p><p>Rainwater is stored in {{5}}</p><p>Solar panels produce {{6}}</p><p>Buildings should use natural {{7}}</p><p>Recycling reduces {{8}}</p><p>Community gardens can improve {{9}}</p><p>Schools play a role in {{10}}</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "pollution",
+            "acceptedAnswers": [],
+            "explanation": "Giao thông tốt hơn giúp giảm pollution."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "temperature",
+            "acceptedAnswers": [],
+            "explanation": "Cây xanh giúp điều hòa temperature."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "cycling",
+            "acceptedAnswers": [],
+            "explanation": "Cần có tuyến cycling an toàn."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "wildlife",
+            "acceptedAnswers": [],
+            "explanation": "Công viên hỗ trợ wildlife."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "tanks",
+            "acceptedAnswers": [],
+            "explanation": "Nước mưa được chứa trong tanks."
+          },
+          {
+            "blankIndex": 5,
+            "correctAnswer": "electricity",
+            "acceptedAnswers": [],
+            "explanation": "Tấm pin mặt trời tạo electricity."
+          },
+          {
+            "blankIndex": 6,
+            "correctAnswer": "light",
+            "acceptedAnswers": [],
+            "explanation": "Tòa nhà nên dùng ánh sáng tự nhiên: light."
+          },
+          {
+            "blankIndex": 7,
+            "correctAnswer": "waste",
+            "acceptedAnswers": [],
+            "explanation": "Tái chế giảm waste."
+          },
+          {
+            "blankIndex": 8,
+            "correctAnswer": "health",
+            "acceptedAnswers": [],
+            "explanation": "Vườn cộng đồng giúp cải thiện health."
+          },
+          {
+            "blankIndex": 9,
+            "correctAnswer": "education",
+            "acceptedAnswers": [],
+            "explanation": "Vai trò của trường học là education."
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "listening-section-4-v2",
+        "cover": "/images/practice/thumb_plastics.png",
+        "source": "Các nguồn khác",
+        "label": "Section 4",
+        "scoreDisplay": "IELTS_LISTENING_BAND",
+        "questionTypes": [
+          "Gap Filling"
+        ],
+        "title": "Sustainable Cities",
+        "kind": "listening"
+      },
+      "sections": [
+        {
+          "id": "section-4",
+          "title": "Sustainable Cities",
+          "questionIds": [
+            "01M4Q7K0D1HHZN4HNS6FNH14BD"
+          ]
+        }
+      ]
+    }
+  }
+}

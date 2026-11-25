@@ -1,0 +1,121 @@
+{
+  "subType": "PRACTICE_LISTENING",
+  "tags": [
+    "Các nguồn khác",
+    "free",
+    "single",
+    "Section 1"
+  ],
+  "content": {
+    "title": "Ashdene Fitness Club",
+    "description": "Đề Listening mẫu kèm audio tổng hợp để luyện giao diện.",
+    "timeLimits": {
+      "default": 600,
+      "hard": 480,
+      "easy": 900
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0CXRN38R7W67TQH15MN",
+        "questionType": "FILL_IN_BLANK",
+        "points": 5,
+        "questionText": "<p>Complete the form below.</p><p>Write ONE WORD AND/OR A NUMBER for each answer.</p><p><strong>Ashdene Fitness Club — membership enquiry</strong></p><p>Deal name: the {{1}} membership</p><p>What&#39;s included: gym, swimming, every class, plus {{2}} at no charge</p><p>Extra facility included: the {{3}}</p><p>Monthly cost (introductory rate): £ {{4}}</p><p>Offer closes: {{5}} June</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "silver",
+            "acceptedAnswers": [],
+            "explanation": "Nhân viên gọi gói tập là ‘silver membership’, nên điền silver."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "parking",
+            "acceptedAnswers": [],
+            "explanation": "‘Free parking’ nghĩa là được gửi xe miễn phí."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "sauna",
+            "acceptedAnswers": [],
+            "explanation": "Tiện ích bổ sung được nói trực tiếp là sauna."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "40",
+            "acceptedAnswers": [],
+            "explanation": "Giá ưu đãi là forty pounds mỗi tháng, viết 40."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "30",
+            "acceptedAnswers": [],
+            "explanation": "‘The thirtieth of June’ tương ứng ngày 30 tháng 6."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CXFXC6S23ZKSR2ZFN2",
+        "questionType": "FILL_IN_BLANK",
+        "points": 5,
+        "questionText": "<p>Complete the notes below.</p><p>Write ONE WORD AND/OR A NUMBER for each answer.</p><p><strong>Joining the club</strong></p><p>Identification to bring: a {{1}}</p><p>Opening time: {{2}} am</p><p>Minimum membership: {{3}} months</p><p>Day of the tour: {{4}}</p><p>Name of the manager: {{5}}</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "passport",
+            "acceptedAnswers": [],
+            "explanation": "Giấy tờ được yêu cầu là passport."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "6",
+            "acceptedAnswers": [],
+            "explanation": "Câu ‘six in the morning’ cho biết giờ mở cửa là 6 am."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "3",
+            "acceptedAnswers": [],
+            "explanation": "Thời hạn tối thiểu là three months."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "Monday",
+            "acceptedAnswers": [],
+            "explanation": "Hai người xác nhận lịch tham quan vào Monday."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "Sarah",
+            "acceptedAnswers": [],
+            "explanation": "Người hướng dẫn tham quan là quản lý Sarah."
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "listening-section-1-v2",
+        "cover": "/images/practice/thumb_sports.png",
+        "source": "Các nguồn khác",
+        "label": "Section 1",
+        "scoreDisplay": "IELTS_LISTENING_BAND",
+        "questionTypes": [
+          "Gap Filling"
+        ],
+        "title": "Ashdene Fitness Club",
+        "kind": "listening"
+      },
+      "sections": [
+        {
+          "id": "section-1",
+          "title": "Ashdene Fitness Club",
+          "questionIds": [
+            "01M4Q7K0CXRN38R7W67TQH15MN",
+            "01M4Q7K0CXFXC6S23ZKSR2ZFN2"
+          ]
+        }
+      ]
+    }
+  }
+}

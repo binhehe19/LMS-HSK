@@ -1,0 +1,214 @@
+{
+  "subType": "PRACTICE_READING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Passage 1"
+  ],
+  "content": {
+    "title": "Vitamins – To supplement or not?",
+    "description": "Khám phá sự thật về việc bổ sung vitamin và khoáng chất hàng ngày đối với sức khoẻ con người.",
+    "timeLimits": {
+      "default": 1200,
+      "hard": 900,
+      "easy": 1800
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0BP0YD1VK7372184TNV",
+        "questionType": "MATCHING",
+        "variant": "TRUE_FALSE_NOT_GIVEN",
+        "points": 4,
+        "questionText": "<p>Do the following statements agree with the information given in Reading Passage 1?</p><p>In boxes 1–4, select:</p><p>• TRUE if the statement agrees with the information</p><p>• FALSE if the statement contradicts the information</p><p>• NOT GIVEN if there is no information on this</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "TRUE"
+          },
+          {
+            "optionIndex": 1,
+            "content": "FALSE"
+          },
+          {
+            "optionIndex": 2,
+            "content": "NOT GIVEN"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "More than 50% of adults in the United States consume at least one dietary supplement each day.",
+            "answer": "TRUE",
+            "explanation": "Trong đoạn A có ghi rõ: '...with more than half of American adults taking at least one daily pill' (hơn một nửa số người trưởng thành tại Mỹ uống ít nhất một viên mỗi ngày). 'More than half' tương đương chính xác với 'More than 50%'. Vì vậy thông tin hoàn toàn trùng khớp.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Clinical trials carried out after Linus Pauling's publications confirmed that high doses of Vitamin C prevent the common cold.",
+            "answer": "FALSE",
+            "explanation": "Câu hỏi khẳng định các thử nghiệm lâm sàng đã 'xác nhận' (confirmed) kết luận của Pauling. Tuy nhiên bài đọc nói: 'subsequent rigorous clinical trials systematically failed to substantiate his extraordinary claims' (các thử nghiệm nghiêm ngặt sau đó liên tục thất bại trong việc chứng minh khẳng định của ông). Do đó phát biểu mâu thuẫn hoàn toàn với bài đọc.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "The CARET study in Finland had to be terminated earlier than planned due to higher cancer rates.",
+            "answer": "TRUE",
+            "explanation": "Đoạn C nêu rõ cuộc thử nghiệm CARET ở Phần Lan đã bị 'halted ahead of schedule' (dừng trước thời hạn) khi phát hiện tỷ lệ ung thư phổi tăng 28% ở nhóm dùng beta-carotene và vitamin A. Điều này khớp hoàn toàn với nhận định.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "Vitamins extracted from natural foods are significantly more expensive to manufacture than synthetic vitamins.",
+            "answer": "NOT GIVEN",
+            "explanation": "Đoạn D so sánh sự khác biệt về cấu trúc sinh học (biological differences) và ma trận dưỡng chất giữa thực phẩm tự nhiên và vitamin tổng hợp, nhưng hoàn toàn KHÔNG đề cập đến chi phí sản xuất (manufacturing costs / expensive). Do đó đáp án là NOT GIVEN.",
+            "answerOptionIndex": 2
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CA1NJ31JP0KZ8R7XZD",
+        "questionType": "FILL_IN_BLANK",
+        "points": 5,
+        "questionText": "<p>Complete the sentences below.</p><p>Choose NO MORE THAN TWO WORDS from the passage for each answer.</p><p>Type your answers into the spaces provided.</p><p>Whole foods contain a complex {{1}} consisting of minerals, polyphenols, and fiber that work synergistically.</p><p>Because vitamins A, D, E, and K are {{2}}, excessive consumption can lead to toxic accumulation inside body organs.</p><p>Expectant mothers are routinely instructed to consume {{3}} to safeguard unborn babies against neural tube defects.</p><p>Individuals following a strict vegan diet lack {{4}} because it is exclusively produced by micro-organisms.</p><p>In the United States, dietary supplements are legally categorized as {{5}}, exempting them from rigorous pre-market safety testing.</p>",
+        "blanks": [
+          {
+            "blankIndex": 0,
+            "correctAnswer": "matrix",
+            "acceptedAnswers": [
+              "matrix",
+              "intricate matrix"
+            ],
+            "explanation": "Tại đoạn D: 'Foods contain an intricate 'matrix' of synergistic compounds...'. Từ thích hợp nhất để điền vào chỗ trống là danh từ 'matrix' (ma trận phức hợp các chất dinh dưỡng liên kết nhau)."
+          },
+          {
+            "blankIndex": 1,
+            "correctAnswer": "fat-soluble",
+            "acceptedAnswers": [
+              "fat-soluble",
+              "fat soluble"
+            ],
+            "explanation": "Đoạn D giải thích các vitamin A, D, E, K là 'fat-soluble' (tan trong chất béo), do đó được lưu trữ tại mô mỡ và gan thay vì bài tiết qua nước tiểu, dễ gây ngộ độc khi quá liều. Từ cần điền là 'fat-soluble'."
+          },
+          {
+            "blankIndex": 2,
+            "correctAnswer": "folic acid",
+            "acceptedAnswers": [
+              "folic acid"
+            ],
+            "explanation": "Đoạn E viết: 'Pregnant women... are universally advised to take 400 micrograms of folic acid per day to prevent neural tube defects...'. Dưỡng chất được khuyên dùng là 'folic acid'."
+          },
+          {
+            "blankIndex": 3,
+            "correctAnswer": "vitamin B12",
+            "acceptedAnswers": [
+              "vitamin B12",
+              "B12"
+            ],
+            "explanation": "Đoạn E khẳng định: 'strict vegans need supplemental vitamin B12 because this essential nutrient is synthesized almost exclusively by microorganisms...'. Do đó đáp án là 'vitamin B12'."
+          },
+          {
+            "blankIndex": 4,
+            "correctAnswer": "foods",
+            "acceptedAnswers": [
+              "foods"
+            ],
+            "explanation": "Đoạn F cho biết: '...dietary supplements are classified under the umbrella of foods rather than pharmaceutical drugs'. Dưới đạo luật DSHEA, thực phẩm chức năng được xếp vào nhóm 'foods'."
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0CBFHEDXD5V6ATGDHGX",
+        "questionType": "MATCHING",
+        "variant": "MATCHING_INFORMATION",
+        "points": 4,
+        "questionText": "<p>Reading Passage 1 has six paragraphs, A–F.</p><p>Which paragraph contains the following information?</p><p>Choose the correct letter, A–F, for each question.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A"
+          },
+          {
+            "optionIndex": 1,
+            "content": "B"
+          },
+          {
+            "optionIndex": 2,
+            "content": "C"
+          },
+          {
+            "optionIndex": 3,
+            "content": "D"
+          },
+          {
+            "optionIndex": 4,
+            "content": "E"
+          },
+          {
+            "optionIndex": 5,
+            "content": "F"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Reference to a celebrity scientist whose popular theories about vitamins were later disproven.",
+            "answer": "B",
+            "explanation": "Đoạn B kể về nhà khoa học đoạt giải Nobel Linus Pauling với giả thuyết dùng liều cao Vitamin C, và sau đó các thử nghiệm lâm sàng đã bác bỏ (disproven) các tuyên bố này.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "A mention of the legal framework that limits government intervention in supplement safety.",
+            "answer": "F",
+            "explanation": "Đoạn F đề cập đến khung pháp lý (đạo luật DSHEA 1994) và lỗ hổng giám sát của chính phủ đối với an toàn của thực phẩm chức năng.",
+            "answerOptionIndex": 5
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "An explanation of how consuming high levels of certain vitamins can cause cellular toxic accumulation.",
+            "answer": "D",
+            "explanation": "Đoạn D đi sâu phân tích cơ chế sinh học khi dùng liều lượng quá cao (supraphysiological concentrations) gây áp đảo các chu trình chuyển hoá và tích tụ độc tố mạn tính trong cơ thể.",
+            "answerOptionIndex": 3
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "Specific demographic groups for whom vitamin supplementation is clinically proven to be beneficial.",
+            "answer": "E",
+            "explanation": "Đoạn E liệt kê chi tiết các nhóm đối tượng đặc biệt thực sự cần bổ sung vitamin (phụ nữ mang thai, người ăn thuần chay, người cao tuổi, người bệnh celiac).",
+            "answerOptionIndex": 4
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "read-vitamins-01-v2",
+        "cover": "/images/practice/thumb_vitamins.png",
+        "source": "The IELTS Space PRO",
+        "label": "Passage 1",
+        "scoreDisplay": "IELTS_READING_BAND",
+        "questionTypes": [
+          "Gap Filling",
+          "Match Information",
+          "Yes/No/Not Given"
+        ],
+        "title": "Vitamins – To supplement or not?",
+        "kind": "reading"
+      },
+      "sections": [
+        {
+          "id": "passage-1",
+          "title": "Vitamins – To supplement or not?",
+          "content": "<p><em>An examination of the multi-billion dollar dietary supplements industry and the medical evidence behind their efficacy.</em></p><p><strong>A</strong>&nbsp;Every day, tens of millions of people around the globe swallow vitamin tablets, capsules, and mineral supplements in the belief that these pills will guard them against sickness, boost vitality, and prolong their lives. In the United States alone, the dietary supplement market is worth more than $35 billion annually, with more than half of American adults taking at least one daily pill. Advertisers routinely depict multivitamins as essential insurance policies against modern stress and deficient diets. Yet surprisingly, the vast majority of biomedical research over the past three decades paints an entirely different picture, suggesting that for healthy individuals eating balanced diets, taking vitamin supplements offers negligible health benefits and, in some circumstances, may even be detrimental.</p><p><strong>B</strong>&nbsp;The fascination with vitamins began in the early twentieth century when scientists discovered that minuscule amounts of specific chemical compounds could cure catastrophic nutritional deficiency diseases like scurvy, rickets, and beriberi. However, a major paradigm shift occurred when marketers and advocates began claiming that if a tiny quantity of a vitamin prevented disease, massive doses would confer superhuman vitality and ward off chronic conditions such as cancer and heart disease. The foremost proponent of this idea was Nobel laureate Linus Pauling, who in the 1970s famously argued that taking several grams of Vitamin C daily could prevent the common cold and substantially extend human lifespan. Despite Pauling's immense scientific stature in chemistry, subsequent rigorous clinical trials systematically failed to substantiate his extraordinary claims.</p><p><strong>C</strong>&nbsp;Over recent years, multiple large-scale randomized controlled trials have investigated the clinical efficacy of antioxidant vitamins, specifically vitamins A, C, and E, alongside beta-carotene. The results have been strikingly consistent: not only did antioxidant supplements fail to decrease rates of cardiovascular events and cancers, but in certain high-risk groups, they actually caused demonstrable harm. A landmark trial known as the CARET study in Finland was halted ahead of schedule when researchers discovered that participants taking beta-carotene and vitamin A suffered a significant 28% increase in lung cancer incidence and a 17% higher overall mortality rate compared to those receiving placebos.</p><p><strong>D</strong>&nbsp;Part of the explanation for these negative findings lies in the biological differences between vitamins naturally present in whole foods and their synthetic counterparts inside pills. Foods contain an intricate 'matrix' of synergistic compounds—such as polyphenols, dietary fiber, and trace minerals—that work collectively to modulate biological absorption and prevent oxidative cellular damage. Isolating a single chemical compound and administering it in supraphysiological concentrations can overwhelm human metabolic pathways and paradoxically inhibit endogenous antioxidant defense mechanisms. Furthermore, fat-soluble vitamins such as vitamins A, D, E, and K are stored in adipose tissue and the liver rather than excreted in urine, creating real risks of chronic toxicity (hypervitaminosis) when consumed in excessive amounts.</p><p><strong>E</strong>&nbsp;Nonetheless, medical experts emphasize that supplements do remain vital for distinct targeted populations facing specific metabolic or nutritional hurdles. Pregnant women, for instance, are universally advised to take 400 micrograms of folic acid per day to prevent neural tube defects such as spina bifida in developing fetuses. Similarly, strict vegans need supplemental vitamin B12 because this essential nutrient is synthesized almost exclusively by microorganisms and found naturally only in animal products. Furthermore, elderly individuals with decreased gastrointestinal absorption and patients suffering from celiac disease or Crohn's disease frequently require prescribed therapeutic supplementation.</p><p><strong>F</strong>&nbsp;Despite widespread consumer assumptions that commercial supplements are rigorously tested before hitting pharmacy shelves, government regulatory oversight is surprisingly lax. Under the US Dietary Supplement Health and Education Act (DSHEA) of 1994, dietary supplements are classified under the umbrella of foods rather than pharmaceutical drugs. Consequently, manufacturers are not required to demonstrate safety or clinical efficacy prior to commercial marketing; the regulatory authority can only intervene post-market if a supplement is proven to have caused widespread actual harm. This regulatory loophole has allowed numerous unverified, poorly manufactured, or tainted products to remain on shelves worldwide.</p>",
+          "questionIds": [
+            "01M4Q7K0BP0YD1VK7372184TNV",
+            "01M4Q7K0CA1NJ31JP0KZ8R7XZD",
+            "01M4Q7K0CBFHEDXD5V6ATGDHGX"
+          ]
+        }
+      ]
+    }
+  }
+}

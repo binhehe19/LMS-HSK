@@ -1,0 +1,127 @@
+{
+  "subType": "PRACTICE_SPEAKING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Part 3"
+  ],
+  "content": {
+    "title": "Role models & society",
+    "description": "",
+    "timeLimits": {
+      "default": 300,
+      "hard": 240,
+      "easy": 480
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0DBV6V3V555AS8M9VC3",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>What qualities make someone a good role model?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Những phẩm chất nào tạo nên một tấm gương tốt?",
+          "structure": "View → Explanation → Example",
+          "ideas": [
+            "Choose two qualities and explain their importance.",
+            "Use a real-world example."
+          ],
+          "vocabulary": [
+            "integrity — sự chính trực",
+            "lead by example — làm gương"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DBZVPPEYRDREWZADGG",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Do celebrities have a responsibility to set a good example?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Người nổi tiếng có trách nhiệm làm gương không?",
+          "structure": "Position → Reason → Counterpoint",
+          "ideas": [
+            "Consider their influence on young people.",
+            "Balance public responsibility with privacy."
+          ],
+          "vocabulary": [
+            "public figure — người của công chúng",
+            "have an impact on — có ảnh hưởng đến"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DBDYMKHKE1NF8SGY4F",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>How has social media changed the way people find inspiration?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Mạng xã hội đã thay đổi cách mọi người tìm cảm hứng như thế nào?",
+          "structure": "Past vs present → Benefit → Limitation",
+          "ideas": [
+            "Compare access to information now and in the past.",
+            "Discuss a benefit and a risk."
+          ],
+          "vocabulary": [
+            "accessible — dễ tiếp cận",
+            "an unrealistic expectation — kỳ vọng thiếu thực tế"
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "speaking-role-models-v2",
+        "cover": "/images/practice/thumb_sports.png",
+        "source": "The IELTS Space PRO",
+        "label": "Part 3",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Speaking Part 3"
+        ],
+        "title": "Role models & society",
+        "kind": "speaking"
+      },
+      "sections": [
+        {
+          "id": "part-3",
+          "title": "Part 3",
+          "questionIds": [
+            "01M4Q7K0DBV6V3V555AS8M9VC3",
+            "01M4Q7K0DBZVPPEYRDREWZADGG",
+            "01M4Q7K0DBDYMKHKE1NF8SGY4F"
+          ]
+        }
+      ]
+    }
+  }
+}

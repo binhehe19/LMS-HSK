@@ -1,0 +1,110 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 2"
+  ],
+  "content": {
+    "title": "Long Working Hours",
+    "description": "In some countries, people are spending long hours in the workplace. Is this a positive or negative development?",
+    "timeLimits": {
+      "default": 2400,
+      "hard": 1800,
+      "easy": 3600
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D875JJ9T7133KNMXJ3",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>In some countries, people are spending long hours in the workplace. Is this a positive or negative development?</p>",
+        "task": 2,
+        "minimumWords": 250,
+        "aiRubric": "IELTS_WRITING",
+        "hints": {
+          "analysis": [
+            "Dạng Positive or negative development: đánh giá hiện tượng và nêu lập trường.",
+            "Phân tích tác động đến người lao động, gia đình hoặc doanh nghiệp."
+          ],
+          "ideas": [
+            {
+              "title": "Lợi ích có thể có",
+              "points": [
+                "Thu nhập tăng và tiến triển sự nghiệp trong ngắn hạn.",
+                "Có thêm thời gian hoàn thành dự án quan trọng."
+              ]
+            },
+            {
+              "title": "Tác động tiêu cực",
+              "points": [
+                "Kiệt sức có thể làm giảm năng suất dài hạn.",
+                "Ít thời gian cho gia đình và sức khỏe."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "work-life balance",
+              "meaning": "cân bằng công việc và cuộc sống",
+              "example": "Long working hours can damage work-life balance."
+            },
+            {
+              "word": "burnout",
+              "meaning": "tình trạng kiệt sức",
+              "example": "Overwork can lead to burnout."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Paraphrase đề bài và nêu quan điểm của bạn. Trả lời trực tiếp yêu cầu của đề."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Main idea → Explain → Result → Example. Phát triển một lập luận và minh họa bằng ví dụ liên quan."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Main idea → Explain → Application → Example. Phân tích quan điểm thứ hai và liên hệ với lập trường của bạn."
+            },
+            {
+              "id": "conclusion",
+              "label": "Conclusion",
+              "instruction": "Tóm tắt lập luận và nhắc lại quan điểm. Không bổ sung ý mới."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-working-hours-v2",
+        "cover": "/images/practice/thumb_book.png",
+        "source": "The IELTS Space PRO",
+        "label": "Task 2",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Work & Careers"
+        ],
+        "minimumWords": 250,
+        "title": "Long Working Hours",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-2",
+          "title": "Long Working Hours",
+          "questionIds": [
+            "01M4Q7K0D875JJ9T7133KNMXJ3"
+          ]
+        }
+      ]
+    }
+  }
+}

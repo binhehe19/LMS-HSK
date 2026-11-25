@@ -1,0 +1,285 @@
+{
+  "subType": "PRACTICE_SPEAKING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "full",
+    "Full"
+  ],
+  "content": {
+    "title": "FORECAST · Speaking Mock Test 2",
+    "description": "",
+    "timeLimits": {
+      "default": 840,
+      "hard": 660,
+      "easy": 1260
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0DDKE7E51MTTN1J8SK2",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>When was the last time you had a few days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Lần gần nhất bạn có vài ngày nghỉ là khi nào?",
+          "structure": "When → What I did → How I felt",
+          "ideas": [
+            "Name the occasion and when it happened.",
+            "Describe one activity and how you felt."
+          ],
+          "vocabulary": [
+            "take a break — nghỉ ngơi",
+            "recharge my batteries — nạp lại năng lượng"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDYKQNSZJ1MCT64GF5",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>What do you usually do on your days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn thường làm gì vào ngày nghỉ?",
+          "structure": "Activity → Reason → Example",
+          "ideas": [
+            "Choose one or two activities you actually enjoy.",
+            "Explain why they help you relax."
+          ],
+          "vocabulary": [
+            "unwind — thư giãn",
+            "catch up with friends — gặp gỡ bạn bè"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DD4W4DMYDPT2HTBKHX",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Do you prefer spending your free time alone or with others?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn thích dành thời gian rảnh một mình hay cùng người khác?",
+          "structure": "Preference → Reason → Exception",
+          "ideas": [
+            "Give a clear preference.",
+            "Mention a situation when you choose differently."
+          ],
+          "vocabulary": [
+            "quality time — thời gian ý nghĩa",
+            "a change of pace — thay đổi nhịp sống"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDE7QWMSR5WQDE8B8Z",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Would you like to have more days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn có muốn có thêm ngày nghỉ không?",
+          "structure": "Answer → Explanation → Future plan",
+          "ideas": [
+            "Explain your current routine.",
+            "Say how you would use an extra day."
+          ],
+          "vocabulary": [
+            "work-life balance — cân bằng công việc và cuộc sống",
+            "make time for — dành thời gian cho"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDCK6FQPJQNQFEBBXS",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "Describe something you do to protect the environment.<p>You should say:</p><ul><li>What you do</li><li>When you started doing it</li><li>How often you do it</li><li>And explain how it helps the environment</li></ul>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 2,
+          "translation": "Mô tả một việc bạn làm để bảo vệ môi trường.",
+          "structure": "Habit → How it started → Actions → Impact",
+          "cues": [
+            "What you do",
+            "When you started doing it",
+            "How often you do it",
+            "And explain how it helps the environment"
+          ],
+          "ideas": [
+            "Describe a small habit you can explain in detail.",
+            "Say when you started and what changed."
+          ],
+          "vocabulary": [
+            "single-use plastic — nhựa dùng một lần",
+            "reduce waste — giảm rác thải"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDK49PGM4N9Q0NS6JH",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>What qualities make someone a good role model?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Những phẩm chất nào tạo nên một tấm gương tốt?",
+          "structure": "View → Explanation → Example",
+          "ideas": [
+            "Choose two qualities and explain their importance.",
+            "Use a real-world example."
+          ],
+          "vocabulary": [
+            "integrity — sự chính trực",
+            "lead by example — làm gương"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDSQ49PHWFZ90FYE1G",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Do celebrities have a responsibility to set a good example?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Người nổi tiếng có trách nhiệm làm gương không?",
+          "structure": "Position → Reason → Counterpoint",
+          "ideas": [
+            "Consider their influence on young people.",
+            "Balance public responsibility with privacy."
+          ],
+          "vocabulary": [
+            "public figure — người của công chúng",
+            "have an impact on — có ảnh hưởng đến"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0DDZ7DJD494G0XJ60J5",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>How has social media changed the way people find inspiration?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 3,
+          "translation": "Mạng xã hội đã thay đổi cách mọi người tìm cảm hứng như thế nào?",
+          "structure": "Past vs present → Benefit → Limitation",
+          "ideas": [
+            "Compare access to information now and in the past.",
+            "Discuss a benefit and a risk."
+          ],
+          "vocabulary": [
+            "accessible — dễ tiếp cận",
+            "an unrealistic expectation — kỳ vọng thiếu thực tế"
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "speaking-full-02-v2",
+        "cover": "/images/hero-illustration-2.png",
+        "source": "The IELTS Space PRO",
+        "label": "Full đề",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Speaking Mock Test"
+        ],
+        "title": "FORECAST · Speaking Mock Test 2",
+        "kind": "speaking"
+      },
+      "sections": [
+        {
+          "id": "part-1",
+          "title": "Part 1",
+          "questionIds": [
+            "01M4Q7K0DDKE7E51MTTN1J8SK2",
+            "01M4Q7K0DDYKQNSZJ1MCT64GF5",
+            "01M4Q7K0DD4W4DMYDPT2HTBKHX",
+            "01M4Q7K0DDE7QWMSR5WQDE8B8Z"
+          ]
+        },
+        {
+          "id": "part-2",
+          "title": "Part 2",
+          "questionIds": [
+            "01M4Q7K0DDCK6FQPJQNQFEBBXS"
+          ]
+        },
+        {
+          "id": "part-3",
+          "title": "Part 3",
+          "questionIds": [
+            "01M4Q7K0DDK49PGM4N9Q0NS6JH",
+            "01M4Q7K0DDSQ49PHWFZ90FYE1G",
+            "01M4Q7K0DDZ7DJD494G0XJ60J5"
+          ]
+        }
+      ]
+    }
+  }
+}

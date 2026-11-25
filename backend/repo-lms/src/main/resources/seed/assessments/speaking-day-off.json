@@ -1,0 +1,155 @@
+{
+  "subType": "PRACTICE_SPEAKING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Part 1"
+  ],
+  "content": {
+    "title": "Day off",
+    "description": "",
+    "timeLimits": {
+      "default": 300,
+      "hard": 240,
+      "easy": 480
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D9WHE9H6SXGTJJW1P1",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>When was the last time you had a few days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Lần gần nhất bạn có vài ngày nghỉ là khi nào?",
+          "structure": "When → What I did → How I felt",
+          "ideas": [
+            "Name the occasion and when it happened.",
+            "Describe one activity and how you felt."
+          ],
+          "vocabulary": [
+            "take a break — nghỉ ngơi",
+            "recharge my batteries — nạp lại năng lượng"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0D9ZKAYBQHH42S2PH3J",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>What do you usually do on your days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn thường làm gì vào ngày nghỉ?",
+          "structure": "Activity → Reason → Example",
+          "ideas": [
+            "Choose one or two activities you actually enjoy.",
+            "Explain why they help you relax."
+          ],
+          "vocabulary": [
+            "unwind — thư giãn",
+            "catch up with friends — gặp gỡ bạn bè"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0D98P2CN4CDSFER2EMR",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Do you prefer spending your free time alone or with others?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn thích dành thời gian rảnh một mình hay cùng người khác?",
+          "structure": "Preference → Reason → Exception",
+          "ideas": [
+            "Give a clear preference.",
+            "Mention a situation when you choose differently."
+          ],
+          "vocabulary": [
+            "quality time — thời gian ý nghĩa",
+            "a change of pace — thay đổi nhịp sống"
+          ]
+        }
+      },
+      {
+        "questionId": "01M4Q7K0D94FJQHXH54C800QND",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "<p>Would you like to have more days off?</p>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 1,
+          "translation": "Bạn có muốn có thêm ngày nghỉ không?",
+          "structure": "Answer → Explanation → Future plan",
+          "ideas": [
+            "Explain your current routine.",
+            "Say how you would use an extra day."
+          ],
+          "vocabulary": [
+            "work-life balance — cân bằng công việc và cuộc sống",
+            "make time for — dành thời gian cho"
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "speaking-day-off-v2",
+        "cover": "/images/practice/thumb_cat.png",
+        "source": "The IELTS Space PRO",
+        "label": "Part 1",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Speaking Part 1"
+        ],
+        "title": "Day off",
+        "kind": "speaking"
+      },
+      "sections": [
+        {
+          "id": "part-1",
+          "title": "Part 1",
+          "questionIds": [
+            "01M4Q7K0D9WHE9H6SXGTJJW1P1",
+            "01M4Q7K0D9ZKAYBQHH42S2PH3J",
+            "01M4Q7K0D98P2CN4CDSFER2EMR",
+            "01M4Q7K0D94FJQHXH54C800QND"
+          ]
+        }
+      ]
+    }
+  }
+}
