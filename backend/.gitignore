@@ -1,0 +1,100 @@
+# Maven build artifacts
+target/
+**/target/
+bin/
+**/bin/
+out/
+**/out/
+*.class
+*.jar
+*.war
+*.ear
+dependency-reduced-pom.xml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+
+# VS Code
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+**/logs/
+*.log
+
+# OS System Files
+.DS_Store
+Thumbs.db
+
+# Maven Wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle
+.gradle/
+build/
+
+# Environment files
+*.env
+*.env.local
+.env
+.env.*
+!.env.dev
+!.env.development
+!.env.example
+!.env.prod.example
+!.env.dev.example
+
+# Local Spring overrides (machine-specific database ports/credentials)
+**/application-local.yml
+
+# Database files
+*.db
+*.sqlite
+
+# Redis dump
+dump.rdb
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Secrets / sensitive data
+secrets/
+**/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# DB Backups
+backups/
+*.sql.gz
+
+# local dev DB override (temporary)
+docker-compose.dev-db.override.yml
+
+# B?ng ánh x? id và báo cáo c?a l?n n?p LMS 1.0 -> 2.0
+scripts/migrate-lms1/state/
+
+# LMS 1.0 migration backend config (prod DB credentials), see ../docs/migration/2026-11-lms1-sang-lms2/04-runbook.md
+repo-lms/src/main/resources/application-migration.yml
+!.env.migration.example
