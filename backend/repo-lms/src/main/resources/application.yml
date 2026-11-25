@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: ${PROFILES_ACTIVE:dev}
+  application:
+    name: repo-lms
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB

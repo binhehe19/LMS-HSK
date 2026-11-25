@@ -1,0 +1,70 @@
+spring:
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lms?stringtype=unspecified}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  cache:
+    type: redis
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: lms-event
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+
+server:
+  port: 8090
+  forward-headers-strategy: framework
+
+security:
+  external-jwt:
+    # Khi chạy từ repo-lms, khóa dùng chung nằm ở backend/secrets.
+    public-key-path: ${EXTERNAL_JWT_PUBLIC_KEY_PATH:../secrets/public_key.pem}
+
+internal:
+  config:
+    auth-base-url: ${AUTH_API_BASE_URL:https://dev-accounts.thespace.edu.vn/api/auth}
+    token-path: /oauth/token
+    client-id: ${INTERNAL_CLIENT_ID}
+    client-secret: ${INTERNAL_CLIENT_SECRET}
+  service:
+    auth-service: repo-auth
+    identity-service: repo-auth
+
+cms:
+  # "Cms" = hệ thống ERP thật (ERP/ERP_Backend/repo-ems) - nguồn dữ liệu Class/Session/Syllabus.
+  # Dùng chung cho cả IELTS và HSK (hsk_frontend tạm/chính thức mượn nguồn giáo trình này).
+  base-url: ${CMS_API_BASE_URL:https://dev-erp.thespace.edu.vn/api/ems}
+
+notification:
+  publisher:
+    # notification-service đọc topic này (mặc định của NotificationPublisher là notification.events nên phải đặt rõ).
+    topic: notification.in-app
+
+# Chấm điểm bài làm (assessment) (giá trị mặc định nằm trong code; chỉ đặt lại ở đây khi cần đổi).
+# Chưa cấu hình ai.api-key thì bài luận Writing đi thẳng sang giáo viên chấm.
+assessment:
+  grading:
+    close-after-seconds: 180
+    close-interval-ms: 60000
+    rescue-pending-after-seconds: 300
+    rescue-interval-ms: 60000
