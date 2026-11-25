@@ -1,0 +1,87 @@
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 25
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  cache:
+    type: redis
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: lms-event
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+
+server:
+  shutdown: graceful
+  port: ${SERVER_PORT}
+  forward-headers-strategy: framework
+  tomcat:
+    threads:
+      max: 150
+      min-spare: 25
+    max-connections: 5000
+    accept-count: 200
+
+security:
+  external-jwt:
+    public-key-path: ${SECURITY_JWT_PUBLIC_KEY_PATH}
+
+internal:
+  config:
+    auth-base-url: ${AUTH_API_BASE_URL}
+    token-path: /oauth/token
+    client-id: ${INTERNAL_CLIENT_ID}
+    client-secret: ${INTERNAL_CLIENT_SECRET}
+  service:
+    auth-service: ${INTERNAL_AUTH_SERVICE}
+    identity-service: ${INTERNAL_IDENTITY_SERVICE}
+
+cms:
+  # "Cms" = hệ thống ERP thật, khác domain LMS - mọi lời gọi phải qua backend (CmsClient),
+  # FE không gọi thẳng. Dùng chung cho cả IELTS và HSK (hsk_frontend dùng nguồn giáo trình này).
+  base-url: ${CMS_API_BASE_URL}
+
+notification:
+  publisher:
+    topic: ${NOTIFICATION_PUBLISHER_TOPIC}
+
+# Chấm điểm bài làm (assessment) (giá trị mặc định nằm trong code). Bài luận Writing tự được AI chấm khi có api-key bên dưới; không có thì bài đi chấm tay.
+ai:
+  # Nhà cung cấp AI dùng chung (API tương thích OpenAI chat completions); hiện dùng để chấm bài luận Writing. Có api-key thì phải có cả model.
+  base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+  api-key: ${AI_API_KEY:}
+  model: ${AI_MODEL:}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
