@@ -1,0 +1,79 @@
+{
+  "subType": "PRACTICE_SPEAKING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Part 2"
+  ],
+  "content": {
+    "title": "A person who inspires you",
+    "description": "",
+    "timeLimits": {
+      "default": 180,
+      "hard": 120,
+      "easy": 300
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0DAFF7EXXDFVHE7R4QB",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "Describe a person who inspires you.<p>You should say:</p><ul><li>Who this person is</li><li>How you know this person</li><li>What this person has achieved</li><li>And explain why this person inspires you</li></ul>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 2,
+          "translation": "Hãy mô tả một người truyền cảm hứng cho bạn.",
+          "structure": "Introduce the person → Tell their story → Explain their influence",
+          "cues": [
+            "Who this person is",
+            "How you know this person",
+            "What this person has achieved",
+            "And explain why this person inspires you"
+          ],
+          "ideas": [
+            "Choose someone whose story you know well.",
+            "Tell a specific story rather than listing qualities.",
+            "Connect their achievements to a change in your own life."
+          ],
+          "vocabulary": [
+            "resilience — sự kiên cường",
+            "look up to — ngưỡng mộ",
+            "a role model — tấm gương"
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "speaking-inspiration-v2",
+        "cover": "/images/hero-illustration-2.png",
+        "source": "The IELTS Space PRO",
+        "label": "Part 2",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Speaking Part 2"
+        ],
+        "title": "A person who inspires you",
+        "kind": "speaking"
+      },
+      "sections": [
+        {
+          "id": "part-2",
+          "title": "Part 2",
+          "questionIds": [
+            "01M4Q7K0DAFF7EXXDFVHE7R4QB"
+          ]
+        }
+      ]
+    }
+  }
+}

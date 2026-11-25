@@ -1,0 +1,126 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 2"
+  ],
+  "content": {
+    "title": "University Subjects and Future Careers",
+    "description": "Some people believe that university students should only study subjects related to their future careers. Others think students should be free to study whatever they like. Discuss both views and give your own opinion.",
+    "timeLimits": {
+      "default": 2400,
+      "hard": 1800,
+      "easy": 3600
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D76YRGKYJTPAS0022Q",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>Some people believe that university students should only study subjects related to their future careers. Others think students should be free to study whatever they like. Discuss both views and give your own opinion.</p>",
+        "task": 2,
+        "minimumWords": 250,
+        "aiRubric": "IELTS_WRITING",
+        "hints": {
+          "analysis": [
+            "Dạng Discuss both views and give your own opinion: cần trình bày cả hai quan điểm.",
+            "Giải thích lợi ích của việc học môn liên quan nghề nghiệp và tự do lựa chọn môn học.",
+            "Nêu rõ quan điểm cá nhân và giữ lập trường nhất quán."
+          ],
+          "ideas": [
+            {
+              "title": "Quan điểm 1 · Tập trung vào thực tế",
+              "points": [
+                "Career-related subjects → specialised knowledge → better professional skills.",
+                "Ví dụ: Medicine, Engineering; chuẩn bị tốt hơn cho công việc."
+              ]
+            },
+            {
+              "title": "Quan điểm 2 · Phát triển toàn diện",
+              "points": [
+                "Freedom to choose → broader knowledge → transferable skills.",
+                "Ví dụ: Business + Psychology, Technology + Communication."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "specialised knowledge",
+              "meaning": "kiến thức chuyên sâu, chuyên môn",
+              "example": "Career-related courses provide specialised knowledge."
+            },
+            {
+              "word": "transferable skills",
+              "meaning": "kỹ năng có thể chuyển giao",
+              "example": "A broad curriculum helps students develop transferable skills."
+            },
+            {
+              "word": "well-rounded education",
+              "meaning": "nền giáo dục toàn diện",
+              "example": "Students benefit from a well-rounded education."
+            },
+            {
+              "word": "career prospects",
+              "meaning": "cơ hội nghề nghiệp",
+              "example": "Practical courses may improve career prospects."
+            },
+            {
+              "word": "broaden one's perspective",
+              "meaning": "mở rộng góc nhìn",
+              "example": "Studying different subjects can broaden one's perspective."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Paraphrase đề bài và nêu quan điểm của bạn. Trả lời trực tiếp yêu cầu của đề."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Main idea → Explain → Result → Example. Phát triển một lập luận và minh họa bằng ví dụ liên quan."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Main idea → Explain → Application → Example. Phân tích quan điểm thứ hai và liên hệ với lập trường của bạn."
+            },
+            {
+              "id": "conclusion",
+              "label": "Conclusion",
+              "instruction": "Tóm tắt lập luận và nhắc lại quan điểm. Không bổ sung ý mới."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-university-v2",
+        "cover": "/images/practice/thumb_book.png",
+        "source": "The IELTS Space PRO",
+        "label": "Task 2",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Education"
+        ],
+        "minimumWords": 250,
+        "title": "University Subjects and Future Careers",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-2",
+          "title": "University Subjects and Future Careers",
+          "questionIds": [
+            "01M4Q7K0D76YRGKYJTPAS0022Q"
+          ]
+        }
+      ]
+    }
+  }
+}

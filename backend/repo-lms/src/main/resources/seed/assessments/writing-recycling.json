@@ -1,0 +1,117 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 1"
+  ],
+  "content": {
+    "title": "Recycling Rate for Selected Materials",
+    "description": "The graph below shows the proportion of four different materials that were recycled from 1982 to 2010 in a particular country. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "timeLimits": {
+      "default": 1200,
+      "hard": 900,
+      "easy": 1800
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D6MB5N70PD6SS643RY",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>The graph below shows the proportion of four different materials that were recycled from 1982 to 2010 in a particular country. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.</p>",
+        "task": 1,
+        "minimumWords": 150,
+        "aiRubric": "IELTS_WRITING",
+        "referenceText": "Illustrative line chart percentages, approximate values read from the displayed plot, years 1982,1986,1990,1994,1998,2002,2006,2010. Paper/cardboard: 65,70,60,80,75,72,70,70. Glass: 50,45,40,50,55,60,65,60. Aluminium: no 1982 value; 5,10,15,20,25,35,45 from 1986. Plastics: no 1982/1986 values; 3,4,5,6,8,9 from 1990. Do not assume undisplayed values.",
+        "hints": {
+          "analysis": [
+            "Biểu đồ đường so sánh bốn vật liệu; đơn vị là phần trăm.",
+            "Nêu xu hướng tổng quát, vật liệu có tỷ lệ cao nhất và thấp nhất.",
+            "Nhóm các đường có xu hướng tương đồng để so sánh số liệu."
+          ],
+          "ideas": [
+            {
+              "title": "Xu hướng nổi bật",
+              "points": [
+                "Paper and cardboard có tỷ lệ tái chế cao nhất trong cả giai đoạn.",
+                "Aluminium cans tăng nhanh, còn plastics tăng nhẹ."
+              ]
+            },
+            {
+              "title": "So sánh chi tiết",
+              "points": [
+                "Paper đạt đỉnh 80% năm 1994 rồi giảm về 70%.",
+                "Glass tăng sau năm 1990, đạt 60% vào 2010."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "proportion",
+              "meaning": "tỷ lệ",
+              "example": "The proportion of recycled glass reached 60%."
+            },
+            {
+              "word": "fluctuate",
+              "meaning": "dao động",
+              "example": "The rate for paper fluctuated before declining."
+            },
+            {
+              "word": "a gradual rise",
+              "meaning": "mức tăng từ từ",
+              "example": "Plastics experienced a gradual rise."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Diễn đạt lại đề bài: đối tượng, địa điểm và khoảng thời gian. Không đưa số liệu chi tiết ở đây."
+            },
+            {
+              "id": "overview",
+              "label": "Overview",
+              "instruction": "Nêu hai đặc điểm nổi bật của bảng, biểu đồ hoặc quy trình. Với dữ liệu, hãy tìm xu hướng chung và điểm cao nhất/thấp nhất."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Chọn nhóm dữ liệu hoặc các giai đoạn đầu. So sánh và dùng số liệu cụ thể từ đề bài."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Trình bày nhóm dữ liệu hoặc các giai đoạn còn lại. Kiểm tra đơn vị và tránh thêm quan điểm cá nhân."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-recycling-v2",
+        "cover": "/images/writing/recycling.svg",
+        "source": "The IELTS Space PRO",
+        "label": "Task 1",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Line Graph"
+        ],
+        "minimumWords": 150,
+        "title": "Recycling Rate for Selected Materials",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-1",
+          "title": "Recycling Rate for Selected Materials",
+          "questionIds": [
+            "01M4Q7K0D6MB5N70PD6SS643RY"
+          ]
+        }
+      ]
+    }
+  }
+}

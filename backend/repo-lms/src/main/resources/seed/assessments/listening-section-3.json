@@ -1,0 +1,172 @@
+{
+  "subType": "PRACTICE_LISTENING",
+  "tags": [
+    "Các nguồn khác",
+    "free",
+    "single",
+    "Section 3"
+  ],
+  "content": {
+    "title": "Student Accommodation",
+    "description": "Đề Listening mẫu kèm audio tổng hợp để luyện giao diện.",
+    "timeLimits": {
+      "default": 600,
+      "hard": 480,
+      "easy": 900
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D057Z2WGZKV2JGDGAE",
+        "questionType": "MATCHING",
+        "points": 4,
+        "questionText": "<p>Choose the type of accommodation for each student. Options may be used more than once.</p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "flat"
+          },
+          {
+            "optionIndex": 1,
+            "content": "house"
+          },
+          {
+            "optionIndex": 2,
+            "content": "hostel"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Anna",
+            "answer": "flat",
+            "explanation": "Anna ở flat.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Ben",
+            "answer": "house",
+            "explanation": "Ben chọn house.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "Clara",
+            "answer": "hostel",
+            "explanation": "Clara thích hostel.",
+            "answerOptionIndex": 2
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "David",
+            "answer": "flat",
+            "explanation": "David cũng chọn flat; được dùng lại lựa chọn này.",
+            "answerOptionIndex": 0
+          }
+        ]
+      },
+      {
+        "questionId": "01M4Q7K0D01Z70GYEZ22ZACVW4",
+        "questionType": "MATCHING",
+        "points": 6,
+        "questionText": "<p>Label the map below. Choose the correct letter, A–F.</p><p><em>Campus map</em></p>",
+        "options": [
+          {
+            "optionIndex": 0,
+            "content": "A"
+          },
+          {
+            "optionIndex": 1,
+            "content": "B"
+          },
+          {
+            "optionIndex": 2,
+            "content": "C"
+          },
+          {
+            "optionIndex": 3,
+            "content": "D"
+          },
+          {
+            "optionIndex": 4,
+            "content": "E"
+          },
+          {
+            "optionIndex": 5,
+            "content": "F"
+          }
+        ],
+        "matchingPairs": [
+          {
+            "pairIndex": 0,
+            "prompt": "Library",
+            "answer": "A",
+            "explanation": "Library nằm bên trái lối vào, ký hiệu A.",
+            "answerOptionIndex": 0
+          },
+          {
+            "pairIndex": 1,
+            "prompt": "Cafe",
+            "answer": "B",
+            "explanation": "Cafe nằm bên phải, ký hiệu B.",
+            "answerOptionIndex": 1
+          },
+          {
+            "pairIndex": 2,
+            "prompt": "Gym",
+            "answer": "C",
+            "explanation": "Gym ở trung tâm, ký hiệu C.",
+            "answerOptionIndex": 2
+          },
+          {
+            "pairIndex": 3,
+            "prompt": "Reception",
+            "answer": "D",
+            "explanation": "Reception ở góc trên bên trái, ký hiệu D.",
+            "answerOptionIndex": 3
+          },
+          {
+            "pairIndex": 4,
+            "prompt": "Garden",
+            "answer": "E",
+            "explanation": "Garden phía sau gym, ký hiệu E.",
+            "answerOptionIndex": 4
+          },
+          {
+            "pairIndex": 5,
+            "prompt": "Student shop",
+            "answer": "F",
+            "explanation": "Student shop ở góc trên bên phải, ký hiệu F.",
+            "answerOptionIndex": 5
+          }
+        ]
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "listening-section-3-v2",
+        "cover": "/images/practice/thumb_grocery.png",
+        "source": "Các nguồn khác",
+        "label": "Section 3",
+        "scoreDisplay": "IELTS_LISTENING_BAND",
+        "questionTypes": [
+          "Matching",
+          "Map Labelling"
+        ],
+        "title": "Student Accommodation",
+        "kind": "listening"
+      },
+      "sections": [
+        {
+          "id": "section-3",
+          "title": "Student Accommodation",
+          "questionIds": [
+            "01M4Q7K0D057Z2WGZKV2JGDGAE",
+            "01M4Q7K0D01Z70GYEZ22ZACVW4"
+          ]
+        }
+      ]
+    }
+  }
+}

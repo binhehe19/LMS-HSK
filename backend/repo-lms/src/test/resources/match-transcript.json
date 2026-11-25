@@ -1,0 +1,224 @@
+{
+  "cards": [
+    {
+      "id": "c0",
+      "term": "word0",
+      "definition": "meaning0"
+    },
+    {
+      "id": "c1",
+      "term": "word1",
+      "definition": "meaning1"
+    },
+    {
+      "id": "c2",
+      "term": "word2",
+      "definition": "meaning2"
+    },
+    {
+      "id": "c3",
+      "term": "word3",
+      "definition": "meaning3"
+    },
+    {
+      "id": "c4",
+      "term": "word4",
+      "definition": "meaning4"
+    },
+    {
+      "id": "c5",
+      "term": "word5",
+      "definition": "meaning5"
+    },
+    {
+      "id": "c6",
+      "term": "word6",
+      "definition": "meaning6"
+    }
+  ],
+  "actions": [
+    {
+      "advance": 1276
+    },
+    {
+      "select": "c0-term"
+    },
+    {
+      "advance": 358
+    },
+    {
+      "select": "c1-def"
+    },
+    {
+      "advance": 750
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c0-term"
+    },
+    {
+      "advance": 0
+    },
+    {
+      "select": "c0-def"
+    },
+    {
+      "advance": 1150
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c1-term"
+    },
+    {
+      "advance": 127
+    },
+    {
+      "select": "c1-def"
+    },
+    {
+      "advance": 1150
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c2-term"
+    },
+    {
+      "advance": 5341
+    },
+    {
+      "select": "c2-def"
+    },
+    {
+      "advance": 1150
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c3-term"
+    },
+    {
+      "advance": 31002
+    },
+    {
+      "select": "c3-def"
+    },
+    {
+      "advance": 1150
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c4-term"
+    },
+    {
+      "advance": 79
+    },
+    {
+      "select": "c4-def"
+    },
+    {
+      "advance": 1150
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c5-term"
+    },
+    {
+      "advance": 532
+    },
+    {
+      "select": "c5-def"
+    },
+    {
+      "advance": 1450
+    },
+    {
+      "advance": 243
+    },
+    {
+      "select": "c6-term"
+    },
+    {
+      "advance": 458
+    },
+    {
+      "select": "c6-def"
+    },
+    {
+      "advance": 1150
+    }
+  ],
+  "request": {
+    "moves": [
+      {
+        "round": 0,
+        "firstTileId": "c0-term",
+        "secondTileId": "c1-def",
+        "pairTenths": 4,
+        "atTenths": 16
+      },
+      {
+        "round": 0,
+        "firstTileId": "c0-term",
+        "secondTileId": "c0-def",
+        "pairTenths": 0,
+        "atTenths": 26
+      },
+      {
+        "round": 0,
+        "firstTileId": "c1-term",
+        "secondTileId": "c1-def",
+        "pairTenths": 2,
+        "atTenths": 41
+      },
+      {
+        "round": 0,
+        "firstTileId": "c2-term",
+        "secondTileId": "c2-def",
+        "pairTenths": 54,
+        "atTenths": 108
+      },
+      {
+        "round": 0,
+        "firstTileId": "c3-term",
+        "secondTileId": "c3-def",
+        "pairTenths": 310,
+        "atTenths": 432
+      },
+      {
+        "round": 0,
+        "firstTileId": "c4-term",
+        "secondTileId": "c4-def",
+        "pairTenths": 1,
+        "atTenths": 447
+      },
+      {
+        "round": 0,
+        "firstTileId": "c5-term",
+        "secondTileId": "c5-def",
+        "pairTenths": 6,
+        "atTenths": 466
+      },
+      {
+        "round": 1,
+        "firstTileId": "c6-term",
+        "secondTileId": "c6-def",
+        "pairTenths": 5,
+        "atTenths": 488
+      }
+    ],
+    "elapsedTenths": 488
+  },
+  "score": 1047,
+  "mistakes": 1
+}

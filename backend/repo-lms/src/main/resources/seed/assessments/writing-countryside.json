@@ -1,0 +1,110 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 2"
+  ],
+  "content": {
+    "title": "Healthy Lifestyle: Countryside vs City",
+    "description": "Some people believe that it is easier to have a healthy lifestyle in the countryside. Others believe that there are health benefits of living in cities. Discuss both views and give your own opinion.",
+    "timeLimits": {
+      "default": 2400,
+      "hard": 1800,
+      "easy": 3600
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D7E8NGD1BB9H1249QM",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>Some people believe that it is easier to have a healthy lifestyle in the countryside. Others believe that there are health benefits of living in cities. Discuss both views and give your own opinion.</p>",
+        "task": 2,
+        "minimumWords": 250,
+        "aiRubric": "IELTS_WRITING",
+        "hints": {
+          "analysis": [
+            "Trình bày cả lợi ích của nông thôn và thành phố đối với sức khỏe.",
+            "Đưa ví dụ và nêu quan điểm cá nhân; không chỉ liệt kê ưu điểm."
+          ],
+          "ideas": [
+            {
+              "title": "Countryside",
+              "points": [
+                "Không khí sạch, ít tiếng ồn và nhiều không gian vận động.",
+                "Có thể thiếu dịch vụ chăm sóc sức khỏe chuyên sâu."
+              ]
+            },
+            {
+              "title": "City",
+              "points": [
+                "Tiếp cận bệnh viện, phòng tập và dịch vụ thuận tiện.",
+                "Ô nhiễm và lối sống ít vận động có thể ảnh hưởng sức khỏe."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "sedentary lifestyle",
+              "meaning": "lối sống ít vận động",
+              "example": "Office jobs can lead to a sedentary lifestyle."
+            },
+            {
+              "word": "access to healthcare",
+              "meaning": "khả năng tiếp cận dịch vụ y tế",
+              "example": "City residents often have better access to healthcare."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Paraphrase đề bài và nêu quan điểm của bạn. Trả lời trực tiếp yêu cầu của đề."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Main idea → Explain → Result → Example. Phát triển một lập luận và minh họa bằng ví dụ liên quan."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Main idea → Explain → Application → Example. Phân tích quan điểm thứ hai và liên hệ với lập trường của bạn."
+            },
+            {
+              "id": "conclusion",
+              "label": "Conclusion",
+              "instruction": "Tóm tắt lập luận và nhắc lại quan điểm. Không bổ sung ý mới."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-countryside-v2",
+        "cover": "/images/practice/thumb_sports.png",
+        "source": "The IELTS Space PRO",
+        "label": "Task 2",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Social"
+        ],
+        "minimumWords": 250,
+        "title": "Healthy Lifestyle: Countryside vs City",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-2",
+          "title": "Healthy Lifestyle: Countryside vs City",
+          "questionIds": [
+            "01M4Q7K0D7E8NGD1BB9H1249QM"
+          ]
+        }
+      ]
+    }
+  }
+}

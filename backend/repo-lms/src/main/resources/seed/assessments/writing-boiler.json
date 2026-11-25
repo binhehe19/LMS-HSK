@@ -1,0 +1,117 @@
+{
+  "subType": "PRACTICE_WRITING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Task 1"
+  ],
+  "content": {
+    "title": "Wood Pellet Boiler",
+    "description": "The diagram shows how a wood pellet boiler is used to provide heat and hot water for a house. Summarize the information by selecting and reporting the main features.",
+    "timeLimits": {
+      "default": 1200,
+      "hard": 900,
+      "easy": 1800
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0D7MHY280VE8G7YS51J",
+        "questionType": "ESSAY",
+        "points": 9,
+        "questionText": "<p>The diagram shows how a wood pellet boiler is used to provide heat and hot water for a house. Summarize the information by selecting and reporting the main features.</p>",
+        "task": 1,
+        "minimumWords": 150,
+        "aiRubric": "IELTS_WRITING",
+        "referenceText": "Diagram: wood pellets move from pellet storage into the boiler. Hot water from the boiler flows to two branches: a radiator and a shower. The shower cold-water return line goes back to the boiler. The diagram has no chimney, electricity generator or other labelled components.",
+        "hints": {
+          "analysis": [
+            "Đây là quy trình vận hành một hệ thống sưởi.",
+            "Mô tả các bộ phận, chiều di chuyển của nhiên liệu và nước.",
+            "Dùng thì hiện tại đơn và cấu trúc bị động khi phù hợp."
+          ],
+          "ideas": [
+            {
+              "title": "Nhiên liệu và nguồn nhiệt",
+              "points": [
+                "Wood pellets được đưa từ kho chứa vào boiler.",
+                "Boiler đốt nhiên liệu để làm nóng nước."
+              ]
+            },
+            {
+              "title": "Phân phối nhiệt",
+              "points": [
+                "Hot water đi đến radiator và shower.",
+                "Nước lạnh quay lại boiler, hoàn thành chu trình."
+              ]
+            }
+          ],
+          "vocabulary": [
+            {
+              "word": "be fed into",
+              "meaning": "được đưa vào",
+              "example": "Wood pellets are fed into the boiler."
+            },
+            {
+              "word": "circulate",
+              "meaning": "lưu thông",
+              "example": "Hot water circulates through the heating system."
+            },
+            {
+              "word": "heat source",
+              "meaning": "nguồn nhiệt",
+              "example": "The boiler acts as the heat source."
+            }
+          ],
+          "steps": [
+            {
+              "id": "introduction",
+              "label": "Introduction",
+              "instruction": "Diễn đạt lại đề bài: đối tượng, địa điểm và khoảng thời gian. Không đưa số liệu chi tiết ở đây."
+            },
+            {
+              "id": "overview",
+              "label": "Overview",
+              "instruction": "Nêu hai đặc điểm nổi bật của bảng, biểu đồ hoặc quy trình. Với dữ liệu, hãy tìm xu hướng chung và điểm cao nhất/thấp nhất."
+            },
+            {
+              "id": "body-1",
+              "label": "Body 1",
+              "instruction": "Chọn nhóm dữ liệu hoặc các giai đoạn đầu. So sánh và dùng số liệu cụ thể từ đề bài."
+            },
+            {
+              "id": "body-2",
+              "label": "Body 2",
+              "instruction": "Trình bày nhóm dữ liệu hoặc các giai đoạn còn lại. Kiểm tra đơn vị và tránh thêm quan điểm cá nhân."
+            }
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "writing-boiler-v2",
+        "cover": "/images/writing/boiler.svg",
+        "source": "The IELTS Space PRO",
+        "label": "Task 1",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Process"
+        ],
+        "minimumWords": 150,
+        "title": "Wood Pellet Boiler",
+        "kind": "writing"
+      },
+      "sections": [
+        {
+          "id": "task-1",
+          "title": "Wood Pellet Boiler",
+          "questionIds": [
+            "01M4Q7K0D7MHY280VE8G7YS51J"
+          ]
+        }
+      ]
+    }
+  }
+}

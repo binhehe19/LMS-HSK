@@ -1,0 +1,77 @@
+{
+  "subType": "PRACTICE_SPEAKING",
+  "tags": [
+    "The IELTS Space PRO",
+    "free",
+    "single",
+    "Part 2"
+  ],
+  "content": {
+    "title": "Protecting the environment",
+    "description": "",
+    "timeLimits": {
+      "default": 180,
+      "hard": 120,
+      "easy": 300
+    },
+    "questions": [
+      {
+        "questionId": "01M4Q7K0DBBZA5Q6JHQM55S8DM",
+        "questionType": "AUDIO_RESPONSE",
+        "points": 9,
+        "questionText": "Describe something you do to protect the environment.<p>You should say:</p><ul><li>What you do</li><li>When you started doing it</li><li>How often you do it</li><li>And explain how it helps the environment</li></ul>",
+        "maxFiles": 1,
+        "maxFileSizeBytes": 10485760,
+        "acceptedMimeTypes": [
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/wav"
+        ],
+        "hints": {
+          "part": 2,
+          "translation": "Mô tả một việc bạn làm để bảo vệ môi trường.",
+          "structure": "Habit → How it started → Actions → Impact",
+          "cues": [
+            "What you do",
+            "When you started doing it",
+            "How often you do it",
+            "And explain how it helps the environment"
+          ],
+          "ideas": [
+            "Describe a small habit you can explain in detail.",
+            "Say when you started and what changed."
+          ],
+          "vocabulary": [
+            "single-use plastic — nhựa dùng một lần",
+            "reduce waste — giảm rác thải"
+          ]
+        }
+      }
+    ],
+    "layout": {
+      "version": 2,
+      "meta": {
+        "key": "speaking-plastic-v2",
+        "cover": "/images/practice/thumb_plastics.png",
+        "source": "The IELTS Space PRO",
+        "label": "Part 2",
+        "scoreDisplay": "IELTS_SCALE_9",
+        "questionTypes": [
+          "Speaking Part 2"
+        ],
+        "title": "Protecting the environment",
+        "kind": "speaking"
+      },
+      "sections": [
+        {
+          "id": "part-2",
+          "title": "Part 2",
+          "questionIds": [
+            "01M4Q7K0DBBZA5Q6JHQM55S8DM"
+          ]
+        }
+      ]
+    }
+  }
+}
